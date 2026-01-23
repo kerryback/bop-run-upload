@@ -61,7 +61,7 @@ if model not in ['bgn', 'kp14', 'gs21']:
 if koyeb_mode:
     config.set_n_jobs(24)
     # On Koyeb, use DATA_DIR for everything (no separate scratch)
-else:
+elif os.path.exists('/opt/scratch/keb7'):
     config.set_jgsrc1_config()
 
 # Get references to config values
@@ -76,14 +76,11 @@ S3_CONFIGURED = bool(os.environ.get('AWS_ACCESS_KEY_ID'))
 
 
 def upload_file(filepath):
-    """Upload a file to S3 if configured."""
+    """Upload a file to S3 if configured. Raises on failure."""
     if not S3_CONFIGURED or not os.path.exists(filepath):
         return
-    try:
-        from utils.upload_to_aws import upload_file_to_s3
-        upload_file_to_s3(filepath)
-    except Exception as e:
-        print(f"[WARN] S3 upload failed for {filepath}: {e}")
+    from utils.upload_to_aws import upload_file as _upload
+    _upload(filepath)
 
 
 def run_script(script_name, args, description):
@@ -94,11 +91,19 @@ def run_script(script_name, args, description):
 
     cmd = [sys.executable, script_name] + args
     start_time = time.time()
-    result = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+    # Use Popen with PIPE to handle TeeOutput (which lacks fileno())
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    for line in process.stdout:
+        print(line, end='')
+    process.wait()
+
     elapsed = time.time() - start_time
 
-    if result.returncode != 0:
-        print(f"\n[ERROR] {script_name} failed with return code {result.returncode}")
+    if process.returncode != 0:
+        print(f"\n[ERROR] {script_name} failed with return code {process.returncode}")
         sys.exit(1)
 
     return elapsed
@@ -231,12 +236,18 @@ if __name__ == "__main__":
             self.streams = streams
         def write(self, data):
             for s in self.streams:
-                s.write(data)
-                s.flush()
+                try:
+                    s.write(data)
+                    s.flush()
+                except ValueError:
+                    pass
             return len(data)
         def flush(self):
             for s in self.streams:
-                s.flush()
+                try:
+                    s.flush()
+                except ValueError:
+                    pass
 
     log_fh = open(log_file, 'w')
     sys.stdout = TeeOutput(sys.__stdout__, log_fh)
@@ -270,4 +281,7 @@ if __name__ == "__main__":
     if koyeb_mode:
         delete_koyeb_service()
 
+    # Restore original stdout/stderr before closing log file
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
     log_fh.close()

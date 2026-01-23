@@ -1,0 +1,299 @@
+Started at Fri 23 Jan 2026, 09:05AM
+
+Configuration:
+  Model: kp14
+  Index range: 0 to 0 (inclusive)
+  Total runs: 1
+  DKKM features: [6, 36, 360, 3600]
+  N_JOBS: 10
+  Log file: C:\Users\kerry\repos\CodeNew\noipca2\logs\kp14_0_1.log
+
+Directories:
+  DATA_DIR: C:\Users\kerry\repos\CodeNew\noipca2\outputs
+  TEMP_DIR: /opt/scratch/keb7
+
+======================================================================
+RUNNING WORKFLOW FOR KP14_0
+======================================================================
+
+======================================================================
+STEP 1: Generating KP14 panel data (index=0)
+======================================================================
+
+======================================================================
+PANEL GENERATION
+======================================================================
+Model: KP14
+Identifier: 0
+Started at Fri 23 Jan 2026, 09:05AM
+======================================================================
+
+Parameters:
+  N (firms): 40
+  T (periods): 400
+  Burnin: 200
+  Characteristics: ['size', 'bm', 'agr', 'roe', 'mom']
+
+----------------------------------------------------------------------
+Generating panel for KP14 model...
+----------------------------------------------------------------------
+Creating arrays...
+Creating panel...
+
+Firm-months with bm=0 (after burnin): 253
+
+----------------------------------------------------------------------
+Saving panel and arrays to C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_panel.pkl...
+----------------------------------------------------------------------
+[OK] Saved successfully
+
+----------------------------------------------------------------------
+PANEL SUMMARY
+----------------------------------------------------------------------
+Model: KP14 (identifier=0)
+  Shape: (16000, 9)
+  Columns: ['month', 'firmid', 'mve', 'xret', 'roe', 'bm', 'mom', 'agr', 'size']
+  Months: 200 to 599
+  Unique months: 400
+  Firms: 40
+  Characteristics: ['size', 'bm', 'agr', 'roe', 'mom']
+  Mean excess return: 0.0029
+  Std excess return: 0.0678
+
+======================================================================
+GENERATION COMPLETE
+======================================================================
+Finished at Fri 23 Jan 2026, 09:06AM
+Total runtime: 9.5s (0.2 minutes)
+
+Output file: C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_panel.pkl
+
+To compute SDF moments:
+  python calculate_moments.py kp14_0
+
+To extract factors:
+  python run_fama.py kp14_0
+  python run_dkkm.py kp14_0 1000
+======================================================================
+
+======================================================================
+STEP 2: Calculating SDF conditional moments
+======================================================================
+
+[Parallel(n_jobs=10)]: Using backend LokyBackend with 10 concurrent workers.
+[Parallel(n_jobs=10)]: Done  30 out of  40 | elapsed:  2.0min remaining:   40.4s
+[Parallel(n_jobs=10)]: Done  40 out of  40 | elapsed:  2.8min finished
+======================================================================
+SDF CONDITIONAL MOMENTS CALCULATION
+======================================================================
+Panel ID: kp14_0
+Model: kp14
+Started at Fri 23 Jan 2026, 09:06AM
+======================================================================
+
+Loading panel from C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_panel.pkl...
+Loaded arrays: N=40, T=400
+
+----------------------------------------------------------------------
+Computing SDF conditional moments...
+----------------------------------------------------------------------
+Computing moments for months 560 to 599
+  Total: 40 months
+  Using parallel processing with n_jobs=10
+  Processing in 1 chunks of 50 months each
+----------------------------------------------------------------------
+
+Chunk 1/1: months 560 to 599 (40 months)
+  [OK] Chunk 1 saved to kp14_0_moments_chunk0.pkl
+
+----------------------------------------------------------------------
+[OK] All chunks computed in 166.7s (2.8 minutes)
+
+----------------------------------------------------------------------
+Consolidating chunks into final moments dictionary...
+----------------------------------------------------------------------
+  Loading chunk 1/1...
+  Sorting moments by month...
+[OK] Consolidated 40 months
+
+Saving consolidated moments to C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_moments.pkl...
+[OK] Moments saved successfully
+
+Cleaning up temporary chunk files...
+  Deleted kp14_0_moments_chunk0.pkl
+[OK] Cleanup complete
+
+======================================================================
+COMPUTATION COMPLETE
+======================================================================
+Finished at Fri 23 Jan 2026, 09:08AM
+Total runtime: 167.4s (2.8 minutes)
+
+Output file: C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_moments.pkl
+  Months: 560 to 599 (40 total)
+  Each month contains:
+    - rp: (40,) expected returns vector
+    - cond_var: (40, 40) conditional variance matrix
+    - second_moment: (40, 40) second moment matrix
+    - second_moment_inv: (40, 40) inverse second moment matrix
+    - sdf_ret: scalar SDF return
+    - max_sr: scalar maximum Sharpe ratio
+
+To load moments:
+  import pickle
+  with open('C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_moments.pkl', 'rb') as f:
+      data = pickle.load(f)
+  moments = data['moments']
+  # Access specific month:
+  rp = moments[560]['rp']
+  cond_var = moments[560]['cond_var']
+======================================================================
+
+======================================================================
+STEP 3: Computing Fama-French and Fama-MacBeth factors
+======================================================================
+
+
+Loading panel from C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_panel.pkl...
+Loaded panel: shape=(16000, 9)
+
+Panel after cleaning:
+  Start month: 200, End month: 599
+  Total observations: 15744
+======================================================================
+FAMA-FRENCH & FAMA-MACBETH FACTORS
+======================================================================
+Model: kp14
+Panel ID: kp14_0
+Configuration: N=40, T=400, n_jobs=10
+Methods: Fama-French, Fama-MacBeth
+Started at Fri 23 Jan 2026, 09:08AM
+======================================================================
+
+----------------------------------------------------------------------
+Computing Fama-French and Fama-MacBeth factors...
+[OK] Fama factors computed in 3.5s
+  FF returns: (400, 6)
+  FM returns: (400, 6)
+
+----------------------------------------------------------------------
+Computing portfolio statistics...
+  Moments range: 560 to 599
+
+  Processing ff...
+
+  Processing fm...
+
+[OK] Portfolio statistics computed in 1.0s
+  Total observations: 80
+
+[OK] Results saved to: C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_fama.pkl
+     Keys: ['ff_returns', 'fm_returns', 'fama_stats', 'panel_id', 'model', 'chars', 'start', 'end']
+
+Total runtime: 4.8s (0.1 minutes)
+
+======================================================================
+COMPUTATION COMPLETE
+======================================================================
+Finished at Fri 23 Jan 2026, 09:09AM
+
+Usage examples:
+  import pickle
+  with open('C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_fama.pkl', 'rb') as f:
+      results = pickle.load(f)
+  ff = results['ff_returns']
+  stats = results['fama_stats']
+======================================================================
+
+======================================================================
+STEP 4: Computing DKKM factors (all nfeatures: [6, 36, 360, 3600])
+======================================================================
+
+
+Loading panel from C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_panel.pkl...
+Loaded panel: shape=(16000, 9)
+
+Panel after cleaning:
+  Start month: 200, End month: 599
+  Total observations: 15744
+======================================================================
+DKKM (RANDOM FOURIER FEATURES) FACTORS
+======================================================================
+Model: kp14
+Panel ID: kp14_0
+Configuration: N=40, T=400, n_jobs=10
+Max features: 3600
+Feature list: [6, 36, 360, 3600]
+Alpha list: [0, 0.01, 0.05, 0.1, 1]
+Include market: True
+Rank standardize: True
+Started at Fri 23 Jan 2026, 09:09AM
+======================================================================
+
+----------------------------------------------------------------------
+Step 1: Computing DKKM factor returns (max_features=3600)...
+[OK] Factor returns computed in 2.7s
+  f_rs shape: (400, 3600)
+  Months: 200 to 599
+
+  Loaded FF returns for market factor: shape=(400, 6)
+
+  Moments range: 560 to 599
+
+----------------------------------------------------------------------
+Step 2: Computing portfolio statistics...
+  Features: [6, 36, 360, 3600]
+  Alphas: [0, 0.01, 0.05, 0.1, 1]
+  Evaluation months: 560 to 599
+
+  Processing nfeatures=6...
+    [OK] nfeatures=6 done in 0.9s
+
+  Processing nfeatures=36...
+    [OK] nfeatures=36 done in 0.9s
+
+  Processing nfeatures=360...
+    [OK] nfeatures=360 done in 7.9s
+
+  Processing nfeatures=3600...
+    [OK] nfeatures=3600 done in 753.3s
+
+[OK] Portfolio statistics computed in 763.0s
+
+Results: 800 observations
+
+[OK] Results saved to: C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm.pkl
+     Keys: ['dkkm_factors', 'dkkm_stats', 'weights', 'max_features', 'nfeatures_lst', 'nmat', 'rank_standardize', 'panel_id', 'model', 'chars', 'alpha_lst', 'include_mkt', 'start', 'end']
+  Saved C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm_6.pkl
+  Saved C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm_36.pkl
+  Saved C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm_360.pkl
+  Saved C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm_3600.pkl
+
+Total runtime: 766.0s (12.8 minutes)
+
+======================================================================
+COMPUTATION COMPLETE
+======================================================================
+Finished at Fri 23 Jan 2026, 09:21AM
+
+Usage examples:
+  import pickle
+  with open('C:\Users\kerry\repos\CodeNew\noipca2\outputs\kp14_0_dkkm.pkl', 'rb') as f:
+      results = pickle.load(f)
+  stats = results['dkkm_stats']
+======================================================================
+
+======================================================================
+WORKFLOW COMPLETE FOR KP14_0
+======================================================================
+  1. Panel:      10.2s (0.2min)
+  2. Moments:   168.0s (2.8min)
+  3. Fama:        7.2s (0.1min)
+  4. DKKM:      767.8s (12.8min)
+  Total:        953.1s (15.9min)
+
+======================================================================
+ALL WORKFLOWS COMPLETE
+======================================================================
+Total runtime: 953.1s (15.9 minutes)
+Finished at Fri 23 Jan 2026, 09:21AM

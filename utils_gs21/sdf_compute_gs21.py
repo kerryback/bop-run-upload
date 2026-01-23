@@ -201,24 +201,19 @@ def sdf_compute(N, T, arr_tuple):
         ER[1:, 0] = (eret[t, :] + 1) * np.exp(r)
 
         # SDF portfolio and returns
-        
+
         # invert ER
         try:
-            # First attempt to solve
-            port = scipy.linalg.solve(ER, np.ones((N + 1, 1)), assume_a="pos").reshape(-1) 
+            port = scipy.linalg.solve(ER, np.ones((N + 1, 1)), assume_a="pos").reshape(-1)
         except Exception as e:
             print(f"An error occurred: {e}. Perturbing ER.")
-            # Perturb ER and retry
             ER += np.eye(ER.shape[0]) * 1e-6
             try:
-                # Second attempt after perturbation
                 port = scipy.linalg.solve(ER, np.ones((N + 1, 1))).reshape(-1)
             except Exception as e:
-                # Handle failure after retry
                 print(f"Second attempt failed: {e}. Using fallback value for port.")
                 port = np.full((N+1, ), np.nan)
 
-        #import pdb; pdb.set_trace()
         port /= port.sum()
         sdf_ret = -(port[1:] * (1 + ret[t, :] - np.exp(r))).sum()
 

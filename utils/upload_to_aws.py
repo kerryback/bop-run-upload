@@ -1,22 +1,24 @@
 """
 AWS S3 upload utilities for incremental file uploads.
 
-Provides minimal-output functions to upload files to S3 as they are created.
+Provides functions to upload files to S3 as they are created.
+Raises exceptions on failure after retry attempts.
 
 Usage:
     from utils.upload_to_aws import upload_file, is_s3_configured
 
-    # Check if S3 is configured
     if is_s3_configured():
-        # Upload a file after creation
         upload_file('/path/to/file.pkl')
 """
 
 import os
+import time
 import boto3
 from pathlib import Path
-from botocore.exceptions import ClientError, NoCredentialsError
 from datetime import datetime
+
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds between retries
 
 
 def is_s3_configured():
@@ -38,105 +40,75 @@ def get_s3_client():
     Create and return a boto3 S3 client.
 
     Returns:
-        boto3.client or None: S3 client if credentials are valid, None otherwise
+        boto3.client: S3 client
+
+    Raises:
+        RuntimeError: If S3 is not configured
+        Exception: If client creation fails
     """
     if not is_s3_configured():
-        return None
-
-    try:
-        aws_region = os.environ.get('AWS_REGION', 'us-east-2')
-        s3_client = boto3.client('s3',
-            aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-            aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
-            region_name=aws_region
+        raise RuntimeError(
+            "S3 not configured. Required environment variables: "
+            "S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
         )
-        return s3_client
-    except Exception:
-        return None
+
+    aws_region = os.environ.get('AWS_REGION', 'us-east-2')
+    s3_client = boto3.client('s3',
+        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        region_name=aws_region
+    )
+    return s3_client
 
 
-def upload_file(filepath, verbose=True):
+def upload_file(filepath, verbose=True, max_retries=MAX_RETRIES):
     """
-    Upload a single file to S3 with minimal output.
+    Upload a single file to S3 with retry logic.
+
+    Retries up to max_retries times on failure. Raises on final failure.
 
     Args:
         filepath: Path to local file (absolute or relative)
-        verbose: If True, print success message (default: True)
+        verbose: If True, print progress messages (default: True)
+        max_retries: Number of upload attempts (default: 3)
 
-    Returns:
-        bool: True if uploaded successfully, False otherwise
+    Raises:
+        FileNotFoundError: If the file does not exist
+        RuntimeError: If S3 is not configured or all upload attempts fail
     """
-    if not is_s3_configured():
-        return False
-
     filepath = Path(filepath)
     if not filepath.exists():
-        if verbose:
-            print(f"⚠ File not found: {filepath.name}")
-        return False
+        raise FileNotFoundError(f"File not found: {filepath}")
 
-    try:
-        s3_client = get_s3_client()
-        if s3_client is None:
-            return False
+    s3_client = get_s3_client()
 
-        bucket_name = os.environ.get('S3_BUCKET')
-        workflow_id = os.environ.get('WORKFLOW_ID', datetime.now().strftime('%Y%m%d_%H%M%S'))
+    bucket_name = os.environ.get('S3_BUCKET')
+    workflow_id = os.environ.get('WORKFLOW_ID', datetime.now().strftime('%Y%m%d_%H%M%S'))
 
-        # Determine S3 key based on file location
-        # If file is in outputs/, use that; otherwise use logs/
-        if '/outputs/' in str(filepath) or '\\outputs\\' in str(filepath):
-            s3_key = f'koyeb-results/{workflow_id}/outputs/{filepath.name}'
-        elif '/logs/' in str(filepath) or '\\logs\\' in str(filepath):
-            s3_key = f'koyeb-results/{workflow_id}/logs/{filepath.name}'
-        else:
-            # Default: use outputs
-            s3_key = f'koyeb-results/{workflow_id}/outputs/{filepath.name}'
+    # Determine S3 key based on file location
+    if '/outputs/' in str(filepath) or '\\outputs\\' in str(filepath):
+        s3_key = f'koyeb-results/{workflow_id}/outputs/{filepath.name}'
+    elif '/logs/' in str(filepath) or '\\logs\\' in str(filepath):
+        s3_key = f'koyeb-results/{workflow_id}/logs/{filepath.name}'
+    else:
+        s3_key = f'koyeb-results/{workflow_id}/outputs/{filepath.name}'
 
-        # Upload file
-        s3_client.upload_file(str(filepath), bucket_name, s3_key)
+    last_exception = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            s3_client.upload_file(str(filepath), bucket_name, s3_key)
+            if verbose:
+                print(f"  Uploaded {filepath.name} to s3://{bucket_name}/{s3_key}")
+            return
+        except Exception as e:
+            last_exception = e
+            if attempt < max_retries:
+                print(f"  Upload attempt {attempt}/{max_retries} failed for {filepath.name}: {e}")
+                print(f"  Retrying in {RETRY_DELAY}s...")
+                time.sleep(RETRY_DELAY)
+            else:
+                print(f"  Upload attempt {attempt}/{max_retries} failed for {filepath.name}: {e}")
 
-        if verbose:
-            print(f"✓ Uploaded {filepath.name} to S3")
-
-        return True
-
-    except (ClientError, NoCredentialsError, Exception):
-        # Silently fail - don't interrupt workflow
-        return False
-
-
-def upload_directory(dirpath, verbose=True):
-    """
-    Upload all files in a directory to S3.
-
-    Args:
-        dirpath: Path to directory
-        verbose: If True, print progress (default: True)
-
-    Returns:
-        tuple: (success_count, fail_count)
-    """
-    if not is_s3_configured():
-        return 0, 0
-
-    dirpath = Path(dirpath)
-    if not dirpath.exists() or not dirpath.is_dir():
-        return 0, 0
-
-    files = list(dirpath.rglob('*'))
-    files = [f for f in files if f.is_file()]
-
-    if not files:
-        return 0, 0
-
-    success_count = 0
-    fail_count = 0
-
-    for filepath in files:
-        if upload_file(filepath, verbose=verbose):
-            success_count += 1
-        else:
-            fail_count += 1
-
-    return success_count, fail_count
+    raise RuntimeError(
+        f"S3 upload failed after {max_retries} attempts for {filepath.name}: {last_exception}"
+    )

@@ -17,8 +17,8 @@ import os
 # ROOT: main_revised.py line 9: N, T, n_ipca_rff = 1000, 720, 36
 # =============================================================================
 
-N = 1000   # Number of firms
-T = 720    # Number of time periods (excluding burnin)
+N = 40   # Number of firms
+T = 400    # Number of time periods (excluding burnin)
 BGN_BURNIN = 200   # ROOT: parameters.py line 12: burnin = 200
 KP14_BURNIN = 200
 GS21_BURNIN = 200
