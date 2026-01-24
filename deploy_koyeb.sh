@@ -7,14 +7,15 @@
 # 3. Auto-deletes itself to stop billing
 #
 # Usage:
-#   ./deploy_koyeb.sh <model> <start> <end> [instance_type] [git_repo]
+#   ./deploy_koyeb.sh <model> <start> <end> [instance_type] [git_repo] [upload_intermediate]
 #
 # Arguments:
 #   model: bgn, kp14, or gs21
 #   start: Starting index
 #   end: Ending index (exclusive)
 #   instance_type: Koyeb instance type (default: 5xlarge)
-#   git_repo: GitHub repo in format username/repo (default: YOUR_USERNAME/YOUR_REPO)
+#   git_repo: GitHub repo in format username/repo (default: auto-detected)
+#   upload_intermediate: Upload panel/moments files to S3 (default: true)
 #
 # Required environment variables:
 #   KOYEB_API_TOKEN: Your Koyeb API token
@@ -39,14 +40,15 @@ set -e  # Exit on error
 if [ $# -lt 3 ]; then
     echo "ERROR: Missing required arguments"
     echo ""
-    echo "Usage: $0 <model> <start> <end> [instance_type] [git_repo]"
+    echo "Usage: $0 <model> <start> <end> [instance_type] [git_repo] [upload_intermediate]"
     echo ""
     echo "Arguments:"
-    echo "  model:         bgn, kp14, or gs21"
-    echo "  start:         Starting index"
-    echo "  end:           Ending index (exclusive)"
-    echo "  instance_type: Koyeb instance (default: 5xlarge)"
-    echo "  git_repo:      GitHub repo username/repo (default: YOUR_USERNAME/YOUR_REPO)"
+    echo "  model:                bgn, kp14, or gs21"
+    echo "  start:                Starting index"
+    echo "  end:                  Ending index (exclusive)"
+    echo "  instance_type:        Koyeb instance (default: 5xlarge)"
+    echo "  git_repo:             GitHub repo username/repo (default: auto-detected)"
+    echo "  upload_intermediate:  Upload panel/moments to S3 (default: true)"
     echo ""
     echo "Examples:"
     echo "  $0 kp14 0 10"
