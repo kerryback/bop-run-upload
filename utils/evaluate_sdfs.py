@@ -131,6 +131,7 @@ def main():
         w = all_weights[month]
         m = moments[month]
         firm_ids = w['firm_ids']
+        mkt_rf = w.get('mkt_rf', np.nan)  # Market excess return for this month
 
         # Get panel data for this month
         data = panel.loc[month]
@@ -141,7 +142,7 @@ def main():
         stock_cov = m['cond_var'][firm_ids, :][:, firm_ids]
         sdf_ret = m['sdf_ret']
 
-        # Fama stats
+        # Fama stats (includes ff, fm, capm)
         for (method_name, alpha), weights_on_stocks in w['fama'].items():
             stdev = np.sqrt(weights_on_stocks @ stock_cov @ weights_on_stocks)
             mean = weights_on_stocks @ rp
@@ -155,6 +156,7 @@ def main():
                 'mean': mean,
                 'xret': xret,
                 'sdf_ret': sdf_ret,
+                'mkt_rf': mkt_rf,
             })
 
         # DKKM stats
@@ -171,6 +173,7 @@ def main():
                 'mean': mean,
                 'xret': xret,
                 'sdf_ret': sdf_ret,
+                'mkt_rf': mkt_rf,
             })
 
     elapsed = time.time() - t0

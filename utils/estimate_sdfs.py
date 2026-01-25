@@ -86,9 +86,13 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
     data_chars_df = pd.DataFrame(data_chars, columns=CHARS, index=firm_ids)
 
     # =========================================================================
-    # FAMA WEIGHTS
+    # FAMA WEIGHTS (ff, fm, capm)
     # =========================================================================
     fama_weights = {}
+
+    # Get market factor and market weights (used by capm)
+    mkt_rf = ff_rets.iloc[:, -1]  # Last column is market excess return
+    market_weight = fama.fama_french(data_chars_df, CHARS, mve=data_mve)[:, -1]
 
     for method_name in ["ff", "fm"]:
         f_rets = ff_rets if method_name == "ff" else fm_rets
@@ -106,6 +110,21 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
 
             key = (method_name, alpha)
             fama_weights[key] = weights_on_stocks.astype(np.float32)
+
+    # CAPM: single-factor model using only market excess return
+    mkt_rf_df = mkt_rf.to_frame(name='mkt_rf')  # Single-column DataFrame
+    for alpha in alpha_lst_fama:
+        # Portfolio of factors from ridge regression (single factor)
+        port_of_factors = fama.mve_data(mkt_rf_df, month, alpha)
+
+        # Final weights on stocks (market_weight * scalar)
+        weights_on_stocks = market_weight * port_of_factors.values[0]
+
+        key = ('capm', alpha)
+        fama_weights[key] = weights_on_stocks.astype(np.float32)
+
+    # Store mkt_rf value for this month (for evaluate_sdfs output)
+    mkt_rf_value = mkt_rf.loc[month] if month in mkt_rf.index else np.nan
 
     # =========================================================================
     # DKKM WEIGHTS WITH NMAT AVERAGING
@@ -169,7 +188,7 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
             key = (nfeatures, alpha)
             dkkm_weights[key] = weights_on_stocks.astype(np.float32)
 
-    return month, firm_ids, fama_weights, dkkm_weights
+    return month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value
 
 
 def main():
@@ -297,11 +316,12 @@ def main():
             )
 
         # Collect results
-        for month, firm_ids, fama_weights, dkkm_weights in chunk_results:
+        for month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value in chunk_results:
             all_weights[month] = {
                 'firm_ids': firm_ids,
                 'fama': fama_weights,
                 'dkkm': dkkm_weights,
+                'mkt_rf': mkt_rf_value,
             }
 
         del chunk_results
