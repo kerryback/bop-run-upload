@@ -26,6 +26,7 @@
 #   S3_BUCKET: S3 bucket name (default: bop-noipca)
 #   AWS_REGION: AWS region (default: us-east-2)
 #   KOYEB_APP_NAME: (auto-generated from model-start-end-timestamp)
+#   WORKFLOW_ID: S3 folder name (auto-generated: model-start-end-YYYYMMDD-HHMMSS)
 #   KOYEB_REGION: Koyeb region (default: was)
 #   MONITOR_URL: URL of koyeb-monitor service for self-termination
 #
@@ -157,9 +158,10 @@ if [ -z "$GIT_BRANCH" ]; then
     fi
 fi
 
-# Generate unique app name from job arguments + timestamp
+# Generate unique app name and S3 folder name from job arguments + timestamp
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 KOYEB_APP_NAME="${MODEL}-${START}-${END}-${TIMESTAMP}"
+WORKFLOW_ID="${MODEL}-${START}-${END}-${TIMESTAMP}"
 
 echo "=========================================="
 echo "KOYEB DEPLOYMENT"
@@ -168,6 +170,7 @@ echo "Configuration:"
 echo "  Model:         $MODEL"
 echo "  Indices:       $START to $((END-1))"
 echo "  App name:      $KOYEB_APP_NAME"
+echo "  S3 folder:     $WORKFLOW_ID"
 echo "  Instance type: $INSTANCE_TYPE"
 echo "  Region:        $KOYEB_REGION"
 echo "  Git repo:      $GIT_REPO"
@@ -201,7 +204,7 @@ koyeb services create worker \
   --type worker \
   --git "github.com/$GIT_REPO" \
   --git-branch "$GIT_BRANCH" \
-  --git-run-command "python main.py $MODEL $START $END --koyeb; curl -s -X POST \$MONITOR_URL/kill -H \"Content-Type: application/json\" -d \"{\\\"app_name\\\": \\\"\$KOYEB_APP_NAME\\\"}\"" \
+  --git-run-command "python main.py $MODEL $START $END --koyeb 2>&1 | tee run.log; python -c \"import requests, os; logs=open('run.log').read() if os.path.exists('run.log') else ''; requests.post(os.environ['MONITOR_URL']+'/submit-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'logs': logs})\"; curl -s -X POST \$MONITOR_URL/kill -H \"Content-Type: application/json\" -d \"{\\\"app_name\\\": \\\"\$KOYEB_APP_NAME\\\"}\"" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \
   --env MONITOR_URL="$MONITOR_URL" \
@@ -211,6 +214,7 @@ koyeb services create worker \
   --env AWS_REGION="$AWS_REGION" \
   --env KOYEB_API_TOKEN="$KOYEB_API_TOKEN" \
   --env KOYEB_APP_NAME="$KOYEB_APP_NAME" \
+  --env WORKFLOW_ID="$WORKFLOW_ID" \
   --token "$KOYEB_API_TOKEN"
 
 echo ""
@@ -221,8 +225,9 @@ echo ""
 echo "The service will:"
 echo "  1. Build and deploy your code"
 echo "  2. Run: python main.py $MODEL $START $END --koyeb"
-echo "  3. Upload results to s3://$S3_BUCKET/koyeb-results/{WORKFLOW_ID}/"
-echo "  4. Auto-delete the app to stop billing"
+echo "  3. Upload results to s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/"
+echo "  4. Submit run logs to the monitor"
+echo "  5. Auto-delete the app to stop billing"
 echo ""
 echo "Monitor the service:"
 echo "  koyeb services get worker --app $KOYEB_APP_NAME --token \$KOYEB_API_TOKEN"
@@ -230,11 +235,14 @@ echo ""
 echo "View build logs:"
 echo "  koyeb services logs worker --app $KOYEB_APP_NAME -t build --token \$KOYEB_API_TOKEN"
 echo ""
-echo "View runtime logs (tail):"
+echo "View runtime logs (live):"
 echo "  koyeb services logs worker --app $KOYEB_APP_NAME --tail --token \$KOYEB_API_TOKEN"
+echo ""
+echo "View captured logs (after completion):"
+echo "  $MONITOR_URL/logs/$KOYEB_APP_NAME"
 echo ""
 echo "Download results when complete:"
 echo "  source .env && aws s3 ls s3://$S3_BUCKET/koyeb-results/"
-echo "  source .env && aws s3 sync s3://$S3_BUCKET/koyeb-results/YYYYMMDD_HHMMSS/ ./results/"
+echo "  source .env && aws s3 sync s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/ ./results/"
 echo ""
 echo "=========================================="

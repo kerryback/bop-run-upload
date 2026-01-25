@@ -23,7 +23,7 @@ from config import (
 A = lambda ep, u: (A_0 + (ep - 1) * A_1 + (u - 1) * A_2 + (ep - 1) * (u - 1) * A_3)
 
 from .sdf_compute_kp14 import *
-from .loadings_compute_kp14 import *
+# from .loadings_compute_kp14 import *
 
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'KP14_solfiles')
@@ -198,18 +198,18 @@ def create_arrays(N, T):
 
     erets = (term1 + term2  + term3 + term4) /price - 1
 
-    loadings_z_taylor, loadings_x_taylor = loadings_Taylor(K, x, z, eps, uj, rate, high, lambda_f, price, G_up, G_down)
-    loadings_z_proj, loadings_x_proj = loadings_projection(K, x, z, eps, uj, rate, high, lambda_f, price, erets, Et_G_up, Et_G_down, Et_A_mod)
+    # loadings_z_taylor, loadings_x_taylor = loadings_Taylor(K, x, z, eps, uj, rate, high, lambda_f, price, G_up, G_down)
+    # loadings_z_proj, loadings_x_proj = loadings_projection(K, x, z, eps, uj, rate, high, lambda_f, price, erets, Et_G_up, Et_G_down, Et_A_mod)
 
 
-    arr_tuple = K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f, loadings_z_taylor, loadings_x_taylor, loadings_z_proj, loadings_x_proj 
+    arr_tuple = K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f 
     
     return arr_tuple
 
 
 def create_panel(N, T, arr_tuple):
 
-    K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, P, ret, eret, lambda_f, loadings_z_taylor, loadings_x_taylor,  loadings_z_proj, loadings_x_proj = arr_tuple
+    K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, P, ret, eret, lambda_f = arr_tuple
     
     df = pd.DataFrame(
         {

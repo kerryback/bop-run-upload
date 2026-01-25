@@ -58,7 +58,7 @@ def rank_standardize(arr):
 # W @ X.T where X is a DataFrame uses pandas __rmatmul__,
 # preserving DataFrame structure throughout.
 #
-# Returns BOTH rank-standardized and raw versions.
+# Returns rank-standardized features only (noipca2 simplification).
 # =============================================================================
 def rff(data, rf, W, model):
     """
@@ -73,7 +73,7 @@ def rff(data, rf, W, model):
         model: Model name ('bgn', 'kp14', 'gs21')
 
     Returns:
-        (rank_standardized_features, raw_features) — both as DataFrames (N, D)
+        rank_standardized_features as DataFrame (N, D)
     """
     # ROOT line 17: rank-standardize characteristics
     X = rank_standardize(data)
@@ -95,8 +95,8 @@ def rff(data, rf, W, model):
     arr.columns = [str(i) for i in range(arr.shape[1])]
     arr.index = data.index
 
-    # ROOT line 25: return (rank_standardized, raw)
-    return rank_standardize(arr), arr
+    # Return rank-standardized features only
+    return rank_standardize(arr)
 
 
 # =============================================================================
@@ -170,7 +170,7 @@ def ridge_regr(signals, labels, future_signals, shrinkage_list):
 # ROOT: dkkm_functions.py lines 46-70
 #
 # Parallel computation of factor returns across months.
-# Returns BOTH rank-standardized and non-rank-standardized factor returns.
+# Returns rank-standardized factor returns only (noipca2 simplification).
 # =============================================================================
 def factors(panel, W, n_jobs, start, end, model, chars):
     """
@@ -188,7 +188,7 @@ def factors(panel, W, n_jobs, start, end, model, chars):
         chars: List of characteristic names
 
     Returns:
-        (f_rs, f_nors): Rank-standardized and non-rank-standardized factor returns
+        f_rs: Rank-standardized factor returns DataFrame
     """
     # ROOT lines 47-56: monthly factor return computation
     def monthly_rets(month):
@@ -200,30 +200,24 @@ def factors(panel, W, n_jobs, start, end, model, chars):
         else:
             rf = None
 
-        # ROOT line 55: compute RFF (returns both versions)
-        weights_rs, weights_nors = rff(data[chars], rf, W=W, model=model)
+        # ROOT line 55: compute RFF (rank-standardized only)
+        weights_rs = rff(data[chars], rf, W=W, model=model)
 
         # ROOT line 56: factor returns = features' @ excess returns
-        return (month,
-                (weights_rs.T @ data.xret).astype(np.float32),
-                (weights_nors.T @ data.xret).astype(np.float32))
+        return (month, (weights_rs.T @ data.xret).astype(np.float32))
 
     # ROOT lines 57-59: parallel computation
     lst = Parallel(n_jobs=n_jobs, verbose=0)(
         delayed(monthly_rets)(month) for month in range(start, end+1)
     )
 
-    # ROOT lines 62-70: assemble DataFrames
-    f_nors = pd.concat([x[2] for x in lst], axis=1).T
+    # ROOT lines 62-70: assemble DataFrame
     f_rs = pd.concat([x[1] for x in lst], axis=1).T
-    f_nors["month"] = [x[0] for x in lst]
-    f_nors.sort_values(by="month", inplace=True)
-    f_nors.set_index("month", inplace=True)
     f_rs["month"] = [x[0] for x in lst]
     f_rs.sort_values(by="month", inplace=True)
     f_rs.set_index("month", inplace=True)
 
-    return f_rs, f_nors
+    return f_rs
 
 
 # =============================================================================
@@ -234,7 +228,7 @@ def factors(panel, W, n_jobs, start, end, model, chars):
 # Takes alpha_lst which is ALREADY SCALED by nfeatures from the caller.
 # (Root main_revised.py line 228: dkkm.mve_data(..., nfeatures*alpha, ...))
 #
-# When include_mkt:
+# Always includes market factor (noipca2 simplification):
 #   - For alpha=0: standard ridge on full X (including market column)
 #   - For alpha>0: augment X to avoid penalizing market column
 #     Augmentation: sqrt(360*alph) * I[:-1] — penalty only on non-market features
@@ -242,7 +236,7 @@ def factors(panel, W, n_jobs, start, end, model, chars):
 # The effective penalty is 360 * alpha_value, where alpha_value = nfeatures * alpha
 # from the caller. So total = 360 * nfeatures * alpha.
 # =============================================================================
-def mve_data(f, month, alpha_lst, mkt_rf=None):
+def mve_data(f, month, alpha_lst, mkt_rf):
     """
     Compute mean-variance efficient portfolio from factor returns.
 
@@ -252,55 +246,47 @@ def mve_data(f, month, alpha_lst, mkt_rf=None):
         f: DataFrame of factor returns
         month: Current month
         alpha_lst: Array of ridge penalties (ALREADY SCALED by nfeatures from caller)
-        mkt_rf: Market return Series (if including market)
+        mkt_rf: Market return Series (always required - market always included)
 
     Returns:
         DataFrame of portfolio weights (columns = alpha values)
     """
     # ROOT line 163: past 360 months of factor returns
     X = f.loc[month-360:month-1].dropna().to_numpy()
-    include_mkt = mkt_rf is not None
 
-    # ROOT lines 166-167: append market returns column
-    if include_mkt:
-        X = np.column_stack((X, mkt_rf.loc[month-360:month-1].dropna().to_numpy()))
+    # ROOT lines 166-167: append market returns column (always)
+    X = np.column_stack((X, mkt_rf.loc[month-360:month-1].dropna().to_numpy()))
 
     # ROOT line 169: target = ones (maximize expected return)
     y = np.ones(len(X))
-    index_cols = list(f.columns) + (['mkt_rf'] if include_mkt else [])
+    index_cols = list(f.columns) + ['mkt_rf']
 
     # ROOT lines 172-193: compute betas for each alpha
+    # Handle market (don't penalize last variable)
     betas_list = []
 
-    if include_mkt:
-        # ROOT lines 174-184: handle market (don't penalize last variable)
-        # For alpha=0: standard ridge
-        beta = ridge_regr(X, y, None, np.array([0]))  # shape (p_, 1)
-        betas_list.append(beta.reshape(-1))
+    # For alpha=0: standard ridge
+    beta = ridge_regr(X, y, None, np.array([0]))  # shape (p_, 1)
+    betas_list.append(beta.reshape(-1))
 
-        for alph in alpha_lst:
-            if alph > 0:
-                # ROOT lines 179-183: augment to avoid penalizing market
-                # Augmentation adds sqrt(360*alph) penalty rows for all vars except last
-                X_aug = np.concatenate(
-                    (X, np.sqrt(360 * alph) * np.eye(X.shape[1])[:-1]),
-                    axis=0
-                )
-                y_aug = np.concatenate([y, np.zeros((X.shape[1] - 1,))])
+    for alph in alpha_lst:
+        if alph > 0:
+            # ROOT lines 179-183: augment to avoid penalizing market
+            # Augmentation adds sqrt(360*alph) penalty rows for all vars except last
+            X_aug = np.concatenate(
+                (X, np.sqrt(360 * alph) * np.eye(X.shape[1])[:-1]),
+                axis=0
+            )
+            y_aug = np.concatenate([y, np.zeros((X.shape[1] - 1,))])
 
-                beta = ridge_regr(X_aug, y_aug, None, np.array([0]))  # shape (p_, 1)
-                betas_list.append(beta.reshape(-1))
+            beta = ridge_regr(X_aug, y_aug, None, np.array([0]))  # shape (p_, 1)
+            betas_list.append(beta.reshape(-1))
 
-        # ROOT line 187: assemble DataFrame
-        betas_df = pd.DataFrame(
-            np.column_stack(betas_list),
-            index=index_cols,
-            columns=alpha_lst
-        )
-
-    else:
-        # ROOT lines 189-192: standard ridge for all alphas at once
-        betas = ridge_regr(X, y, None, alpha_lst)  # shape (p_, len(alpha_lst))
-        betas_df = pd.DataFrame(betas, index=index_cols, columns=alpha_lst)
+    # ROOT line 187: assemble DataFrame
+    betas_df = pd.DataFrame(
+        np.column_stack(betas_list),
+        index=index_cols,
+        columns=alpha_lst
+    )
 
     return betas_df

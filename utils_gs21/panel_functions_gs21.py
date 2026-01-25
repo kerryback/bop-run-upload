@@ -13,7 +13,7 @@ from config import (
     GS21_BURNIN as burnin
 )
 from .sdf_compute_gs21 import *
-from .loadings_compute_gs21 import *
+# from .loadings_compute_gs21 import *
 
 # function to generate Gomes Schmid 2021 panel with N firms and T periods
 def create_arrays(N, T):
@@ -211,10 +211,10 @@ def create_arrays(N, T):
 
     
     
-    loadings_x_taylor = loadings_Taylor(k, b, x, z, cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, N)
-    loadings_x_proj = loadings_projection(k, b, x, z, cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, N, T)
+    # loadings_x_taylor = loadings_Taylor(k, b, x, z, cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, N)
+    # loadings_x_proj = loadings_projection(k, b, x, z, cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, N, T)
 
-    arr_tuple = k, b, x, z,cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, loadings_x_taylor, loadings_x_proj 
+    arr_tuple = k, b, x, z,cutoff, eta, P, P_ex, erets, rets, op_cashflow, default 
     #sdf_loop = sdf_compute(N, T, arr_tuple)
     #var = sdf_loop(10)[-1]
     #print(np.mean(invest))
@@ -227,7 +227,7 @@ def create_arrays(N, T):
 
 def create_panel(N, T, arr_tuple):
 
-    book, debt, x, z,cutoff, eta, P, P_ex, erets, rets, op_cashflow, default, A_x_taylor, A_x_proj = arr_tuple
+    book, debt, x, z,cutoff, eta, P, P_ex, erets, rets, op_cashflow, default = arr_tuple
     
     P = P_ex
     df = pd.DataFrame(

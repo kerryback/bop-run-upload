@@ -61,15 +61,12 @@ def set_jgsrc1_config():
 
 KEEP_PANEL = True
 KEEP_MOMENTS = True
+KEEP_WEIGHTS = True
 
 # =============================================================================
 # DKKM AND FAMA PARAMETERS
 # ROOT: main_revised.py lines 11-20
 # =============================================================================
-
-# ROOT: main_revised.py line 11: include_market = False
-# OVERRIDE: Keep True for noipca2 (user preference)
-INCLUDE_MKT = True
 
 # ROOT: main_revised.py line 12: nmat = 1
 NMAT = 1
@@ -79,10 +76,6 @@ N_DKKM_FEATURES_LIST = [6, 36, 360]
 
 # ROOT: main_revised.py line 14: max_features = max(nfeatures_lst)
 MAX_FEATURES = max(N_DKKM_FEATURES_LIST)
-
-# Which version of RFF features to use for portfolio stats
-# ROOT uses f_rs (rank-standardized) — see main_revised.py generate_rff_panel
-DKKM_RANK_STANDARDIZE = True
 
 # ROOT: main_revised.py line 15: alpha_lst_fama = [0]
 ALPHA_LST_FAMA = [0]
@@ -245,11 +238,9 @@ def get_model_config(model_name):
         'chars': MODEL_CHARS[model_name],
         'factor_names': MODEL_FACTOR_NAMES[model_name],
         'n_jobs': N_JOBS,
-        'include_mkt': INCLUDE_MKT,
         'nmat': NMAT,
         'max_features': MAX_FEATURES,
         'n_dkkm_features_list': N_DKKM_FEATURES_LIST,
-        'dkkm_rank_standardize': DKKM_RANK_STANDARDIZE,
         'alpha_lst_fama': ALPHA_LST_FAMA,
         'alpha_lst': MODEL_ALPHA_LST[model_name],
     }

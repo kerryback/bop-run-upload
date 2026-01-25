@@ -7,7 +7,7 @@ from scipy import interpolate
 from scipy.stats import expon
 from .vasicek import *
 from .sdf_compute_bgn import *
-from .loadings_compute_bgn import *
+# from .loadings_compute_bgn import *
 from config import (
     PI as pi, RBAR as rbar, KAPPA as kappa, SIGMA_R as sigma_r,
     BETA_ZR as beta_zr, SIGMA_Z as sigma_z, CBAR as Cbar,
@@ -187,15 +187,15 @@ def create_arrays(N, T):
     eret = eret[:T, :]  # only keep first T rows
 
     # compute loadings for BGN latent factor model
-    loadings_mu_taylor, loadings_xi_taylor = loadings_Taylor(r, P, A, chi, sigmaj, corr_zj, T, N)
-    loadings_mu_proj, loadings_xi_proj = loadings_projection(r, P, A, chi, sigmaj, corr_zj, T, N)
+    # loadings_mu_taylor, loadings_xi_taylor = loadings_Taylor(r, P, A, chi, sigmaj, corr_zj, T, N)
+    # loadings_mu_proj, loadings_xi_proj = loadings_projection(r, P, A, chi, sigmaj, corr_zj, T, N)
 
-    return r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow, loadings_mu_taylor, loadings_xi_taylor, loadings_mu_proj, loadings_xi_proj
+    return r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow
 
 
 def create_panel(N, T, arr_tuple):
 
-    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow, loadings_mu_taylor, loadings_xi_taylor, loadings_mu_proj, loadings_xi_proj = arr_tuple
+    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow = arr_tuple
     r = pd.DataFrame(
         {
             "month": range(1, T),

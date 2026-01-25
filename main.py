@@ -6,6 +6,7 @@ Runs the complete workflow for a range of panel identifiers:
 2. Calculate SDF moments
 3. Compute Fama factors
 4. Compute DKKM factors (all nfeatures in one run — matches root approach)
+5. Compute portfolio statistics (parallelized month loop)
 
 Usage:
     python main.py [model] [start] [end] [--koyeb]
@@ -70,6 +71,7 @@ TEMP_DIR = config.TEMP_DIR
 N_DKKM_FEATURES_LIST = config.N_DKKM_FEATURES_LIST
 KEEP_PANEL = config.KEEP_PANEL
 KEEP_MOMENTS = config.KEEP_MOMENTS
+KEEP_WEIGHTS = config.KEEP_WEIGHTS
 
 # S3 upload support
 S3_CONFIGURED = bool(os.environ.get('AWS_ACCESS_KEY_ID'))
@@ -115,9 +117,11 @@ def run_workflow_for_index(panel_id):
 
     Steps:
     1. Generate panel → {model}_{id}_panel.pkl
-    2. Calculate SDF moments → {model}_{id}_moments.pkl
-    3. Compute Fama factors → {model}_{id}_fama.pkl
-    4. Compute DKKM factors (all nfeatures at once) → {model}_{id}_dkkm_*.pkl
+    2. Compute Fama factors → {model}_{id}_fama.pkl
+    3. Compute DKKM factors (all nfeatures at once) → {model}_{id}_dkkm.pkl
+    4. Estimate SDFs (compute stock weights) → {model}_{id}_weights.pkl
+    5. Calculate SDF moments → {model}_{id}_moments.pkl
+    6. Evaluate SDFs (compute stats) → {model}_{id}_portfolio_stats.pkl
     """
     full_panel_id = f"{model}_{panel_id}"
 
@@ -135,38 +139,46 @@ def run_workflow_for_index(panel_id):
     )
     upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
 
-    # Step 2: Calculate SDF moments
+    # Step 2: Fama factors
+    timings['fama'] = run_script(
+        "utils/generate_fama_factors.py",
+        [full_panel_id],
+        "STEP 2: Computing Fama-French and Fama-MacBeth factors"
+    )
+    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_fama.pkl"))
+
+    # Step 3: DKKM factors (all nfeatures in one run — matches root approach)
+    timings['dkkm'] = run_script(
+        "utils/generate_dkkm_factors.py",
+        [full_panel_id],
+        f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})"
+    )
+    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_dkkm.pkl"))
+
+    # Step 4: Estimate SDFs (compute stock weights via ridge regression)
+    timings['estimate'] = run_script(
+        "utils/estimate_sdfs.py",
+        [full_panel_id],
+        "STEP 4: Estimating SDFs (computing stock weights)"
+    )
+    if KEEP_WEIGHTS:
+        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_weights.pkl"))
+
+    # Step 5: Calculate SDF moments
     timings['moments'] = run_script(
         "utils/calculate_moments.py",
         [full_panel_id],
-        "STEP 2: Calculating SDF conditional moments"
+        "STEP 5: Calculating SDF conditional moments"
     )
     upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
 
-    # Step 3: Fama factors
-    timings['fama'] = run_script(
-        "utils/run_fama.py",
+    # Step 6: Evaluate SDFs (compute portfolio statistics)
+    timings['evaluate'] = run_script(
+        "utils/evaluate_sdfs.py",
         [full_panel_id],
-        "STEP 3: Computing Fama-French and Fama-MacBeth factors"
+        "STEP 6: Evaluating SDFs (computing statistics)"
     )
-    fama_file = os.path.join(DATA_DIR, f"{full_panel_id}_fama.pkl")
-    upload_file(fama_file)
-
-    # Step 4: DKKM factors (all nfeatures in one run — matches root approach)
-    # ROOT: main_revised.py generates max_features once, then subsets for each nfeatures
-    # noipca2/run_dkkm.py does the same: one W matrix, all nfeatures evaluated
-    timings['dkkm'] = run_script(
-        "utils/run_dkkm.py",
-        [full_panel_id],
-        f"STEP 4: Computing DKKM factors (all nfeatures: {N_DKKM_FEATURES_LIST})"
-    )
-
-    # Upload all DKKM output files
-    for nfeatures in N_DKKM_FEATURES_LIST:
-        dkkm_file = os.path.join(DATA_DIR, f"{full_panel_id}_dkkm_{nfeatures}.pkl")
-        upload_file(dkkm_file)
-    dkkm_all_file = os.path.join(DATA_DIR, f"{full_panel_id}_dkkm.pkl")
-    upload_file(dkkm_all_file)
+    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_portfolio_stats.pkl"))
 
     # Cleanup
     if not KEEP_MOMENTS:
@@ -181,16 +193,24 @@ def run_workflow_for_index(panel_id):
             os.remove(panel_file)
             print(f"[CLEANUP] Deleted panel file")
 
+    if not KEEP_WEIGHTS:
+        weights_file = os.path.join(DATA_DIR, f"{full_panel_id}_weights.pkl")
+        if os.path.exists(weights_file):
+            os.remove(weights_file)
+            print(f"[CLEANUP] Deleted weights file")
+
     # Summary
     total = sum(timings.values())
     print(f"\n{'='*70}")
     print(f"WORKFLOW COMPLETE FOR {full_panel_id.upper()}")
     print(f"{'='*70}")
-    print(f"  1. Panel:   {timings['panel']:7.1f}s ({timings['panel']/60:.1f}min)")
-    print(f"  2. Moments: {timings['moments']:7.1f}s ({timings['moments']/60:.1f}min)")
-    print(f"  3. Fama:    {timings['fama']:7.1f}s ({timings['fama']/60:.1f}min)")
-    print(f"  4. DKKM:    {timings['dkkm']:7.1f}s ({timings['dkkm']/60:.1f}min)")
-    print(f"  Total:      {total:7.1f}s ({total/60:.1f}min)")
+    print(f"  1. Panel:         {timings['panel']:7.1f}s ({timings['panel']/60:.1f}min)")
+    print(f"  2. Fama:          {timings['fama']:7.1f}s ({timings['fama']/60:.1f}min)")
+    print(f"  3. DKKM:          {timings['dkkm']:7.1f}s ({timings['dkkm']/60:.1f}min)")
+    print(f"  4. Estimate:      {timings['estimate']:7.1f}s ({timings['estimate']/60:.1f}min)")
+    print(f"  5. Moments:       {timings['moments']:7.1f}s ({timings['moments']/60:.1f}min)")
+    print(f"  6. Evaluate:      {timings['evaluate']:7.1f}s ({timings['evaluate']/60:.1f}min)")
+    print(f"  Total:            {total:7.1f}s ({total/60:.1f}min)")
 
 
 def delete_koyeb_service():
