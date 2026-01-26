@@ -19,9 +19,9 @@ import os
 
 N = 1000   # Number of firms
 T = 720    # Number of time periods (excluding burnin)
-BGN_BURNIN = 200   # ROOT: parameters.py line 12: burnin = 200
-KP14_BURNIN = 200
-GS21_BURNIN = 200
+BGN_BURNIN = 500   # ROOT: parameters.py line 12: burnin = 200
+KP14_BURNIN = 500
+GS21_BURNIN = 500
 N_JOBS = 24   # ROOT: main_revised.py line 20: n_jobs = 10
 
 # =============================================================================
@@ -72,7 +72,7 @@ KEEP_WEIGHTS = True
 NMAT = 20
 
 # ROOT: main_revised.py line 13: nfeatures_lst = [6, 36, 360, 3600]
-N_DKKM_FEATURES_LIST = [18000]
+N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
 
 # ROOT: main_revised.py line 14: max_features = max(nfeatures_lst)
 MAX_FEATURES = max(N_DKKM_FEATURES_LIST)
