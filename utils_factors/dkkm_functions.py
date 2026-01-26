@@ -36,18 +36,26 @@ def rank_standardize(arr):
     DKKM rank-based standardization.
 
     ROOT: dkkm_functions.py lines 10-13
-    Uses pandas .rank(axis=0) which handles DataFrames naturally.
     Formula: (ranks - 0.5) / N - 0.5
 
+    Uses numpy argsort instead of pandas .rank() for speed.
+    Produces ordinal ranks (ties broken by position), which is equivalent
+    to pandas method='average' when data is continuous with no ties.
+
     Args:
-        arr: DataFrame or Series to rank-standardize
+        arr: DataFrame to rank-standardize
 
     Returns:
-        Rank-standardized DataFrame/Series (values in ~[-0.5, 0.5])
+        Rank-standardized DataFrame (values in ~[-0.5, 0.5])
     """
-    ranks = arr.rank(axis=0)
-    ranks = (ranks - 0.5) / len(ranks) - 0.5
-    return ranks
+    values = arr.values
+    n = values.shape[0]
+    order = np.argsort(values, axis=0, kind='quicksort')
+    ranks = np.empty_like(values, dtype=np.float64)
+    col_idx = np.arange(values.shape[1])
+    ranks[order, col_idx] = np.arange(1, n + 1, dtype=np.float64).reshape(-1, 1)
+    ranks = (ranks - 0.5) / n - 0.5
+    return pd.DataFrame(ranks, index=arr.index, columns=arr.columns)
 
 
 # =============================================================================

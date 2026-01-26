@@ -147,7 +147,8 @@ def run_workflow_for_index(panel_id):
         [model, str(panel_id)],
         f"STEP 1: Generating {model.upper()} panel data (index={panel_id})"
     )
-    upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
+    if KEEP_PANEL:
+        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
 
     # Step 2: Fama factors
     timings['fama'] = run_script(
@@ -155,7 +156,7 @@ def run_workflow_for_index(panel_id):
         [full_panel_id],
         "STEP 2: Computing Fama-French and Fama-MacBeth factors"
     )
-    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_fama.pkl"))
+    # Factor files not uploaded to S3
 
     # Step 3: DKKM factors (all nfeatures in one run — matches root approach)
     timings['dkkm'] = run_script(
@@ -163,7 +164,7 @@ def run_workflow_for_index(panel_id):
         [full_panel_id],
         f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})"
     )
-    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_dkkm.pkl"))
+    # DKKM factor file not uploaded to S3
 
     # Step 4: Estimate SDFs (compute stock weights via ridge regression)
     timings['estimate'] = run_script(
@@ -180,7 +181,8 @@ def run_workflow_for_index(panel_id):
         [full_panel_id],
         "STEP 5: Calculating SDF conditional moments"
     )
-    upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
+    if KEEP_MOMENTS:
+        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
 
     # Step 6: Evaluate SDFs (compute portfolio statistics)
     timings['evaluate'] = run_script(
