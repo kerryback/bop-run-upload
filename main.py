@@ -97,6 +97,14 @@ def upload_file(filepath):
     _upload(filepath)
 
 
+class ScriptError(Exception):
+    """Raised when a subprocess script fails."""
+    def __init__(self, script_name, returncode):
+        self.script_name = script_name
+        self.returncode = returncode
+        super().__init__(f"{script_name} failed with return code {returncode}")
+
+
 def run_script(script_name, args, description):
     """Run a Python script as subprocess."""
     print(f"\n{'='*70}")
@@ -118,7 +126,7 @@ def run_script(script_name, args, description):
 
     if process.returncode != 0:
         print(f"\n[ERROR] {script_name} failed with return code {process.returncode}")
-        sys.exit(1)
+        raise ScriptError(script_name, process.returncode)
 
     return elapsed
 
@@ -325,7 +333,25 @@ if __name__ == "__main__":
 
     # Run workflow for each index
     for idx in range(start_idx, end_idx):
-        run_workflow_for_index(idx)
+        try:
+            run_workflow_for_index(idx)
+        except Exception as e:
+            import traceback
+            crash_tb = traceback.format_exc()
+            print(f"\n[CRASH] Workflow failed for index {idx}:\n{crash_tb}")
+
+            # Upload crash report to S3 for diagnosis
+            crash_file = os.path.join(DATA_DIR, f"{model}_{idx}_crash.pkl")
+            with open(crash_file, 'wb') as f:
+                pickle.dump({
+                    'error': str(e),
+                    'type': type(e).__name__,
+                    'traceback': crash_tb,
+                    'timestamp': now(),
+                }, f)
+            upload_file(crash_file)
+            print(f"[CRASH] Crash report uploaded to S3")
+            sys.exit(1)
 
     # Final summary
     total_time = time.time() - overall_start
