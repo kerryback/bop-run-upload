@@ -3,10 +3,11 @@ noipca2 - Master Orchestration Script
 
 Runs the complete workflow for a range of panel identifiers:
 1. Generate panel data
-2. Calculate SDF moments
-3. Compute Fama factors
-4. Compute DKKM factors (all nfeatures in one run — matches root approach)
-5. Compute portfolio statistics (parallelized month loop)
+2. Compute Fama factors (FF and FM)
+3. Compute DKKM factors (all nfeatures in one run)
+4. Estimate SDFs (compute stock weights via ridge regression)
+5. Calculate SDF moments
+6. Evaluate SDFs (compute portfolio statistics)
 
 Usage:
     python main.py [model] [start] [end] [--koyeb]

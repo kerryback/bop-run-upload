@@ -1,5 +1,5 @@
 """
-SDF estimation: compute stock weights for Fama and DKKM methods.
+SDF estimation: compute stock weights for Fama, CAPM, and DKKM methods.
 
 This script computes the weights_on_stocks for each method/alpha combination
 by running ridge regression on factor returns and combining with factor weights.
@@ -9,7 +9,7 @@ Does NOT require moments data - only needs panel, fama factors, and dkkm factors
 Output: {panel_id}_weights.pkl containing stock weights per month for each method.
 
 Usage:
-    python estimate_sdf.py [panel_id] [--config CONFIG_MODULE]
+    python estimate_sdfs.py [panel_id] [--config CONFIG_MODULE]
 """
 
 import sys

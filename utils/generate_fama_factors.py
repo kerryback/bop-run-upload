@@ -7,10 +7,10 @@ Computes:
 1. FF factor returns (Fama-French sorted portfolios)
 2. FM factor returns (Fama-MacBeth cross-sectional regression)
 
-Portfolio statistics are computed separately by run_portfolio_stats.py
+Portfolio statistics are computed separately by evaluate_sdfs.py
 
 Usage:
-    python run_fama.py [panel_id] [--config CONFIG_MODULE]
+    python generate_fama_factors.py [panel_id] [--config CONFIG_MODULE]
 """
 
 import sys

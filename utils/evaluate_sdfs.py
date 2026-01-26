@@ -1,13 +1,13 @@
 """
 SDF evaluation: compute portfolio statistics using pre-computed weights.
 
-This script loads the stock weights from estimate_sdf.py and the moments
+This script loads the stock weights from estimate_sdfs.py and the moments
 from calculate_moments.py, then computes mean, stdev, xret for each method.
 
 Output: {panel_id}_portfolio_stats.pkl containing fama_stats and dkkm_stats DataFrames.
 
 Usage:
-    python evaluate_sdf.py [panel_id] [--config CONFIG_MODULE]
+    python evaluate_sdfs.py [panel_id] [--config CONFIG_MODULE]
 """
 
 import sys

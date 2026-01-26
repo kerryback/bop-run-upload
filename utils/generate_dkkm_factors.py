@@ -7,7 +7,7 @@ This script implements the root's approach:
 1. Generate ONE large W matrix of shape (max_features/2, nchars)
 2. Compute factor returns for ALL max_features features at once
 
-Portfolio statistics are computed separately by run_portfolio_stats.py
+Portfolio statistics are computed separately by evaluate_sdfs.py
 
 CRITICAL DIFFERENCE FROM noipca/utils/run_dkkm.py:
   noipca generates a SEPARATE W matrix for each nfeatures value.
@@ -16,7 +16,7 @@ CRITICAL DIFFERENCE FROM noipca/utils/run_dkkm.py:
   the first 6 features of nfeatures=3600.
 
 Usage:
-    python run_dkkm.py [panel_id] [--config CONFIG_MODULE]
+    python generate_dkkm_factors.py [panel_id] [--config CONFIG_MODULE]
 """
 
 import sys
