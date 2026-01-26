@@ -99,9 +99,10 @@ def upload_file(filepath):
 
 class ScriptError(Exception):
     """Raised when a subprocess script fails."""
-    def __init__(self, script_name, returncode):
+    def __init__(self, script_name, returncode, output_tail=""):
         self.script_name = script_name
         self.returncode = returncode
+        self.output_tail = output_tail
         super().__init__(f"{script_name} failed with return code {returncode}")
 
 
@@ -115,18 +116,23 @@ def run_script(script_name, args, description):
     start_time = time.time()
 
     # Use Popen with PIPE to handle TeeOutput (which lacks fileno())
+    # Keep last 100 lines for crash reporting
+    output_lines = []
     process = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     for line in process.stdout:
         print(line, end='')
+        output_lines.append(line)
+        if len(output_lines) > 100:
+            output_lines.pop(0)
     process.wait()
 
     elapsed = time.time() - start_time
 
     if process.returncode != 0:
         print(f"\n[ERROR] {script_name} failed with return code {process.returncode}")
-        raise ScriptError(script_name, process.returncode)
+        raise ScriptError(script_name, process.returncode, "".join(output_lines))
 
     return elapsed
 
@@ -347,6 +353,7 @@ if __name__ == "__main__":
                     'error': str(e),
                     'type': type(e).__name__,
                     'traceback': crash_tb,
+                    'output_tail': getattr(e, 'output_tail', ''),
                     'timestamp': now(),
                 }, f)
             upload_file(crash_file)
