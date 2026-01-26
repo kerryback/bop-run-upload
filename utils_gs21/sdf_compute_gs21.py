@@ -190,7 +190,7 @@ def integ_zi_zj_x(N, Pi, i_cutoff, bi, zi, eta, x, n = 10):
     return ERR
 
 def sdf_compute(N, T, arr_tuple):
-    k, b, x, z, cutoff, eta, P, P_ex, eret, ret, op_cashflow, default, loadings_x_taylor, loadings_x_proj = arr_tuple
+    k, b, x, z, cutoff, eta, P, P_ex, eret, ret, op_cashflow, default = arr_tuple
     def sdf_loop(t, iter):
         t = t+1
         ER = np.zeros((N+1, N+1))

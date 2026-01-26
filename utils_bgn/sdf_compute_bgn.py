@@ -128,7 +128,7 @@ interp_integ_optvalexpy = integ_expy(integrand_optval, y_pts)
 
 
 def sdf_compute(N, T, arr_tuple):
-    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow, loadings_mu_taylor, loadings_xi_taylor, loadings_mu_proj, loadings_xi_proj  = arr_tuple
+    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow = arr_tuple
 
     # precompute some of the integrals to be used below
 
