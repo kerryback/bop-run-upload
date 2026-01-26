@@ -161,6 +161,14 @@ def run_workflow_for_index(panel_id):
     )
     upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl"))
 
+    # Diagnostic checkpoint: upload a trivial file to S3 to confirm process is alive
+    checkpoint_file = os.path.join(DATA_DIR, f"{full_panel_id}_checkpoint.pkl")
+    with open(checkpoint_file, 'wb') as f:
+        pickle.dump({'status': 'pre_fama', 'timestamp': now()}, f)
+    upload_file(checkpoint_file)
+    os.remove(checkpoint_file)
+    print(f"[CHECKPOINT] Pre-fama checkpoint uploaded at {now()}")
+
     # Step 2: Fama factors
     timings['fama'] = run_script(
         "utils/generate_fama_factors.py",

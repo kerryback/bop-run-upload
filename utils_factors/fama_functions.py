@@ -164,7 +164,7 @@ def fama_macbeth(data, chars, **kwargs):
         P.columns = ["smb", "hml", "umd"]
 
     # ROOT line 95: equal-weighted market portfolio
-    P['mkt_rf'] = 1 / len(data)
+    P['mkt_rf'] = 1 / len(d)
 
     # Reindex to original data shape so dimensions match rets in caller
     P = P.reindex(data.index, fill_value=0)
