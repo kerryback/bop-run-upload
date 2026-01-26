@@ -46,7 +46,9 @@ def fama_french(data, chars, **kwargs):
     factor_dct = {}
 
     # ROOT lines 13-16: determine factor names based on number of chars
-    if len(chars) == 5:
+    if len(chars) == 6:
+        names = ["smb", "hml", "cma", "rmw", "umd", "mkt_lev"]
+    elif len(chars) == 5:
         names = ["smb", "hml", "cma", "rmw", "umd"]
     else:
         names = ["smb", "hml", "umd"]
@@ -154,7 +156,9 @@ def fama_macbeth(data, chars, **kwargs):
     P *= 2 / P.abs().sum()
 
     # ROOT lines 89-92: set column names
-    if len(chars) == 5:
+    if len(chars) == 6:
+        P.columns = ["smb", "hml", "cma", "rmw", "umd", "mkt_lev"]
+    elif len(chars) == 5:
         P.columns = ["smb", "hml", "cma", "rmw", "umd"]
     else:
         P.columns = ["smb", "hml", "umd"]

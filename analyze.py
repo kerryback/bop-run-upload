@@ -326,7 +326,7 @@ def create_fama_boxplots(fama_df: pd.DataFrame, model: str):
         ax.set_xticks(positions)
         ax.set_xticklabels(labels, rotation=45, ha='right')
     else:
-        bp = ax.boxplot(boxplot_data, labels=labels, patch_artist=True)
+        bp = ax.boxplot(boxplot_data, tick_labels=labels, patch_artist=True)
         for patch in bp['boxes']:
             patch.set_facecolor('lightblue')
         plt.xticks(rotation=45, ha='right')
@@ -374,7 +374,7 @@ def create_dkkm_boxplots(dkkm_df: pd.DataFrame, model: str):
         ax.set_xticks(positions)
         ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
     else:
-        bp = ax.boxplot(boxplot_data, labels=labels, patch_artist=True)
+        bp = ax.boxplot(boxplot_data, tick_labels=labels, patch_artist=True)
         for patch in bp['boxes']:
             patch.set_facecolor('lightblue')
         plt.xticks(rotation=45, ha='right', fontsize=8)
