@@ -198,13 +198,19 @@ else
 fi
 
 # Create the service
+# The run command:
+#   1. Starts a background log streamer (sends logs to monitor every 60s)
+#   2. Runs main.py with output tee'd to run.log
+#   3. Kills the background streamer when done
+#   4. Submits final logs to monitor
+#   5. Sends kill request to terminate the app
 echo "Creating Koyeb service..."
 koyeb services create worker \
   --app "$KOYEB_APP_NAME" \
   --type worker \
   --git "github.com/$GIT_REPO" \
   --git-branch "$GIT_BRANCH" \
-  --git-run-command "python main.py $MODEL $START $END --koyeb 2>&1 | tee run.log; python -c \"import requests, os; logs=open('run.log').read() if os.path.exists('run.log') else ''; requests.post(os.environ['MONITOR_URL']+'/submit-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'logs': logs})\"; curl -s -X POST \$MONITOR_URL/kill -H \"Content-Type: application/json\" -d \"{\\\"app_name\\\": \\\"\$KOYEB_APP_NAME\\\"}\"" \
+  --git-run-command "(while true; do sleep 60; python -c \"import requests, os; logs=open('run.log').read() if os.path.exists('run.log') else ''; requests.post(os.environ['MONITOR_URL']+'/submit-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'logs': logs})\" 2>/dev/null; done) & LOG_PID=\$!; python main.py $MODEL $START $END --koyeb 2>&1 | tee run.log; kill \$LOG_PID 2>/dev/null; python -c \"import requests, os; logs=open('run.log').read() if os.path.exists('run.log') else ''; requests.post(os.environ['MONITOR_URL']+'/submit-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'logs': logs})\"; curl -s -X POST \$MONITOR_URL/kill -H \"Content-Type: application/json\" -d \"{\\\"app_name\\\": \\\"\$KOYEB_APP_NAME\\\"}\"" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \
   --env MONITOR_URL="$MONITOR_URL" \
@@ -224,10 +230,11 @@ echo "=========================================="
 echo ""
 echo "The service will:"
 echo "  1. Build and deploy your code"
-echo "  2. Run: python main.py $MODEL $START $END --koyeb"
-echo "  3. Upload results to s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/"
-echo "  4. Submit run logs to the monitor"
-echo "  5. Auto-delete the app to stop billing"
+echo "  2. Start background log streamer (sends logs every 60s)"
+echo "  3. Run: python main.py $MODEL $START $END --koyeb"
+echo "  4. Upload results to s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/"
+echo "  5. Submit final logs to the monitor"
+echo "  6. Auto-delete the app to stop billing"
 echo ""
 echo "Monitor the service:"
 echo "  koyeb services get worker --app $KOYEB_APP_NAME --token \$KOYEB_API_TOKEN"
