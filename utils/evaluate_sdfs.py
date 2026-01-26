@@ -20,9 +20,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import time
 import importlib
 import pickle
+
+def fmt(s):
+    h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
+    return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
+
+def now():
+    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Parse optional --config argument
 config_module_name = 'config'
@@ -68,7 +76,7 @@ def main():
     print("="*70)
     print(f"Panel ID: {panel_id}")
     print(f"Model: {MODEL}")
-    print(f"Started at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+    print(f"Started at {now()}")
     print("="*70)
 
     # Load panel (needed for xret)
@@ -177,7 +185,7 @@ def main():
             })
 
     elapsed = time.time() - t0
-    print(f"[OK] Statistics computed for {n_months} months in {elapsed:.1f}s")
+    print(f"[OK] Statistics computed for {n_months} months in {fmt(elapsed)} at {now()}")
 
     # =========================================================================
     # CREATE OUTPUT DATAFRAMES
@@ -216,8 +224,8 @@ def main():
     print(f"\n{'='*70}")
     print("EVALUATION COMPLETE")
     print(f"{'='*70}")
-    print(f"Finished at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
-    print(f"Total runtime: {total_time:.1f}s ({total_time/60:.1f} minutes)")
+    print(f"Finished at {now()}")
+    print(f"Total runtime: {fmt(total_time)}")
     print(f"{'='*70}")
 
 

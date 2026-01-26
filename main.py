@@ -36,6 +36,15 @@ import subprocess
 import pickle
 from datetime import datetime
 
+# Format seconds as h:m:s
+def fmt(s):
+    h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
+    return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
+
+def now():
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
+
 # Add this directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -203,15 +212,15 @@ def run_workflow_for_index(panel_id):
     # Summary
     total = sum(timings.values())
     print(f"\n{'='*70}")
-    print(f"WORKFLOW COMPLETE FOR {full_panel_id.upper()}")
+    print(f"WORKFLOW COMPLETE FOR {full_panel_id.upper()} at {now()}")
     print(f"{'='*70}")
-    print(f"  1. Panel:         {timings['panel']:7.1f}s ({timings['panel']/60:.1f}min)")
-    print(f"  2. Fama:          {timings['fama']:7.1f}s ({timings['fama']/60:.1f}min)")
-    print(f"  3. DKKM:          {timings['dkkm']:7.1f}s ({timings['dkkm']/60:.1f}min)")
-    print(f"  4. Estimate:      {timings['estimate']:7.1f}s ({timings['estimate']/60:.1f}min)")
-    print(f"  5. Moments:       {timings['moments']:7.1f}s ({timings['moments']/60:.1f}min)")
-    print(f"  6. Evaluate:      {timings['evaluate']:7.1f}s ({timings['evaluate']/60:.1f}min)")
-    print(f"  Total:            {total:7.1f}s ({total/60:.1f}min)")
+    print(f"  1. Panel:    {fmt(timings['panel'])}")
+    print(f"  2. Fama:     {fmt(timings['fama'])}")
+    print(f"  3. DKKM:     {fmt(timings['dkkm'])}")
+    print(f"  4. Estimate: {fmt(timings['estimate'])}")
+    print(f"  5. Moments:  {fmt(timings['moments'])}")
+    print(f"  6. Evaluate: {fmt(timings['evaluate'])}")
+    print(f"  Total:       {fmt(total)}")
 
 
 def delete_koyeb_service():
@@ -274,7 +283,7 @@ if __name__ == "__main__":
     sys.stdout = TeeOutput(sys.__stdout__, log_fh)
     sys.stderr = TeeOutput(sys.__stderr__, log_fh)
 
-    print(f"Started at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+    print(f"Started at {now()}")
     print(f"\nConfiguration:")
     print(f"  Model: {model}")
     print(f"  Index range: {start_idx} to {end_idx-1} (inclusive)")
@@ -293,10 +302,9 @@ if __name__ == "__main__":
     # Final summary
     total_time = time.time() - overall_start
     print(f"\n{'='*70}")
-    print(f"ALL WORKFLOWS COMPLETE")
+    print(f"ALL WORKFLOWS COMPLETE at {now()}")
     print(f"{'='*70}")
-    print(f"Total runtime: {total_time:.1f}s ({total_time/60:.1f} minutes)")
-    print(f"Finished at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+    print(f"Total runtime: {fmt(total_time)}")
 
     # Koyeb auto-cleanup
     if koyeb_mode:

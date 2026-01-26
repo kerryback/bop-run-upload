@@ -23,9 +23,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import time
 import importlib
 import pickle
+
+def fmt(s):
+    h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
+    return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
+
+def now():
+    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Parse optional --config argument
 config_module_name = 'config'
@@ -116,7 +124,7 @@ def main():
     )
 
     elapsed = time.time() - t0
-    print(f"[OK] Fama factors computed in {elapsed:.1f}s")
+    print(f"[OK] Fama factors computed in {fmt(elapsed)} at {now()}")
     print(f"  FF returns: {ff_rets.shape}")
     print(f"  FM returns: {fm_rets.shape}")
 
@@ -139,7 +147,7 @@ def main():
 
     # Print runtime
     total_time = time.time() - start_time
-    print(f"\nTotal runtime: {total_time:.1f}s ({total_time/60:.1f} minutes)")
+    print(f"\nTotal runtime: {fmt(total_time)} at {now()}")
 
     factor_utils.print_script_footer(
         panel_id=panel_id,

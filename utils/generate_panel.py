@@ -29,7 +29,15 @@ import pandas as pd
 import pickle
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import importlib
+
+def fmt(s):
+    h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
+    return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
+
+def now():
+    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Add current directory and parent directory to path for imports
 # Parent directory is needed for temp_config files created by main.py
@@ -84,7 +92,7 @@ def main():
     print("="*70)
     print(f"Model: {model_name.upper()}")
     print(f"Identifier: {identifier}")
-    print(f"Started at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+    print(f"Started at {now()}")
     print("="*70)
 
     # Import appropriate panel generation module
@@ -186,8 +194,8 @@ def main():
     print(f"\n{'='*70}")
     print("GENERATION COMPLETE")
     print(f"{'='*70}")
-    print(f"Finished at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
-    print(f"Total runtime: {elapsed_time:.1f}s ({elapsed_time/60:.1f} minutes)")
+    print(f"Finished at {now()}")
+    print(f"Total runtime: {fmt(elapsed_time)}")
     print(f"\nOutput file: {panel_filename}")
     print(f"\nTo compute SDF moments:")
     print(f"  python calculate_moments.py {model_name}_{identifier}")

@@ -24,10 +24,18 @@ import os
 import numpy as np
 import pickle
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import time
 import gc
 from joblib import Parallel, delayed
 import importlib
+
+def fmt(s):
+    h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
+    return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
+
+def now():
+    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Add current directory and parent directory to path for imports
 # Parent directory is needed for temp_config files created by main.py
@@ -109,7 +117,7 @@ def main():
     print("="*70)
     print(f"Panel ID: {panel_id}")
     print(f"Model: {model_name}")
-    print(f"Started at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+    print(f"Started at {now()}")
     print("="*70)
 
     # Load panel data
@@ -206,7 +214,7 @@ def main():
 
     elapsed = time.time() - t0
     print(f"\n{'-'*70}")
-    print(f"[OK] All chunks computed in {elapsed:.1f}s ({elapsed/60:.1f} minutes)")
+    print(f"[OK] All chunks computed in {fmt(elapsed)} at {now()}")
 
     # Consolidate chunks into final moments dictionary
     print(f"\n{'-'*70}")
@@ -262,8 +270,8 @@ def main():
     print(f"\n{'='*70}")
     print("COMPUTATION COMPLETE")
     print(f"{'='*70}")
-    print(f"Finished at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
-    print(f"Total runtime: {total_time:.1f}s ({total_time/60:.1f} minutes)")
+    print(f"Finished at {now()}")
+    print(f"Total runtime: {fmt(total_time)}")
     print(f"\nOutput file: {output_file}")
     print(f"  Months: {start_month} to {end_month} ({len(moments)} total)")
     print(f"  Each month contains:")
