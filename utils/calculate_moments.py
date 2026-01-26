@@ -120,23 +120,32 @@ def main():
     print(f"Started at {now()}")
     print("="*70)
 
-    # Load panel data
-    panel_path = os.path.join(config.TEMP_DIR, f"{panel_id}_panel.pkl")
+    # Load arr_tuple as memory-mapped arrays.
+    # Each array was saved as a separate .npy file by generate_panel.py.
+    # np.load(mmap_mode='r') creates a read-only memory map: the OS pages in
+    # only the slices that sdf_compute accesses for each month (~40 MB),
+    # rather than loading all ~36 GB into RAM. Forked parallel workers share
+    # the same physical pages via copy-on-write.
+    arr_dir = os.path.join(config.TEMP_DIR, f"{panel_id}_arr")
 
-    if not os.path.exists(panel_path):
-        print(f"ERROR: Panel file not found at: {panel_path}")
-        print(f"\nPlease run generate_panel.py first to create the panel file.")
+    if not os.path.exists(arr_dir):
+        print(f"ERROR: arr_tuple directory not found at: {arr_dir}")
+        print(f"\nPlease run generate_panel.py first to create the arr_tuple files.")
         sys.exit(1)
 
-    print(f"\nLoading panel from {panel_path}...")
-    with open(panel_path, 'rb') as f:
-        arrays_data = pickle.load(f)
+    print(f"\nLoading arr_tuple (memmap) from {arr_dir}/ ...")
+    with open(os.path.join(arr_dir, 'metadata.pkl'), 'rb') as f:
+        metadata = pickle.load(f)
 
-    arr_tuple = arrays_data['arr_tuple']
-    N = arrays_data['N']
-    T = arrays_data['T']
+    N = metadata['N']
+    T = metadata['T']
 
-    print(f"Loaded arrays: N={N}, T={T}")
+    arr_tuple = tuple(
+        np.load(os.path.join(arr_dir, f'{i}.npy'), mmap_mode='r')
+        for i in range(metadata['n_arrays'])
+    )
+
+    print(f"Loaded {len(arr_tuple)} arrays as memmap: N={N}, T={T}")
 
     # Import appropriate SDF compute module and get burnin
     if model_name == 'bgn':

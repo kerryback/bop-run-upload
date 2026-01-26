@@ -151,17 +151,16 @@ def main():
         zero_bm_count = None
         print("\nWarning: 'bm' column not found, cannot count zero book-to-market")
 
-    # Save panel and arrays to temporary directory
+    # Save panel as pickle (small — ~200 MB, uploaded to S3)
     panel_filename = os.path.join(config.TEMP_DIR, f'{model_name}_{identifier}_panel.pkl')
 
     print(f"\n{'-'*70}")
-    print(f"Saving panel and arrays to {panel_filename}...")
+    print(f"Saving panel to {panel_filename}...")
     print(f"{'-'*70}")
 
     with open(panel_filename, 'wb') as f:
         pickle.dump({
             'panel': panel,
-            'arr_tuple': arr_tuple,
             'N': N,
             'T': T,
             'model': model_name,
@@ -171,7 +170,39 @@ def main():
             'burnin': burnin
         }, f)
 
-    print(f"[OK] Saved successfully")
+    print(f"[OK] Panel saved")
+
+    # Strip book and op_cashflow from kp14 arr_tuple (only needed for panel creation)
+    if model_name == 'kp14':
+        K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f = arr_tuple
+        arr_tuple = K, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f
+        del book, op_cashflow
+
+    # Save arr_tuple as individual .npy files for memory-mapped loading.
+    # Instead of pickling the full ~36 GB tuple (which forces calculate_moments
+    # to load everything into RAM), each array is saved separately with np.save.
+    # calculate_moments.py then loads them with np.load(mmap_mode='r'), which
+    # creates read-only memory-mapped arrays: the OS pages in only the slices
+    # that sdf_compute actually accesses (~40 MB per month), and forked worker
+    # processes share pages via copy-on-write. Total RAM drops from ~36 GB to
+    # the working set size.
+    arr_dir = os.path.join(config.TEMP_DIR, f'{model_name}_{identifier}_arr')
+    os.makedirs(arr_dir, exist_ok=True)
+
+    print(f"Saving arr_tuple arrays to {arr_dir}/ ...")
+    for i, arr in enumerate(arr_tuple):
+        np.save(os.path.join(arr_dir, f'{i}.npy'), np.asarray(arr))
+
+    with open(os.path.join(arr_dir, 'metadata.pkl'), 'wb') as f:
+        pickle.dump({
+            'n_arrays': len(arr_tuple),
+            'N': N,
+            'T': T,
+            'model': model_name,
+            'burnin': burnin
+        }, f)
+
+    print(f"[OK] arr_tuple saved ({len(arr_tuple)} arrays)")
 
     # Print summary statistics
     print(f"\n{'-'*70}")

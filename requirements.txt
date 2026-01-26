@@ -15,3 +15,4 @@ numba>=0.56.0
 
 # AWS S3 integration for result storage
 boto3>=1.26.0
+requests>=2.31.0

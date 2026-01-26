@@ -64,7 +64,7 @@ def discover_panels(model: str, results_dir: Path) -> List[int]:
     """
     Discover all available panel indices for a given model.
 
-    Scans results directory for files matching: {model}_{panel_idx}_portfolio_stats.pkl
+    Scans results directory for files matching: {model}_{panel_idx}_results.pkl
 
     Args:
         model: Model name ('bgn', 'kp14', 'gs21')
@@ -79,18 +79,18 @@ def discover_panels(model: str, results_dir: Path) -> List[int]:
         print(f"  WARNING: {results_dir} does not exist")
         return []
 
-    # Pattern: model_*_portfolio_stats.pkl
-    pattern = str(results_dir / f"{model}_*_portfolio_stats.pkl")
+    # Pattern: model_*_results.pkl
+    pattern = str(results_dir / f"{model}_*_results.pkl")
 
     for filepath in glob.glob(pattern):
         # Extract panel_idx from filename
-        filename = Path(filepath).stem  # "kp14_0_portfolio_stats"
+        filename = Path(filepath).stem  # "kp14_0_results"
         parts = filename.split('_')
 
-        # Format: model_panelid_portfolio_stats
-        if len(parts) >= 3 and parts[-1] == 'stats' and parts[-2] == 'portfolio':
+        # Format: model_panelid_results
+        if len(parts) >= 3 and parts[-1] == 'results':
             try:
-                panel_idx = int(parts[-3])
+                panel_idx = int(parts[-2])
                 panels.add(panel_idx)
             except ValueError:
                 continue
@@ -102,8 +102,8 @@ def load_and_process_fama(model: str, panels: List[int], results_dir: Path) -> p
     """
     Load Fama results and compute sharpe from the stored stats.
 
-    The fama_stats DataFrame from run_portfolio_stats.py contains:
-        month, method, alpha, stdev, mean, xret, sdf_ret
+    The fama_stats DataFrame from evaluate_sdfs.py contains:
+        month, method, alpha, stdev, mean, xret
 
     For each month: sharpe = mean / stdev
 
@@ -117,7 +117,7 @@ def load_and_process_fama(model: str, panels: List[int], results_dir: Path) -> p
     all_data = []
 
     for panel_id, panel_idx in enumerate(panels):
-        filename = f"{model}_{panel_idx}_portfolio_stats.pkl"
+        filename = f"{model}_{panel_idx}_results.pkl"
         stats_file = results_dir / filename
 
         if not stats_file.exists():
@@ -149,8 +149,8 @@ def load_and_process_dkkm(model: str, panels: List[int], results_dir: Path) -> p
     """
     Load DKKM results and compute sharpe from the stored stats.
 
-    The dkkm_stats DataFrame from run_portfolio_stats.py contains:
-        month, matrix, nfeatures, alpha, include_mkt, stdev, mean, xret, sdf_ret
+    The dkkm_stats DataFrame from evaluate_sdfs.py contains:
+        month, nfeatures, alpha, stdev, mean, xret
 
     Args:
         model: Model name
@@ -162,8 +162,8 @@ def load_and_process_dkkm(model: str, panels: List[int], results_dir: Path) -> p
     all_data = []
 
     for panel_id, panel_idx in enumerate(panels):
-        # Load from portfolio_stats.pkl
-        stats_file = results_dir / f"{model}_{panel_idx}_portfolio_stats.pkl"
+        # Load from results.pkl
+        stats_file = results_dir / f"{model}_{panel_idx}_results.pkl"
 
         if not stats_file.exists():
             continue

@@ -92,7 +92,7 @@ Et_A_G_down = lambda eps, u: (A_0 + A_2 * Et_um1(u))*Et_G_down(eps) + (A_1 + A_3
 
 # Covariance computations
 def sdf_compute(N, T, arr_tuple):
-    K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, ret, eret, lambda_f = arr_tuple
+    K, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, ret, eret, lambda_f = arr_tuple
 
     part1 = (C*rate*dt*Et_A_mod(eps) + Et_G)
 

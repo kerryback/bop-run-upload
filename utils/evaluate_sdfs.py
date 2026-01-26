@@ -4,7 +4,10 @@ SDF evaluation: compute portfolio statistics using pre-computed weights.
 This script loads the stock weights from estimate_sdfs.py and the moments
 from calculate_moments.py, then computes mean, stdev, xret for each method.
 
-Output: {panel_id}_portfolio_stats.pkl containing fama_stats and dkkm_stats DataFrames.
+Output: {panel_id}_results.pkl containing:
+  - fama_stats: DataFrame (month, method, alpha, stdev, mean, xret)
+  - dkkm_stats: DataFrame (month, nfeatures, alpha, stdev, mean, xret)
+  - returns: DataFrame (month, sdf_ret, mkt_rf)
 
 Usage:
     python evaluate_sdfs.py [panel_id] [--config CONFIG_MODULE]
@@ -127,6 +130,7 @@ def main():
 
     all_fama_results = []
     all_dkkm_results = []
+    all_returns = []
 
     n_months = 0
     for month in range(eval_start, eval_end + 1):
@@ -139,7 +143,7 @@ def main():
         w = all_weights[month]
         m = moments[month]
         firm_ids = w['firm_ids']
-        mkt_rf = w.get('mkt_rf', np.nan)  # Market excess return for this month
+        mkt_rf = w.get('mkt_rf', np.nan)
 
         # Get panel data for this month
         data = panel.loc[month]
@@ -149,6 +153,13 @@ def main():
         rp = m['rp'][firm_ids]
         stock_cov = m['cond_var'][firm_ids, :][:, firm_ids]
         sdf_ret = m['sdf_ret']
+
+        # Per-month returns (common across all methods)
+        all_returns.append({
+            'month': month,
+            'sdf_ret': sdf_ret,
+            'mkt_rf': mkt_rf,
+        })
 
         # Fama stats (includes ff, fm, capm)
         for (method_name, alpha), weights_on_stocks in w['fama'].items():
@@ -163,8 +174,6 @@ def main():
                 'stdev': stdev,
                 'mean': mean,
                 'xret': xret,
-                'sdf_ret': sdf_ret,
-                'mkt_rf': mkt_rf,
             })
 
         # DKKM stats
@@ -180,8 +189,6 @@ def main():
                 'stdev': stdev,
                 'mean': mean,
                 'xret': xret,
-                'sdf_ret': sdf_ret,
-                'mkt_rf': mkt_rf,
             })
 
     elapsed = time.time() - t0
@@ -192,10 +199,12 @@ def main():
     # =========================================================================
     fama_stats = pd.DataFrame(all_fama_results)
     dkkm_stats = pd.DataFrame(all_dkkm_results)
+    returns = pd.DataFrame(all_returns)
 
     print(f"\nResults:")
     print(f"  Fama stats: {len(fama_stats)} observations")
     print(f"  DKKM stats: {len(dkkm_stats)} observations")
+    print(f"  Returns: {len(returns)} months")
 
     # =========================================================================
     # SAVE RESULTS
@@ -203,6 +212,7 @@ def main():
     results = {
         'fama_stats': fama_stats,
         'dkkm_stats': dkkm_stats,
+        'returns': returns,
         'panel_id': panel_id,
         'model': MODEL,
         'chars': CHARS,
@@ -214,7 +224,7 @@ def main():
         'end': eval_end,
     }
 
-    output_file = os.path.join(config.DATA_DIR, f"{panel_id}_portfolio_stats.pkl")
+    output_file = os.path.join(config.DATA_DIR, f"{panel_id}_results.pkl")
     with open(output_file, 'wb') as f:
         pickle.dump(results, f)
     print(f"\n[OK] Results saved to: {output_file}")

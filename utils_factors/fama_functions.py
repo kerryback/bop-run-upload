@@ -152,7 +152,7 @@ def fama_macbeth(data, chars, **kwargs):
     P = X @ linalg.pinvh(X.T @ X)
 
     # ROOT lines 87-88: drop intercept column, normalize
-    P = pd.DataFrame(P[:, 1:])
+    P = pd.DataFrame(P[:, 1:], index=d.index)
     P *= 2 / P.abs().sum()
 
     # ROOT lines 89-92: set column names
@@ -165,6 +165,9 @@ def fama_macbeth(data, chars, **kwargs):
 
     # ROOT line 95: equal-weighted market portfolio
     P['mkt_rf'] = 1 / len(data)
+
+    # Reindex to original data shape so dimensions match rets in caller
+    P = P.reindex(data.index, fill_value=0)
 
     # ROOT line 97: return as numpy array
     return P.to_numpy()

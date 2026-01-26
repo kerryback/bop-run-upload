@@ -2,12 +2,13 @@
 noipca2 - Master Orchestration Script
 
 Runs the complete workflow for a range of panel identifiers:
-1. Generate panel data
-2. Compute Fama factors (FF and FM)
-3. Compute DKKM factors (all nfeatures in one run)
-4. Estimate SDFs (compute stock weights via ridge regression)
-5. Calculate SDF moments
-6. Evaluate SDFs (compute portfolio statistics)
+1.  Generate panel data
+1b. Generate 25 double-sorted portfolios (mve x bm)
+2.  Compute Fama factors (FF and FM)
+3.  Compute DKKM factors (all nfeatures in one run)
+4.  Estimate SDFs (compute stock weights via ridge regression)
+5.  Calculate SDF moments
+6.  Evaluate SDFs (compute portfolio statistics)
 
 Usage:
     python main.py [model] [start] [end] [--koyeb]
@@ -34,6 +35,7 @@ import os
 import time
 import subprocess
 import pickle
+import shutil
 from datetime import datetime
 
 # Format seconds as h:m:s
@@ -126,12 +128,13 @@ def run_workflow_for_index(panel_id):
     Run complete workflow for a single panel index.
 
     Steps:
-    1. Generate panel → {model}_{id}_panel.pkl
-    2. Compute Fama factors → {model}_{id}_fama.pkl
-    3. Compute DKKM factors (all nfeatures at once) → {model}_{id}_dkkm.pkl
-    4. Estimate SDFs (compute stock weights) → {model}_{id}_stock_weights.pkl
-    5. Calculate SDF moments → {model}_{id}_moments.pkl
-    6. Evaluate SDFs (compute stats) → {model}_{id}_portfolio_stats.pkl
+    1.  Generate panel → {model}_{id}_panel.pkl
+    1b. Generate 25 portfolios → {model}_{id}_25_portfolios.pkl
+    2.  Compute Fama factors → {model}_{id}_fama.pkl
+    3.  Compute DKKM factors (all nfeatures at once) → {model}_{id}_dkkm.pkl
+    4.  Estimate SDFs (compute stock weights) → {model}_{id}_stock_weights.pkl
+    5.  Calculate SDF moments → {model}_{id}_moments.pkl
+    6.  Evaluate SDFs (compute stats) → {model}_{id}_results.pkl
     """
     full_panel_id = f"{model}_{panel_id}"
 
@@ -149,6 +152,14 @@ def run_workflow_for_index(panel_id):
     )
     if KEEP_PANEL:
         upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
+
+    # Step 1b: Generate 25 portfolios
+    timings['25_portfolios'] = run_script(
+        "utils/generate_25_portfolios.py",
+        [full_panel_id],
+        "STEP 1b: Computing 25 double-sorted portfolios"
+    )
+    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl"))
 
     # Step 2: Fama factors
     timings['fama'] = run_script(
@@ -184,13 +195,19 @@ def run_workflow_for_index(panel_id):
     if KEEP_MOMENTS:
         upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
 
+    # arr_tuple is no longer needed after moments are computed
+    arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
+    if os.path.exists(arr_dir):
+        shutil.rmtree(arr_dir)
+        print(f"[CLEANUP] Deleted arr_tuple directory")
+
     # Step 6: Evaluate SDFs (compute portfolio statistics)
     timings['evaluate'] = run_script(
         "utils/evaluate_sdfs.py",
         [full_panel_id],
         "STEP 6: Evaluating SDFs (computing statistics)"
     )
-    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_portfolio_stats.pkl"))
+    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl"))
 
     # Cleanup
     if not KEEP_MOMENTS:
@@ -216,13 +233,14 @@ def run_workflow_for_index(panel_id):
     print(f"\n{'='*70}")
     print(f"WORKFLOW COMPLETE FOR {full_panel_id.upper()} at {now()}")
     print(f"{'='*70}")
-    print(f"  1. Panel:    {fmt(timings['panel'])}")
-    print(f"  2. Fama:     {fmt(timings['fama'])}")
-    print(f"  3. DKKM:     {fmt(timings['dkkm'])}")
-    print(f"  4. Estimate: {fmt(timings['estimate'])}")
-    print(f"  5. Moments:  {fmt(timings['moments'])}")
-    print(f"  6. Evaluate: {fmt(timings['evaluate'])}")
-    print(f"  Total:       {fmt(total)}")
+    print(f"  1.  Panel:      {fmt(timings['panel'])}")
+    print(f"  1b. Portfolios: {fmt(timings['25_portfolios'])}")
+    print(f"  2.  Fama:       {fmt(timings['fama'])}")
+    print(f"  3.  DKKM:       {fmt(timings['dkkm'])}")
+    print(f"  4.  Estimate:   {fmt(timings['estimate'])}")
+    print(f"  5.  Moments:    {fmt(timings['moments'])}")
+    print(f"  6.  Evaluate:   {fmt(timings['evaluate'])}")
+    print(f"  Total:          {fmt(total)}")
 
 
 def delete_koyeb_service():
