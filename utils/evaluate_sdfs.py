@@ -90,7 +90,7 @@ def main():
     panel, _, _ = factor_utils.prepare_panel(panel, CHARS)
 
     # Load weights
-    weights_path = os.path.join(config.DATA_DIR, f"{panel_id}_weights.pkl")
+    weights_path = os.path.join(config.DATA_DIR, f"{panel_id}_stock_weights.pkl")
     print(f"Loading weights from {weights_path}...")
     with open(weights_path, 'rb') as f:
         weights_data = pickle.load(f)

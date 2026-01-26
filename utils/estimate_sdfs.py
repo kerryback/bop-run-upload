@@ -6,7 +6,7 @@ by running ridge regression on factor returns and combining with factor weights.
 
 Does NOT require moments data - only needs panel, fama factors, and dkkm factors.
 
-Output: {panel_id}_weights.pkl containing stock weights per month for each method.
+Output: {panel_id}_stock_weights.pkl containing stock weights per month for each method.
 
 Usage:
     python estimate_sdfs.py [panel_id] [--config CONFIG_MODULE]
@@ -354,7 +354,7 @@ def main():
         'end': eval_end,
     }
 
-    output_file = os.path.join(config.DATA_DIR, f"{panel_id}_weights.pkl")
+    output_file = os.path.join(config.DATA_DIR, f"{panel_id}_stock_weights.pkl")
     with open(output_file, 'wb') as f:
         pickle.dump(results, f)
     print(f"\n[OK] Weights saved to: {output_file}")

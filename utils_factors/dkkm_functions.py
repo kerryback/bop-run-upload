@@ -7,9 +7,9 @@ All functions match the root logic precisely.
 ROOT FILE: c:\\Users\\kerry\\repos\\CodeNew\\dkkm_functions.py
 
 KEY DIFFERENCES FROM noipca/utils_factors/dkkm_functions.py:
-  1. rank_standardize uses pandas .rank() with formula (ranks-0.5)/len(ranks)-0.5
+  1. rank_standardize uses numpy argsort with formula (ranks-0.5)/N-0.5
      (noipca used scipy rankdata with (ranks-1)/(N-1)-0.5 — DIFFERENT VALUES)
-  2. rff() operates entirely on DataFrames (noipca converted to numpy)
+  2. rff() uses pure numpy internally (avoids DataFrame overhead at large D)
   3. ridge_regr() is inline here (noipca used separate ridge_utils.py)
   4. mve_data() takes alpha_lst (already scaled by nfeatures from caller)
      (noipca scaled internally — same net effect but different interface)
@@ -21,17 +21,17 @@ from joblib import Parallel, delayed
 
 
 # =============================================================================
-# rank_standardize
+# rank_standardize (pure numpy)
 # ROOT: dkkm_functions.py lines 10-13
 #
 # CRITICAL DIFFERENCE FROM noipca:
-#   Root:   (ranks - 0.5) / len(ranks) - 0.5
-#   noipca: (ranks - 1) / (N - 1) - 0.5
+#   Root/noipca2: (ranks - 0.5) / N - 0.5
+#   noipca:       (ranks - 1) / (N - 1) - 0.5
 #
 #   For N=1000: Root maps rank 1 to -0.4995, rank 1000 to 0.4995
 #               noipca maps rank 1 to -0.5, rank 1000 to 0.5
 # =============================================================================
-def rank_standardize(arr):
+def rank_standardize(values):
     """
     DKKM rank-based standardization.
 
@@ -43,28 +43,25 @@ def rank_standardize(arr):
     to pandas method='average' when data is continuous with no ties.
 
     Args:
-        arr: DataFrame to rank-standardize
+        values: (N, P) numpy ndarray to rank-standardize
 
     Returns:
-        Rank-standardized DataFrame (values in ~[-0.5, 0.5])
+        (N, P) numpy ndarray with values in ~[-0.5, 0.5]
     """
-    values = arr.values
     n = values.shape[0]
     order = np.argsort(values, axis=0, kind='quicksort')
     ranks = np.empty_like(values, dtype=np.float64)
     col_idx = np.arange(values.shape[1])
     ranks[order, col_idx] = np.arange(1, n + 1, dtype=np.float64).reshape(-1, 1)
-    ranks = (ranks - 0.5) / n - 0.5
-    return pd.DataFrame(ranks, index=arr.index, columns=arr.columns)
+    return (ranks - 0.5) / n - 0.5
 
 
 # =============================================================================
 # rff (Random Fourier Features)
 # ROOT: dkkm_functions.py lines 16-25
 #
-# CRITICAL: Operates entirely on DataFrames.
-# W @ X.T where X is a DataFrame uses pandas __rmatmul__,
-# preserving DataFrame structure throughout.
+# Pure numpy implementation. Avoids DataFrame overhead for large feature
+# counts (D=18000+) where pd.concat and DataFrame construction dominate.
 #
 # Returns rank-standardized features only (noipca2 simplification).
 # =============================================================================
@@ -81,30 +78,24 @@ def rff(data, rf, W, model):
         model: Model name ('bgn', 'kp14', 'gs21')
 
     Returns:
-        rank_standardized_features as DataFrame (N, D)
+        rank_standardized_features as ndarray (N, D)
     """
     # ROOT line 17: rank-standardize characteristics
-    X = rank_standardize(data)
+    X = rank_standardize(data.values)
 
     # ROOT lines 18-19: add risk-free rate for BGN model
     if model == 'bgn':
-        X['rf'] = rf
+        X = np.column_stack([X, rf.values])
 
-    # ROOT line 20: W @ X.T — matrix multiply (W is numpy, X.T is DataFrame)
-    # Result is a numpy array of shape (D/2, N)
+    # ROOT line 20: W @ X.T — (D/2, L) @ (L, N) = (D/2, N)
     Z = W @ X.T
 
     # ROOT lines 21-22: sin and cos features
-    Z1 = np.sin(Z)
-    Z2 = np.cos(Z)
-
     # ROOT line 23: concatenate [sin; cos] then transpose to (N, D)
-    arr = pd.concat([pd.DataFrame(Z1), pd.DataFrame(Z2)], axis=0).T
-    arr.columns = [str(i) for i in range(arr.shape[1])]
-    arr.index = data.index
+    features = np.vstack([np.sin(Z), np.cos(Z)]).T
 
     # Return rank-standardized features only
-    return rank_standardize(arr)
+    return rank_standardize(features)
 
 
 # =============================================================================
@@ -198,6 +189,8 @@ def factors(panel, W, n_jobs, start, end, model, chars):
     Returns:
         f_rs: Rank-standardized factor returns DataFrame
     """
+    D = W.shape[0] * 2  # total features (sin + cos)
+
     # ROOT lines 47-56: monthly factor return computation
     def monthly_rets(month):
         data = panel.loc[month]
@@ -212,7 +205,7 @@ def factors(panel, W, n_jobs, start, end, model, chars):
         weights_rs = rff(data[chars], rf, W=W, model=model)
 
         # ROOT line 56: factor returns = features' @ excess returns
-        return (month, (weights_rs.T @ data.xret).astype(np.float32))
+        return (month, (weights_rs.T @ data.xret.values).astype(np.float32))
 
     # ROOT lines 57-59: parallel computation
     lst = Parallel(n_jobs=n_jobs, verbose=0)(
@@ -220,10 +213,13 @@ def factors(panel, W, n_jobs, start, end, model, chars):
     )
 
     # ROOT lines 62-70: assemble DataFrame
-    f_rs = pd.concat([x[1] for x in lst], axis=1).T
-    f_rs["month"] = [x[0] for x in lst]
-    f_rs.sort_values(by="month", inplace=True)
-    f_rs.set_index("month", inplace=True)
+    months = [x[0] for x in lst]
+    frets = np.vstack([x[1] for x in lst])
+    f_rs = pd.DataFrame(frets,
+                         columns=[str(i) for i in range(D)])
+    f_rs.index = months
+    f_rs.index.name = 'month'
+    f_rs.sort_index(inplace=True)
 
     return f_rs
 
