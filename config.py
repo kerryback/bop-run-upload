@@ -72,7 +72,7 @@ KEEP_WEIGHTS = True
 NMAT = 20
 
 # ROOT: main_revised.py line 13: nfeatures_lst = [6, 36, 360, 3600]
-N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
+N_DKKM_FEATURES_LIST = [6, 36]
 
 # ROOT: main_revised.py line 14: max_features = max(nfeatures_lst)
 MAX_FEATURES = max(N_DKKM_FEATURES_LIST)
