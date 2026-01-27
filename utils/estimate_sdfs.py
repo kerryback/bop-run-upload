@@ -327,7 +327,7 @@ def run(panel_id, model_name, dkkm_data=None, fama_data=None):
     # _SHARED_DATA via copy-on-write instead of serializing ~2 GB per worker.
     # =========================================================================
     print(f"\n{'-'*70}")
-    print(f"Computing stock weights in parallel (n_jobs={config.N_JOBS})...")
+    print(f"Computing Fama and DKKM stock weights by generating factors and running ridge regressions (n_jobs={config.N_JOBS})...")
     t0 = time.time()
 
     chunk_size = 50
