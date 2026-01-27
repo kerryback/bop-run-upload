@@ -20,6 +20,11 @@ import scipy.linalg as linalg
 from sklearn.linear_model import Ridge
 
 
+# Shared data for parallel workers. Set before Parallel() call; workers
+# inherit via fork (copy-on-write) with backend='multiprocessing'.
+_SHARED_DATA = {}
+
+
 # =============================================================================
 # fama_french
 # ROOT: fama_functions.py lines 9-71
@@ -178,7 +183,23 @@ def fama_macbeth(data, chars, **kwargs):
 # ROOT: fama_functions.py lines 103-121
 #
 # Parallel computation of factor returns across months.
+# Uses _SHARED_DATA + backend='multiprocessing' (fork on Linux) so panel
+# is inherited via copy-on-write instead of serialized to each worker.
 # =============================================================================
+def _compute_monthly_fama(month, method, chars):
+    """
+    Module-level worker function for parallel fama factor computation.
+
+    Reads panel from _SHARED_DATA (inherited via fork/COW).
+    """
+    panel = _SHARED_DATA['panel']
+    data = panel.loc[month]
+    weights = method(data[chars], chars, mve=data.mve)
+    rets = data.xret.to_numpy().reshape(-1, 1)
+    wts = weights.T @ rets
+    return pd.DataFrame(wts.T, index=[month])
+
+
 def factors(method, panel, n_jobs, start, end, chars):
     """
     Compute panel of factor returns for a given method.
@@ -196,19 +217,16 @@ def factors(method, panel, n_jobs, start, end, chars):
     Returns:
         Factor returns DataFrame indexed by month
     """
-    # ROOT lines 104-110: monthly return computation
-    def monthly_rets(month):
-        data = panel.loc[month]
-        weights = method(data[chars], chars, mve=data.mve)
-        rets = data.xret.to_numpy().reshape(-1, 1)
-        wts = weights.T @ rets
-        wts = pd.DataFrame(wts.T, index=[month])
-        return wts
+    # Set shared data for workers (inherited via fork/COW)
+    _SHARED_DATA['panel'] = panel
 
     # ROOT lines 111-113: parallel computation
-    lst = Parallel(n_jobs=n_jobs, verbose=0)(
-        delayed(monthly_rets)(month) for month in range(start, end+1)
+    lst = Parallel(n_jobs=n_jobs, verbose=0, backend='multiprocessing')(
+        delayed(_compute_monthly_fama)(month, method, chars)
+        for month in range(start, end+1)
     )
+
+    _SHARED_DATA.clear()
 
     # ROOT lines 119-121: concatenate results
     f = pd.concat(lst)

@@ -20,6 +20,11 @@ import pandas as pd
 from joblib import Parallel, delayed
 
 
+# Shared data for parallel workers. Set before Parallel() call; workers
+# inherit via fork (copy-on-write) with backend='multiprocessing'.
+_SHARED_DATA = {}
+
+
 # =============================================================================
 # rank_standardize (pure numpy)
 # ROOT: dkkm_functions.py lines 10-13
@@ -170,7 +175,28 @@ def ridge_regr(signals, labels, future_signals, shrinkage_list):
 #
 # Parallel computation of factor returns across months.
 # Returns rank-standardized factor returns only (noipca2 simplification).
+# Uses _SHARED_DATA + backend='multiprocessing' (fork on Linux) so panel
+# and W are inherited via copy-on-write instead of serialized to each worker.
 # =============================================================================
+def _compute_monthly_dkkm(month, model, chars):
+    """
+    Module-level worker function for parallel DKKM factor computation.
+
+    Reads panel and W from _SHARED_DATA (inherited via fork/COW).
+    """
+    panel = _SHARED_DATA['panel']
+    W = _SHARED_DATA['W']
+    data = panel.loc[month]
+
+    if model == 'bgn':
+        rf = data.rf_stand
+    else:
+        rf = None
+
+    weights_rs = rff(data[chars], rf, W=W, model=model)
+    return (month, (weights_rs.T @ data.xret.values).astype(np.float32))
+
+
 def factors(panel, W, n_jobs, start, end, model, chars):
     """
     Compute panel of random Fourier factor returns.
@@ -191,26 +217,17 @@ def factors(panel, W, n_jobs, start, end, model, chars):
     """
     D = W.shape[0] * 2  # total features (sin + cos)
 
-    # ROOT lines 47-56: monthly factor return computation
-    def monthly_rets(month):
-        data = panel.loc[month]
-
-        # ROOT lines 50-53: get risk-free rate for BGN
-        if model == 'bgn':
-            rf = data.rf_stand
-        else:
-            rf = None
-
-        # ROOT line 55: compute RFF (rank-standardized only)
-        weights_rs = rff(data[chars], rf, W=W, model=model)
-
-        # ROOT line 56: factor returns = features' @ excess returns
-        return (month, (weights_rs.T @ data.xret.values).astype(np.float32))
+    # Set shared data for workers (inherited via fork/COW)
+    _SHARED_DATA['panel'] = panel
+    _SHARED_DATA['W'] = W
 
     # ROOT lines 57-59: parallel computation
-    lst = Parallel(n_jobs=n_jobs, verbose=0)(
-        delayed(monthly_rets)(month) for month in range(start, end+1)
+    lst = Parallel(n_jobs=n_jobs, verbose=0, backend='multiprocessing')(
+        delayed(_compute_monthly_dkkm)(month, model, chars)
+        for month in range(start, end+1)
     )
+
+    _SHARED_DATA.clear()
 
     # ROOT lines 62-70: assemble DataFrame
     months = [x[0] for x in lst]

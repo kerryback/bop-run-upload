@@ -81,11 +81,10 @@ MAX_FEATURES = max(N_DKKM_FEATURES_LIST)
 ALPHA_LST_FAMA = [0]
 
 # ROOT: main_revised.py line 16: alpha_lst = [0, 0.01, 0.05, 0.1, 1]
-ALPHA_LST = [0, 0.01, 0.05, 0.1, 1]
+ALPHA_LST = [0, 0.001, 0.01, 0.05, 0.1, 1]
 
 # ROOT: main_revised.py lines 17-18 (GS21 uses finer grid)
-ALPHA_LST_GS = [0, 0.0000001, 0.0000005, 0.000001, 0.000005, 0.00001,
-                0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 1]
+ALPHA_LST_GS = [x/100 for x in ALPHA_LST]
 
 # =============================================================================
 # ROOT: parameters.py — Economic parameters

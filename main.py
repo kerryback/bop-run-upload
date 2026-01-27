@@ -145,9 +145,9 @@ def run_workflow_for_index(panel_id):
     Steps:
     1.  Generate panel → {model}_{id}_panel.pkl
     1b. Generate 25 portfolios → {model}_{id}_25_portfolios.pkl
-    2.  Compute Fama factors → {model}_{id}_fama.pkl
-    3.  Compute DKKM factors (in-process, kept in memory)
-    4.  Estimate SDFs (in-process, receives DKKM data) → {model}_{id}_stock_weights.pkl
+    2.  Compute Fama factors (in-process, kept in memory for Step 4)
+    3.  Compute DKKM factors (in-process, kept in memory for Step 4)
+    4.  Estimate SDFs (in-process, receives Fama + DKKM data) → {model}_{id}_stock_weights.pkl
     5.  Calculate SDF moments → {model}_{id}_moments.pkl
     6.  Evaluate SDFs (compute stats) → {model}_{id}_results.pkl
     """
@@ -184,13 +184,14 @@ def run_workflow_for_index(panel_id):
     os.remove(checkpoint_file)
     print(f"[CHECKPOINT] Pre-fama checkpoint uploaded at {now()}")
 
-    # Step 2: Fama factors
-    timings['fama'] = run_script(
-        "utils/generate_fama_factors.py",
-        [full_panel_id],
-        "STEP 2: Computing Fama-French and Fama-MacBeth factors"
-    )
-    # Factor files not uploaded to S3
+    # Step 2: Fama factors (in-process)
+    print(f"\n{'='*70}")
+    print(f"STEP 2: Computing Fama-French and Fama-MacBeth factors")
+    print(f"{'='*70}\n")
+    t0 = time.time()
+    from generate_fama_factors import compute as compute_fama
+    fama_data = compute_fama(full_panel_id, model)
+    timings['fama'] = time.time() - t0
 
     # Step 3: DKKM factors (in-process)
     print(f"\n{'='*70}")
@@ -201,14 +202,14 @@ def run_workflow_for_index(panel_id):
     dkkm_data = compute_dkkm(full_panel_id, model)
     timings['dkkm'] = time.time() - t0
 
-    # Step 4: Estimate SDFs (in-process, receives DKKM data in memory)
+    # Step 4: Estimate SDFs (in-process, receives Fama + DKKM data in memory)
     print(f"\n{'='*70}")
     print(f"STEP 4: Estimating SDFs (computing stock weights)")
     print(f"{'='*70}\n")
     t0 = time.time()
     from estimate_sdfs import run as run_estimate_sdfs
-    run_estimate_sdfs(full_panel_id, model, dkkm_data=dkkm_data)
-    del dkkm_data  # Free ~2 GB of DKKM data
+    run_estimate_sdfs(full_panel_id, model, dkkm_data=dkkm_data, fama_data=fama_data)
+    del dkkm_data, fama_data  # Free memory
     timings['estimate'] = time.time() - t0
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights.pkl"))
