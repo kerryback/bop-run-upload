@@ -26,10 +26,10 @@ N_JOBS = 24   # ROOT: main_revised.py line 20: n_jobs = 10
 
 # Per-step n_jobs configuration (overrides N_JOBS if set)
 # Useful for memory management with large MAX_FEATURES
-N_JOBS_MOMENTS = None    # Step 1b: 25 portfolios moments (can use more workers)
+N_JOBS_MOMENTS = 30      # Step 1b: 25 portfolios moments (can use more workers)
 N_JOBS_FAMA = None       # Step 2: Fama factors (memory-efficient)
 N_JOBS_DKKM = None       # Step 3: DKKM factors (memory-efficient)
-N_JOBS_SDF = None        # Step 4: SDF estimation (memory-intensive with large MAX_FEATURES)
+N_JOBS_SDF = 10          # Step 4: SDF estimation (memory-intensive with large MAX_FEATURES)
 
 # =============================================================================
 # DATA DIRECTORY CONFIGURATION
