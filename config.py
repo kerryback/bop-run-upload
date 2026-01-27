@@ -26,9 +26,10 @@ N_JOBS = 24   # ROOT: main_revised.py line 20: n_jobs = 10
 
 # Per-step n_jobs configuration (overrides N_JOBS if set)
 # Useful for memory management with large MAX_FEATURES
-N_JOBS_MOMENTS = 30      # Step 1b: 25 portfolios moments (can use more workers)
-N_JOBS_FAMA = None       # Step 2: Fama factors (memory-efficient)
-N_JOBS_DKKM = None       # Step 3: DKKM factors (memory-efficient)
+# Set to None to use the default N_JOBS value
+N_JOBS_MOMENTS = 30      # Step 5: Moments calculation (not currently used - reserved for future)
+N_JOBS_FAMA = None       # Step 2: Fama factors (uses N_JOBS=24)
+N_JOBS_DKKM = None       # Step 3: DKKM factors (uses N_JOBS=24)
 N_JOBS_SDF = 10          # Step 4: SDF estimation (memory-intensive with large MAX_FEATURES)
 
 # =============================================================================
@@ -288,15 +289,15 @@ def get_model_config(model_name):
 # Example 1: MAX_FEATURES=18000 with memory optimization (current config)
 #   N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
 #   MAX_FEATURES = 18000
-#   N_JOBS = 24
+#   N_JOBS = 24             # Used by Steps 2 & 3 (Fama, DKKM)
 #   N_JOBS_SDF = 10         # Reduce to 10 workers for Step 4
-#   N_JOBS_MOMENTS = 30     # Increase to 30 for moments calculation
+#   N_JOBS_MOMENTS = 30     # Reserved for Step 5 (not currently used)
 #
 # Example 2: Balanced configuration
 #   MAX_FEATURES = 3600
 #   N_JOBS = 24
 #   N_JOBS_SDF = 16         # Moderate reduction for Step 4
 #
-# The moments calculation (Step 1b: 25 portfolios) is very memory-efficient
-# and can safely use more workers than the default N_JOBS.
+# Note: N_JOBS_MOMENTS is reserved for future parallelization of Step 5
+# (moments calculation in evaluate_sdfs.py), which is not currently parallel.
 # =============================================================================
