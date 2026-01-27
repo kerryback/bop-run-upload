@@ -164,9 +164,12 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
             # Subset factor returns for this W matrix
             f_subset_i = frets_i.iloc[:, nf_indx]
 
-            # Factor weights from rff
-            fw_i = dkkm.rff(data_chars_df, rf, W=W_i[:num, :], model=MODEL)
-            fw_i.columns = [str(ind) for ind in nf_indx]
+            # Factor weights from rff (returns ndarray, wrap in DataFrame)
+            fw_i = pd.DataFrame(
+                dkkm.rff(data_chars_df, rf, W=W_i[:num, :], model=MODEL),
+                columns=[str(ind) for ind in nf_indx],
+                index=firm_ids,
+            )
 
             # Always add market weights
             fw_i['mkt_rf'] = fama.fama_french(
