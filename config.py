@@ -61,9 +61,6 @@ def get_n_jobs_for_step(step_name):
     """
     Get the appropriate n_jobs for a specific step.
 
-    Automatically reduces parallelism for memory-intensive steps when
-    MAX_FEATURES is large.
-
     Args:
         step_name: 'moments', 'fama', 'dkkm', or 'sdf'
 
@@ -80,14 +77,6 @@ def get_n_jobs_for_step(step_name):
 
     if step_name in overrides and overrides[step_name] is not None:
         return overrides[step_name]
-
-    # Auto-adjust based on MAX_FEATURES for memory-intensive steps
-    if step_name == 'sdf' and MAX_FEATURES > 1000:
-        # SDF step is memory-intensive with large feature sets
-        # Reduce to ~10-12 workers to avoid OOM
-        adjusted = max(10, N_JOBS // 2)
-        print(f"[CONFIG] Auto-reducing n_jobs for SDF step: {N_JOBS} → {adjusted} (MAX_FEATURES={MAX_FEATURES})")
-        return adjusted
 
     # Default: use global N_JOBS
     return N_JOBS
@@ -293,11 +282,10 @@ def get_model_config(model_name):
 # =============================================================================
 #
 # For high feature counts (MAX_FEATURES > 1000), memory usage increases
-# significantly in Step 4 (SDF estimation). The auto-adjustment in
-# get_n_jobs_for_step() will reduce parallelism automatically, but you can
-# also set explicit per-step n_jobs:
+# significantly in Step 4 (SDF estimation). Set N_JOBS_SDF to a lower value
+# to prevent OOM errors:
 #
-# Example 1: MAX_FEATURES=18000 with memory optimization
+# Example 1: MAX_FEATURES=18000 with memory optimization (current config)
 #   N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
 #   MAX_FEATURES = 18000
 #   N_JOBS = 24
