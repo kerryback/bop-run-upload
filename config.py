@@ -24,6 +24,13 @@ KP14_BURNIN = 500
 GS21_BURNIN = 500
 N_JOBS = 24   # ROOT: main_revised.py line 20: n_jobs = 10
 
+# Per-step n_jobs configuration (overrides N_JOBS if set)
+# Useful for memory management with large MAX_FEATURES
+N_JOBS_MOMENTS = None    # Step 1b: 25 portfolios moments (can use more workers)
+N_JOBS_FAMA = None       # Step 2: Fama factors (memory-efficient)
+N_JOBS_DKKM = None       # Step 3: DKKM factors (memory-efficient)
+N_JOBS_SDF = None        # Step 4: SDF estimation (memory-intensive with large MAX_FEATURES)
+
 # =============================================================================
 # DATA DIRECTORY CONFIGURATION
 # =============================================================================
@@ -48,6 +55,42 @@ def set_n_jobs(n_jobs):
     global N_JOBS
     N_JOBS = n_jobs
     print(f"[CONFIG] N_JOBS set to: {N_JOBS}")
+
+
+def get_n_jobs_for_step(step_name):
+    """
+    Get the appropriate n_jobs for a specific step.
+
+    Automatically reduces parallelism for memory-intensive steps when
+    MAX_FEATURES is large.
+
+    Args:
+        step_name: 'moments', 'fama', 'dkkm', or 'sdf'
+
+    Returns:
+        Number of parallel jobs to use
+    """
+    # Check for explicit per-step override
+    overrides = {
+        'moments': N_JOBS_MOMENTS,
+        'fama': N_JOBS_FAMA,
+        'dkkm': N_JOBS_DKKM,
+        'sdf': N_JOBS_SDF,
+    }
+
+    if step_name in overrides and overrides[step_name] is not None:
+        return overrides[step_name]
+
+    # Auto-adjust based on MAX_FEATURES for memory-intensive steps
+    if step_name == 'sdf' and MAX_FEATURES > 1000:
+        # SDF step is memory-intensive with large feature sets
+        # Reduce to ~10-12 workers to avoid OOM
+        adjusted = max(10, N_JOBS // 2)
+        print(f"[CONFIG] Auto-reducing n_jobs for SDF step: {N_JOBS} → {adjusted} (MAX_FEATURES={MAX_FEATURES})")
+        return adjusted
+
+    # Default: use global N_JOBS
+    return N_JOBS
 
 
 def set_jgsrc1_config():
@@ -243,3 +286,29 @@ def get_model_config(model_name):
         'alpha_lst_fama': ALPHA_LST_FAMA,
         'alpha_lst': MODEL_ALPHA_LST[model_name],
     }
+
+
+# =============================================================================
+# CONFIGURATION EXAMPLES FOR DIFFERENT SCENARIOS
+# =============================================================================
+#
+# For high feature counts (MAX_FEATURES > 1000), memory usage increases
+# significantly in Step 4 (SDF estimation). The auto-adjustment in
+# get_n_jobs_for_step() will reduce parallelism automatically, but you can
+# also set explicit per-step n_jobs:
+#
+# Example 1: MAX_FEATURES=18000 with memory optimization
+#   N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
+#   MAX_FEATURES = 18000
+#   N_JOBS = 24
+#   N_JOBS_SDF = 10         # Reduce to 10 workers for Step 4
+#   N_JOBS_MOMENTS = 30     # Increase to 30 for moments calculation
+#
+# Example 2: Balanced configuration
+#   MAX_FEATURES = 3600
+#   N_JOBS = 24
+#   N_JOBS_SDF = 16         # Moderate reduction for Step 4
+#
+# The moments calculation (Step 1b: 25 portfolios) is very memory-efficient
+# and can safely use more workers than the default N_JOBS.
+# =============================================================================

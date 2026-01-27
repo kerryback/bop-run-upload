@@ -90,7 +90,8 @@ def compute(panel_id, model_name):
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
 
     # Generate W matrices and compute factor returns
-    print(f"\nComputing DKKM factor returns (max_features={max_features}, NMAT={NMAT})...")
+    n_jobs = config.get_n_jobs_for_step('dkkm')
+    print(f"\nComputing DKKM factor returns (max_features={max_features}, NMAT={NMAT}, n_jobs={n_jobs})...")
     t0 = time.time()
 
     half = int(max_features / 2)
@@ -111,7 +112,7 @@ def compute(panel_id, model_name):
         W_i = gamma_i * W_i
 
         frets_i = dkkm.factors(
-            panel=panel, W=W_i, n_jobs=CONFIG['n_jobs'],
+            panel=panel, W=W_i, n_jobs=n_jobs,
             start=start, end=end, model=MODEL, chars=CHARS
         )
 

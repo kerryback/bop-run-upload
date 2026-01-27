@@ -327,7 +327,8 @@ def run(panel_id, model_name, dkkm_data=None, fama_data=None):
     # _SHARED_DATA via copy-on-write instead of serializing ~2 GB per worker.
     # =========================================================================
     print(f"\n{'-'*70}")
-    print(f"Computing Fama and DKKM stock weights by generating factors and running ridge regressions (n_jobs={config.N_JOBS})...")
+    n_jobs = config.get_n_jobs_for_step('sdf')
+    print(f"Computing Fama and DKKM stock weights by generating factors and running ridge regressions (n_jobs={n_jobs})...")
     t0 = time.time()
 
     chunk_size = 50
@@ -342,7 +343,7 @@ def run(panel_id, model_name, dkkm_data=None, fama_data=None):
 
         print(f"\n  Chunk {chunk_idx + 1}/{n_chunks}: months {chunk[0]['month']} to {chunk[-1]['month']}")
 
-        with Parallel(n_jobs=config.N_JOBS, verbose=5, backend='multiprocessing') as parallel:
+        with Parallel(n_jobs=n_jobs, verbose=5, backend='multiprocessing') as parallel:
             chunk_results = parallel(
                 delayed(compute_month_weights)(
                     md, half, nfeatures_lst, alpha_lst,
