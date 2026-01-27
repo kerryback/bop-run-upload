@@ -59,17 +59,22 @@ except ImportError as e:
     sys.exit(1)
 
 
-def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
+# Shared data for parallel workers. Set before Parallel() call; workers
+# inherit via fork (copy-on-write) with backend='multiprocessing'.
+_SHARED_DATA = {}
+
+
+def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
                           alpha_lst_fama, CHARS, MODEL, NMAT):
     """
     Compute stock weights for a single month.
 
     This function is called in parallel for each month.
-    Returns weights_on_stocks for each (method, alpha) combination.
+    Large data (W_list, ff_rets, fm_rets, frets_list) is read from
+    module-level _SHARED_DATA to avoid serializing ~2 GB per worker.
 
     Args:
         month_data: Dict containing pre-extracted data for this month
-        W_list: List of DKKM weight matrices (each max_features/2, nchars)
         half: max_features // 2
         nfeatures_lst: List of feature counts [6, 36, 360]
         alpha_lst: DKKM alpha list
@@ -85,10 +90,13 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
     data_chars = month_data['data_chars']  # numpy array
     data_mve = month_data['data_mve']      # numpy array
     firm_ids = month_data['firm_ids']
-    ff_rets = month_data['ff_rets']        # DataFrame (full history)
-    fm_rets = month_data['fm_rets']        # DataFrame (full history)
-    frets_list = month_data['frets_list']  # List of DKKM factor returns DataFrames
     rf_stand = month_data.get('rf_stand')  # For BGN model
+
+    # Read large shared data (inherited via fork, not serialized)
+    W_list = _SHARED_DATA['W_list']
+    ff_rets = _SHARED_DATA['ff_rets']
+    fm_rets = _SHARED_DATA['fm_rets']
+    frets_list = _SHARED_DATA['frets_list']
 
     # Create DataFrame for characteristics (needed by dkkm.rff and fama methods)
     data_chars_df = pd.DataFrame(data_chars, columns=CHARS, index=firm_ids)
@@ -202,16 +210,19 @@ def compute_month_weights(month_data, W_list, half, nfeatures_lst, alpha_lst,
     return month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value
 
 
-def main():
-    """Main execution function."""
+def run(panel_id, model_name, dkkm_data=None):
+    """
+    Run SDF estimation.
+
+    If dkkm_data is provided, uses it directly (no disk I/O for DKKM).
+    Otherwise loads from {panel_id}_dkkm.pkl.
+
+    Uses backend='multiprocessing' (fork on Linux) so that large shared
+    data (frets_list, W_list, ff_rets, fm_rets) is inherited via
+    copy-on-write instead of being serialized to each worker.
+    """
     start_time = time.time()
 
-    # Parse arguments
-    panel_id, model_name, _ = factor_utils.parse_panel_arguments(
-        script_name='estimate_sdf'
-    )
-
-    # Load config
     CONFIG = config.get_model_config(model_name)
     MODEL = CONFIG['model']
     CHARS = CONFIG['chars']
@@ -237,8 +248,7 @@ def main():
     panel_path = os.path.join(config.TEMP_DIR, f"{panel_id}_panel.pkl")
     print(f"\nLoading panel from {panel_path}...")
     with open(panel_path, 'rb') as f:
-        panel_data = pickle.load(f)
-    panel = panel_data['panel']
+        panel = pickle.load(f)['panel']
 
     # Prepare panel
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
@@ -251,13 +261,16 @@ def main():
     ff_rets = fama_data['ff_returns']
     fm_rets = fama_data['fm_returns']
 
-    # Load dkkm results
-    dkkm_path = os.path.join(config.DATA_DIR, f"{panel_id}_dkkm.pkl")
-    print(f"Loading dkkm factors from {dkkm_path}...")
-    with open(dkkm_path, 'rb') as f:
-        dkkm_data = pickle.load(f)
-    frets_list = dkkm_data['dkkm_factors']  # List of DataFrames
-    W_list = dkkm_data['weights']           # List of arrays
+    # Load or use provided DKKM results
+    if dkkm_data is None:
+        dkkm_path = os.path.join(config.DATA_DIR, f"{panel_id}_dkkm.pkl")
+        print(f"Loading dkkm factors from {dkkm_path}...")
+        with open(dkkm_path, 'rb') as f:
+            dkkm_data = pickle.load(f)
+    else:
+        print("Using DKKM factors from memory")
+    frets_list = dkkm_data['dkkm_factors']
+    W_list = dkkm_data['weights']
     NMAT = dkkm_data['nmat']
 
     # Evaluation range: need 360 months of history for ridge regression
@@ -273,7 +286,15 @@ def main():
     print(f"  Evaluation range: {eval_start} to {eval_end}")
 
     # =========================================================================
-    # PRE-EXTRACT PER-MONTH DATA
+    # SET SHARED DATA FOR PARALLEL WORKERS
+    # =========================================================================
+    _SHARED_DATA['W_list'] = W_list
+    _SHARED_DATA['ff_rets'] = ff_rets
+    _SHARED_DATA['fm_rets'] = fm_rets
+    _SHARED_DATA['frets_list'] = frets_list
+
+    # =========================================================================
+    # PRE-EXTRACT PER-MONTH DATA (small per-month data only)
     # =========================================================================
     print(f"\n{'-'*70}")
     print("Preparing per-month data...")
@@ -289,9 +310,6 @@ def main():
             'data_chars': data[CHARS].values,
             'data_mve': data.mve.values,
             'firm_ids': firm_ids,
-            'ff_rets': ff_rets,
-            'fm_rets': fm_rets,
-            'frets_list': frets_list,
             'rf_stand': data.rf_stand.values if MODEL == 'bgn' and 'rf_stand' in data.columns else None,
         })
 
@@ -299,16 +317,17 @@ def main():
 
     # =========================================================================
     # PARALLEL WEIGHT COMPUTATION
+    # Use backend='multiprocessing' (fork on Linux) so workers inherit
+    # _SHARED_DATA via copy-on-write instead of serializing ~2 GB per worker.
     # =========================================================================
     print(f"\n{'-'*70}")
     print(f"Computing stock weights in parallel (n_jobs={config.N_JOBS})...")
     t0 = time.time()
 
-    # Process in chunks to manage memory
     chunk_size = 50
     n_chunks = (len(month_data_list) + chunk_size - 1) // chunk_size
 
-    all_weights = {}  # month -> {'firm_ids': ..., 'fama': ..., 'dkkm': ...}
+    all_weights = {}
 
     for chunk_idx in range(n_chunks):
         chunk_start = chunk_idx * chunk_size
@@ -317,16 +336,15 @@ def main():
 
         print(f"\n  Chunk {chunk_idx + 1}/{n_chunks}: months {chunk[0]['month']} to {chunk[-1]['month']}")
 
-        with Parallel(n_jobs=config.N_JOBS, verbose=5) as parallel:
+        with Parallel(n_jobs=config.N_JOBS, verbose=5, backend='multiprocessing') as parallel:
             chunk_results = parallel(
                 delayed(compute_month_weights)(
-                    md, W_list, half, nfeatures_lst, alpha_lst,
+                    md, half, nfeatures_lst, alpha_lst,
                     alpha_lst_fama, CHARS, MODEL, NMAT
                 )
                 for md in chunk
             )
 
-        # Collect results
         for month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value in chunk_results:
             all_weights[month] = {
                 'firm_ids': firm_ids,
@@ -338,6 +356,9 @@ def main():
         del chunk_results
         gc.collect()
 
+    # Clear shared data
+    _SHARED_DATA.clear()
+
     elapsed = time.time() - t0
     print(f"\n[OK] Weights computed in {fmt(elapsed)} at {now()}")
 
@@ -345,7 +366,7 @@ def main():
     # SAVE RESULTS
     # =========================================================================
     results = {
-        'weights': all_weights,  # month -> {'firm_ids', 'fama', 'dkkm'}
+        'weights': all_weights,
         'panel_id': panel_id,
         'model': MODEL,
         'chars': CHARS,
@@ -362,7 +383,6 @@ def main():
         pickle.dump(results, f)
     print(f"\n[OK] Weights saved to: {output_file}")
 
-    # Print summary
     total_time = time.time() - start_time
     print(f"\n{'='*70}")
     print("ESTIMATION COMPLETE")
@@ -370,6 +390,14 @@ def main():
     print(f"Finished at {now()}")
     print(f"Total runtime: {fmt(total_time)}")
     print(f"{'='*70}")
+
+
+def main():
+    """Standalone entry point: parse args and run."""
+    panel_id, model_name, _ = factor_utils.parse_panel_arguments(
+        script_name='estimate_sdf'
+    )
+    run(panel_id, model_name)
 
 
 if __name__ == "__main__":

@@ -63,24 +63,15 @@ except ImportError as e:
     sys.exit(1)
 
 
-def main():
+def compute(panel_id, model_name):
     """
-    Main execution function.
+    Compute DKKM factors and return results dict (no disk I/O).
 
     ROOT: main_revised.py lines 133-141 (generate_rff_panel)
 
-    Key logic:
-    1. Generate ONE W matrix of (max_features/2, nchars) with gamma scaling
-    2. Compute factor returns for max_features
-
-    Portfolio stats are computed by run_portfolio_stats.py
+    Returns:
+        results dict with keys: dkkm_factors, weights, nmat, max_features, etc.
     """
-    start_time = time.time()
-
-    # Parse arguments
-    panel_id, model_name, _ = factor_utils.parse_panel_arguments(script_name='run_dkkm')
-
-    # Load config
     CONFIG = config.get_model_config(model_name)
     MODEL = CONFIG['model']
     CHARS = CONFIG['chars']
@@ -90,44 +81,16 @@ def main():
 
     # Load panel data
     panel_path = os.path.join(config.TEMP_DIR, f"{panel_id}_panel.pkl")
-    if not os.path.exists(panel_path):
-        print(f"ERROR: Panel file not found at: {panel_path}")
-        sys.exit(1)
-
     print(f"\nLoading panel from {panel_path}...")
     with open(panel_path, 'rb') as f:
-        arrays_data = pickle.load(f)
-    panel = arrays_data['panel']
+        panel = pickle.load(f)['panel']
     print(f"Loaded panel: shape={panel.shape}")
 
     # Prepare panel
-    # ROOT: main_revised.py lines 62-70
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
 
-    CONFIG['T'] = end - start + 1
-    CONFIG['N'] = panel.groupby(level='month').size().max()
-
-    # Print header
-    factor_utils.print_script_header(
-        title="DKKM (RANDOM FOURIER FEATURES) FACTORS",
-        model=MODEL,
-        panel_id=panel_id,
-        config=CONFIG,
-        additional_info={
-            'Max features': max_features,
-            'NMAT': NMAT,
-        }
-    )
-
-    # =========================================================================
-    # STEP 1: Generate W matrices and compute factor returns
-    # ROOT: main_revised.py lines 133-141 (generate_rff_panel)
-    #
-    # For NMAT > 1: Generate NMAT different W matrices and compute
-    # factor returns for each. Portfolio stats will average across them.
-    # =========================================================================
-    print(f"\n{'-'*70}")
-    print(f"Step 1: Computing DKKM factor returns (max_features={max_features}, NMAT={NMAT})...")
+    # Generate W matrices and compute factor returns
+    print(f"\nComputing DKKM factor returns (max_features={max_features}, NMAT={NMAT})...")
     t0 = time.time()
 
     half = int(max_features / 2)
@@ -138,21 +101,15 @@ def main():
         if NMAT > 1:
             print(f"  Matrix {mat_idx + 1}/{NMAT}...", end=" ", flush=True)
 
-        # ROOT line 134: generate weight matrix
-        # nchars + (model == 'bgn') adds one column for rf rate in BGN model
         W_i = np.random.normal(
             size=(half, nchars + (MODEL == 'bgn'))
         )
-
-        # ROOT lines 135-136: scale by gamma (random bandwidth)
         gamma_i = np.random.choice(
             config.GAMMA_GRID,
             size=(half, 1)
         )
         W_i = gamma_i * W_i
 
-        # Compute factor returns for all max_features
-        # dkkm.factors returns rank-standardized factor returns
         frets_i = dkkm.factors(
             panel=panel, W=W_i, n_jobs=CONFIG['n_jobs'],
             start=start, end=end, model=MODEL, chars=CHARS
@@ -169,13 +126,9 @@ def main():
     print(f"  frets shape: {frets_list[0].shape}")
     print(f"  Months: {frets_list[0].index.min()} to {frets_list[0].index.max()}")
 
-    # =========================================================================
-    # STEP 2: Save results
-    # Portfolio stats are computed by run_portfolio_stats.py
-    # =========================================================================
-    results = {
-        'dkkm_factors': frets_list,  # List[DataFrame] of length NMAT
-        'weights': W_list,           # List[ndarray] of length NMAT
+    return {
+        'dkkm_factors': frets_list,
+        'weights': W_list,
         'nmat': NMAT,
         'max_features': max_features,
         'panel_id': panel_id,
@@ -185,24 +138,17 @@ def main():
         'end': end,
     }
 
+
+def main():
+    """Standalone entry point: compute and save to disk."""
+    start_time = time.time()
+    panel_id, model_name, _ = factor_utils.parse_panel_arguments(script_name='run_dkkm')
+    results = compute(panel_id, model_name)
+
     output_file = os.path.join(config.DATA_DIR, f"{panel_id}_dkkm.pkl")
     factor_utils.save_factor_results(results, output_file, verbose=True)
 
-    # Print runtime
-    total_time = time.time() - start_time
-    print(f"\nTotal runtime: {fmt(total_time)} at {now()}")
-
-    factor_utils.print_script_footer(
-        panel_id=panel_id,
-        usage_examples=[
-            "import pickle",
-            f"with open('{output_file}', 'rb') as f:",
-            "    results = pickle.load(f)",
-            "frets_list = results['dkkm_factors']  # List of DataFrames",
-            "W_list = results['weights']           # List of arrays",
-            f"nmat = results['nmat']                # {NMAT}",
-        ]
-    )
+    print(f"\nTotal runtime: {fmt(time.time() - start_time)} at {now()}")
 
 
 if __name__ == "__main__":
