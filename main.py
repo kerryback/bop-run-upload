@@ -145,11 +145,12 @@ def run_workflow_for_index(panel_id):
     Steps:
     1.  Generate panel → {model}_{id}_panel.pkl
     1b. Generate 25 portfolios → {model}_{id}_25_portfolios.pkl
-    2.  Compute Fama factors (in-process, kept in memory for Step 4)
-    3.  Compute DKKM factors (in-process, kept in memory for Step 4)
-    4.  Estimate SDFs (in-process, receives Fama + DKKM data) → {model}_{id}_stock_weights.pkl
+    2.  Compute Fama factors → {model}_{id}_fama.pkl
+    3.  Compute DKKM factors → {model}_{id}_dkkm.pkl
+    4a. Estimate Fama/CAPM SDFs → {model}_{id}_stock_weights_fama.pkl
+    4b. Estimate DKKM SDFs → {model}_{id}_stock_weights_dkkm.pkl
     5.  Calculate SDF moments → {model}_{id}_moments.pkl
-    6.  Evaluate SDFs (compute stats) → {model}_{id}_results.pkl
+    6.  Evaluate SDFs (compute stats, merges Fama+DKKM weights) → {model}_{id}_results.pkl
     """
     full_panel_id = f"{model}_{panel_id}"
 
@@ -200,15 +201,25 @@ def run_workflow_for_index(panel_id):
     )
     # Factor files not uploaded to S3
 
-    # Step 4: Estimate SDFs (compute stock weights)
-    timings['estimate'] = run_script(
-        "utils/estimate_sdfs.py",
+    # Step 4a: Estimate Fama/CAPM SDFs (compute stock weights)
+    timings['estimate_fama'] = run_script(
+        "utils/estimate_sdf_fama.py",
         [full_panel_id],
-        "STEP 4: Estimating SDFs (computing stock weights)"
+        "STEP 4a: Estimating Fama/CAPM SDFs (computing stock weights)"
     )
 
     if KEEP_WEIGHTS:
-        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights.pkl"))
+        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_fama.pkl"))
+
+    # Step 4b: Estimate DKKM SDFs (compute stock weights)
+    timings['estimate_dkkm'] = run_script(
+        "utils/estimate_sdf_dkkm.py",
+        [full_panel_id],
+        "STEP 4b: Estimating DKKM SDFs (computing stock weights)"
+    )
+
+    if KEEP_WEIGHTS:
+        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_dkkm.pkl"))
 
     # Step 5: Calculate SDF moments
     timings['moments'] = run_script(

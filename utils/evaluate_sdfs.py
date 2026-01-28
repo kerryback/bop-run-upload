@@ -92,19 +92,36 @@ def main():
     # Prepare panel
     panel, _, _ = factor_utils.prepare_panel(panel, CHARS)
 
-    # Load weights
-    weights_path = os.path.join(config.DATA_DIR, f"{panel_id}_stock_weights.pkl")
-    print(f"Loading weights from {weights_path}...")
-    with open(weights_path, 'rb') as f:
-        weights_data = pickle.load(f)
+    # Load Fama weights
+    fama_weights_path = os.path.join(config.DATA_DIR, f"{panel_id}_stock_weights_fama.pkl")
+    print(f"Loading Fama weights from {fama_weights_path}...")
+    with open(fama_weights_path, 'rb') as f:
+        fama_weights_data = pickle.load(f)
 
-    all_weights = weights_data['weights']
-    nfeatures_lst = weights_data['nfeatures_lst']
-    alpha_lst = weights_data['alpha_lst']
-    alpha_lst_fama = weights_data['alpha_lst_fama']
-    NMAT = weights_data['nmat']
-    eval_start = weights_data['start']
-    eval_end = weights_data['end']
+    # Load DKKM weights
+    dkkm_weights_path = os.path.join(config.DATA_DIR, f"{panel_id}_stock_weights_dkkm.pkl")
+    print(f"Loading DKKM weights from {dkkm_weights_path}...")
+    with open(dkkm_weights_path, 'rb') as f:
+        dkkm_weights_data = pickle.load(f)
+
+    # Merge weights (combine Fama and DKKM per month)
+    all_weights = {}
+    for month in fama_weights_data['weights']:
+        fama_month = fama_weights_data['weights'][month]
+        dkkm_month = dkkm_weights_data['weights'][month]
+        all_weights[month] = {
+            'firm_ids': fama_month['firm_ids'],
+            'fama': fama_month['fama'],
+            'dkkm': dkkm_month['dkkm'],
+            'mkt_rf': fama_month['mkt_rf'],
+        }
+
+    nfeatures_lst = dkkm_weights_data['nfeatures_lst']
+    alpha_lst = dkkm_weights_data['alpha_lst']
+    alpha_lst_fama = fama_weights_data['alpha_lst_fama']
+    NMAT = dkkm_weights_data['nmat']
+    eval_start = fama_weights_data['start']
+    eval_end = fama_weights_data['end']
 
     # Load moments
     moments, N, moments_start, moments_end = sdf_utils.load_precomputed_moments(panel_id)
