@@ -102,7 +102,7 @@ KEEP_WEIGHTS = True
 # =============================================================================
 
 # ROOT: main_revised.py line 12: nmat = 1
-NMAT = 20
+NMAT = 5
 
 # ROOT: main_revised.py line 13: nfeatures_lst = [6, 36, 360, 3600]
 N_DKKM_FEATURES_LIST = [6, 36, 360, 3600]

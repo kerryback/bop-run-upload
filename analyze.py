@@ -100,9 +100,9 @@ def discover_panels(model: str, results_dir: Path) -> List[int]:
 
 def load_and_process_fama(model: str, panels: List[int], results_dir: Path) -> pd.DataFrame:
     """
-    Load Fama results and compute sharpe from the stored stats.
+    Load Fama results and compute sharpe from the stored results.
 
-    The fama_stats DataFrame from evaluate_sdfs.py contains:
+    The fama_results DataFrame from evaluate_sdfs.py contains:
         month, method, alpha, stdev, mean, xret
 
     For each month: sharpe = mean / stdev
@@ -118,26 +118,26 @@ def load_and_process_fama(model: str, panels: List[int], results_dir: Path) -> p
 
     for panel_id, panel_idx in enumerate(panels):
         filename = f"{model}_{panel_idx}_results.pkl"
-        stats_file = results_dir / filename
+        results_file = results_dir / filename
 
-        if not stats_file.exists():
+        if not results_file.exists():
             continue
 
-        with open(stats_file, 'rb') as f:
-            stats_data = pickle.load(f)
+        with open(results_file, 'rb') as f:
+            results_data = pickle.load(f)
 
-        fama_stats = stats_data.get('fama_stats')
-        if fama_stats is None or len(fama_stats) == 0:
+        fama_results = results_data.get('fama_results')
+        if fama_results is None or len(fama_results) == 0:
             continue
 
         # Compute sharpe for each month
-        fama_stats = fama_stats.copy()
-        fama_stats['sharpe'] = fama_stats['mean'] / fama_stats['stdev']
+        fama_results = fama_results.copy()
+        fama_results['sharpe'] = fama_results['mean'] / fama_results['stdev']
 
         # Use sequential panel_id for aggregation
-        fama_stats['panel'] = panel_id
+        fama_results['panel'] = panel_id
 
-        all_data.append(fama_stats[['panel', 'month', 'method', 'alpha', 'sharpe']])
+        all_data.append(fama_results[['panel', 'month', 'method', 'alpha', 'sharpe']])
 
     if all_data:
         return pd.concat(all_data, ignore_index=True)
@@ -147,9 +147,9 @@ def load_and_process_fama(model: str, panels: List[int], results_dir: Path) -> p
 
 def load_and_process_dkkm(model: str, panels: List[int], results_dir: Path) -> pd.DataFrame:
     """
-    Load DKKM results and compute sharpe from the stored stats.
+    Load DKKM results and compute sharpe from the stored results.
 
-    The dkkm_stats DataFrame from evaluate_sdfs.py contains:
+    The dkkm_results DataFrame from evaluate_sdfs.py contains:
         month, nfeatures, alpha, stdev, mean, xret
 
     Args:
@@ -163,24 +163,24 @@ def load_and_process_dkkm(model: str, panels: List[int], results_dir: Path) -> p
 
     for panel_id, panel_idx in enumerate(panels):
         # Load from results.pkl
-        stats_file = results_dir / f"{model}_{panel_idx}_results.pkl"
+        results_file = results_dir / f"{model}_{panel_idx}_results.pkl"
 
-        if not stats_file.exists():
+        if not results_file.exists():
             continue
 
-        with open(stats_file, 'rb') as f:
-            stats_data = pickle.load(f)
+        with open(results_file, 'rb') as f:
+            results_data = pickle.load(f)
 
-        dkkm_stats = stats_data.get('dkkm_stats')
-        if dkkm_stats is None or len(dkkm_stats) == 0:
+        dkkm_results = results_data.get('dkkm_results')
+        if dkkm_results is None or len(dkkm_results) == 0:
             continue
 
-        dkkm_stats = dkkm_stats.copy()
-        dkkm_stats['sharpe'] = dkkm_stats['mean'] / dkkm_stats['stdev']
-        dkkm_stats['panel'] = panel_id
+        dkkm_results = dkkm_results.copy()
+        dkkm_results['sharpe'] = dkkm_results['mean'] / dkkm_results['stdev']
+        dkkm_results['panel'] = panel_id
         # Column is 'nfeatures' in noipca2 (renamed to 'num_factors' for table display)
-        dkkm_stats['num_factors'] = dkkm_stats['nfeatures']
-        all_data.append(dkkm_stats[['panel', 'month', 'alpha', 'num_factors', 'sharpe']])
+        dkkm_results['num_factors'] = dkkm_results['nfeatures']
+        all_data.append(dkkm_results[['panel', 'month', 'alpha', 'num_factors', 'sharpe']])
 
     if all_data:
         return pd.concat(all_data, ignore_index=True)

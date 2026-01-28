@@ -164,7 +164,7 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
             key = (nfeatures, alpha)
             dkkm_weights[key] = weights_on_stocks.astype(np.float32)
 
-        print(f"  Month {month}: DKKM nfeatures={nfeatures} complete")
+        print(f"  Month {month}: DKKM nfeatures={nfeatures} complete at {now()}")
 
     return month, firm_ids, dkkm_weights
 

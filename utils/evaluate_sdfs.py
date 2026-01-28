@@ -5,8 +5,8 @@ This script loads the stock weights from estimate_sdfs.py and the moments
 from calculate_moments.py, then computes mean, stdev, xret for each method.
 
 Output: {panel_id}_results.pkl containing:
-  - fama_stats: DataFrame (month, method, alpha, stdev, mean, xret)
-  - dkkm_stats: DataFrame (month, nfeatures, alpha, stdev, mean, xret)
+  - fama_results: DataFrame (month, method, alpha, stdev, mean, xret)
+  - dkkm_results: DataFrame (month, nfeatures, alpha, stdev, mean, xret)
   - returns: DataFrame (month, sdf_ret, mkt_rf)
 
 Usage:
@@ -178,7 +178,7 @@ def main():
             'mkt_rf': mkt_rf,
         })
 
-        # Fama stats (includes ff, fm, capm)
+        # Fama results (includes ff, fm, capm)
         for (method_name, alpha), weights_on_stocks in w['fama'].items():
             stdev = np.sqrt(weights_on_stocks @ stock_cov @ weights_on_stocks)
             mean = weights_on_stocks @ rp
@@ -193,7 +193,7 @@ def main():
                 'xret': xret,
             })
 
-        # DKKM stats
+        # DKKM results
         for (nfeatures, alpha), weights_on_stocks in w['dkkm'].items():
             stdev = np.sqrt(weights_on_stocks @ stock_cov @ weights_on_stocks)
             mean = weights_on_stocks @ rp
@@ -214,21 +214,21 @@ def main():
     # =========================================================================
     # CREATE OUTPUT DATAFRAMES
     # =========================================================================
-    fama_stats = pd.DataFrame(all_fama_results)
-    dkkm_stats = pd.DataFrame(all_dkkm_results)
+    fama_results = pd.DataFrame(all_fama_results)
+    dkkm_results = pd.DataFrame(all_dkkm_results)
     returns = pd.DataFrame(all_returns)
 
     print(f"\nResults:")
-    print(f"  Fama stats: {len(fama_stats)} observations")
-    print(f"  DKKM stats: {len(dkkm_stats)} observations")
+    print(f"  Fama results: {len(fama_results)} observations")
+    print(f"  DKKM results: {len(dkkm_results)} observations")
     print(f"  Returns: {len(returns)} months")
 
     # =========================================================================
     # SAVE RESULTS
     # =========================================================================
     results = {
-        'fama_stats': fama_stats,
-        'dkkm_stats': dkkm_stats,
+        'fama_results': fama_results,
+        'dkkm_results': dkkm_results,
         'returns': returns,
         'panel_id': panel_id,
         'model': MODEL,

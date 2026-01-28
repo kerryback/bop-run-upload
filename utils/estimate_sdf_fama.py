@@ -130,7 +130,7 @@ def compute_month_weights_fama(month_data, alpha_lst_fama, CHARS):
     # Store mkt_rf value for this month (for evaluate_sdfs output)
     mkt_rf_value = mkt_rf.loc[month] if month in mkt_rf.index else np.nan
 
-    print(f"  Month {month}: Fama/CAPM complete")
+    print(f"  Month {month}: Fama/CAPM complete at {now()}")
 
     return month, firm_ids, fama_weights, mkt_rf_value, market_weight
 
