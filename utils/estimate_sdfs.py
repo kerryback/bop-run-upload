@@ -142,6 +142,8 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
     # Store mkt_rf value for this month (for evaluate_sdfs output)
     mkt_rf_value = mkt_rf.loc[month] if month in mkt_rf.index else np.nan
 
+    print(f"  Month {month}: Fama/CAPM complete")
+
     # =========================================================================
     # DKKM WEIGHTS WITH NMAT AVERAGING
     # =========================================================================
@@ -204,6 +206,8 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
 
             key = (nfeatures, alpha)
             dkkm_weights[key] = weights_on_stocks.astype(np.float32)
+
+        print(f"  Month {month}: DKKM nfeatures={nfeatures} complete")
 
     return month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value
 
