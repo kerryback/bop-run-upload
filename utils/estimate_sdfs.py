@@ -179,10 +179,8 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
                 index=firm_ids,
             )
 
-            # Always add market weights
-            fw_i['mkt_rf'] = fama.fama_french(
-                data_chars_df, CHARS, mve=data_mve
-            )[:, -1]
+            # Always add market weights (reuse pre-computed)
+            fw_i['mkt_rf'] = market_weight
 
             # Portfolio of factors from ridge regression
             pof_i = dkkm.mve_data(f_subset_i, month, scaled_alphas, mkt_rf)
