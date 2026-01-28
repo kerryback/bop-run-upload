@@ -38,7 +38,7 @@ def submit_logs():
     resp = requests.post(
         f"{MONITOR_URL}/submit-logs",
         json={"app_name": APP_NAME, "logs": logs},
-        timeout=30,
+        timeout=90,
     )
     resp.raise_for_status()
 
@@ -54,6 +54,8 @@ def main():
         time.sleep(INTERVAL)
         try:
             submit_logs()
+        except requests.exceptions.Timeout:
+            print(f"log_streamer: timeout (logs too large, will retry)", file=sys.stderr)
         except Exception as e:
             print(f"log_streamer: error: {e}", file=sys.stderr)
 
