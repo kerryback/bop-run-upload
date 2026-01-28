@@ -184,33 +184,29 @@ def run_workflow_for_index(panel_id):
     os.remove(checkpoint_file)
     print(f"[CHECKPOINT] Pre-fama checkpoint uploaded at {now()}")
 
-    # Step 2: Fama factors (in-process)
-    print(f"\n{'='*70}")
-    print(f"STEP 2: Computing Fama-French and Fama-MacBeth factors")
-    print(f"{'='*70}\n")
-    t0 = time.time()
-    from generate_fama_factors import compute as compute_fama
-    fama_data = compute_fama(full_panel_id, model)
-    timings['fama'] = time.time() - t0
+    # Step 2: Fama factors
+    timings['fama'] = run_script(
+        "utils/generate_fama_factors.py",
+        [full_panel_id],
+        "STEP 2: Computing Fama-French and Fama-MacBeth factors"
+    )
+    # Factor files not uploaded to S3
 
-    # Step 3: DKKM factors (in-process)
-    print(f"\n{'='*70}")
-    print(f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})")
-    print(f"{'='*70}\n")
-    t0 = time.time()
-    from generate_dkkm_factors import compute as compute_dkkm
-    dkkm_data = compute_dkkm(full_panel_id, model)
-    timings['dkkm'] = time.time() - t0
+    # Step 3: DKKM factors
+    timings['dkkm'] = run_script(
+        "utils/generate_dkkm_factors.py",
+        [full_panel_id],
+        f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})"
+    )
+    # Factor files not uploaded to S3
 
-    # Step 4: Estimate SDFs (in-process, receives Fama + DKKM data in memory)
-    print(f"\n{'='*70}")
-    print(f"STEP 4: Estimating SDFs (computing stock weights)")
-    print(f"{'='*70}\n")
-    t0 = time.time()
-    from estimate_sdfs import run as run_estimate_sdfs
-    run_estimate_sdfs(full_panel_id, model, dkkm_data=dkkm_data, fama_data=fama_data)
-    del dkkm_data, fama_data  # Free memory
-    timings['estimate'] = time.time() - t0
+    # Step 4: Estimate SDFs (compute stock weights)
+    timings['estimate'] = run_script(
+        "utils/estimate_sdfs.py",
+        [full_panel_id],
+        "STEP 4: Estimating SDFs (computing stock weights)"
+    )
+
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights.pkl"))
 

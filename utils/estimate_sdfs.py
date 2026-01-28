@@ -210,15 +210,11 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
     return month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value
 
 
-def run(panel_id, model_name, dkkm_data=None, fama_data=None):
+def run(panel_id, model_name):
     """
     Run SDF estimation.
 
-    If dkkm_data is provided, uses it directly (no disk I/O for DKKM).
-    Otherwise loads from {panel_id}_dkkm.pkl.
-
-    If fama_data is provided, uses it directly (no disk I/O for Fama).
-    Otherwise loads from {panel_id}_fama.pkl.
+    Loads Fama and DKKM factors from disk.
 
     Uses backend='multiprocessing' (fork on Linux) so that large shared
     data (frets_list, W_list, ff_rets, fm_rets) is inherited via
@@ -256,25 +252,19 @@ def run(panel_id, model_name, dkkm_data=None, fama_data=None):
     # Prepare panel
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
 
-    # Load or use provided Fama results
-    if fama_data is None:
-        fama_path = os.path.join(config.DATA_DIR, f"{panel_id}_fama.pkl")
-        print(f"Loading fama factors from {fama_path}...")
-        with open(fama_path, 'rb') as f:
-            fama_data = pickle.load(f)
-    else:
-        print("Using Fama factors from memory")
+    # Load Fama results
+    fama_path = os.path.join(config.DATA_DIR, f"{panel_id}_fama.pkl")
+    print(f"Loading fama factors from {fama_path}...")
+    with open(fama_path, 'rb') as f:
+        fama_data = pickle.load(f)
     ff_rets = fama_data['ff_returns']
     fm_rets = fama_data['fm_returns']
 
-    # Load or use provided DKKM results
-    if dkkm_data is None:
-        dkkm_path = os.path.join(config.DATA_DIR, f"{panel_id}_dkkm.pkl")
-        print(f"Loading dkkm factors from {dkkm_path}...")
-        with open(dkkm_path, 'rb') as f:
-            dkkm_data = pickle.load(f)
-    else:
-        print("Using DKKM factors from memory")
+    # Load DKKM results
+    dkkm_path = os.path.join(config.DATA_DIR, f"{panel_id}_dkkm.pkl")
+    print(f"Loading dkkm factors from {dkkm_path}...")
+    with open(dkkm_path, 'rb') as f:
+        dkkm_data = pickle.load(f)
     frets_list = dkkm_data['dkkm_factors']
     W_list = dkkm_data['weights']
     NMAT = dkkm_data['nmat']
