@@ -86,7 +86,13 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
     Returns:
         Tuple of (month, firm_ids, fama_weights_dict, dkkm_weights_dict)
     """
+    import time
+    from datetime import datetime, timezone
+
     month = month_data['month']
+    t_start = time.time()
+    print(f"  [Worker PID {os.getpid()}] Month {month}: Starting at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
+
     data_chars = month_data['data_chars']  # numpy array
     data_mve = month_data['data_mve']      # numpy array
     firm_ids = month_data['firm_ids']
@@ -207,6 +213,8 @@ def compute_month_weights(month_data, half, nfeatures_lst, alpha_lst,
             key = (nfeatures, alpha)
             dkkm_weights[key] = weights_on_stocks.astype(np.float32)
 
+    elapsed = time.time() - t_start
+    print(f"  [Worker PID {os.getpid()}] Month {month}: Completed in {elapsed:.1f}s at {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
     return month, firm_ids, fama_weights, dkkm_weights, mkt_rf_value
 
 

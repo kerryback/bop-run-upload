@@ -108,7 +108,7 @@ NMAT = 20
 N_DKKM_FEATURES_LIST = [6, 36, 360, 1800, 9000]
 
 # ROOT: main_revised.py line 14: max_features = max(nfeatures_lst)
-MAX_FEATURES = 9000
+MAX_FEATURES = max(N_DKKM_FEATURES_LIST)
 
 # ROOT: main_revised.py line 15: alpha_lst_fama = [0]
 ALPHA_LST_FAMA = [0]
