@@ -264,9 +264,12 @@ def run(panel_id, model_name):
         data = panel.loc[month]
         firm_ids = data.index.to_numpy()
 
+        # Use to_numpy() for better performance and ensure C-contiguous layout
+        data_chars = np.ascontiguousarray(data[CHARS].to_numpy())
+
         month_data_list.append({
             'month': month,
-            'data_chars': data[CHARS].values,
+            'data_chars': data_chars,
             'firm_ids': firm_ids,
             'rf_stand': data.rf_stand if MODEL == 'bgn' and 'rf_stand' in data.columns else None,
         })

@@ -203,10 +203,14 @@ def run(panel_id, model_name):
         data = panel.loc[month]
         firm_ids = data.index.to_numpy()
 
+        # Use to_numpy() for better performance and ensure C-contiguous layout
+        data_chars = np.ascontiguousarray(data[CHARS].to_numpy())
+        data_mve = np.ascontiguousarray(data.mve.to_numpy())
+
         month_data_list.append({
             'month': month,
-            'data_chars': data[CHARS].values,
-            'data_mve': data.mve.values,
+            'data_chars': data_chars,
+            'data_mve': data_mve,
             'firm_ids': firm_ids,
         })
 

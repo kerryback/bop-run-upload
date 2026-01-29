@@ -51,14 +51,17 @@ def rank_standardize(values):
         values: (N, P) numpy ndarray to rank-standardize
 
     Returns:
-        (N, P) numpy ndarray with values in ~[-0.5, 0.5]
+        (N, P) numpy ndarray with values in ~[-0.5, 0.5], C-contiguous
     """
     n = values.shape[0]
     order = np.argsort(values, axis=0, kind='quicksort')
-    ranks = np.empty_like(values, dtype=np.float64)
+    # Pre-allocate with C-contiguous layout
+    ranks = np.empty(values.shape, dtype=np.float64, order='C')
     col_idx = np.arange(values.shape[1])
     ranks[order, col_idx] = np.arange(1, n + 1, dtype=np.float64).reshape(-1, 1)
-    return (ranks - 0.5) / n - 0.5
+    result = (ranks - 0.5) / n - 0.5
+    # Ensure result is C-contiguous for downstream operations
+    return np.ascontiguousarray(result)
 
 
 # =============================================================================
@@ -92,12 +95,16 @@ def rff(data, rf, W, model):
     if model == 'bgn':
         X = np.column_stack([X, rf.values])
 
+    # Ensure C-contiguous for optimal matrix multiplication performance
+    X = np.ascontiguousarray(X)
+
     # ROOT line 20: W @ X.T — (D/2, L) @ (L, N) = (D/2, N)
     Z = W @ X.T
 
     # ROOT lines 21-22: sin and cos features
     # ROOT line 23: concatenate [sin; cos] then transpose to (N, D)
-    features = np.vstack([np.sin(Z), np.cos(Z)]).T
+    # Use column_stack instead of vstack+transpose for better memory layout
+    features = np.ascontiguousarray(np.vstack([np.sin(Z), np.cos(Z)]).T)
 
     # Return rank-standardized features only
     return rank_standardize(features)
@@ -133,6 +140,10 @@ def ridge_regr(signals, labels, future_signals, shrinkage_list):
     Returns:
         betas: (P, len(shrinkage_list)) coefficient matrix
     """
+    # Ensure C-contiguous arrays for optimal BLAS performance
+    signals = np.ascontiguousarray(signals)
+    labels = np.ascontiguousarray(labels)
+
     t_ = signals.shape[0]
     p_ = signals.shape[1]
 
@@ -145,10 +156,10 @@ def ridge_regr(signals, labels, future_signals, shrinkage_list):
 
         # Compute for all shrinkage values at once
         # ROOT line 143: penalty is 360*z
-        intermed = np.concatenate([
-            (1 / (eigenvalues.reshape(-1, 1) + 360*z)) * multiplied
-            for z in shrinkage_list
-        ], axis=1)
+        # Pre-allocate for better memory performance
+        intermed = np.empty((multiplied.shape[0], len(shrinkage_list)), dtype=multiplied.dtype)
+        for i, z in enumerate(shrinkage_list):
+            intermed[:, i:i+1] = (1 / (eigenvalues.reshape(-1, 1) + 360*z)) * multiplied
         betas = eigenvectors @ intermed
 
     else:
@@ -159,10 +170,10 @@ def ridge_regr(signals, labels, future_signals, shrinkage_list):
         multiplied = eigenvectors.T @ means
 
         # ROOT line 153: same 360*z penalty
-        intermed = np.concatenate([
-            (1 / (eigenvalues.reshape(-1, 1) + 360*z)) * multiplied
-            for z in shrinkage_list
-        ], axis=1)
+        # Pre-allocate for better memory performance
+        intermed = np.empty((multiplied.shape[0], len(shrinkage_list)), dtype=multiplied.dtype)
+        for i, z in enumerate(shrinkage_list):
+            intermed[:, i:i+1] = (1 / (eigenvalues.reshape(-1, 1) + 360*z)) * multiplied
         tmp = eigenvectors.T @ signals
         betas = tmp.T @ intermed
 
