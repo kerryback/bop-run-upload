@@ -70,7 +70,6 @@ pip install -r requirements.txt
 - scipy (>=1.7.0)
 - statsmodels (>=0.13.0)
 - scikit-learn (>=1.0.0)
-- numba (>=0.56.0)
 - joblib (>=1.1.0)
 - boto3 (>=1.26.0)
 - requests (>=2.31.0)

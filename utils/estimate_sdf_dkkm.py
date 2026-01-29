@@ -51,7 +51,6 @@ sys.modules['config'] = config
 # Import factor modules
 try:
     from utils_factors import dkkm_functions as dkkm
-    from utils_factors import fama_functions as fama
     from utils_factors import factor_utils
 except ImportError as e:
     print(f"Import error: {e}")
