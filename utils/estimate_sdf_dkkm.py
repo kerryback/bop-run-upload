@@ -268,7 +268,7 @@ def run(panel_id, model_name):
             'month': month,
             'data_chars': data[CHARS].values,
             'firm_ids': firm_ids,
-            'rf_stand': data.rf_stand.values if MODEL == 'bgn' and 'rf_stand' in data.columns else None,
+            'rf_stand': data.rf_stand if MODEL == 'bgn' and 'rf_stand' in data.columns else None,
         })
 
     print(f"  Prepared {len(month_data_list)} months in {time.time()-t0:.1f}s")
