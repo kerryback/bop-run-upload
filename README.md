@@ -249,6 +249,19 @@ Each panel generates:
 | `{model}_{id}_moments.pkl` | Conditional moments |
 | `{model}_{id}_results.pkl` | Final evaluation results |
 
+## Files Uploaded to AWS S3
+
+When S3 is configured, the following files are uploaded after each step:
+
+| File | Description |
+|------|-------------|
+| `{model}_{id}_panel.pkl` | Panel data |
+| `{model}_{id}_25_portfolios.pkl` | Double-sorted portfolios |
+| `{model}_{id}_stock_weights_fama.pkl` | Fama SDF weights |
+| `{model}_{id}_stock_weights_dkkm.pkl` | DKKM SDF weights |
+| `{model}_{id}_moments.pkl` | Conditional moments |
+| `{model}_{id}_results.pkl` | Final evaluation results |
+
 ## Performance Optimization
 
 The framework includes several optimizations:
