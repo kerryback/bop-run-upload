@@ -98,6 +98,14 @@ def upload_file(filepath):
     _upload(filepath)
 
 
+def upload_logs(log_file):
+    """Upload logs to S3 after each step."""
+    if not S3_CONFIGURED or not os.path.exists(log_file):
+        return
+    from utils.upload_to_aws import upload_file as _upload
+    _upload(log_file)
+
+
 class ScriptError(Exception):
     """Raised when a subprocess script fails."""
     def __init__(self, script_name, returncode, output_tail=""):
@@ -138,7 +146,7 @@ def run_script(script_name, args, description):
     return elapsed
 
 
-def run_workflow_for_index(panel_id):
+def run_workflow_for_index(panel_id, log_file):
     """
     Run complete workflow for a single panel index.
 
@@ -168,6 +176,7 @@ def run_workflow_for_index(panel_id):
     )
     if KEEP_PANEL:
         upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
+    upload_logs(log_file)
 
     # Step 1b: Generate 25 portfolios
     timings['25_portfolios'] = run_script(
@@ -176,6 +185,7 @@ def run_workflow_for_index(panel_id):
         "STEP 1b: Computing 25 double-sorted portfolios"
     )
     upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl"))
+    upload_logs(log_file)
 
     # Diagnostic checkpoint: upload a trivial file to S3 to confirm process is alive
     checkpoint_file = os.path.join(DATA_DIR, f"{full_panel_id}_checkpoint.pkl")
@@ -192,6 +202,7 @@ def run_workflow_for_index(panel_id):
         "STEP 2: Computing Fama-French and Fama-MacBeth factors"
     )
     # Factor files not uploaded to S3
+    upload_logs(log_file)
 
     # Step 3: DKKM factors
     timings['dkkm'] = run_script(
@@ -200,6 +211,7 @@ def run_workflow_for_index(panel_id):
         f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})"
     )
     # Factor files not uploaded to S3
+    upload_logs(log_file)
 
     # Step 4a: Estimate Fama/CAPM SDFs (compute stock weights)
     timings['estimate_fama'] = run_script(
@@ -210,6 +222,7 @@ def run_workflow_for_index(panel_id):
 
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_fama.pkl"))
+    upload_logs(log_file)
 
     # Step 4b: Estimate DKKM SDFs (compute stock weights)
     timings['estimate_dkkm'] = run_script(
@@ -220,6 +233,7 @@ def run_workflow_for_index(panel_id):
 
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_dkkm.pkl"))
+    upload_logs(log_file)
 
     # Step 5: Calculate SDF moments
     timings['moments'] = run_script(
@@ -229,6 +243,7 @@ def run_workflow_for_index(panel_id):
     )
     if KEEP_MOMENTS:
         upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
+    upload_logs(log_file)
 
     # arr_tuple is no longer needed after moments are computed
     arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
@@ -243,6 +258,7 @@ def run_workflow_for_index(panel_id):
         "STEP 6: Evaluating SDFs (computing statistics)"
     )
     upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl"))
+    upload_logs(log_file)
 
     # Cleanup
     if not KEEP_MOMENTS:
@@ -354,7 +370,7 @@ if __name__ == "__main__":
     # Run workflow for each index
     for idx in range(start_idx, end_idx):
         try:
-            run_workflow_for_index(idx)
+            run_workflow_for_index(idx, log_file)
         except Exception as e:
             import traceback
             crash_tb = traceback.format_exc()
@@ -371,6 +387,7 @@ if __name__ == "__main__":
                     'timestamp': now(),
                 }, f)
             upload_file(crash_file)
+            upload_logs(log_file)
             print(f"[CRASH] Crash report uploaded to S3")
             sys.exit(1)
 
@@ -380,6 +397,24 @@ if __name__ == "__main__":
     print(f"ALL WORKFLOWS COMPLETE at {now()}")
     print(f"{'='*70}")
     print(f"Total runtime: {fmt(total_time)}")
+
+    # Upload final logs
+    upload_logs(log_file)
+
+    # Notify monitor that job is complete (for kill signal)
+    monitor_url = os.environ.get('MONITOR_URL')
+    app_name = os.environ.get('KOYEB_APP_NAME')
+    if monitor_url and app_name:
+        import requests
+        try:
+            requests.post(
+                f"{monitor_url}/kill",
+                json={"app_name": app_name},
+                timeout=30
+            )
+            print(f"\n[MONITOR] Notified monitor for app termination")
+        except Exception as e:
+            print(f"\n[MONITOR] Failed to notify monitor: {e}")
 
     # Koyeb auto-cleanup
     if koyeb_mode:
