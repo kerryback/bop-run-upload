@@ -28,7 +28,6 @@ This framework:
 ```
 ├── config.py                 # Centralized configuration
 ├── main.py                   # Main script to run simulations
-├── analyze.py                # Stand-alone script to analyze results after main.py completes
 ├── requirements.txt          # Python dependencies
 ├── deploy_koyeb.sh           # Wrapper to run main.py on Koyeb with AWS S3 storage
 │
@@ -51,12 +50,7 @@ This framework:
 │
 ├── utils_bgn/                # BGN model implementation
 ├── utils_kp14/               # KP14 model implementation
-├── utils_gs21/               # GS21 model implementation
-│
-├── outputs/                  # Generated panel data and results
-├── tables/                   # LaTeX tables
-├── figures/                  # Boxplot figures
-└── logs/                     # Execution logs
+└── utils_gs21/               # GS21 model implementation
 ```
 
 ## Installation
@@ -112,14 +106,6 @@ python main.py gs21 5 16
 # Deploy KP14 panels 0-10 on 5xlarge instance
 ./deploy_koyeb.sh kp14 0 10 5xlarge
 ```
-
-### Analyzing Results
-
-```bash
-python analyze.py
-```
-
-Generates LaTeX tables and boxplot figures from completed panel results.
 
 ## Workflow Pipeline
 
