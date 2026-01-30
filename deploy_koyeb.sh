@@ -62,33 +62,7 @@ MODEL=$1
 START=$2
 END=$3
 INSTANCE_TYPE=${4:-5xlarge}
-GIT_REPO=${5:-}
-
-# Auto-detect git repository if not provided
-if [ -z "$GIT_REPO" ]; then
-    echo "Auto-detecting git repository..."
-    if git remote get-url origin &> /dev/null; then
-        # Extract username/repo from git remote URL
-        # Handles both HTTPS and SSH formats
-        REMOTE_URL=$(git remote get-url origin)
-
-        # Extract from HTTPS: https://github.com/user/repo.git -> user/repo
-        if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+/[^/]+)(\.git)?$ ]]; then
-            GIT_REPO="${BASH_REMATCH[1]}"
-            GIT_REPO="${GIT_REPO%.git}"  # Remove .git suffix if present
-            echo "✓ Detected repository: $GIT_REPO"
-        else
-            echo "ERROR: Could not parse git remote URL: $REMOTE_URL"
-            echo "Please specify git repo manually: $0 $MODEL $START $END $INSTANCE_TYPE username/repo"
-            exit 1
-        fi
-    else
-        echo "ERROR: No git repository detected and none specified"
-        echo "Either run from a git repository or specify manually:"
-        echo "  $0 $MODEL $START $END $INSTANCE_TYPE username/repo"
-        exit 1
-    fi
-fi
+GIT_REPO=${5:-kerryback/bop-run-upload}
 
 # Validate model
 if [[ ! "$MODEL" =~ ^(bgn|kp14|gs21)$ ]]; then
@@ -208,6 +182,7 @@ koyeb services create worker \
   --type worker \
   --git "github.com/$GIT_REPO" \
   --git-branch "$GIT_BRANCH" \
+  --git-no-deploy-on-push \
   --git-run-command "python -c \"import requests, os, datetime; requests.post(os.environ['MONITOR_URL']+'/init-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'model': '$MODEL', 'start': $START, 'end': $END, 'instance_type': '$INSTANCE_TYPE', 'started_at': datetime.datetime.now().isoformat()})\"; python main.py $MODEL $START $END --koyeb" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \

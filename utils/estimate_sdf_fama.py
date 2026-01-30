@@ -220,7 +220,7 @@ def run(panel_id, model_name):
     # PARALLEL WEIGHT COMPUTATION
     # =========================================================================
     print(f"\n{'-'*70}")
-    n_jobs = config.get_n_jobs_for_step('sdf')
+    n_jobs = config.get_n_jobs_for_step('fama')
     print(f"Computing Fama/CAPM stock weights (n_jobs={n_jobs})...")
     t0 = time.time()
 

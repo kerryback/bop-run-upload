@@ -22,15 +22,14 @@ T = 720    # Number of time periods (excluding burnin)
 BGN_BURNIN = 500   # ROOT: parameters.py line 12: burnin = 200
 KP14_BURNIN = 500
 GS21_BURNIN = 500
-N_JOBS = 24   # ROOT: main_revised.py line 20: n_jobs = 10
+N_JOBS = 16   # ROOT: main_revised.py line 20: n_jobs = 10
 
 # Per-step n_jobs configuration (overrides N_JOBS if set)
 # Useful for memory management with large MAX_FEATURES
 # Set to None to use the default N_JOBS value
-N_JOBS_MOMENTS = 30      # Step 5: Moments calculation (not currently used - reserved for future)
-N_JOBS_FAMA = None       # Step 2: Fama factors (uses N_JOBS=24)
-N_JOBS_DKKM = None       # Step 3: DKKM factors (uses N_JOBS=24)
-N_JOBS_SDF = 10          # Step 4: SDF estimation (memory-intensive with large MAX_FEATURES)
+N_JOBS_MOMENTS = None    # Step 5: Moments calculation (not currently used - reserved for future)
+N_JOBS_FAMA = None       # Step 2: Fama factors
+N_JOBS_DKKM = 4          # Step 3: DKKM factors
 
 # =============================================================================
 # DATA DIRECTORY CONFIGURATION
@@ -73,7 +72,6 @@ def get_n_jobs_for_step(step_name):
         'moments': N_JOBS_MOMENTS,
         'fama': N_JOBS_FAMA,
         'dkkm': N_JOBS_DKKM,
-        'sdf': N_JOBS_SDF,
     }
 
     if step_name in overrides and overrides[step_name] is not None:
@@ -277,27 +275,3 @@ def get_model_config(model_name):
         'alpha_lst': MODEL_ALPHA_LST[model_name],
     }
 
-
-# =============================================================================
-# CONFIGURATION EXAMPLES FOR DIFFERENT SCENARIOS
-# =============================================================================
-#
-# For high feature counts (MAX_FEATURES > 1000), memory usage increases
-# significantly in Step 4 (SDF estimation). Set N_JOBS_SDF to a lower value
-# to prevent OOM errors:
-#
-# Example 1: MAX_FEATURES=18000 with memory optimization (current config)
-#   N_DKKM_FEATURES_LIST = [6, 36, 360, 3600, 18000]
-#   MAX_FEATURES = 18000
-#   N_JOBS = 24             # Used by Steps 2 & 3 (Fama, DKKM)
-#   N_JOBS_SDF = 10         # Reduce to 10 workers for Step 4
-#   N_JOBS_MOMENTS = 30     # Reserved for Step 5 (not currently used)
-#
-# Example 2: Balanced configuration
-#   MAX_FEATURES = 3600
-#   N_JOBS = 24
-#   N_JOBS_SDF = 16         # Moderate reduction for Step 4
-#
-# Note: N_JOBS_MOMENTS is reserved for future parallelization of Step 5
-# (moments calculation in evaluate_sdfs.py), which is not currently parallel.
-# =============================================================================
