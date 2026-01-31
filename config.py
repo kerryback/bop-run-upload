@@ -30,18 +30,18 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 4,
-        'generate_fama': 4,
-        'generate_dkkm': 4,
-        'estimate_fama': 4,
-        'estimate_dkkm': 4,
+        'moments': 8,
+        'generate_fama': 8,
+        'generate_dkkm': 8,
+        'estimate_fama': 8,
+        'estimate_dkkm': 8,
     },
     'kp14': {
-        'moments': 4,
-        'generate_fama': 4,
-        'generate_dkkm': 4,
-        'estimate_fama': 4,
-        'estimate_dkkm': 4,
+        'moments': 8,
+        'generate_fama': 8,
+        'generate_dkkm': 8,
+        'estimate_fama': 8,
+        'estimate_dkkm': 8,
     },
     'gs21': {
         'moments': 4,
