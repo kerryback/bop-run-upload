@@ -237,7 +237,7 @@ def run(panel_id, model_name):
     eval_end = end
 
     print(f"\nConfiguration:")
-    print(f"  N_JOBS: {config.N_JOBS}")
+    print(f"  N_JOBS (dkkm, {model_name}): {config.get_n_jobs_for_step('estimate_dkkm', model_name)}")
     print(f"  NMAT: {NMAT}")
     print(f"  Features: {nfeatures_lst}")
     print(f"  Alphas (DKKM): {alpha_lst}")
@@ -279,7 +279,7 @@ def run(panel_id, model_name):
     # PARALLEL WEIGHT COMPUTATION
     # =========================================================================
     print(f"\n{'-'*70}")
-    n_jobs = config.get_n_jobs_for_step('dkkm')
+    n_jobs = config.get_n_jobs_for_step('estimate_dkkm', model_name)
     print(f"Computing DKKM stock weights (n_jobs={n_jobs})...")
     t0 = time.time()
 

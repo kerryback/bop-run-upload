@@ -17,7 +17,7 @@ Arguments:
     model: Model name (bgn, kp14, gs21)
     start: Starting index (optional, default: 0)
     end: Ending index exclusive (optional, default: 1)
-    --koyeb: Configure for Koyeb deployment (N_JOBS=24, TEMP_DIR=DATA_DIR)
+    --koyeb: Configure for Koyeb deployment (TEMP_DIR=DATA_DIR)
 
 ROOT REFERENCE: main_revised.py
   The root runs everything in one script (generate panel, compute factors,
@@ -73,8 +73,9 @@ if model not in ['bgn', 'kp14', 'gs21']:
 
 # Configure environment
 if koyeb_mode:
-    config.set_n_jobs(24)
     # On Koyeb, use DATA_DIR for everything (no separate scratch)
+    # N_JOBS is configured per-model in MODEL_N_JOBS
+    pass
 elif os.path.exists('/opt/scratch/keb7'):
     config.set_jgsrc1_config()
 
@@ -361,7 +362,7 @@ if __name__ == "__main__":
     print(f"  Index range: {start_idx} to {end_idx-1} (inclusive)")
     print(f"  Total runs: {end_idx - start_idx}")
     print(f"  DKKM features: {N_DKKM_FEATURES_LIST}")
-    print(f"  N_JOBS: {config.N_JOBS}")
+    print(f"  N_JOBS: {config.MODEL_N_JOBS[model]}")
     print(f"  Log file: {log_file}")
     print(f"\nDirectories:")
     print(f"  DATA_DIR: {DATA_DIR}")

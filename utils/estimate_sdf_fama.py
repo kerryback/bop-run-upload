@@ -181,7 +181,7 @@ def run(panel_id, model_name):
     eval_end = end
 
     print(f"\nConfiguration:")
-    print(f"  N_JOBS: {config.N_JOBS}")
+    print(f"  N_JOBS (fama, {model_name}): {config.get_n_jobs_for_step('estimate_fama', model_name)}")
     print(f"  Alphas (Fama): {alpha_lst_fama}")
     print(f"  Evaluation range: {eval_start} to {eval_end}")
 
@@ -220,7 +220,7 @@ def run(panel_id, model_name):
     # PARALLEL WEIGHT COMPUTATION
     # =========================================================================
     print(f"\n{'-'*70}")
-    n_jobs = config.get_n_jobs_for_step('fama')
+    n_jobs = config.get_n_jobs_for_step('estimate_fama', model_name)
     print(f"Computing Fama/CAPM stock weights (n_jobs={n_jobs})...")
     t0 = time.time()
 

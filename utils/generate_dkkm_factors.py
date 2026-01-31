@@ -90,7 +90,7 @@ def compute(panel_id, model_name):
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
 
     # Generate W matrices and compute factor returns
-    n_jobs = config.get_n_jobs_for_step('dkkm')
+    n_jobs = config.get_n_jobs_for_step('generate_dkkm', model_name)
     print(f"\nComputing DKKM factor returns (max_features={max_features}, NMAT={NMAT}, n_jobs={n_jobs})...")
     t0 = time.time()
 

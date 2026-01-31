@@ -19,17 +19,40 @@ import os
 
 N = 1000   # Number of firms
 T = 720    # Number of time periods (excluding burnin)
-BGN_BURNIN = 500   # ROOT: parameters.py line 12: burnin = 200
-KP14_BURNIN = 500
-GS21_BURNIN = 500
-N_JOBS = 16   # ROOT: main_revised.py line 20: n_jobs = 10
+BGN_BURNIN = 400
+KP14_BURNIN = 400
+GS21_BURNIN = 400
 
-# Per-step n_jobs configuration (overrides N_JOBS if set)
-# Useful for memory management with large MAX_FEATURES
-# Set to None to use the default N_JOBS value
-N_JOBS_MOMENTS = None    # Step 5: Moments calculation (not currently used - reserved for future)
-N_JOBS_FAMA = None       # Step 2: Fama factors
-N_JOBS_DKKM = 4          # Step 3: DKKM factors
+# =============================================================================
+# N_JOBS CONFIGURATION BY MODEL AND STEP
+# =============================================================================
+# GS21: 2xlarge instances (8GB RAM) - 4 workers
+# BGN/KP14: 4xlarge instances (16GB RAM) - 8 workers
+# DKKM step uses fewer workers due to memory constraints
+
+MODEL_N_JOBS = {
+    'bgn': {
+        'moments': 8,
+        'generate_fama': 8,
+        'generate_dkkm': 8,
+        'estimate_fama': 8,
+        'estimate_dkkm': 8,
+    },
+    'kp14': {
+        'moments': 8,
+        'generate_fama': 8,
+        'generate_dkkm': 8,
+        'estimate_fama': 8,
+        'estimate_dkkm': 8,
+    },
+    'gs21': {
+        'moments': 4,
+        'generate_fama': 4,
+        'generate_dkkm': 4,
+        'estimate_fama': 4,
+        'estimate_dkkm': 4,
+    },
+}
 
 # =============================================================================
 # DATA DIRECTORY CONFIGURATION
@@ -50,41 +73,29 @@ def set_temp_dir(temp_path):
     print(f"[CONFIG] TEMP_DIR set to: {TEMP_DIR}")
 
 
-def set_n_jobs(n_jobs):
-    """Set number of parallel jobs."""
-    global N_JOBS
-    N_JOBS = n_jobs
-    print(f"[CONFIG] N_JOBS set to: {N_JOBS}")
-
-
-def get_n_jobs_for_step(step_name):
+def get_n_jobs_for_step(step_name, model_name='bgn'):
     """
-    Get the appropriate n_jobs for a specific step.
+    Get the appropriate n_jobs for a specific step and model.
 
     Args:
-        step_name: 'moments', 'fama', 'dkkm', or 'sdf'
+        step_name: 'moments', 'fama', or 'dkkm'
+        model_name: 'bgn', 'kp14', or 'gs21'
 
     Returns:
         Number of parallel jobs to use
     """
-    # Check for explicit per-step override
-    overrides = {
-        'moments': N_JOBS_MOMENTS,
-        'fama': N_JOBS_FAMA,
-        'dkkm': N_JOBS_DKKM,
-    }
-
-    if step_name in overrides and overrides[step_name] is not None:
-        return overrides[step_name]
-
-    # Default: use global N_JOBS
-    return N_JOBS
+    model_config = MODEL_N_JOBS.get(model_name, MODEL_N_JOBS['bgn'])
+    return model_config[step_name]
 
 
 def set_jgsrc1_config():
-    """Configure for jgsrc1 server."""
+    """Configure for jgsrc1 server with reduced worker counts."""
     set_temp_dir('/opt/scratch/keb7')
-    set_n_jobs(10)
+    # Cap all models to 10 workers max
+    for model in MODEL_N_JOBS:
+        for step in MODEL_N_JOBS[model]:
+            MODEL_N_JOBS[model][step] = min(MODEL_N_JOBS[model][step], 10)
+    print("[CONFIG] MODEL_N_JOBS capped to 10 workers")
 
 # =============================================================================
 # FILE MANAGEMENT FLAGS
@@ -267,7 +278,7 @@ def get_model_config(model_name):
         'burnin': burnin_map[model_name],
         'chars': MODEL_CHARS[model_name],
         'factor_names': MODEL_FACTOR_NAMES[model_name],
-        'n_jobs': N_JOBS,
+        'n_jobs': MODEL_N_JOBS[model_name],
         'nmat': NMAT,
         'max_features': MAX_FEATURES,
         'n_dkkm_features_list': N_DKKM_FEATURES_LIST,

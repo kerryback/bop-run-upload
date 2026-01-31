@@ -180,7 +180,8 @@ def main():
 
     print(f"Computing moments for months {start_month} to {end_month}")
     print(f"  Total: {n_months} months")
-    print(f"  Using parallel processing with n_jobs={config.N_JOBS}")
+    n_jobs = config.get_n_jobs_for_step('moments', model_name)
+    print(f"  Using parallel processing with n_jobs={n_jobs}")
 
     # Process in chunks to avoid memory exhaustion
     # Chunking is the key optimization - prevents accumulating all 13+ GB of results
@@ -200,7 +201,7 @@ def main():
 
         # Use context manager to ensure workers are cleaned up after each chunk
         # This prevents memory accumulation across chunks
-        with Parallel(n_jobs=config.N_JOBS, verbose=5) as parallel:
+        with Parallel(n_jobs=n_jobs, verbose=5) as parallel:
             chunk_results = parallel(
                 delayed(compute_month_moments)(sdf_loop, month)
                 for month in chunk_months

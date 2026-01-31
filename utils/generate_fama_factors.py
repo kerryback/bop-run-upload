@@ -81,7 +81,7 @@ def compute(panel_id, model_name):
     panel, start, end = factor_utils.prepare_panel(panel, CHARS)
 
     # Compute factor returns
-    n_jobs = config.get_n_jobs_for_step('fama')
+    n_jobs = config.get_n_jobs_for_step('generate_fama', model_name)
     print(f"\nComputing Fama-French and Fama-MacBeth factors (n_jobs={n_jobs})...")
     t0 = time.time()
 

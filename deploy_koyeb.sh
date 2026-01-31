@@ -13,7 +13,7 @@
 #   model: bgn, kp14, or gs21
 #   start: Starting index
 #   end: Ending index (exclusive)
-#   instance_type: Koyeb instance type (default: 5xlarge)
+#   instance_type: Koyeb instance type (default: 4xlarge for bgn/kp14, 2xlarge for gs21)
 #   git_repo: GitHub repo in format username/repo (default: auto-detected)
 #   upload_intermediate: Upload panel/moments files to S3 (default: true)
 #
@@ -31,9 +31,9 @@
 #   MONITOR_URL: URL of koyeb-monitor service for self-termination
 #
 # Examples:
-#   ./deploy_koyeb.sh kp14 0 10
-#   ./deploy_koyeb.sh bgn 0 5 5xlarge myuser/noipca
-#   ./deploy_koyeb.sh gs21 0 20 6xlarge
+#   ./deploy_koyeb.sh kp14 0 10              # Uses default 4xlarge
+#   ./deploy_koyeb.sh gs21 0 20              # Uses default 2xlarge
+#   ./deploy_koyeb.sh bgn 0 5 5xlarge        # Override with 5xlarge
 
 set -e  # Exit on error
 
@@ -47,13 +47,14 @@ if [ $# -lt 3 ]; then
     echo "  model:                bgn, kp14, or gs21"
     echo "  start:                Starting index"
     echo "  end:                  Ending index (exclusive)"
-    echo "  instance_type:        Koyeb instance (default: 5xlarge)"
+    echo "  instance_type:        Koyeb instance (default: 4xlarge for bgn/kp14, 2xlarge for gs21)"
     echo "  git_repo:             GitHub repo username/repo (default: auto-detected)"
     echo "  upload_intermediate:  Upload panel/moments to S3 (default: true)"
     echo ""
     echo "Examples:"
-    echo "  $0 kp14 0 10"
-    echo "  $0 bgn 0 5 5xlarge myuser/noipca"
+    echo "  $0 kp14 0 10              # Uses default 4xlarge"
+    echo "  $0 gs21 0 20              # Uses default 2xlarge"
+    echo "  $0 bgn 0 5 5xlarge        # Override with 5xlarge"
     exit 1
 fi
 
@@ -61,15 +62,27 @@ fi
 MODEL=$1
 START=$2
 END=$3
-INSTANCE_TYPE=${4:-5xlarge}
-GIT_REPO=${5:-kerryback/bop-run-upload}
 
-# Validate model
+# Validate model first (needed for default instance type)
 if [[ ! "$MODEL" =~ ^(bgn|kp14|gs21)$ ]]; then
     echo "ERROR: Invalid model '$MODEL'"
     echo "Valid models: bgn, kp14, gs21"
     exit 1
 fi
+
+# Set default instance type based on model
+# GS21: 2xlarge (8GB RAM) - smaller memory footprint (2D arrays only)
+# BGN/KP14: 4xlarge (16GB RAM) - larger memory footprint (3D arrays)
+if [ -z "$4" ]; then
+    if [ "$MODEL" = "gs21" ]; then
+        INSTANCE_TYPE="2xlarge"
+    else
+        INSTANCE_TYPE="4xlarge"
+    fi
+else
+    INSTANCE_TYPE=$4
+fi
+GIT_REPO=${5:-kerryback/bop-run-upload}
 
 # Validate indices
 if [ "$START" -ge "$END" ]; then
