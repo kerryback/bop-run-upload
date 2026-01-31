@@ -19,9 +19,9 @@ import os
 
 N = 1000   # Number of firms
 T = 720    # Number of time periods (excluding burnin)
-BGN_BURNIN = 400
-KP14_BURNIN = 400
-GS21_BURNIN = 400
+BGN_BURNIN = 300
+KP14_BURNIN = 300
+GS21_BURNIN = 300
 
 # =============================================================================
 # N_JOBS CONFIGURATION BY MODEL AND STEP
