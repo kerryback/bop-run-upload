@@ -32,6 +32,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import importlib
 
+from utils.sparse_3d import save_sparse_3d
+
 def fmt(s):
     h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
     return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
@@ -178,20 +180,44 @@ def main():
         arr_tuple = K, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f
         del book, op_cashflow
 
-    # Save arr_tuple as individual .npy files for memory-mapped loading.
-    # Instead of pickling the full ~36 GB tuple (which forces calculate_moments
-    # to load everything into RAM), each array is saved separately with np.save.
-    # calculate_moments.py then loads them with np.load(mmap_mode='r'), which
-    # creates read-only memory-mapped arrays: the OS pages in only the slices
-    # that sdf_compute actually accesses (~40 MB per month), and forked worker
-    # processes share pages via copy-on-write. Total RAM drops from ~36 GB to
-    # the working set size.
+    # Save arr_tuple as individual files for memory-efficient loading.
+    # TxTxN matrices (chi for BGN; K, uj, chi for KP14) are saved as sparse
+    # format to reduce disk usage by ~85%. Other arrays are saved as dense .npy
+    # files with memory-mapped loading support.
     arr_dir = os.path.join(config.TEMP_DIR, f'{model_name}_{identifier}_arr')
     os.makedirs(arr_dir, exist_ok=True)
 
+    # Define which arrays are TxTxN (3D) and should be saved as sparse
+    # BGN arr_tuple: r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow
+    # KP14 arr_tuple (after strip): K, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, rets, erets, lambda_f
+    SPARSE_INDICES = {
+        'bgn': {4: 'chi'},           # chi at index 4
+        'kp14': {0: 'K', 4: 'uj', 5: 'chi'},  # K at 0, uj at 4, chi at 5
+        'gs21': {}                   # GS21 has no TxTxN arrays
+    }
+
+    sparse_config = SPARSE_INDICES.get(model_name, {})
+    sparse_info = {}
+
     print(f"Saving arr_tuple arrays to {arr_dir}/ ...")
     for i, arr in enumerate(arr_tuple):
-        np.save(os.path.join(arr_dir, f'{i}.npy'), np.asarray(arr))
+        arr_np = np.asarray(arr)
+
+        if i in sparse_config and arr_np.ndim == 3:
+            # Save as sparse
+            name = sparse_config[i]
+            sparse_dir = os.path.join(arr_dir, f'{i}_sparse')
+            meta = save_sparse_3d(arr_np, sparse_dir)
+            sparse_info[i] = {
+                'name': name,
+                'is_sparse': True,
+                **meta
+            }
+            print(f"  [{i}] {name}: sparse (sparsity={meta['sparsity']:.1%}, nnz={meta['nnz_total']:,})")
+        else:
+            # Save as dense .npy
+            np.save(os.path.join(arr_dir, f'{i}.npy'), arr_np)
+            sparse_info[i] = {'is_sparse': False}
 
     with open(os.path.join(arr_dir, 'metadata.pkl'), 'wb') as f:
         pickle.dump({
@@ -199,7 +225,9 @@ def main():
             'N': N,
             'T': T,
             'model': model_name,
-            'burnin': burnin
+            'burnin': burnin,
+            'sparse_info': sparse_info,
+            'version': 2  # v2 = sparse format support
         }, f)
 
     print(f"[OK] arr_tuple saved ({len(arr_tuple)} arrays)")

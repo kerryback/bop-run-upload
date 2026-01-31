@@ -30,6 +30,8 @@ import gc
 from joblib import Parallel, delayed
 import importlib
 
+from utils.sparse_3d import load_sparse_3d, Sparse3D
+
 def fmt(s):
     h, m, sec = int(s // 3600), int(s % 3600 // 60), int(s % 60)
     return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
@@ -133,19 +135,33 @@ def main():
         print(f"\nPlease run generate_panel.py first to create the arr_tuple files.")
         sys.exit(1)
 
-    print(f"\nLoading arr_tuple (memmap) from {arr_dir}/ ...")
+    print(f"\nLoading arr_tuple from {arr_dir}/ ...")
     with open(os.path.join(arr_dir, 'metadata.pkl'), 'rb') as f:
         metadata = pickle.load(f)
 
     N = metadata['N']
     T = metadata['T']
+    sparse_info = metadata.get('sparse_info', {})
+    version = metadata.get('version', 1)
 
-    arr_tuple = tuple(
-        np.load(os.path.join(arr_dir, f'{i}.npy'), mmap_mode='r')
-        for i in range(metadata['n_arrays'])
-    )
+    arr_list = []
+    for i in range(metadata['n_arrays']):
+        info = sparse_info.get(i, {})
 
-    print(f"Loaded {len(arr_tuple)} arrays as memmap: N={N}, T={T}")
+        if info.get('is_sparse', False):
+            # Load as sparse
+            sparse_dir = os.path.join(arr_dir, f'{i}_sparse')
+            sparse_list = load_sparse_3d(sparse_dir, info['n_slices'])
+            arr = Sparse3D(sparse_list, info['shape'])
+            print(f"  [{i}] {info.get('name', '?')}: sparse (sparsity={info['sparsity']:.1%})")
+        else:
+            # Load as memory-mapped dense
+            arr = np.load(os.path.join(arr_dir, f'{i}.npy'), mmap_mode='r')
+
+        arr_list.append(arr)
+
+    arr_tuple = tuple(arr_list)
+    print(f"Loaded {len(arr_tuple)} arrays: N={N}, T={T} (format v{version})")
 
     # Import appropriate SDF compute module and get burnin
     if model_name == 'bgn':

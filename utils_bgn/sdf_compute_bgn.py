@@ -152,7 +152,13 @@ def sdf_compute(N, T, arr_tuple):
         # compute sparse matrices to be used repeatedly
         # chi_{s, t}^i for t going from date 1, ..., T-1, s going from dates 1 to t,
         # and i going from 1 to N
-        chisp = csr_matrix(chi[t, : t + 1, :])
+        # Handle both Sparse3D (new format) and dense numpy arrays (backwards compat)
+        if hasattr(chi, 'get_row_slice'):
+            chisp = chi.get_row_slice(t, t + 1)
+            chi_slice = chisp.toarray()  # For diagonal corrections
+        else:
+            chisp = csr_matrix(chi[t, : t + 1, :])
+            chi_slice = chi[t, : t + 1, :]
         col1 = chisp.multiply(exp_beta[: t + 1, :])
         col2 = chisp.multiply(sigmaj[: t + 1, :] * corr_zj[: t + 1, :])
         col3 = chisp.multiply(exp_corr_zr[: t + 1, :])
@@ -216,7 +222,7 @@ def sdf_compute(N, T, arr_tuple):
                 (
                     (Chat * I * pi) ** 2
                     * data_integ_D_sq[t]
-                    * chi[t, : t + 1, :]
+                    * chi_slice
                     * exp_beta[: t + 1, :] ** 2
                 ).sum(axis=0)
             ).reshape(
@@ -229,7 +235,7 @@ def sdf_compute(N, T, arr_tuple):
             np.array(
                 (
                     (Chat * I * pi) ** 2
-                    * chi[t, : t + 1, :]
+                    * chi_slice
                     * np.exp(sigmaj[: t + 1, :] ** 2 * corr_zj[: t + 1, :] ** 2)
                 ).sum(axis=0)
             ).reshape(
@@ -241,7 +247,7 @@ def sdf_compute(N, T, arr_tuple):
                 (
                     (Chat * I) ** 2
                     * pi
-                    * chi[t, : t + 1, :]
+                    * chi_slice
                     * np.exp(sigmaj[: t + 1, :] ** 2)
                 ).sum(axis=0)
             ).reshape(

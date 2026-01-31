@@ -19,31 +19,29 @@ import os
 
 N = 1000   # Number of firms
 T = 720    # Number of time periods (excluding burnin)
-BGN_BURNIN = 300
-KP14_BURNIN = 300
-GS21_BURNIN = 300
+BGN_BURNIN = 500
+KP14_BURNIN = 500
+GS21_BURNIN = 500
 
 # =============================================================================
 # N_JOBS CONFIGURATION BY MODEL AND STEP
 # =============================================================================
-# GS21: 2xlarge instances (8GB RAM) - 4 workers
-# BGN/KP14: 4xlarge instances (16GB RAM) - 8 workers
-# DKKM step uses fewer workers due to memory constraints
+# All models: 2xlarge instances (8GB RAM) - 4 workers
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 8,
-        'generate_fama': 8,
-        'generate_dkkm': 8,
-        'estimate_fama': 8,
-        'estimate_dkkm': 8,
+        'moments': 4,
+        'generate_fama': 4,
+        'generate_dkkm': 4,
+        'estimate_fama': 4,
+        'estimate_dkkm': 4,
     },
     'kp14': {
-        'moments': 8,
-        'generate_fama': 8,
-        'generate_dkkm': 8,
-        'estimate_fama': 8,
-        'estimate_dkkm': 8,
+        'moments': 4,
+        'generate_fama': 4,
+        'generate_dkkm': 4,
+        'estimate_fama': 4,
+        'estimate_dkkm': 4,
     },
     'gs21': {
         'moments': 4,

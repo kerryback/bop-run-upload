@@ -114,8 +114,25 @@ def sdf_compute(N, T, arr_tuple):
         t = t +1 # to match BGN timing
         ER = np.zeros((N+1, N+1))
 
+        # Handle both Sparse3D (new format) and dense numpy arrays (backwards compat)
+        # K, uj, chi use column slices: arr[:t+1, t, :]
+        if hasattr(K, 'get_col_slice_dense'):
+            K_slice = K.get_col_slice_dense(t, t + 1)
+        else:
+            K_slice = K[:t + 1, t, :]
+
+        if hasattr(chi, 'get_col_slice_dense'):
+            chi_slice = chi.get_col_slice_dense(t, t + 1)
+        else:
+            chi_slice = chi[:t+1, t, :]
+
+        if hasattr(uj, 'get_col_slice_dense'):
+            uj_slice = uj.get_col_slice_dense(t, t + 1)
+        else:
+            uj_slice = uj[:t+1, t, :]
+
         # start with f1 != f2
-        Ktalpha = K[:t + 1, t, :]**alpha
+        Ktalpha = K_slice**alpha
         Ktalpha_sp = csr_matrix(Ktalpha)
         col = Ktalpha_sp.multiply(csr_matrix(EtA[:t + 1, t, :])) # recall from panel_function_kp14 - K = 0 if chi = 0
         result = kron(col, col)
@@ -123,7 +140,7 @@ def sdf_compute(N, T, arr_tuple):
 
         # Compute part2 on-demand for this time t only (memory optimization)
         # Uses same Ktalpha already computed above, so no redundant computation
-        part2_t = (1 - delta*dt)*np.sum(chi[:t+1, t, :]*EtA[:t+1, t, :]*Ktalpha, axis=0)
+        part2_t = (1 - delta*dt)*np.sum(chi_slice*EtA[:t+1, t, :]*Ktalpha, axis=0)
         term2 = Et_z_alph[t]*np.outer(part1[t,:], part2_t)
         term2 = term2 + term2.T
 
@@ -143,7 +160,7 @@ def sdf_compute(N, T, arr_tuple):
         ''' 
 
         # adjust for ignored cashflow terms
-        ujt = uj[:t+1, t, :]
+        ujt = uj_slice
         cf = np.sum(eps[t, :]*ujt*x[t]*Ktalpha*dt, axis = 0)
         term4 = np.outer(cf/price[t,:], 1+eret[t,:])
         term4 = term4 + term4.T  - np.outer(cf/price[t,:], cf/price[t,:]) # last term is double counted in first two, hence subtract
@@ -152,7 +169,7 @@ def sdf_compute(N, T, arr_tuple):
 
         # adjust for diagonal terms (f1 = f2)
         eps_rep = np.repeat(eps[t, :].reshape((1, N)), t+1, axis = 0)
-        term1_diag = ((1 - delta*dt)*Ktalpha**2* Et_A_sq(eps_rep, uj[:t+1, t, :])).sum(axis = 0)
+        term1_diag = ((1 - delta*dt)*Ktalpha**2* Et_A_sq(eps_rep, uj_slice)).sum(axis = 0)
 
         row_indices = np.repeat(np.arange(t + 1), t + 1)  # length (t+1)^2
         Ktalpha_repeated = vstack([Ktalpha_sp[i, :] for i in row_indices])

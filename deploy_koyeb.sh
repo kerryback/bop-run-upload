@@ -13,7 +13,7 @@
 #   model: bgn, kp14, or gs21
 #   start: Starting index
 #   end: Ending index (exclusive)
-#   instance_type: Koyeb instance type (default: 4xlarge for bgn/kp14, 2xlarge for gs21)
+#   instance_type: Koyeb instance type (default: 2xlarge)
 #   git_repo: GitHub repo in format username/repo (default: auto-detected)
 #   upload_intermediate: Upload panel/moments files to S3 (default: true)
 #
@@ -31,9 +31,9 @@
 #   MONITOR_URL: URL of koyeb-monitor service for self-termination
 #
 # Examples:
-#   ./deploy_koyeb.sh kp14 0 10              # Uses default 4xlarge
+#   ./deploy_koyeb.sh kp14 0 10              # Uses default 2xlarge
 #   ./deploy_koyeb.sh gs21 0 20              # Uses default 2xlarge
-#   ./deploy_koyeb.sh bgn 0 5 5xlarge        # Override with 5xlarge
+#   ./deploy_koyeb.sh bgn 0 5 4xlarge        # Override with 4xlarge
 
 set -e  # Exit on error
 
@@ -47,14 +47,14 @@ if [ $# -lt 3 ]; then
     echo "  model:                bgn, kp14, or gs21"
     echo "  start:                Starting index"
     echo "  end:                  Ending index (exclusive)"
-    echo "  instance_type:        Koyeb instance (default: 4xlarge for bgn/kp14, 2xlarge for gs21)"
+    echo "  instance_type:        Koyeb instance (default: 2xlarge)"
     echo "  git_repo:             GitHub repo username/repo (default: auto-detected)"
     echo "  upload_intermediate:  Upload panel/moments to S3 (default: true)"
     echo ""
     echo "Examples:"
-    echo "  $0 kp14 0 10              # Uses default 4xlarge"
+    echo "  $0 kp14 0 10              # Uses default 2xlarge"
     echo "  $0 gs21 0 20              # Uses default 2xlarge"
-    echo "  $0 bgn 0 5 5xlarge        # Override with 5xlarge"
+    echo "  $0 bgn 0 5 4xlarge        # Override with 4xlarge"
     exit 1
 fi
 
@@ -70,15 +70,9 @@ if [[ ! "$MODEL" =~ ^(bgn|kp14|gs21)$ ]]; then
     exit 1
 fi
 
-# Set default instance type based on model
-# GS21: 2xlarge (8GB RAM) - smaller memory footprint (2D arrays only)
-# BGN/KP14: 4xlarge (16GB RAM) - larger memory footprint (3D arrays)
+# Set default instance type (2xlarge for all models)
 if [ -z "$4" ]; then
-    if [ "$MODEL" = "gs21" ]; then
-        INSTANCE_TYPE="2xlarge"
-    else
-        INSTANCE_TYPE="4xlarge"
-    fi
+    INSTANCE_TYPE="2xlarge"
 else
     INSTANCE_TYPE=$4
 fi
