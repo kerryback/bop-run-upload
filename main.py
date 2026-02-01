@@ -3,12 +3,12 @@ noipca2 - Master Orchestration Script
 
 Runs the complete workflow for a range of panel identifiers:
 1.  Generate panel data
-1b. Generate 25 double-sorted portfolios (mve x bm)
-2.  Compute Fama factors (FF and FM)
-3.  Compute DKKM factors (all nfeatures in one run)
-4.  Estimate SDFs (compute stock weights via ridge regression)
-5.  Calculate SDF moments
-6.  Evaluate SDFs (compute portfolio statistics)
+2.  Calculate SDF moments (immediately after panel, while arr_tuple is fresh)
+3.  Generate 25 double-sorted portfolios (mve x bm)
+4.  Compute Fama factors (FF and FM)
+5.  Compute DKKM factors (all nfeatures in one run)
+6.  Estimate SDFs (compute stock weights via ridge regression)
+7.  Evaluate SDFs (compute portfolio statistics)
 
 Usage:
     python main.py [model] [start] [end] [--koyeb]
@@ -152,14 +152,14 @@ def run_workflow_for_index(panel_id, log_file):
     Run complete workflow for a single panel index.
 
     Steps:
-    1.  Generate panel → {model}_{id}_panel.pkl
-    1b. Generate 25 portfolios → {model}_{id}_25_portfolios.pkl
-    2.  Compute Fama factors → {model}_{id}_fama.pkl
-    3.  Compute DKKM factors → {model}_{id}_dkkm.pkl
-    4a. Estimate Fama/CAPM SDFs → {model}_{id}_stock_weights_fama.pkl
-    4b. Estimate DKKM SDFs → {model}_{id}_stock_weights_dkkm.pkl
-    5.  Calculate SDF moments → {model}_{id}_moments.pkl
-    6.  Evaluate SDFs (compute stats, merges Fama+DKKM weights) → {model}_{id}_results.pkl
+    1.  Generate panel → {model}_{id}_arr/ (memory-mapped arrays)
+    2.  Calculate SDF moments → {model}_{id}_moments.pkl (uses arr_tuple, then deletes it)
+    3.  Generate 25 portfolios → {model}_{id}_25_portfolios.pkl
+    4.  Compute Fama factors → {model}_{id}_fama.pkl
+    5.  Compute DKKM factors → {model}_{id}_dkkm.pkl
+    6a. Estimate Fama/CAPM SDFs → {model}_{id}_stock_weights_fama.pkl
+    6b. Estimate DKKM SDFs → {model}_{id}_stock_weights_dkkm.pkl
+    7.  Evaluate SDFs (compute stats, merges Fama+DKKM weights) → {model}_{id}_results.pkl
     """
     full_panel_id = f"{model}_{panel_id}"
 
@@ -179,11 +179,27 @@ def run_workflow_for_index(panel_id, log_file):
         upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
     upload_logs(log_file)
 
-    # Step 1b: Generate 25 portfolios
+    # Step 2: Calculate SDF moments (immediately after panel, while arr_tuple is fresh)
+    timings['moments'] = run_script(
+        "utils/calculate_moments.py",
+        [full_panel_id],
+        "STEP 2: Calculating SDF conditional moments"
+    )
+    if KEEP_MOMENTS:
+        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
+    upload_logs(log_file)
+
+    # arr_tuple is no longer needed after moments are computed
+    arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
+    if os.path.exists(arr_dir):
+        shutil.rmtree(arr_dir)
+        print(f"[CLEANUP] Deleted arr_tuple directory")
+
+    # Step 3: Generate 25 portfolios
     timings['25_portfolios'] = run_script(
         "utils/generate_25_portfolios.py",
         [full_panel_id],
-        "STEP 1b: Computing 25 double-sorted portfolios"
+        "STEP 3: Computing 25 double-sorted portfolios"
     )
     upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl"))
     upload_logs(log_file)
@@ -196,67 +212,51 @@ def run_workflow_for_index(panel_id, log_file):
     os.remove(checkpoint_file)
     print(f"[CHECKPOINT] Pre-fama checkpoint uploaded at {now()}")
 
-    # Step 2: Fama factors
+    # Step 4: Fama factors
     timings['fama'] = run_script(
         "utils/generate_fama_factors.py",
         [full_panel_id],
-        "STEP 2: Computing Fama-French and Fama-MacBeth factors"
+        "STEP 4: Computing Fama-French and Fama-MacBeth factors"
     )
     # Factor files not uploaded to S3
     upload_logs(log_file)
 
-    # Step 3: DKKM factors
+    # Step 5: DKKM factors
     timings['dkkm'] = run_script(
         "utils/generate_dkkm_factors.py",
         [full_panel_id],
-        f"STEP 3: Computing DKKM factors (max_features={config.MAX_FEATURES})"
+        f"STEP 5: Computing DKKM factors (max_features={config.MAX_FEATURES})"
     )
     # Factor files not uploaded to S3
     upload_logs(log_file)
 
-    # Step 4a: Estimate Fama/CAPM SDFs (compute stock weights)
+    # Step 6a: Estimate Fama/CAPM SDFs (compute stock weights)
     timings['estimate_fama'] = run_script(
         "utils/estimate_sdf_fama.py",
         [full_panel_id],
-        "STEP 4a: Estimating Fama/CAPM SDFs (computing stock weights)"
+        "STEP 6a: Estimating Fama/CAPM SDFs (computing stock weights)"
     )
 
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_fama.pkl"))
     upload_logs(log_file)
 
-    # Step 4b: Estimate DKKM SDFs (compute stock weights)
+    # Step 6b: Estimate DKKM SDFs (compute stock weights)
     timings['estimate_dkkm'] = run_script(
         "utils/estimate_sdf_dkkm.py",
         [full_panel_id],
-        "STEP 4b: Estimating DKKM SDFs (computing stock weights)"
+        "STEP 6b: Estimating DKKM SDFs (computing stock weights)"
     )
 
     if KEEP_WEIGHTS:
         upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_dkkm.pkl"))
     upload_logs(log_file)
 
-    # Step 5: Calculate SDF moments
-    timings['moments'] = run_script(
-        "utils/calculate_moments.py",
-        [full_panel_id],
-        "STEP 5: Calculating SDF conditional moments"
-    )
-    if KEEP_MOMENTS:
-        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
-    upload_logs(log_file)
-
-    # arr_tuple is no longer needed after moments are computed
-    arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
-    if os.path.exists(arr_dir):
-        shutil.rmtree(arr_dir)
-        print(f"[CLEANUP] Deleted arr_tuple directory")
-
-    # Step 6: Evaluate SDFs (compute portfolio statistics)
+    # Step 7: Evaluate SDFs (compute portfolio statistics)
     timings['evaluate'] = run_script(
         "utils/evaluate_sdfs.py",
         [full_panel_id],
-        "STEP 6: Evaluating SDFs (computing statistics)"
+        "STEP 7: Evaluating SDFs (computing statistics)"
     )
     upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl"))
     upload_logs(log_file)
@@ -286,13 +286,13 @@ def run_workflow_for_index(panel_id, log_file):
     print(f"WORKFLOW COMPLETE FOR {full_panel_id.upper()} at {now()}")
     print(f"{'='*70}")
     print(f"  1.  Panel:      {fmt(timings['panel'])}")
-    print(f"  1b. Portfolios: {fmt(timings['25_portfolios'])}")
-    print(f"  2.  Fama:       {fmt(timings['fama'])}")
-    print(f"  3.  DKKM:       {fmt(timings['dkkm'])}")
-    print(f"  4a. Est Fama:   {fmt(timings['estimate_fama'])}")
-    print(f"  4b. Est DKKM:   {fmt(timings['estimate_dkkm'])}")
-    print(f"  5.  Moments:    {fmt(timings['moments'])}")
-    print(f"  6.  Evaluate:   {fmt(timings['evaluate'])}")
+    print(f"  2.  Moments:    {fmt(timings['moments'])}")
+    print(f"  3.  Portfolios: {fmt(timings['25_portfolios'])}")
+    print(f"  4.  Fama:       {fmt(timings['fama'])}")
+    print(f"  5.  DKKM:       {fmt(timings['dkkm'])}")
+    print(f"  6a. Est Fama:   {fmt(timings['estimate_fama'])}")
+    print(f"  6b. Est DKKM:   {fmt(timings['estimate_dkkm'])}")
+    print(f"  7.  Evaluate:   {fmt(timings['evaluate'])}")
     print(f"  Total:          {fmt(total)}")
 
 

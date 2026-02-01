@@ -126,8 +126,8 @@ def main():
     # Each array was saved as a separate .npy file by generate_panel.py.
     # np.load(mmap_mode='r') creates a read-only memory map: the OS pages in
     # only the slices that sdf_compute accesses for each month (~40 MB),
-    # rather than loading all ~36 GB into RAM. Forked parallel workers share
-    # the same physical pages via copy-on-write.
+    # rather than loading all ~36 GB into RAM. Using threading backend means
+    # all workers share the same memory space directly (no fork/COW needed).
     arr_dir = os.path.join(config.TEMP_DIR, f"{panel_id}_arr")
 
     if not os.path.exists(arr_dir):
@@ -197,7 +197,7 @@ def main():
     print(f"Computing moments for months {start_month} to {end_month}")
     print(f"  Total: {n_months} months")
     n_jobs = config.get_n_jobs_for_step('moments', model_name)
-    print(f"  Using parallel processing with n_jobs={n_jobs}")
+    print(f"  Using threading backend with n_jobs={n_jobs} (shared memory)")
 
     # Process in chunks to avoid memory exhaustion
     # Chunking is the key optimization - prevents accumulating all 13+ GB of results
@@ -217,7 +217,9 @@ def main():
 
         # Use context manager to ensure workers are cleaned up after each chunk
         # This prevents memory accumulation across chunks
-        with Parallel(n_jobs=n_jobs, verbose=5) as parallel:
+        # Use threading backend to share memory (memory-mapped arrays) across workers
+        # instead of multiprocessing which would fork and copy memory
+        with Parallel(n_jobs=n_jobs, prefer="threads", verbose=5) as parallel:
             chunk_results = parallel(
                 delayed(compute_month_moments)(sdf_loop, month)
                 for month in chunk_months
