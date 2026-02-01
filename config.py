@@ -88,6 +88,11 @@ def get_n_jobs_for_step(step_name, model_name='bgn'):
     Returns:
         Number of parallel jobs to use
     """
+    # Check for environment variable override (set by deploy_koyeb.sh)
+    env_n_jobs = os.environ.get('N_JOBS')
+    if env_n_jobs:
+        return int(env_n_jobs)
+
     model_config = MODEL_N_JOBS.get(model_name, MODEL_N_JOBS['bgn'])
     return model_config[step_name]
 

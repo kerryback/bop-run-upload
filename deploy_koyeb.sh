@@ -7,15 +7,14 @@
 # 3. Auto-deletes itself to stop billing
 #
 # Usage:
-#   ./deploy_koyeb.sh <model> <start> <end> [instance_type] [git_repo] [upload_intermediate]
+#   ./deploy_koyeb.sh <model> <start> <end> [instance_type] [n_jobs]
 #
 # Arguments:
 #   model: bgn, kp14, or gs21
 #   start: Starting index
 #   end: Ending index (exclusive)
 #   instance_type: Koyeb instance type (default: 2xlarge)
-#   git_repo: GitHub repo in format username/repo (default: auto-detected)
-#   upload_intermediate: Upload panel/moments files to S3 (default: true)
+#   n_jobs: Number of parallel workers (default: based on instance type)
 #
 # Required environment variables:
 #   KOYEB_API_TOKEN: Your Koyeb API token
@@ -31,9 +30,9 @@
 #   MONITOR_URL: URL of koyeb-monitor service for self-termination
 #
 # Examples:
-#   ./deploy_koyeb.sh kp14 0 10              # Uses default 2xlarge
-#   ./deploy_koyeb.sh gs21 0 20              # Uses default 2xlarge
-#   ./deploy_koyeb.sh bgn 0 5 4xlarge        # Override with 4xlarge
+#   ./deploy_koyeb.sh kp14 0 10              # Uses default 2xlarge, auto n_jobs
+#   ./deploy_koyeb.sh bgn 0 5 4xlarge        # 4xlarge with auto n_jobs (32)
+#   ./deploy_koyeb.sh bgn 0 5 4xlarge 16     # 4xlarge with 16 workers
 
 set -e  # Exit on error
 
@@ -41,20 +40,19 @@ set -e  # Exit on error
 if [ $# -lt 3 ]; then
     echo "ERROR: Missing required arguments"
     echo ""
-    echo "Usage: $0 <model> <start> <end> [instance_type] [git_repo] [upload_intermediate]"
+    echo "Usage: $0 <model> <start> <end> [instance_type] [n_jobs]"
     echo ""
     echo "Arguments:"
-    echo "  model:                bgn, kp14, or gs21"
-    echo "  start:                Starting index"
-    echo "  end:                  Ending index (exclusive)"
-    echo "  instance_type:        Koyeb instance (default: 2xlarge)"
-    echo "  git_repo:             GitHub repo username/repo (default: auto-detected)"
-    echo "  upload_intermediate:  Upload panel/moments to S3 (default: true)"
+    echo "  model:          bgn, kp14, or gs21"
+    echo "  start:          Starting index"
+    echo "  end:            Ending index (exclusive)"
+    echo "  instance_type:  Koyeb instance (default: 2xlarge)"
+    echo "  n_jobs:         Number of parallel workers (default: auto)"
     echo ""
     echo "Examples:"
-    echo "  $0 kp14 0 10              # Uses default 2xlarge"
-    echo "  $0 gs21 0 20              # Uses default 2xlarge"
-    echo "  $0 bgn 0 5 4xlarge        # Override with 4xlarge"
+    echo "  $0 kp14 0 10              # 2xlarge, auto n_jobs"
+    echo "  $0 bgn 0 5 4xlarge        # 4xlarge, auto n_jobs (32)"
+    echo "  $0 bgn 0 5 4xlarge 16     # 4xlarge, 16 workers"
     exit 1
 fi
 
@@ -76,7 +74,21 @@ if [ -z "$4" ]; then
 else
     INSTANCE_TYPE=$4
 fi
-GIT_REPO=${5:-kerryback/bop-run-upload}
+
+# Set n_jobs (default based on instance type if not specified)
+if [ -z "$5" ]; then
+    # Auto-detect based on instance type
+    case "$INSTANCE_TYPE" in
+        4xlarge) N_JOBS=32 ;;
+        2xlarge) N_JOBS=16 ;;
+        xlarge)  N_JOBS=8 ;;
+        *)       N_JOBS=16 ;;
+    esac
+else
+    N_JOBS=$5
+fi
+
+GIT_REPO="kerryback/bop-run-upload"
 
 # Validate indices
 if [ "$START" -ge "$END" ]; then
@@ -153,6 +165,7 @@ echo "  Indices:       $START to $((END-1))"
 echo "  App name:      $KOYEB_APP_NAME"
 echo "  S3 folder:     $WORKFLOW_ID"
 echo "  Instance type: $INSTANCE_TYPE"
+echo "  N_JOBS:        $N_JOBS"
 echo "  Region:        $KOYEB_REGION"
 echo "  Git repo:      $GIT_REPO"
 echo "  Git branch:    $GIT_BRANCH"
@@ -201,6 +214,7 @@ koyeb services create worker \
   --env KOYEB_API_TOKEN="$KOYEB_API_TOKEN" \
   --env KOYEB_APP_NAME="$KOYEB_APP_NAME" \
   --env WORKFLOW_ID="$WORKFLOW_ID" \
+  --env N_JOBS="$N_JOBS" \
   --token "$KOYEB_API_TOKEN"
 
 echo ""
