@@ -9,8 +9,14 @@ ROOT REFERENCES:
   - main_revised.py lines 1-20: N, T, nmat, nfeatures_lst, alpha_lst, n_jobs, include_market
 """
 
-import numpy as np
 import os
+
+# Set BLAS threads to 1 for better parallelization with many workers
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
+import numpy as np
 
 # =============================================================================
 # PANEL DIMENSIONS
@@ -26,29 +32,29 @@ GS21_BURNIN = 200
 # =============================================================================
 # N_JOBS CONFIGURATION BY MODEL AND STEP
 # =============================================================================
-# All models: 2xlarge instances (8GB RAM) - 4 workers
+# 4xlarge instances (32 vCPUs) with BLAS threads=1
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 8,
-        'generate_fama': 8,
-        'generate_dkkm': 8,
-        'estimate_fama': 8,
-        'estimate_dkkm': 8,
+        'moments': 32,
+        'generate_fama': 32,
+        'generate_dkkm': 32,
+        'estimate_fama': 32,
+        'estimate_dkkm': 32,
     },
     'kp14': {
-        'moments': 8,
-        'generate_fama': 8,
-        'generate_dkkm': 8,
-        'estimate_fama': 8,
-        'estimate_dkkm': 8,
+        'moments': 32,
+        'generate_fama': 32,
+        'generate_dkkm': 32,
+        'estimate_fama': 32,
+        'estimate_dkkm': 32,
     },
     'gs21': {
-        'moments': 4,
-        'generate_fama': 4,
-        'generate_dkkm': 4,
-        'estimate_fama': 4,
-        'estimate_dkkm': 4,
+        'moments': 16,
+        'generate_fama': 16,
+        'generate_dkkm': 16,
+        'estimate_fama': 16,
+        'estimate_dkkm': 16,
     },
 }
 
