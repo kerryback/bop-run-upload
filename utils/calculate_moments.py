@@ -214,12 +214,13 @@ def main():
         chunk_months = months_list[chunk_start_idx:chunk_end_idx]
 
         print(f"\nChunk {chunk_idx + 1}/{n_chunks}: months {chunk_months[0]} to {chunk_months[-1]} ({len(chunk_months)} months)")
+        chunk_t0 = time.time()
 
         # Use context manager to ensure workers are cleaned up after each chunk
         # This prevents memory accumulation across chunks
         # Use threading backend to share memory (memory-mapped arrays) across workers
         # instead of multiprocessing which would fork and copy memory
-        with Parallel(n_jobs=n_jobs, prefer="threads", verbose=5) as parallel:
+        with Parallel(n_jobs=n_jobs, prefer="threads", verbose=0) as parallel:
             chunk_results = parallel(
                 delayed(compute_month_moments)(sdf_loop, month)
                 for month in chunk_months
@@ -234,7 +235,8 @@ def main():
             pickle.dump(chunk_moments, f)
         chunk_files.append(chunk_file)
 
-        print(f"  [OK] Chunk {chunk_idx + 1} saved to {os.path.basename(chunk_file)}")
+        chunk_elapsed = time.time() - chunk_t0
+        print(f"  [OK] Chunk {chunk_idx + 1} done in {fmt(chunk_elapsed)} at {now()}")
 
         # Free memory - workers are already terminated by context manager
         del chunk_results, chunk_moments

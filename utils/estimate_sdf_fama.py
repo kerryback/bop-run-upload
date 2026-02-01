@@ -236,7 +236,7 @@ def run(panel_id, model_name):
 
         print(f"\n  Chunk {chunk_idx + 1}/{n_chunks}: months {chunk[0]['month']} to {chunk[-1]['month']}")
 
-        with Parallel(n_jobs=n_jobs, verbose=5, backend='multiprocessing') as parallel:
+        with Parallel(n_jobs=n_jobs, verbose=0, backend='multiprocessing') as parallel:
             chunk_results = parallel(
                 delayed(compute_month_weights_fama)(
                     md, alpha_lst_fama, CHARS
