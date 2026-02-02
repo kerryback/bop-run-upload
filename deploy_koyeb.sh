@@ -135,7 +135,7 @@ fi
 S3_BUCKET=${S3_BUCKET:-bop-noipca}
 AWS_REGION=${AWS_REGION:-us-east-2}
 KOYEB_REGION=${KOYEB_REGION:-was}
-MONITOR_URL=${MONITOR_URL:-https://koyeb-monitor-kerrybackapps-c07b20b0.koyeb.app}
+MONITOR_URL=${MONITOR_URL:-https://koyeb-monitor-kerrybackapps-b8bcf38f.koyeb.app}
 
 # Auto-detect git branch (default: current branch)
 if [ -z "$GIT_BRANCH" ]; then
@@ -187,9 +187,8 @@ fi
 
 # Create the service
 # The run command:
-#   1. Sends init message to monitor (for tracking)
-#   2. Runs main.py (which uploads logs to S3 after each step)
-#   3. main.py notifies monitor at end for app termination
+#   1. Runs main.py (which uploads logs to S3 after each step)
+#   2. main.py notifies monitor at end for app termination
 echo "Creating Koyeb service..."
 koyeb services create worker \
   --app "$KOYEB_APP_NAME" \
@@ -197,7 +196,7 @@ koyeb services create worker \
   --git "github.com/$GIT_REPO" \
   --git-branch "$GIT_BRANCH" \
   --git-no-deploy-on-push \
-  --git-run-command "python -c \"import requests, os, datetime; requests.post(os.environ['MONITOR_URL']+'/init-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'model': '$MODEL', 'start': $START, 'end': $END, 'instance_type': '$INSTANCE_TYPE', 'started_at': datetime.datetime.now().isoformat()})\"; python main.py $MODEL $START $END --koyeb" \
+  --git-run-command "python main.py $MODEL $START $END --koyeb" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \
   --min-scale 0 \
@@ -220,11 +219,10 @@ echo "=========================================="
 echo ""
 echo "The service will:"
 echo "  1. Build and deploy your code"
-echo "  2. Initialize log file at monitor (for tracking)"
-echo "  3. Run: python main.py $MODEL $START $END --koyeb"
-echo "  4. Upload results and logs to s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/"
+echo "  2. Run: python main.py $MODEL $START $END --koyeb"
+echo "  3. Upload results and logs to s3://$S3_BUCKET/koyeb-results/$WORKFLOW_ID/"
 echo "     (logs uploaded after each step, results uploaded as completed)"
-echo "  5. Notify monitor at completion for app termination"
+echo "  4. Notify monitor at completion for app termination"
 echo ""
 echo "Monitor the service:"
 echo "  koyeb services get worker --app $KOYEB_APP_NAME --token \$KOYEB_API_TOKEN"
@@ -234,9 +232,6 @@ echo "  koyeb services logs worker --app $KOYEB_APP_NAME -t build --token \$KOYE
 echo ""
 echo "View runtime logs (live):"
 echo "  koyeb services logs worker --app $KOYEB_APP_NAME --tail --token \$KOYEB_API_TOKEN"
-echo ""
-echo "View captured logs (after completion):"
-echo "  $MONITOR_URL/logs/$KOYEB_APP_NAME"
 echo ""
 echo "Download results when complete:"
 echo "  source .env && aws s3 ls s3://$S3_BUCKET/koyeb-results/"
