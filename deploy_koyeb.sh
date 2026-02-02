@@ -206,6 +206,8 @@ koyeb services create worker \
   --git-run-command "python -c \"import requests, os, datetime; requests.post(os.environ['MONITOR_URL']+'/init-logs', json={'app_name': os.environ['KOYEB_APP_NAME'], 'model': '$MODEL', 'start': $START, 'end': $END, 'instance_type': '$INSTANCE_TYPE', 'started_at': datetime.datetime.now().isoformat()})\"; python main.py $MODEL $START $END --koyeb" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \
+  --min-scale 0 \
+  --max-scale 1 \
   --env MONITOR_URL="$MONITOR_URL" \
   --env S3_BUCKET="$S3_BUCKET" \
   --env AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \

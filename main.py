@@ -296,30 +296,6 @@ def run_workflow_for_index(panel_id, log_file):
     print(f"  Total:          {fmt(total)}")
 
 
-def delete_koyeb_service():
-    """Delete the Koyeb service (for auto-cleanup after completion)."""
-    app_name = os.environ.get('KOYEB_APP_NAME')
-    service_name = os.environ.get('KOYEB_SERVICE_NAME')
-    token = os.environ.get('KOYEB_API_TOKEN')
-
-    if not all([app_name, service_name, token]):
-        return
-
-    print(f"\n[KOYEB] Deleting service {service_name} from app {app_name}...")
-    try:
-        result = subprocess.run(
-            ['koyeb', 'services', 'delete', service_name,
-             '--app', app_name, '--token', token],
-            capture_output=True, text=True, timeout=30
-        )
-        if result.returncode == 0:
-            print(f"[KOYEB] Service deleted successfully")
-        else:
-            print(f"[KOYEB] Delete failed: {result.stderr}")
-    except Exception as e:
-        print(f"[KOYEB] Delete error: {e}")
-
-
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
@@ -416,10 +392,6 @@ if __name__ == "__main__":
             print(f"\n[MONITOR] Notified monitor for app termination")
         except Exception as e:
             print(f"\n[MONITOR] Failed to notify monitor: {e}")
-
-    # Koyeb auto-cleanup
-    if koyeb_mode:
-        delete_koyeb_service()
 
     # Restore original stdout/stderr before closing log file
     sys.stdout = sys.__stdout__
