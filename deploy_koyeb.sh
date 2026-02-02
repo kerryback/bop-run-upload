@@ -134,7 +134,7 @@ fi
 # Set defaults for optional variables
 S3_BUCKET=${S3_BUCKET:-bop-noipca}
 AWS_REGION=${AWS_REGION:-us-east-2}
-KOYEB_REGION=${KOYEB_REGION:-was}
+KOYEB_REGION=${KOYEB_REGION:-sin}
 MONITOR_URL=${MONITOR_URL:-https://koyeb-monitor-kerrybackapps-b8bcf38f.koyeb.app}
 
 # Auto-detect git branch (default: current branch)
