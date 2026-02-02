@@ -84,6 +84,7 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
         Tuple of (month, firm_ids, dkkm_weights_dict)
     """
     month = month_data['month']
+    month_t0 = time.time()
     data_chars = month_data['data_chars']  # numpy array
     firm_ids = month_data['firm_ids']
     rf_stand = month_data.get('rf_stand')  # For BGN model
@@ -163,7 +164,8 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
             key = (nfeatures, alpha)
             dkkm_weights[key] = weights_on_stocks.astype(np.float32)
 
-        print(f"  Month {month}: DKKM nfeatures={nfeatures} complete at {now()}")
+    month_elapsed = time.time() - month_t0
+    print(f"  Month {month}: done in {fmt(month_elapsed)} at {now()}")
 
     return month, firm_ids, dkkm_weights
 
