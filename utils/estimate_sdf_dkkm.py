@@ -120,9 +120,11 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
         # Scaled alphas for ridge regression
         scaled_alphas = np.array([nfeatures * a for a in alpha_lst])
 
-        # Accumulate factor_weights and port_of_factors across NMAT iterations
-        factor_weights_sum = None
-        port_of_factors_sum = None
+        # Accumulate stock weights across NMAT iterations
+        # (Must compute stock_weights = factor_weights @ port_of_factors for each W_i,
+        # then average. Cannot average factor_weights and port_of_factors separately
+        # due to cross-terms in matrix multiplication.)
+        stock_weights_sum = {alpha: None for alpha in alpha_lst}
 
         for mat_idx in range(NMAT):
             W_i = W_list[mat_idx]
@@ -144,25 +146,20 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
             # Portfolio of factors from ridge regression
             pof_i = dkkm.mve_data(f_subset_i, month, scaled_alphas, mkt_rf)
 
-            # Accumulate
-            if factor_weights_sum is None:
-                factor_weights_sum = fw_i.values.copy()
-                port_of_factors_sum = pof_i.values.copy()
-            else:
-                factor_weights_sum += fw_i.values
-                port_of_factors_sum += pof_i.values
+            # Compute stock weights for this W matrix and accumulate
+            for i, alpha in enumerate(alpha_lst):
+                pof_alpha = pof_i.values[:, i]
+                sw_i = fw_i.values @ pof_alpha
 
-        # Average across NMAT iterations
-        factor_weights_avg = factor_weights_sum / NMAT
-        port_of_factors_avg = port_of_factors_sum / NMAT
+                if stock_weights_sum[alpha] is None:
+                    stock_weights_sum[alpha] = sw_i.copy()
+                else:
+                    stock_weights_sum[alpha] += sw_i
 
-        # Compute weights for each alpha
-        for i, alpha in enumerate(alpha_lst):
-            pof_alpha = port_of_factors_avg[:, i]
-            weights_on_stocks = factor_weights_avg @ pof_alpha
-
+        # Average stock weights across NMAT iterations
+        for alpha in alpha_lst:
             key = (nfeatures, alpha)
-            dkkm_weights[key] = weights_on_stocks.astype(np.float32)
+            dkkm_weights[key] = (stock_weights_sum[alpha] / NMAT).astype(np.float32)
 
     month_elapsed = time.time() - month_t0
     print(f"  Month {month}: done in {fmt(month_elapsed)} at {now()}")
