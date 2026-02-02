@@ -199,8 +199,6 @@ koyeb services create worker \
   --git-run-command "python main.py $MODEL $START $END --koyeb" \
   --instance-type "$INSTANCE_TYPE" \
   --regions "$KOYEB_REGION" \
-  --min-scale 0 \
-  --max-scale 1 \
   --env MONITOR_URL="$MONITOR_URL" \
   --env S3_BUCKET="$S3_BUCKET" \
   --env AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
