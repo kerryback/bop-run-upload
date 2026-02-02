@@ -222,7 +222,7 @@ def run(panel_id, model_name):
     print(f"Computing Fama/CAPM stock weights (n_jobs={n_jobs})...")
     t0 = time.time()
 
-    chunk_size = 50
+    chunk_size = 16
     n_chunks = (len(month_data_list) + chunk_size - 1) // chunk_size
 
     all_weights = {}

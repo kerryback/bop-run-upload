@@ -13,7 +13,7 @@
 #   model: bgn, kp14, or gs21
 #   start: Starting index
 #   end: Ending index (exclusive)
-#   instance_type: Koyeb instance type (default: 2xlarge)
+#   instance_type: Koyeb instance type (default: 5xlarge)
 #   n_jobs: Number of parallel workers (default: based on instance type)
 #
 # Required environment variables:
@@ -30,9 +30,9 @@
 #   MONITOR_URL: URL of koyeb-monitor service for self-termination
 #
 # Examples:
-#   ./deploy_koyeb.sh kp14 0 10              # Uses default 2xlarge, auto n_jobs
-#   ./deploy_koyeb.sh bgn 0 5 4xlarge        # 4xlarge with auto n_jobs (32)
-#   ./deploy_koyeb.sh bgn 0 5 4xlarge 16     # 4xlarge with 16 workers
+#   ./deploy_koyeb.sh kp14 0 10              # Uses default 5xlarge, 16 workers
+#   ./deploy_koyeb.sh bgn 0 5 4xlarge        # 4xlarge with 16 workers
+#   ./deploy_koyeb.sh bgn 0 5 4xlarge 8      # 4xlarge with 8 workers
 
 set -e  # Exit on error
 
@@ -46,13 +46,13 @@ if [ $# -lt 3 ]; then
     echo "  model:          bgn, kp14, or gs21"
     echo "  start:          Starting index"
     echo "  end:            Ending index (exclusive)"
-    echo "  instance_type:  Koyeb instance (default: 2xlarge)"
-    echo "  n_jobs:         Number of parallel workers (default: auto)"
+    echo "  instance_type:  Koyeb instance (default: 5xlarge)"
+    echo "  n_jobs:         Number of parallel workers (default: 16)"
     echo ""
     echo "Examples:"
-    echo "  $0 kp14 0 10              # 2xlarge, auto n_jobs"
-    echo "  $0 bgn 0 5 4xlarge        # 4xlarge, auto n_jobs (32)"
-    echo "  $0 bgn 0 5 4xlarge 16     # 4xlarge, 16 workers"
+    echo "  $0 kp14 0 10              # 5xlarge, 16 workers"
+    echo "  $0 bgn 0 5 4xlarge        # 4xlarge, 16 workers"
+    echo "  $0 bgn 0 5 4xlarge 8      # 4xlarge, 8 workers"
     exit 1
 fi
 
@@ -68,22 +68,16 @@ if [[ ! "$MODEL" =~ ^(bgn|kp14|gs21)$ ]]; then
     exit 1
 fi
 
-# Set default instance type (2xlarge for all models)
+# Set default instance type (5xlarge for all models)
 if [ -z "$4" ]; then
-    INSTANCE_TYPE="2xlarge"
+    INSTANCE_TYPE="5xlarge"
 else
     INSTANCE_TYPE=$4
 fi
 
-# Set n_jobs (default based on instance type if not specified)
+# Set n_jobs (default 16 for all instance types)
 if [ -z "$5" ]; then
-    # Auto-detect based on instance type
-    case "$INSTANCE_TYPE" in
-        4xlarge) N_JOBS=32 ;;
-        2xlarge) N_JOBS=16 ;;
-        xlarge)  N_JOBS=8 ;;
-        *)       N_JOBS=16 ;;
-    esac
+    N_JOBS=16
 else
     N_JOBS=$5
 fi
