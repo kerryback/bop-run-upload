@@ -213,7 +213,6 @@ def main():
         chunk_end_idx = min((chunk_idx + 1) * chunk_size, n_months)
         chunk_months = months_list[chunk_start_idx:chunk_end_idx]
 
-        print(f"\nChunk {chunk_idx + 1}/{n_chunks}: months {chunk_months[0]} to {chunk_months[-1]} ({len(chunk_months)} months)")
         chunk_t0 = time.time()
 
         # Use context manager to ensure workers are cleaned up after each chunk
