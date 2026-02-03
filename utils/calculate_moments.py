@@ -45,17 +45,27 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def compute_month_moments(sdf_loop, month):
+# Shared data for parallel workers. Set before Parallel() call; workers
+# inherit via fork (copy-on-write) with backend='multiprocessing'.
+# This avoids pickling large data structures (which would force memory-mapped
+# arrays into RAM and multiply memory usage by n_jobs).
+_SHARED_DATA = {}
+
+
+def compute_month_moments(month):
     """
     Compute SDF moments for a single month.
 
+    Reads sdf_loop from module-level _SHARED_DATA (inherited via fork, not pickled).
+
     Args:
-        sdf_loop: SDF computation function
         month: Month number (arrays are indexed 0 to T+burnin-1, matching month numbers)
 
     Returns:
         Tuple of (month, moments_dict)
     """
+    sdf_loop = _SHARED_DATA['sdf_loop']
+
     # Call sdf_loop with month-1 to compute statistics at time month
     # (sdf_loop(t) computes returns from time t to t+1, using data at t+1)
     sdf_ret, max_sr, rp, cond_var = sdf_loop(month - 1, 0)
@@ -183,8 +193,11 @@ def main():
 
     t0 = time.time()
 
-    # Create SDF compute function
+    # Create SDF compute function and store in shared data
+    # Workers inherit via fork (copy-on-write), avoiding pickle serialization
+    # which would force memory-mapped arrays into RAM
     sdf_loop = sdf_module.sdf_compute(N, T + burnin, arr_tuple)
+    _SHARED_DATA['sdf_loop'] = sdf_loop
 
     # Compute SDF outputs for months that will be used in portfolio stats
     # Portfolio stats use months >= burnin + 360 (needs 360 months of history)
@@ -217,9 +230,10 @@ def main():
 
         # Use context manager to ensure workers are cleaned up after each chunk
         # This prevents memory accumulation across chunks
-        with Parallel(n_jobs=n_jobs, verbose=0) as parallel:
+        # backend='multiprocessing' ensures fork-based parallelism for copy-on-write
+        with Parallel(n_jobs=n_jobs, verbose=0, backend='multiprocessing') as parallel:
             chunk_results = parallel(
-                delayed(compute_month_moments)(sdf_loop, month)
+                delayed(compute_month_moments)(month)
                 for month in chunk_months
             )
 
@@ -238,6 +252,9 @@ def main():
         # Free memory - workers are already terminated by context manager
         del chunk_results, chunk_moments
         gc.collect()
+
+    # Clear shared data
+    _SHARED_DATA.clear()
 
     elapsed = time.time() - t0
     print(f"\n{'-'*70}")
