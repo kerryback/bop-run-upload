@@ -214,7 +214,7 @@ def main():
 
     # Process in chunks to avoid memory exhaustion
     # Chunking is the key optimization - prevents accumulating all 13+ GB of results
-    chunk_size = 16  # Process 16 months at a time
+    chunk_size = config.MODEL_CHUNK_SIZE.get(model_name, 16)
     n_chunks = (n_months + chunk_size - 1) // chunk_size  # Ceiling division
     chunk_files = []
 

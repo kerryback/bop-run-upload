@@ -36,11 +36,11 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 16,
+        'moments': 12,
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,
-        'estimate_dkkm': 16,
+        'estimate_dkkm': 12,
     },
     'kp14': {
         'moments': 16,
@@ -56,6 +56,13 @@ MODEL_N_JOBS = {
         'estimate_fama': 16,
         'estimate_dkkm': 16,
     },
+}
+
+# Chunk sizes for moments calculation (per model)
+MODEL_CHUNK_SIZE = {
+    'bgn': 12,
+    'kp14': 16,
+    'gs21': 16,
 }
 
 # =============================================================================
