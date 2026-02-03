@@ -135,7 +135,7 @@ fi
 S3_BUCKET=${S3_BUCKET:-bop-noipca}
 AWS_REGION=${AWS_REGION:-us-east-2}
 KOYEB_REGION=${KOYEB_REGION:-sin}
-MONITOR_URL=${MONITOR_URL:-https://koyeb-monitor-kerrybackapps-025bdc00.koyeb.app}
+MONITOR_URL=${MONITOR_URL:-https://koyeb-monitor-kerrybackapps-c70ec369.koyeb.app}
 
 # Auto-detect git branch (default: current branch)
 if [ -z "$GIT_BRANCH" ]; then
