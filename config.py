@@ -104,6 +104,28 @@ def get_n_jobs_for_step(step_name, model_name='bgn'):
     return model_config[step_name]
 
 
+def set_scratch_dir(scratch_dir, n_jobs_cap=None):
+    """
+    Route all output (panels, moments, results) to a scratch filesystem.
+
+    Called automatically when the BOP_SCRATCH_DIR environment variable is set
+    (e.g. from a SLURM sbatch script).
+
+    Args:
+        scratch_dir: Path to scratch directory for all output files.
+        n_jobs_cap: If set, cap all MODEL_N_JOBS values to this number.
+    """
+    global DATA_DIR, TEMP_DIR
+    DATA_DIR = scratch_dir
+    TEMP_DIR = scratch_dir
+    os.makedirs(DATA_DIR, exist_ok=True)
+    if n_jobs_cap:
+        for model in MODEL_N_JOBS:
+            for step in MODEL_N_JOBS[model]:
+                MODEL_N_JOBS[model][step] = min(MODEL_N_JOBS[model][step], n_jobs_cap)
+    print(f"[CONFIG] DATA_DIR/TEMP_DIR set to: {scratch_dir}")
+
+
 def set_jgsrc1_config():
     """Configure for jgsrc1 server with reduced worker counts."""
     set_temp_dir('/opt/scratch/keb7')
@@ -163,12 +185,29 @@ I = 1
 GAMMA_GRID = np.arange(0.5, 1.1, 0.1)
 
 # ROOT: parameters.py lines 14-15
+# "size" is always the first char and is required — it drives the Big/Small
+# sort in FF/FM and is the input for SMB. The --chars CLI flag always prepends
+# "size" automatically, so users never need to specify it.
+# SMB and market (mkt_rf) are always present as factors in FF and FM output,
+# regardless of which subset of chars is chosen.
 CHARS_DEFAULT = ["size", "bm", "agr", "roe", "mom"]
 FACTOR_NAMES_DEFAULT = ["smb", "hml", "cma", "rmw", "umd"]
 
-# GS21 characteristics
+# GS21 characteristics (adds market leverage)
 CHARS_GS21 = ["size", "bm", "agr", "roe", "mom", "mkt_lev"]
 FACTOR_NAMES_GS21 = ["smb", "hml", "cma", "rmw", "umd", "mkt_lev"]
+
+# Explicit characteristic → factor name mapping (non-size chars only).
+# Used by fama_functions.py to assign factor names dynamically for any subset.
+# Note: "smb" is derived from the "bm" sort, not a direct char column.
+CHAR_TO_FACTOR = {
+    "bm":      "hml",
+    "agr":     "cma",
+    "roe":     "rmw",
+    "mom":     "umd",
+    "mkt_lev": "mkt_lev",
+}
+FACTOR_TO_CHAR = {v: k for k, v in CHAR_TO_FACTOR.items()}
 
 # =============================================================================
 # KP14 Model Parameters
@@ -254,6 +293,7 @@ MODEL_CHARS = {
     'kp14': CHARS_DEFAULT,
     'gs21': CHARS_GS21
 }
+
 
 MODEL_FACTOR_NAMES = {
     'bgn': FACTOR_NAMES_DEFAULT,

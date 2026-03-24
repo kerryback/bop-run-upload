@@ -18,16 +18,36 @@ Arguments:
     start: Starting index (optional, default: 0)
     end: Ending index exclusive (optional, default: 1)
     --koyeb: Configure for Koyeb deployment (TEMP_DIR=DATA_DIR)
+    --chars: Comma-separated factor names to use, e.g. --chars cma,umd
+             Available: hml, cma, rmw, umd (+ mkt_lev for gs21)
+             Overrides the model's default full set.
+             "size" is always included as a characteristic (required for the
+             Big/Small sort). SMB and market are always present as factors in
+             the FF and FM models regardless of what is specified here.
 
 ROOT REFERENCE: main_revised.py
   The root runs everything in one script (generate panel, compute factors,
   evaluate portfolio stats in run_month). noipca2 splits into separate scripts
   but the computation logic matches root exactly.
 
+SLURM / Cluster Usage:
+  Use run_bop_job.sh to submit jobs to a SLURM cluster (e.g. ASU HTC partition).
+  Each array task runs one panel: sbatch --array=0-99 run_bop_job.sh
+
+  Output directory is controlled by the BOP_SCRATCH_DIR environment variable.
+  When set, all output files (panels, moments, weights, results) are written
+  there instead of the default outputs/ subfolder. Set this in the sbatch script:
+      export BOP_SCRATCH_DIR=/scratch/sjpruitt/bop
+
+  Worker counts (n_jobs) are taken from MODEL_N_JOBS in config.py. The sbatch
+  script requests --cpus-per-task=16 to match. Adjust if your allocation differs.
+
 Examples:
-    python main.py kp14                    # Single panel, index 0
-    python main.py kp14 0 5                # Indices 0-4
-    python main.py kp14 0 10 --koyeb       # Koyeb deployment
+    python main.py kp14                      # Single panel, index 0
+    python main.py kp14 0 5                  # Indices 0-4
+    python main.py kp14 0 10 --koyeb         # Koyeb deployment
+    python main.py bgn 0 10 --chars cma,umd       # SMB+CMA+UMD+market (FF/FM)
+    python main.py bgn 0 10 --chars "hml, cma, rmw"  # Spaces after commas OK
 """
 
 import sys
@@ -62,6 +82,28 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 model = sys.argv[1].lower()
+
+# Parse --chars flag before positional args (it consumes two argv entries)
+chars_override = None
+if '--chars' in sys.argv:
+    chars_idx = sys.argv.index('--chars')
+    factor_names_arg = [f.strip() for f in sys.argv[chars_idx + 1].lower().split(',')]
+    sys.argv.pop(chars_idx)
+    sys.argv.pop(chars_idx)
+    _FACTOR_TO_CHAR = {"hml": "bm", "cma": "agr", "rmw": "roe",
+                       "umd": "mom", "mkt_lev": "mkt_lev"}
+    unknown = [f for f in factor_names_arg if f not in _FACTOR_TO_CHAR]
+    if unknown:
+        print(f"ERROR: Unknown factor name(s): {unknown}")
+        print(f"Valid factors: {list(_FACTOR_TO_CHAR.keys())}")
+        sys.exit(1)
+    # chars: used by both FF/FM and DKKM. "size" always included (for big/small
+    # sort and SMB). SMB is always produced by FF/FM via a simple size sort,
+    # so "bm" does not need to be added automatically.
+    chars_override = ["size"] + [_FACTOR_TO_CHAR[f] for f in factor_names_arg]
+    # factor_names: smb is always produced; add user-requested factors
+    factor_names_override = ["smb"] + list(factor_names_arg)
+
 start_idx = int(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else 0
 end_idx = int(sys.argv[3]) if len(sys.argv) > 3 and not sys.argv[3].startswith('--') else start_idx + 1
 koyeb_mode = '--koyeb' in sys.argv
@@ -78,6 +120,17 @@ if koyeb_mode:
     pass
 elif os.path.exists('/opt/scratch/keb7'):
     config.set_jgsrc1_config()
+
+# SLURM / scratch filesystem support: set BOP_SCRATCH_DIR env var in sbatch script
+scratch_dir = os.environ.get('BOP_SCRATCH_DIR')
+if scratch_dir:
+    config.set_scratch_dir(scratch_dir)
+
+# Apply --chars override (must come after model validation and config setup)
+if chars_override:
+    config.MODEL_CHARS[model] = chars_override
+    config.MODEL_FACTOR_NAMES[model] = factor_names_override
+    print(f"[CONFIG] --chars override: chars={chars_override}, factors={factor_names_override}")
 
 # Get references to config values
 DATA_DIR = config.DATA_DIR

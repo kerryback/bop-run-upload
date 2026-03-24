@@ -30,6 +30,20 @@ import gc
 from joblib import Parallel, delayed
 import importlib
 
+# Add current directory and parent directory to path for imports
+# Parent directory is needed for config and utils package imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Force fork-based multiprocessing so _SHARED_DATA is inherited by workers.
+# Python 3.12+ changed the default start method on Linux to forkserver/spawn,
+# which breaks the copy-on-write shared memory pattern used throughout.
+import multiprocessing
+try:
+    multiprocessing.set_start_method('fork')
+except RuntimeError:
+    pass  # Already set (e.g. if imported rather than run directly)
+
 from utils.sparse_3d import load_sparse_3d, Sparse3D
 
 def fmt(s):
@@ -38,11 +52,6 @@ def fmt(s):
 
 def now():
     return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
-
-# Add current directory and parent directory to path for imports
-# Parent directory is needed for temp_config files created by main.py
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # Shared data for parallel workers. Set before Parallel() call; workers

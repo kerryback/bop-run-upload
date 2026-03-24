@@ -20,6 +20,13 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Force fork so _SHARED_DATA is inherited by parallel workers (Python 3.12+ fix)
+import multiprocessing
+try:
+    multiprocessing.set_start_method('fork')
+except RuntimeError:
+    pass
+
 import numpy as np
 import pandas as pd
 from datetime import datetime

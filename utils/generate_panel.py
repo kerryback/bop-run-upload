@@ -32,6 +32,11 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import importlib
 
+# Add current directory and parent directory to path for imports
+# Parent directory is needed for config and utils package imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.sparse_3d import save_sparse_3d
 
 def fmt(s):
@@ -40,11 +45,6 @@ def fmt(s):
 
 def now():
     return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
-
-# Add current directory and parent directory to path for imports
-# Parent directory is needed for temp_config files created by main.py
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def main():

@@ -33,6 +33,10 @@ _SHARED_DATA = {}
 # Size median split x characteristic 30/40/30 tercile split.
 # Value-weighted within each of the 6 portfolios.
 # Returns (N, K+1) array including market portfolio.
+#
+# DEVIATION FROM ROOT: SMB is computed from a simple value-weighted size sort
+# (long small-cap, short large-cap) rather than the traditional 2x3 BM sort.
+# This decouples SMB from BM, so "bm" need not be in chars to get SMB.
 # =============================================================================
 def fama_french(data, chars, **kwargs):
     """
@@ -40,39 +44,50 @@ def fama_french(data, chars, **kwargs):
 
     ROOT: fama_functions.py lines 9-71
 
+    Always produces SMB (from a simple value-weighted size sort) and market
+    (mkt_rf) regardless of which chars are supplied. Additional factors are
+    produced for each non-size characteristic in chars.
+
     Args:
-        data: DataFrame of characteristics (N firms)
-        chars: List of characteristic names
+        data: DataFrame of characteristics (N firms). Must include "size".
+        chars: List of characteristic names. "size" must be present.
         **kwargs: Must include 'mve' (market value of equity)
 
     Returns:
-        (N, K+1) numpy array of portfolio weights (factors + market)
+        (N, K+1) numpy array of portfolio weights
+        Column order: smb, [one factor per non-size char], mkt_rf
     """
     factor_dct = {}
 
-    # ROOT lines 13-16: determine factor names based on number of chars
-    if len(chars) == 6:
-        names = ["smb", "hml", "cma", "rmw", "umd", "mkt_lev"]
-    elif len(chars) == 5:
-        names = ["smb", "hml", "cma", "rmw", "umd"]
-    else:
-        names = ["smb", "hml", "umd"]
-    name_dct = dict(zip(chars, names))
+    # Map each non-size characteristic to its factor name.
+    _CHAR_TO_FACTOR = {"bm": "hml", "agr": "cma", "roe": "rmw",
+                       "mom": "umd", "mkt_lev": "mkt_lev"}
+    name_dct = {c: _CHAR_TO_FACTOR[c] for c in chars if c in _CHAR_TO_FACTOR}
 
-    # ROOT lines 20-21: sort on size (median split)
+    # Size median split — used for SMB and all 2x3 sorts
     big = data["size"] > data["size"].median()
     small = 1 - big
     mve = kwargs["mve"]
 
-    # ROOT lines 24-51: for each non-size characteristic
+    # SMB: simple value-weighted size sort (small minus big).
+    # Does not require "bm" in chars; always produced.
+    smb_small = mve * small
+    smb_big = mve * big
+    if smb_small.sum() != 0:
+        smb_small = smb_small / smb_small.sum()
+    if smb_big.sum() != 0:
+        smb_big = smb_big / smb_big.sum()
+    factor_dct["smb"] = (smb_small - smb_big).to_numpy()
+
+    # For each non-size characteristic: 2x3 sort → long-short factor
     for char in [c for c in chars if c != "size"]:
 
-        # ROOT lines 27-29: tercile split on characteristic
+        # Tercile split on characteristic
         low = data[char] <= data[char].quantile(0.3)
         high = data[char] > data[char].quantile(0.7)
         med = 1 - low - high
 
-        # ROOT lines 32-37: form six portfolios (value-weighted)
+        # Six value-weighted portfolios
         high_big = mve * (high & big)
         high_small = mve * (high & small)
         low_big = mve * (low & big)
@@ -80,40 +95,25 @@ def fama_french(data, chars, **kwargs):
         med_big = mve * (med & big)
         med_small = mve * (med & small)
 
-        # ROOT lines 40-42: normalize by portfolio market cap
         for ser in [high_big, high_small, low_big, low_small, med_big, med_small]:
             if ser.sum() != 0:
                 ser /= ser.sum()
 
-        # ROOT lines 45-48: long-short factor portfolio
-        factor = 0.5 * (
-            high_big + high_small
-            - low_big - low_small
-        )
-
-        # ROOT line 51: store factor weights
+        # Long-short factor (high minus low, averaged across size groups)
+        factor = 0.5 * (high_big + high_small - low_big - low_small)
         factor_dct[name_dct[char]] = factor.to_numpy()
 
-        # ROOT lines 54-58: define SMB using book-to-market sorts
-        if char == "bm":
-            smb = (
-                high_small + med_small + low_small
-                - high_big - med_big - low_big
-            ) / 3
-            factor_dct["smb"] = smb.to_numpy()
-
-    # ROOT lines 61-62: create output DataFrame
+    # Create output DataFrame
     df = pd.DataFrame(factor_dct)
     df.index = data.index
 
-    # ROOT lines 65-66: CMA is low minus high (flip sign)
-    if "cma" in names:
+    # CMA is investment factor: low investment minus high (flip sign)
+    if "cma" in name_dct.values():
         df["cma"] *= -1
 
-    # ROOT lines 69: value-weighted market portfolio
+    # Value-weighted market portfolio (always last column)
     df['mkt_rf'] = mve / mve.sum()
 
-    # ROOT line 71: return as numpy array
     return df.to_numpy()
 
 
@@ -131,16 +131,20 @@ def fama_macbeth(data, chars, **kwargs):
 
     ROOT: fama_functions.py lines 74-97
 
+    Always produces SMB (from the "size" column in the cross-sectional
+    regression) and market (mkt_rf) regardless of which chars are supplied.
+
     Note: Standardization is COMMENTED OUT in root (lines 78-81).
     This uses raw characteristics directly.
 
     Args:
-        data: DataFrame of characteristics
-        chars: List of characteristic names
+        data: DataFrame of characteristics. Must include "size".
+        chars: List of characteristic names. "size" must be present.
         **kwargs: Accepts additional arguments for compatibility
 
     Returns:
-        (N, K+1) numpy array of portfolio weights (factors + market)
+        (N, K+1) numpy array of portfolio weights
+        Column order: smb, [one factor per non-size char], mkt_rf
     """
     # ROOT line 75: drop NaN values
     d = data.dropna()
@@ -160,15 +164,14 @@ def fama_macbeth(data, chars, **kwargs):
     P = pd.DataFrame(P[:, 1:], index=d.index)
     P *= 2 / P.abs().sum()
 
-    # ROOT lines 89-92: set column names
-    if len(chars) == 6:
-        P.columns = ["smb", "hml", "cma", "rmw", "umd", "mkt_lev"]
-    elif len(chars) == 5:
-        P.columns = ["smb", "hml", "cma", "rmw", "umd"]
-    else:
-        P.columns = ["smb", "hml", "umd"]
+    # ROOT lines 89-92: set column names dynamically from char→factor mapping.
+    # FM uses all chars (including size) in the cross-sectional regression, so
+    # P has len(chars) columns after dropping the intercept. "size" → "smb".
+    _CHAR_TO_FACTOR = {"size": "smb", "bm": "hml", "agr": "cma", "roe": "rmw",
+                       "mom": "umd", "mkt_lev": "mkt_lev"}
+    P.columns = [_CHAR_TO_FACTOR.get(c, c) for c in chars]
 
-    # ROOT line 95: equal-weighted market portfolio
+    # ROOT line 95: equal-weighted market portfolio (always last column)
     P['mkt_rf'] = 1 / len(d)
 
     # Reindex to original data shape so dimensions match rets in caller
@@ -215,7 +218,8 @@ def factors(method, panel, n_jobs, start, end, chars):
         chars: List of characteristics
 
     Returns:
-        Factor returns DataFrame indexed by month
+        Factor returns DataFrame indexed by month.
+        Columns: smb, [factor per non-size char], mkt_rf
     """
     # Set shared data for workers (inherited via fork/COW)
     _SHARED_DATA['panel'] = panel
