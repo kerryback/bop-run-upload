@@ -121,10 +121,13 @@ if koyeb_mode:
 elif os.path.exists('/opt/scratch/keb7'):
     config.set_jgsrc1_config()
 
-# SLURM / scratch filesystem support: set BOP_SCRATCH_DIR env var in sbatch script
+# SLURM / scratch filesystem support: set BOP_SCRATCH_DIR env var in sbatch script.
+# Optionally set BOP_TEMP_DIR to a separate directory for intermediate _arr/ files,
+# which keeps permanent pkl outputs in BOP_SCRATCH_DIR clean and crash-safe.
 scratch_dir = os.environ.get('BOP_SCRATCH_DIR')
 if scratch_dir:
-    config.set_scratch_dir(scratch_dir)
+    temp_dir = os.environ.get('BOP_TEMP_DIR')   # None → falls back to scratch_dir
+    config.set_scratch_dir(scratch_dir, temp_dir=temp_dir)
 
 # Apply --chars override (must come after model validation and config setup)
 if chars_override:

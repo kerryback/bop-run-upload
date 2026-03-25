@@ -78,8 +78,11 @@ def main():
         arrays_data = pickle.load(f)
     panel = arrays_data['panel']
 
-    # Prepare panel (adds size=log(mve), sets MultiIndex, removes NaNs)
-    panel, start, end = factor_utils.prepare_panel(panel, CHARS)
+    # Prepare panel (adds size=log(mve), sets MultiIndex, removes NaNs).
+    # Always include "bm" in the NaN check even if not in CHARS, since the
+    # 25-portfolio sort always uses mve x bm regardless of --chars selection.
+    chars_for_panel = list(dict.fromkeys(CHARS + ["bm"]))
+    panel, start, end = factor_utils.prepare_panel(panel, chars_for_panel)
 
     print("="*70)
     print("25 DOUBLE-SORTED PORTFOLIOS (MVE x BM)")

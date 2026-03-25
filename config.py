@@ -40,7 +40,7 @@ MODEL_N_JOBS = {
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,
-        'estimate_dkkm': 12,
+        'estimate_dkkm': 16,
     },
     'kp14': {
         'moments': 16,
@@ -60,7 +60,7 @@ MODEL_N_JOBS = {
 
 # Chunk sizes for moments calculation (per model)
 MODEL_CHUNK_SIZE = {
-    'bgn': 12,
+    'bgn': 16,
     'kp14': 16,
     'gs21': 16,
 }
@@ -104,26 +104,37 @@ def get_n_jobs_for_step(step_name, model_name='bgn'):
     return model_config[step_name]
 
 
-def set_scratch_dir(scratch_dir, n_jobs_cap=None):
+def set_scratch_dir(scratch_dir, temp_dir=None, n_jobs_cap=None):
     """
-    Route all output (panels, moments, results) to a scratch filesystem.
+    Route output and temporary files to scratch filesystems.
 
     Called automatically when the BOP_SCRATCH_DIR environment variable is set
-    (e.g. from a SLURM sbatch script).
+    (e.g. from a SLURM sbatch script).  Optionally, BOP_TEMP_DIR can point to
+    a separate directory for intermediate _arr/ files, keeping permanent pkl
+    outputs in scratch_dir clean.  If temp_dir is omitted, both DATA_DIR and
+    TEMP_DIR are set to scratch_dir (original behaviour).
 
     Args:
-        scratch_dir: Path to scratch directory for all output files.
-        n_jobs_cap: If set, cap all MODEL_N_JOBS values to this number.
+        scratch_dir: Path for permanent output files (panels, moments, results).
+        temp_dir:    Path for intermediate _arr/ directories.  If None, falls
+                     back to scratch_dir.
+        n_jobs_cap:  If set, cap all MODEL_N_JOBS values to this number.
     """
     global DATA_DIR, TEMP_DIR
     DATA_DIR = scratch_dir
-    TEMP_DIR = scratch_dir
+    TEMP_DIR = temp_dir if temp_dir else scratch_dir
     os.makedirs(DATA_DIR, exist_ok=True)
+    if TEMP_DIR != DATA_DIR:
+        os.makedirs(TEMP_DIR, exist_ok=True)
     if n_jobs_cap:
         for model in MODEL_N_JOBS:
             for step in MODEL_N_JOBS[model]:
                 MODEL_N_JOBS[model][step] = min(MODEL_N_JOBS[model][step], n_jobs_cap)
-    print(f"[CONFIG] DATA_DIR/TEMP_DIR set to: {scratch_dir}")
+    if TEMP_DIR != DATA_DIR:
+        print(f"[CONFIG] DATA_DIR={DATA_DIR}")
+        print(f"[CONFIG] TEMP_DIR={TEMP_DIR}")
+    else:
+        print(f"[CONFIG] DATA_DIR/TEMP_DIR set to: {scratch_dir}")
 
 
 def set_jgsrc1_config():
