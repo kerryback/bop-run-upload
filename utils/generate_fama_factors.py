@@ -53,6 +53,7 @@ if '--config' in sys.argv:
 # Import config module
 config = importlib.import_module(config_module_name)
 sys.modules['config'] = config
+config.init_from_env()
 
 # Import factor modules
 try:

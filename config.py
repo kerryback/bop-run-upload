@@ -36,7 +36,7 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 12,
+        'moments': 8,   # bgn runs into OOM sooner than others, at this step -- lower the njob
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,
@@ -135,6 +135,21 @@ def set_scratch_dir(scratch_dir, temp_dir=None, n_jobs_cap=None):
         print(f"[CONFIG] TEMP_DIR={TEMP_DIR}")
     else:
         print(f"[CONFIG] DATA_DIR/TEMP_DIR set to: {scratch_dir}")
+
+
+def init_from_env():
+    """Read BOP_SCRATCH_DIR / BOP_TEMP_DIR env vars and configure dirs.
+
+    Call at the top of every subprocess script so that cluster jobs route
+    outputs to scratch rather than the default outputs/ directory.
+    DATA_DIR  → BOP_SCRATCH_DIR (permanent pkl outputs)
+    TEMP_DIR  → BOP_TEMP_DIR   (intermediate _arr/ directories)
+    No-op when BOP_SCRATCH_DIR is not set (e.g. local runs, AWS).
+    """
+    scratch = os.environ.get('BOP_SCRATCH_DIR')
+    if scratch:
+        temp = os.environ.get('BOP_TEMP_DIR')
+        set_scratch_dir(scratch, temp_dir=temp)
 
 
 def set_jgsrc1_config():

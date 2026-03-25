@@ -43,6 +43,7 @@ if '--config' in sys.argv:
 # Import config module
 config = importlib.import_module(config_module_name)
 sys.modules['config'] = config
+config.init_from_env()
 
 # Import factor modules
 try:
@@ -103,8 +104,10 @@ def main():
     for month in range(start, end + 1):
         data = panel.loc[month]
 
-        mve_q = pd.qcut(data['mve'], 5, labels=[1, 2, 3, 4, 5])
-        bm_q = pd.qcut(data['bm'], 5, labels=[1, 2, 3, 4, 5])
+        # Rank first to guarantee unique bin edges even when many firms
+        # share identical mve or bm values (common in GS21 simulations).
+        mve_q = pd.qcut(data['mve'].rank(method='first'), 5, labels=[1, 2, 3, 4, 5])
+        bm_q  = pd.qcut(data['bm'].rank(method='first'),  5, labels=[1, 2, 3, 4, 5])
 
         for (mq, bq), group in data.groupby([mve_q, bm_q], observed=True):
             weights = group['mve'] / group['mve'].sum()

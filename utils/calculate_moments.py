@@ -113,6 +113,7 @@ def main():
     # This ensures utility modules that do "from config import" get the correct config
     config = importlib.import_module(config_module_name)
     sys.modules['config'] = config
+    config.init_from_env()
 
     # Parse command-line argument for panel identifier
     if len(sys.argv) > 1:

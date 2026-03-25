@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J bop
-#SBATCH --array=0-9          # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
+#SBATCH --array=3          # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
 #SBATCH --cpus-per-task=16    # coordinate with N_JOBS max (16 workers)
 #SBATCH --mem=48GB
 #SBATCH -t 0-10:00             # 
@@ -10,8 +10,7 @@
 
 # ---------------------------------------------------------------------------
 # Configuration — edit these before submitting
-# ---------------------------------------------------------------------------
-
+# -------------------------------------------------------------------------
 MODEL=gs21                               # bgn | kp14 | gs21
 CONDA_ENV=bop                           # your conda environment name
 SCRATCH=/scratch/sjpruitt/bop           # permanent output files (pkl) land here
