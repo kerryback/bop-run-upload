@@ -232,7 +232,10 @@ def run_workflow_for_index(panel_id, log_file):
         f"STEP 1: Generating {model.upper()} panel data (index={panel_id})"
     )
     if KEEP_PANEL:
-        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl"))
+        src = os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl")
+        upload_file(src)
+        if TEMP_DIR != DATA_DIR and os.path.exists(src):
+            shutil.copy2(src, os.path.join(DATA_DIR, f"{full_panel_id}_panel.pkl"))
     upload_logs(log_file)
 
     # Step 2: Calculate SDF moments (immediately after panel, while arr_tuple is fresh)
@@ -242,7 +245,10 @@ def run_workflow_for_index(panel_id, log_file):
         "STEP 2: Calculating SDF conditional moments"
     )
     if KEEP_MOMENTS:
-        upload_file(os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl"))
+        src = os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl")
+        upload_file(src)
+        if TEMP_DIR != DATA_DIR and os.path.exists(src):
+            shutil.copy2(src, os.path.join(DATA_DIR, f"{full_panel_id}_moments.pkl"))
     upload_logs(log_file)
 
     # arr_tuple is no longer needed after moments are computed

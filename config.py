@@ -36,7 +36,7 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 8,   # bgn runs into OOM sooner than others, at this step -- lower the njob
+        'moments': 6,   # bgn can run into OOM sooner than others, at this step -- lower the njob
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,
