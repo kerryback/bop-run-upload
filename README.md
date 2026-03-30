@@ -2,7 +2,7 @@
 
 Code repository for Back, Ober, and Pruitt - "The Virtue of Complexity in Simple Economic Models"
 
-*Last updated: January 29, 2026*
+*Last updated: March 30, 2026*
 
 A computational finance research framework for estimating and evaluating Stochastic Discount Factors (SDFs) across multiple macroeconomic asset pricing models. The project compares traditional Fama-French factor methods with modern Random Fourier Features (DKKM) approaches.
 
@@ -13,7 +13,7 @@ This framework:
 - **Estimates** factor returns using Fama-French and Random Fourier Features methods
 - **Computes** SDF weights via ridge regression
 - **Evaluates** portfolio performance through Sharpe ratios and other statistics
-- **Scales** to cloud deployment (Koyeb) with AWS S3 integration
+- **Scales** to cloud (AWS/Koyeb) or SLURM cluster deployment, with optional AWS S3 integration
 
 ## Models Implemented
 
@@ -30,6 +30,7 @@ This framework:
 ├── main.py                   # Main script to run simulations
 ├── requirements.txt          # Python dependencies
 ├── deploy_koyeb.sh           # Wrapper to run main.py on Koyeb with AWS S3 storage
+├── run_bop_job.sh            # SLURM sbatch script for cluster deployment
 │
 ├── utils/                    # Core workflow scripts
 │   ├── generate_panel.py         # Panel data generation
@@ -76,10 +77,10 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Running a Single Panel
+### Running Locally
 
 ```bash
-python main.py <model> [start] [end]
+python main.py <model> [start] [end] [--chars char1,char2,...]
 ```
 
 **Examples:**
@@ -92,7 +93,30 @@ python main.py bgn 0 10
 
 # Run GS21 model for panels 5-15
 python main.py gs21 5 16
+
+# Run BGN with a subset of characteristics (size always included)
+python main.py bgn 0 10 --chars bm,agr,roe
 ```
+
+**`--chars` flag:**
+- Accepts a comma-separated list of characteristic names: `size`, `bm`, `agr`, `roe`, `mom`, `mkt_lev`
+- Factor names are also accepted and mapped automatically: `hml`→`bm`, `cma`→`agr`, `rmw`→`roe`, `umd`→`mom`
+- `size` is always included regardless of the selection
+- The market factor and SMB are always included in the output
+
+### SLURM Cluster Deployment
+
+```bash
+# Edit run_bop_job.sh to set MODEL, SCRATCH, TEMP, CONDA_ENV, and optionally CHARS_FLAG
+# then submit a job array:
+sbatch --array=0-9 run_bop_job.sh
+```
+
+Key variables in `run_bop_job.sh`:
+- `MODEL` — bgn, kp14, or gs21
+- `SCRATCH` — permanent output directory (e.g. `/scratch/sjpruitt/bop`)
+- `TEMP` — intermediate files directory (e.g. `/scratch/sjpruitt/bop_temp`)
+- `CHARS_FLAG` — optional, e.g. `--chars bm,agr,roe`
 
 ### Cloud Deployment (Koyeb)
 
@@ -108,7 +132,7 @@ python main.py gs21 5 16
 
 ## Workflow Pipeline
 
-The framework executes a 6-step pipeline for each panel:
+The framework executes a 7-step pipeline for each panel:
 
 ```
 Step 1: Panel Generation
@@ -118,52 +142,46 @@ Step 1: Panel Generation
               utils_gs21/panel_functions_gs21.py (GS21 model simulation)
     └── Creates: {id}_panel.pkl, {id}_arr/ (memmap arrays)
 
-Step 1b: Portfolio Construction
+Step 2: Conditional Moments
+    └── Compute expected returns and covariances (run immediately after Step 1 while arr/ is fresh)
+    └── Uses: utils_bgn/sdf_compute_bgn.py, utils_kp14/sdf_compute_kp14.py, utils_gs21/sdf_compute_gs21.py
+    └── Reads: {id}_arr/ (memmap arrays)
+    └── Creates: {id}_moments.pkl
+    └── Note: {id}_arr/ is deleted after this step to free disk space
+
+Step 3: Portfolio Construction
     └── Create 5×5 double-sorted portfolios (size × book-to-market)
     └── Uses: utils_factors/factor_utils.py (portfolio sorting utilities)
     └── Reads: {id}_panel.pkl
     └── Creates: {id}_25_portfolios.pkl
 
-Step 2: Fama-French Factors
+Step 4: Fama-French Factors
     └── Compute factor returns via 2×3 sorts and Fama-MacBeth
-    └── Uses: utils_factors/fama_functions.py (Fama-French factor construction)
-              utils_factors/factor_utils.py (common utilities)
+    └── Uses: utils_factors/fama_functions.py, utils_factors/factor_utils.py
     └── Reads: {id}_panel.pkl
     └── Creates: {id}_fama.pkl
 
-Step 3: DKKM Factors
+Step 5: DKKM Factors
     └── Generate Random Fourier Features factors
-    └── Uses: utils_factors/dkkm_functions.py (RFF computation)
-              utils_factors/factor_utils.py (common utilities)
+    └── Uses: utils_factors/dkkm_functions.py, utils_factors/factor_utils.py
     └── Reads: {id}_panel.pkl
     └── Creates: {id}_dkkm.pkl
 
-Step 4a: Fama SDF Estimation
+Step 6a: Fama SDF Estimation
     └── Ridge regression for Fama/CAPM SDF weights
-    └── Uses: utils_factors/fama_functions.py (portfolio weight computation)
-              utils_factors/factor_utils.py (common utilities)
+    └── Uses: utils_factors/fama_functions.py, utils_factors/factor_utils.py
     └── Reads: {id}_panel.pkl, {id}_fama.pkl
     └── Creates: {id}_stock_weights_fama.pkl
 
-Step 4b: DKKM SDF Estimation
+Step 6b: DKKM SDF Estimation
     └── Ridge regression for DKKM SDF weights
-    └── Uses: utils_factors/dkkm_functions.py (ridge regression)
-              utils_factors/factor_utils.py (common utilities)
+    └── Uses: utils_factors/dkkm_functions.py, utils_factors/factor_utils.py
     └── Reads: {id}_panel.pkl, {id}_fama.pkl, {id}_dkkm.pkl, {id}_stock_weights_fama.pkl
     └── Creates: {id}_stock_weights_dkkm.pkl
 
-Step 5: Conditional Moments
-    └── Compute expected returns and covariances
-    └── Uses: utils_bgn/sdf_compute_bgn.py (BGN SDF computation)
-              utils_kp14/sdf_compute_kp14.py (KP14 SDF computation)
-              utils_gs21/sdf_compute_gs21.py (GS21 SDF computation)
-    └── Reads: {id}_arr/ (memmap arrays)
-    └── Creates: {id}_moments.pkl
-
-Step 6: Evaluation
+Step 7: Evaluation
     └── Calculate Sharpe ratios and portfolio statistics
-    └── Uses: utils_factors/factor_utils.py (common utilities)
-              utils_factors/sdf_utils.py (SDF evaluation utilities)
+    └── Uses: utils_factors/factor_utils.py, utils_factors/sdf_utils.py
     └── Reads: {id}_panel.pkl, {id}_stock_weights_fama.pkl, {id}_stock_weights_dkkm.pkl
     └── Creates: {id}_results.pkl
 ```
@@ -176,7 +194,11 @@ Key parameters in `config.py`:
 |-----------|---------|-------------|
 | `N` | 1000 | Number of firms |
 | `T` | 720 | Time periods (months) |
-| `N_JOBS` | 24 | Parallel workers |
+| `MODEL_N_JOBS` | dict | Parallel workers per model and step (e.g. `bgn moments: 8, dkkm: 16`) |
+| `MODEL_CHUNK_SIZE` | dict | Chunk size for parallel loops per model |
+| `KEEP_PANEL` | True | Copy panel pkl to output dir and retain after run |
+| `KEEP_MOMENTS` | True | Copy moments pkl to output dir and retain after run |
+| `KEEP_WEIGHTS` | True | Retain stock weights pkl after run |
 | `N_DKKM_FEATURES_LIST` | [6, 36, 360, 3600] | DKKM feature counts |
 | `ALPHA_LST` | [0, 0.001, 0.01, 0.05, 0.1, 1] | Ridge regularization (BGN, KP14) |
 | `ALPHA_LST_GS` | [0, 1e-5, 1e-4, 5e-4, 1e-3, 0.01] | Ridge regularization (GS21) |
@@ -187,7 +209,8 @@ Key parameters in `config.py`:
 ### Factor Construction
 
 **Fama-French Method:**
-- 2×3 double sorts on size and characteristics
+- SMB computed from a simple size median split (independent of other characteristics)
+- All other factors use 2×3 double sorts on size and the relevant characteristic
 - Value-weighted portfolios
 - Factors: MKT, SMB, HML, CMA, RMW, UMD
 - GS21 includes an additional leverage factor (mkt_lev)
@@ -219,6 +242,13 @@ Where:
 - α: Ridge penalty
 
 ## Environment Variables
+
+For SLURM cluster deployment:
+```bash
+export BOP_SCRATCH_DIR=/scratch/sjpruitt/bop        # permanent output directory
+export BOP_TEMP_DIR=/scratch/sjpruitt/bop_temp      # intermediate files (arr/, panel, moments)
+```
+These are set automatically by `run_bop_job.sh`. If `BOP_TEMP_DIR` is omitted, intermediate files go to `BOP_SCRATCH_DIR`.
 
 For AWS S3 integration:
 ```bash
