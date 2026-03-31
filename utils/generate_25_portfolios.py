@@ -104,6 +104,10 @@ def main():
     for month in range(start, end + 1):
         data = panel.loc[month]
 
+        # Need at least 5 firms to form 5 bins; early burnin months may have fewer
+        if len(data) < 5:
+            continue
+
         # Rank first to guarantee unique bin edges even when many firms
         # share identical mve or bm values (common in GS21 simulations).
         mve_q = pd.qcut(data['mve'].rank(method='first'), 5, labels=[1, 2, 3, 4, 5])
