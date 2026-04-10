@@ -1,17 +1,17 @@
 #!/bin/bash
-#SBATCH -J bop
-#SBATCH --array=1,4,6,8          # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
+#SBATCH -J bop_gs21
+#SBATCH --array=0-9         # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
 #SBATCH --cpus-per-task=16    # coordinate with N_JOBS max (16 workers)
 #SBATCH --mem=48GB
-#SBATCH -t 0-10:00             # 
+#SBATCH -t 0-8:00             # 
 #SBATCH -p public
-#SBATCH -o outslurm/bop.bgn.%a.out 
-#SBATCH -e outslurm/bop.bgn.%a.err
+#SBATCH -o outslurm/bop.gs21.%a.out 
+#SBATCH -e outslurm/bop.gs21.%a.err
 
 # ---------------------------------------------------------------------------
 # Configuration — edit these before submitting
 # -------------------------------------------------------------------------
-MODEL=bgn                               # bgn | kp14 | gs21
+MODEL=gs21                               # bgn | kp14 | gs21
 CONDA_ENV=bop                           # your conda environment name
 SCRATCH=/scratch/sjpruitt/bop           # permanent output files (pkl) land here
 TEMP=/scratch/sjpruitt/bop_temp         # intermediate _arr/ directories land here
