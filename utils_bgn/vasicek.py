@@ -70,7 +70,7 @@ def fit_beta_params(x):
     scale = np.exp(x[1])
     p1 = prob_in_money(0, beta_star, scale)
     p2 = prob_in_money(rbar, beta_star, scale)
-    return np.array([p1-0.1, p2-0.05])
+    return np.array([p1-0.2, p2-0.05])
 
 x = fsolve(fit_beta_params, x0 = [1, 1])
 beta_star = x[0]
