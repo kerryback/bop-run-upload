@@ -24,7 +24,6 @@ import os
 import numpy as np
 import pickle
 from datetime import datetime
-from zoneinfo import ZoneInfo
 import time
 import gc
 from joblib import Parallel, delayed
@@ -51,7 +50,7 @@ def fmt(s):
     return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
 
 def now():
-    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
+    return datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')
 
 
 # Shared data for parallel workers. Set before Parallel() call; workers

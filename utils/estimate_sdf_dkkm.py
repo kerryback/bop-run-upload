@@ -29,7 +29,6 @@ except RuntimeError:
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from zoneinfo import ZoneInfo
 import time
 import importlib
 import pickle
@@ -41,7 +40,7 @@ def fmt(s):
     return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
 
 def now():
-    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
+    return datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Parse optional --config argument
 config_module_name = 'config'
