@@ -64,8 +64,7 @@ def fmt(s):
     return f"{h}h {m}m {sec}s" if h else f"{m}m {sec}s"
 
 def now():
-    from zoneinfo import ZoneInfo
-    return datetime.now(ZoneInfo('America/Chicago')).strftime('%a %d %b %Y, %I:%M%p %Z')
+    return datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')
 
 # Add this directory and utils/ to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

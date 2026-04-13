@@ -15,7 +15,7 @@ from config import (
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'BGN_solfiles')
 
-print(f"started import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+print(f"started import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
 
 # parameters for bond pricing, going out max_prds
 
@@ -118,7 +118,7 @@ def inner_sum(r, option_mat):
 def Jstar(r):
     return np.sum([inner_sum(r, s) for s in range(1, 951)])
 
-print(f"finished import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+print(f"finished import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
 
 '''
 nsim = int(1.0e8)

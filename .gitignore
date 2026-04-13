@@ -63,3 +63,4 @@ Thumbs.db
 .mypy_cache/
 .claude/
 /debugging
+/logs
