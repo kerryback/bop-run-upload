@@ -11,9 +11,9 @@
 # ---------------------------------------------------------------------------
 # Configuration — edit these before submitting
 # -------------------------------------------------------------------------
-MODEL=gs21                               # bgn | kp14 | gs21
+MODEL=bgn                               # bgn | kp14 | gs21
 CONDA_ENV=bop                           # your conda environment name
-SCRATCH=/scratch/sjpruitt/bop           # permanent output files (pkl) land here
+SCRATCH=/scratch/sjpruitt/bop_umd       # permanent output files (pkl) land here
 TEMP=/scratch/sjpruitt/bop_temp         # intermediate _arr/ directories land here
                                         # (kept separate so pkl output stays clean;
                                         #  stale _arr/ from crashes never pollutes SCRATCH)
