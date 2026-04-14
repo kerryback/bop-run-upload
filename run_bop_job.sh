@@ -1,19 +1,19 @@
 #!/bin/bash
-#SBATCH -J bop_bgn
+#SBATCH -J bop_kp14
 #SBATCH --array=0-9         # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
 #SBATCH --cpus-per-task=16    # coordinate with N_JOBS max (16 workers)
 #SBATCH --mem=90GB
 #SBATCH -t 0-16:00             #
 #SBATCH -p public
-#SBATCH -o outslurm/bop.bgn.%a.log 
+#SBATCH -o outslurm/bop.kp14.%a.log 
 
 # ---------------------------------------------------------------------------
 # Configuration — edit these before submitting
 # -------------------------------------------------------------------------
-MODEL=bgn                               # bgn | kp14 | gs21
+MODEL=kp14                               # bgn | kp14 | gs21
 CONDA_ENV=bop                           # your conda environment name
-SCRATCH=/scratch/sjpruitt/bop_umd_bgn       # permanent output files (pkl) land here
-TEMP=/scratch/sjpruitt/bop_temp_bgn         # intermediate _arr/ directories land here
+SCRATCH=/scratch/sjpruitt/bop_umd_kp14       # permanent output files (pkl) land here
+TEMP=/scratch/sjpruitt/bop_temp_kp14         # intermediate _arr/ directories land here
                                         # (kept separate so pkl output stays clean;
                                         #  stale _arr/ from crashes never pollutes SCRATCH)
 
