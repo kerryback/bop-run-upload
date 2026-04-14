@@ -2,8 +2,8 @@
 #SBATCH -J bop_gs21
 #SBATCH --array=0-9         # Set to number_of_panels - 1 (e.g. 0-99 for 100 panels)
 #SBATCH --cpus-per-task=16    # coordinate with N_JOBS max (16 workers)
-#SBATCH --mem=60GB
-#SBATCH -t 0-12:00             # 
+#SBATCH --mem=90GB
+#SBATCH -t 0-16:00             #
 #SBATCH -p public
 #SBATCH -o outslurm/bop.bgn.%a.log 
 
