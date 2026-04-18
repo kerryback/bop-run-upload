@@ -32,7 +32,7 @@ tau = 0.2/3;
 phi = 0.4;
 kappa_e = 0; %0.025;
 kappa_b = 0.004;
-xi = 0.03/3;
+xi = 0.03/3*3;
 
 %% set solution parameters
 
@@ -50,7 +50,7 @@ xnum = 20; %number of x grid points
 znum = 200; %number of z grid points
 mnstdev = 4; %number of standard deviations to cover 
 
-sigma_m = 2.5;
+sigma_m = 5; % 2.5
 mbar = 4*sigma_m;
 [nodes, w] = gaussHermite(20000);
 w= w/sqrt(pi);
