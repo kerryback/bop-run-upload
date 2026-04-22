@@ -206,6 +206,11 @@ def run_workflow_for_index(panel_id, log_file):
     """
     Run complete workflow for a single panel index.
 
+    Each step's canonical output file is checked before running. If it already
+    exists (e.g. from a prior crashed run of this array task), the step is
+    skipped. Combined with per-chunk resume inside calculate_moments.py, a
+    restarted job picks up exactly where the previous one left off.
+
     Steps:
     1.  Generate panel → {model}_{id}_arr/ (memory-mapped arrays)
     2.  Calculate SDF moments → {model}_{id}_moments.pkl (uses arr_tuple, then deletes it)
@@ -224,45 +229,79 @@ def run_workflow_for_index(panel_id, log_file):
 
     timings = {}
 
-    # Step 1: Generate panel
-    timings['panel'] = run_script(
-        "utils/generate_panel.py",
-        [model, str(panel_id)],
-        f"STEP 1: Generating {model.upper()} panel data (index={panel_id})"
-    )
+    # Short-circuit: whole workflow already done from a prior run.
+    results_file = os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl")
+    if os.path.exists(results_file):
+        print(f"[SKIP] Workflow already complete — "
+              f"{os.path.basename(results_file)} exists. Nothing to do.")
+        return
+
+    def skip_or_run(output_path, script, args, description, key):
+        """Run a step, or skip if its canonical output is already on disk."""
+        if os.path.exists(output_path):
+            print(f"\n{'='*70}")
+            print(f"[SKIP] {description}")
+            print(f"       {os.path.basename(output_path)} exists — reusing.")
+            print(f"{'='*70}")
+            timings[key] = 0.0
+        else:
+            timings[key] = run_script(script, args, description)
+
+    # Step 1: Generate panel.
+    # Panel is "done" when either (a) moments already exist (Step 2 finished
+    # and arr_tuple was cleaned up), or (b) panel.pkl + arr_tuple both exist
+    # (Step 2 can consume them directly).
+    panel_file = os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl")
+    arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
+    moments_file = os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl")
+    panel_done = (os.path.exists(moments_file)
+                  or (os.path.exists(panel_file) and os.path.isdir(arr_dir)))
+    if panel_done:
+        print(f"\n{'='*70}")
+        print(f"[SKIP] STEP 1: Panel + arr_tuple already present for {full_panel_id}")
+        print(f"{'='*70}")
+        timings['panel'] = 0.0
+    else:
+        timings['panel'] = run_script(
+            "utils/generate_panel.py",
+            [model, str(panel_id)],
+            f"STEP 1: Generating {model.upper()} panel data (index={panel_id})"
+        )
     if KEEP_PANEL:
-        src = os.path.join(TEMP_DIR, f"{full_panel_id}_panel.pkl")
-        upload_file(src)
-        if TEMP_DIR != DATA_DIR and os.path.exists(src):
-            shutil.copy2(src, os.path.join(DATA_DIR, f"{full_panel_id}_panel.pkl"))
+        upload_file(panel_file)
+        if TEMP_DIR != DATA_DIR and os.path.exists(panel_file):
+            shutil.copy2(panel_file, os.path.join(DATA_DIR, f"{full_panel_id}_panel.pkl"))
     upload_logs(log_file)
 
-    # Step 2: Calculate SDF moments (immediately after panel, while arr_tuple is fresh)
-    timings['moments'] = run_script(
+    # Step 2: Calculate SDF moments.
+    skip_or_run(
+        moments_file,
         "utils/calculate_moments.py",
         [full_panel_id],
-        "STEP 2: Calculating SDF conditional moments"
+        "STEP 2: Calculating SDF conditional moments",
+        'moments'
     )
     if KEEP_MOMENTS:
-        src = os.path.join(TEMP_DIR, f"{full_panel_id}_moments.pkl")
-        upload_file(src)
-        if TEMP_DIR != DATA_DIR and os.path.exists(src):
-            shutil.copy2(src, os.path.join(DATA_DIR, f"{full_panel_id}_moments.pkl"))
+        upload_file(moments_file)
+        if TEMP_DIR != DATA_DIR and os.path.exists(moments_file):
+            shutil.copy2(moments_file, os.path.join(DATA_DIR, f"{full_panel_id}_moments.pkl"))
     upload_logs(log_file)
 
     # arr_tuple is no longer needed after moments are computed
-    arr_dir = os.path.join(TEMP_DIR, f"{full_panel_id}_arr")
     if os.path.exists(arr_dir):
         shutil.rmtree(arr_dir)
         print(f"[CLEANUP] Deleted arr_tuple directory")
 
-    # Step 3: Generate 25 portfolios
-    timings['25_portfolios'] = run_script(
+    # Step 3: Generate 25 portfolios.
+    portfolios_file = os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl")
+    skip_or_run(
+        portfolios_file,
         "utils/generate_25_portfolios.py",
         [full_panel_id],
-        "STEP 3: Computing 25 double-sorted portfolios"
+        "STEP 3: Computing 25 double-sorted portfolios",
+        '25_portfolios'
     )
-    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_25_portfolios.pkl"))
+    upload_file(portfolios_file)
     upload_logs(log_file)
 
     # Diagnostic checkpoint: upload a trivial file to S3 to confirm process is alive
@@ -273,53 +312,65 @@ def run_workflow_for_index(panel_id, log_file):
     os.remove(checkpoint_file)
     print(f"[CHECKPOINT] Pre-fama checkpoint uploaded at {now()}")
 
-    # Step 4: Fama factors
-    timings['fama'] = run_script(
+    # Step 4: Fama factors.
+    fama_file = os.path.join(DATA_DIR, f"{full_panel_id}_fama.pkl")
+    skip_or_run(
+        fama_file,
         "utils/generate_fama_factors.py",
         [full_panel_id],
-        "STEP 4: Computing Fama-French and Fama-MacBeth factors"
+        "STEP 4: Computing Fama-French and Fama-MacBeth factors",
+        'fama'
     )
     # Factor files not uploaded to S3
     upload_logs(log_file)
 
-    # Step 5: DKKM factors
-    timings['dkkm'] = run_script(
+    # Step 5: DKKM factors.
+    dkkm_file = os.path.join(DATA_DIR, f"{full_panel_id}_dkkm.pkl")
+    skip_or_run(
+        dkkm_file,
         "utils/generate_dkkm_factors.py",
         [full_panel_id],
-        f"STEP 5: Computing DKKM factors (max_features={config.MAX_FEATURES})"
+        f"STEP 5: Computing DKKM factors (max_features={config.MAX_FEATURES})",
+        'dkkm'
     )
     # Factor files not uploaded to S3
     upload_logs(log_file)
 
-    # Step 6a: Estimate Fama/CAPM SDFs (compute stock weights)
-    timings['estimate_fama'] = run_script(
+    # Step 6a: Estimate Fama/CAPM SDFs (compute stock weights).
+    weights_fama_file = os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_fama.pkl")
+    skip_or_run(
+        weights_fama_file,
         "utils/estimate_sdf_fama.py",
         [full_panel_id],
-        "STEP 6a: Estimating Fama/CAPM SDFs (computing stock weights)"
+        "STEP 6a: Estimating Fama/CAPM SDFs (computing stock weights)",
+        'estimate_fama'
     )
-
     if KEEP_WEIGHTS:
-        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_fama.pkl"))
+        upload_file(weights_fama_file)
     upload_logs(log_file)
 
-    # Step 6b: Estimate DKKM SDFs (compute stock weights)
-    timings['estimate_dkkm'] = run_script(
+    # Step 6b: Estimate DKKM SDFs (compute stock weights).
+    weights_dkkm_file = os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_dkkm.pkl")
+    skip_or_run(
+        weights_dkkm_file,
         "utils/estimate_sdf_dkkm.py",
         [full_panel_id],
-        "STEP 6b: Estimating DKKM SDFs (computing stock weights)"
+        "STEP 6b: Estimating DKKM SDFs (computing stock weights)",
+        'estimate_dkkm'
     )
-
     if KEEP_WEIGHTS:
-        upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_stock_weights_dkkm.pkl"))
+        upload_file(weights_dkkm_file)
     upload_logs(log_file)
 
-    # Step 7: Evaluate SDFs (compute portfolio statistics)
-    timings['evaluate'] = run_script(
+    # Step 7: Evaluate SDFs (compute portfolio statistics).
+    skip_or_run(
+        results_file,
         "utils/evaluate_sdfs.py",
         [full_panel_id],
-        "STEP 7: Evaluating SDFs (computing statistics)"
+        "STEP 7: Evaluating SDFs (computing statistics)",
+        'evaluate'
     )
-    upload_file(os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl"))
+    upload_file(results_file)
     upload_logs(log_file)
 
     # Cleanup

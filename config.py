@@ -36,7 +36,7 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 6,   # bgn can run into OOM sooner than others, at this step -- lower the njob
+        'moments': 4,   # bgn moments peak-memory is high; 4 workers avoids OOM on 90GB nodes
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,

@@ -133,6 +133,18 @@ def main():
         print(f"Valid models: {', '.join(valid_models)}")
         sys.exit(1)
 
+    # Resume support: if the final moments file already exists, skip entirely.
+    # Lets a restarted job move on to the next step without recomputing.
+    output_file = os.path.join(config.TEMP_DIR, f"{panel_id}_moments.pkl")
+    if os.path.exists(output_file):
+        print("="*70)
+        print("SDF CONDITIONAL MOMENTS CALCULATION")
+        print("="*70)
+        print(f"Panel ID: {panel_id}")
+        print(f"[SKIP] {output_file} already exists — moments are done, exiting.")
+        print("="*70)
+        return
+
     print("="*70)
     print("SDF CONDITIONAL MOMENTS CALCULATION")
     print("="*70)
@@ -235,6 +247,15 @@ def main():
         chunk_end_idx = min((chunk_idx + 1) * chunk_size, n_months)
         chunk_months = months_list[chunk_start_idx:chunk_end_idx]
 
+        chunk_file = os.path.join(config.TEMP_DIR, f"{panel_id}_moments_chunk{chunk_idx}.pkl")
+
+        # Resume support: skip chunks already on disk from a prior (crashed) run.
+        # Corruption is handled at consolidation time below.
+        if os.path.exists(chunk_file):
+            print(f"  [SKIP] Chunk {chunk_idx + 1} already on disk, reusing")
+            chunk_files.append(chunk_file)
+            continue
+
         chunk_t0 = time.time()
 
         # Use context manager to ensure workers are cleaned up after each chunk
@@ -250,7 +271,6 @@ def main():
         chunk_moments = {month: moments_dict for month, moments_dict in chunk_results}
 
         # Save chunk to temporary file
-        chunk_file = os.path.join(config.TEMP_DIR, f"{panel_id}_moments_chunk{chunk_idx}.pkl")
         with open(chunk_file, 'wb') as f:
             pickle.dump(chunk_moments, f)
         chunk_files.append(chunk_file)
@@ -277,8 +297,21 @@ def main():
     moments = {}
     for chunk_idx, chunk_file in enumerate(chunk_files):
         print(f"  Loading chunk {chunk_idx + 1}/{n_chunks}...")
-        with open(chunk_file, 'rb') as f:
-            chunk_moments = pickle.load(f)
+        try:
+            with open(chunk_file, 'rb') as f:
+                chunk_moments = pickle.load(f)
+        except (EOFError, pickle.UnpicklingError, OSError) as e:
+            # A partial write from a prior OOM/timeout crash. Delete the bad
+            # file so the next run recomputes this specific chunk.
+            print(f"  [ERROR] Chunk {chunk_idx + 1} ({chunk_file}) is corrupt: {e}")
+            print(f"  Deleting corrupt chunk so the next run will recompute it.")
+            try:
+                os.remove(chunk_file)
+            except OSError:
+                pass
+            raise RuntimeError(
+                f"Corrupt chunk {chunk_file} removed; re-run this job to recompute it."
+            )
         moments.update(chunk_moments)
         del chunk_moments
         gc.collect()
