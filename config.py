@@ -36,7 +36,7 @@ GS21_BURNIN = 200
 
 MODEL_N_JOBS = {
     'bgn': {
-        'moments': 4,   # bgn moments peak-memory is high; 4 workers avoids OOM on 90GB nodes
+        'moments': 1,   # n_jobs=1 runs in-process (no forking); OOM-killed workers cause indefinite hangs
         'generate_fama': 16,
         'generate_dkkm': 16,
         'estimate_fama': 16,
