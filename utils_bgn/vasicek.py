@@ -1,21 +1,14 @@
 __metaclass__ = type
 
 from datetime import datetime
-import numpy as np
-import pandas as pd
-import os
+import numpy as np 
+import pandas as pd 
 from scipy.optimize import root_scalar, fsolve
 from scipy.stats import norm
 from scipy.special import roots_laguerre
-from config import (
-    PI as pi, RBAR as rbar, KAPPA as kappa, SIGMA_R as sigma_r,
-    BETA_ZR as beta_zr, SIGMA_Z as sigma_z, CBAR as Cbar
-)
+from parameters import *
 
-# Get path to solution files relative to this module
-_SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'BGN_solfiles')
-
-print(f"started import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
+print(f"started import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
 
 # parameters for bond pricing, going out max_prds
 
@@ -70,7 +63,7 @@ def fit_beta_params(x):
     scale = np.exp(x[1])
     p1 = prob_in_money(0, beta_star, scale)
     p2 = prob_in_money(rbar, beta_star, scale)
-    return np.array([p1-0.2, p2-0.05])
+    return np.array([p1-0.1, p2-0.05]) # was 0.1
 
 x = fsolve(fit_beta_params, x0 = [1, 1])
 beta_star = x[0]
@@ -118,7 +111,7 @@ def inner_sum(r, option_mat):
 def Jstar(r):
     return np.sum([inner_sum(r, s) for s in range(1, 951)])
 
-print(f"finished import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
+print(f"finished import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
 
 '''
 nsim = int(1.0e8)
@@ -134,8 +127,16 @@ rmin = r.quantile(1-0.99995)
 rmax = r.quantile(0.99995)
 print(f"99.99% of the distribution is between {rmin} and {rmax}")
 
+from joblib import Parallel, delayed
+
 grid1 = np.linspace(rmin, rmax, 51)
-J1 = np.array([Jstar(r) for r in grid1])
+J1 = np.array(Parallel(n_jobs=4)(delayed(Jstar)(r) for r in grid1))
+df = pd.DataFrame(
+        {"r": grid1, "J": J1}
+)
+df = df.sort_values(by="r")
+df.to_csv("Jstar.csv", index=False)
+
 
 maxerr = 1
 iter = 0
@@ -143,7 +144,7 @@ while maxerr > 0.0001:
     print(iter)
 
     grid2 = 0.5*(grid1[:-1] + grid1[1:])
-    J2 = np.array([Jstar(r) for r in grid2])
+    J2 = np.array(Parallel(n_jobs=4)(delayed(Jstar)(r) for r in grid2))
 
     grid = np.concatenate((grid1, grid2))
     Jvals = np.concatenate((J1, J2))
@@ -152,16 +153,15 @@ while maxerr > 0.0001:
         {"r": grid, "J": Jvals}
     )
     df = df.sort_values(by="r")
-    df.to_csv(os.path.join(_SOLFILES_DIR, 'Jstar.csv'), index=False)
+    df.to_csv("Jstar.csv", index=False)
 
     J2hat = np.interp(grid2, grid1, J1)
     err = np.abs(np.array(J2) - J2hat) / J2
-    maxerr = np.max(err) 
+    maxerr = np.max(err)
 
     grid1 = df.r.to_numpy()
     J1 = df.J.to_numpy()
 
-    iter += 1 
-
+    iter += 1
 
 '''
