@@ -1,14 +1,21 @@
 __metaclass__ = type
 
 from datetime import datetime
-import numpy as np 
-import pandas as pd 
+import numpy as np
+import pandas as pd
+import os
 from scipy.optimize import root_scalar, fsolve
 from scipy.stats import norm
 from scipy.special import roots_laguerre
-from parameters import *
+from config import (
+    PI as pi, RBAR as rbar, KAPPA as kappa, SIGMA_R as sigma_r,
+    BETA_ZR as beta_zr, SIGMA_Z as sigma_z, CBAR as Cbar
+)
 
-print(f"started import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+# Get path to solution files relative to this module
+_SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'BGN_solfiles')
+
+print(f"started import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
 
 # parameters for bond pricing, going out max_prds
 
@@ -63,7 +70,7 @@ def fit_beta_params(x):
     scale = np.exp(x[1])
     p1 = prob_in_money(0, beta_star, scale)
     p2 = prob_in_money(rbar, beta_star, scale)
-    return np.array([p1-0.1, p2-0.05]) # was 0.1
+    return np.array([p1-0.1, p2-0.05])  # default from bgn
 
 x = fsolve(fit_beta_params, x0 = [1, 1])
 beta_star = x[0]
@@ -111,7 +118,7 @@ def inner_sum(r, option_mat):
 def Jstar(r):
     return np.sum([inner_sum(r, s) for s in range(1, 951)])
 
-print(f"finished import of vasicek at {datetime.now().strftime('%a %d %b %Y, %I:%M%p')}")
+print(f"finished import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
 
 '''
 nsim = int(1.0e8)
@@ -135,7 +142,7 @@ df = pd.DataFrame(
         {"r": grid1, "J": J1}
 )
 df = df.sort_values(by="r")
-df.to_csv("Jstar.csv", index=False)
+df.to_csv(os.path.join(_SOLFILES_DIR, 'Jstar.csv'), index=False)
 
 
 maxerr = 1
@@ -153,7 +160,7 @@ while maxerr > 0.0001:
         {"r": grid, "J": Jvals}
     )
     df = df.sort_values(by="r")
-    df.to_csv("Jstar.csv", index=False)
+    df.to_csv(os.path.join(_SOLFILES_DIR, 'Jstar.csv'), index=False)
 
     J2hat = np.interp(grid2, grid1, J1)
     err = np.abs(np.array(J2) - J2hat) / J2
