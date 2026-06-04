@@ -1,0 +1,20 @@
+name: bop
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip
+  # Core numerical computing (conda-forge binaries ship MKL/OpenBLAS — beat PyPI wheels)
+  - numpy>=1.26
+  - pandas>=2.0
+  - scipy>=1.11
+  # Statistical analysis
+  - statsmodels>=0.14
+  # Machine learning — sklearn Ridge in utils_factors/fama_functions.py
+  - scikit-learn>=1.3
+  # Parallel processing
+  - joblib>=1.3
+  # AWS S3 result storage (utils/upload_to_aws.py) + webhook notify (main.py)
+  - boto3>=1.34
+  - requests>=2.31
