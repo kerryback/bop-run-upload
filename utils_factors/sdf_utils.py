@@ -21,7 +21,7 @@ def load_precomputed_moments(panel_id: str) -> Tuple[Dict, int, int, int]:
 
     Returns:
         Tuple of (moments dict, N, start_month, end_month)
-        moments dict has structure: {month: {'rp', 'cond_var', 'second_moment', 'second_moment_inv', ...}}
+        moments dict has structure: {month: {'rp', 'cond_var', 'sdf_ret', 'max_sr'}}
     """
     # Load the moments pickle file
     moments_file = os.path.join(TEMP_DIR, f'{panel_id}_moments.pkl')
