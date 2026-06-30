@@ -291,14 +291,27 @@ def sdf_compute(N, T, arr_tuple):
 
         # SDF portfolio and returns
 
-        # invert ER
+        # Exclude zero-capital firms (no active projects -> book = I*num = 0, i.e.
+        # bm=0) from the SDF solve. Their conditional return second-moment is
+        # degenerate, so the full ER is singular; scipy's assume_a="pos" solve would
+        # silently return garbage without raising. They are not in the investable
+        # universe (the panel drops book<=0 firms downstream), so they get zero SDF
+        # weight. book[t,:] shares chi's first-index t, matching ER at t+1. See the
+        # analogous fix in sdf_compute_kp14.py / diag_singular.py.
+        keep = book[t, :] > 0                                   # risky firms with capital
+        idx = np.concatenate(([0], 1 + np.flatnonzero(keep)))  # always keep risk-free (col 0)
+
+        # invert ER (on the non-degenerate sub-universe)
+        port = np.zeros(N + 1)
         try:
-            port = scipy.linalg.solve(ER, np.ones((N + 1, 1)), assume_a="pos").reshape(-1)
+            port[idx] = scipy.linalg.solve(
+                ER[np.ix_(idx, idx)], np.ones((len(idx), 1)), assume_a="pos"
+            ).reshape(-1)
         except Exception as e:
             print(f"An error occurred: {e}. Perturbing ER.")
-            ER += np.eye(ER.shape[0]) * 1e-6
+            ER_sub = ER[np.ix_(idx, idx)] + np.eye(len(idx)) * 1e-6
             try:
-                port = scipy.linalg.solve(ER, np.ones((N + 1, 1)), assume_a="pos").reshape(-1)
+                port[idx] = scipy.linalg.solve(ER_sub, np.ones((len(idx), 1)), assume_a="pos").reshape(-1)
             except Exception as e:
                 print(f"Second attempt failed: {e}. Using fallback value for port.")
                 port = np.full((N+1, ), np.nan)

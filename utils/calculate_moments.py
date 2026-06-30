@@ -1,9 +1,9 @@
 """
 Calculate and save SDF conditional moments for a panel.
 
-This script computes the expensive SDF outputs (rp, cond_var, second_moment,
-second_moment_inv) once and saves them to a pickle file. This avoids redundant
-computation across run_fama.py and run_dkkm.py.
+This script computes the expensive SDF outputs (rp, cond_var, sdf_ret, max_sr)
+once and saves them to a pickle file. This avoids redundant computation across
+run_fama.py and run_dkkm.py.
 
 Usage:
     python calculate_moments.py [panel_id] [--config CONFIG_MODULE]
@@ -78,16 +78,9 @@ def compute_month_moments(month):
     # (sdf_loop(t) computes returns from time t to t+1, using data at t+1)
     sdf_ret, max_sr, rp, cond_var = sdf_loop(month - 1, 0)
 
-    # Compute second moment matrix and its inverse
-    rp_vec = rp.reshape(-1, 1)
-    second_moment = cond_var + (rp_vec @ rp_vec.T)
-    second_moment_inv = np.linalg.inv(second_moment)
-
     moments_dict = {
         'rp': rp,
         'cond_var': cond_var,
-        'second_moment': second_moment,
-        'second_moment_inv': second_moment_inv,
         'sdf_ret': sdf_ret,
         'max_sr': max_sr
     }
@@ -363,8 +356,6 @@ def main():
     print(f"  Each month contains:")
     print(f"    - rp: ({N},) expected returns vector")
     print(f"    - cond_var: ({N}, {N}) conditional variance matrix")
-    print(f"    - second_moment: ({N}, {N}) second moment matrix")
-    print(f"    - second_moment_inv: ({N}, {N}) inverse second moment matrix")
     print(f"    - sdf_ret: scalar SDF return")
     print(f"    - max_sr: scalar maximum Sharpe ratio")
     print(f"\nTo load moments:")
