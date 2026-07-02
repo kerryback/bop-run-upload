@@ -268,6 +268,7 @@ def create_panel(N, T, arr_tuple):
     )
     df.index = df.index.swaplevel()
     df.sort_index(level=["month", "firmid"], inplace=True)
+    df.loc[df["book"] == 0, "xret"] = np.nan ## just added
     df = df.drop(columns=["book", "cumret", "op_cash_flow"])  
     df.reset_index(inplace=True)
     df.ret -= (np.exp(r*dt) - 1)
