@@ -1,0 +1,212 @@
+{
+ "scope": "Deep structural analysis of the GS21 (Gomes-Schmid 2021) model as implemented in /Users/sjpruitt/GitHub/bop-run-upload. Read in full: utils_gs21/panel_functions_gs21.py, utils_gs21/sdf_compute_gs21.py, utils_gs21/loadings_compute_gs21.py, the GS21_solfiles/*.csv solution grids, the GS21 block of config.py, utils_factors/fama_functions.py + dkkm_functions.py, utils/evaluate_sdfs.py, and in the analyze repo: analyze_gs21_panels.py, create_slides_tables.py, build_sdfwts_chars.py, \"MLP Analyze\"/README.md and both correlations.csv files. All quantitative claims below are computed by me from freshly simulated GS21 panels (seeds 0,3,7; N=200/500/1000; T=burnin+80 .. burnin+720) using the repo's own create_arrays / create_panel / integ_zi_zj_x / sdf_compute code paths. Scratch scripts: /private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/{gs21_diag,gs21_sdf,gs21_span,gs21_w,gs21_check,gs21_headroom,gs21_placebo,gs21_hjd,gs21_default}.py",
+ "findings": [
+  {
+   "claim": "CONFIRMED: GS21 has exactly one aggregate shock (x), and the implemented conditional covariance matrix is EXACTLY rank-1-systematic plus diagonal. z is purely idiosyncratic and the code integrates z_i' and z_j' independently.",
+   "evidence": "panel_functions_gs21.simulate_ar1 draws a single scalar path x[0..T] and an (T+1,N) matrix z; only x is shared. In sdf_compute_gs21.integ_zi_zj_x, `weighted` (lines 135-136) integrates out z' firm-by-firm leaving an (N, n_x) matrix of E_{z'}[payoff_i | x'], and line 141 forms the cross-product ONLY over the shared x' nodes: ERR[i,j] = sum_{x'} w_x f_i(x') f_j(x'). The diagonal is overwritten (line 188) with the exact double integral including z' variance. So Sigma = (x-driven common part) + diag. Numerically at N=200, t=251 the eigenvalues of cond_var are [3.047, 5.2053e-4, 5.2029e-4, 5.1994e-4, ...]: ONE systematic eigenvalue carrying 97.34% of total variance, and the remaining 199 eigenvalues lie exactly in the idiosyncratic-variance bulk [2.39e-4, 5.2e-4] = idio sd in [1.54%, 2.27%]/month. Even though the x'-exposure is nonlinear in principle (10 GH nodes could support rank 9), the firms' f_i(x') functions are near-proportional so the systematic block is numerically rank 1. Mean pairwise conditional correlation = 0.944-0.975 (realized panel correlation 0.975).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:21-48",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:78-190"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Because Sigma = beta beta' + D exactly, the true MVE weight is exactly the idiosyncratic-variance-tilted alpha portfolio w* = D^{-1}(mu - beta*lambda), verified to machine precision.",
+   "evidence": "For t in {251,281,311}: corr(port[1:], alpha/idio_var) = -1.000, -1.000, -1.000 (the minus sign is the SDF-vs-MVE convention; sdf_compute returns port = ER^{-1}1, and max_sr is computed with a leading minus, so MVE = -port[1:]). Decomposition of the maximum conditional squared Sharpe: market/beta leg SR = 0.1074 / 0.0626 / 0.0350 and alpha-leg appraisal ratio = 0.3036 / 0.2169 / 0.2129, total max_sr = 0.3206 / 0.2249 / 0.2149. So 89% / 92% / 97% of the maximum squared Sharpe comes from the ALPHA leg, i.e. from diversifying away sd(alpha)=3.5-4.3 bp/month of cross-sectional mispricing across N nearly identical firms with 2.0-2.4%/month idio vol. Per-firm monthly information ratio = 4.33e-4/0.0203 = 0.0213; times sqrt(200) = 0.302.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:205-224",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/build_sdfwts_chars.py:52-60"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "HEADROOM: with ZERO estimation error, six linear characteristic portfolios already capture 87% of the maximum squared Sharpe and the actual FM portfolios capture 93%. The best possible nonlinear-characteristic portfolio adds at most +3% in Sharpe over FM. This is the ceiling on any DKKM-over-FM gap in GS21.",
+   "evidence": "N=500, 30 consecutive eval months, population moments from integ_zi_zj_x (no sampling noise at all). Fraction of max SR^2 attained by the span of each weight basis (mean over months): equal-weight/market 0.042; actual fama_french 2x3 sorted factors (7 cols) 0.734; actual fama_macbeth X(X'X)^-1 portfolios (7 cols) 0.932; 6 rank-standardized chars + const 0.871; + all 21 quadratic cross-terms 0.909; RFF 6 feats 0.811; RFF 36 0.879; RFF 180 0.950; RFF 360 0.988. Converting to fraction of max SHARPE: EW 0.205, FF 0.857, FM 0.965, lin6 0.933, quad 0.954, RFF36 0.937, RFF180 0.975, RFF360 0.994. Mean max_sr over these months = 0.438/month. So the largest achievable DKKM-over-FM Sharpe gap is 0.994/0.965 = +3.0%, and DKKM at the production-relevant RFF/N ratio (180 features, 500 firms) beats FM by 0.975/0.965 = +1.0%. Placebo control at N=200: a basis of 150 RANDOM Gaussian directions (no char information at all) already attains 0.74-0.82 of max SR^2, so a large share of the RFF360 number is pure dimension-counting, not economics.",
+   "file_refs": [
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_headroom.py",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_placebo.py",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:41-175"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "DEFAULT NEVER HAPPENS. Zero defaults in 2,163,000 post-burnin firm-months at the production configuration (N=1000, T=920, 3 seeds). The default region is not merely rare, it is unreachable by a factor of ~30 in price. The 'genuine nonlinearity' GS21 was supposed to contribute is absent.",
+   "evidence": "Direct simulation of the state recursion with the repo's own P_up/P_down/i_cut/b_refin interpolators: defaults = 0/2,163,000; minimum post-burnin equity price P = 30.4, 40.8, 49.6 across seeds (default triggers at P <= 0). Stronger: the MATLAB solution files themselves contain no default region over the ENTIRE solved grid -- min(P_down.csv) = 4.728 and min(P_up.csv) = 10.064 over all 200x20x20 = 80,000 grid points, including z at -2.72 sd, x at -2.69 sd, and b = 1.0 (100% debt per unit capital). Consistently, z_cut_down.csv is pinned at the zgrid floor (-0.146826) at EVERY (x,b) point, i.e. the solver found the default threshold to lie below the state grid everywhere. Realized market leverage b/P: median 0.0019, 95th pct 0.0040, max over 2.16M firm-months = 0.0104. GS21's firms are effectively all-equity (max 1% market leverage) and infinitely far from the default boundary. Note the task premise that default frequency follows from GS21_ZETA is incorrect: zeta = 0.03/3 = 0.01 is the monthly REFINANCING (eta=1) probability, not a default hazard.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/GS21_solfiles/P_down.csv",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/GS21_solfiles/z_cut_down.csv",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:68-89",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_default.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The cross-sectional price function is essentially EXACTLY log-linear in (z, b). There is no kink, no convexity, and no size x value x leverage interaction anywhere in the visited state space.",
+   "evidence": "Cross-sectional OLS of log(P_ex) on (z, b) at t = 251/281/311 (N=200): R^2 = 0.9951 / 0.9890 / 0.9508, with d log P / d z = 0.359 / 0.290 / 0.292 and d log P / d b = -1.248 / -1.247 / -1.246. The leverage elasticity is constant to three decimals across dates and price levels -- the debt effect is a pure constant-elasticity level shift, not a kinked or convex one. On the raw solution grid, P_down at (z=0, x=mid) falls monotonically and near-geometrically from 287.9 at b=0 to 70.8 at b=1 -- smooth, no curvature break. R^2 of the true conditional beta on 6 linear rank-std chars = 0.914 / 0.835 / 0.879, rising only to 0.947 / 0.908 / 0.922 with all 21 quadratic terms. The nonlinearity that exists is generic smooth curvature, not a default kink.",
+   "file_refs": [
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_hjd.py",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_span.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "A 40:1 elasticity asymmetry -- firm value responds to the aggregate discount-rate shock x forty times more strongly than to its own productivity z -- is the root cause of the 0.97 pairwise correlation and the collapsed cross-section.",
+   "evidence": "From P_down.csv at z=0, b=0: P rises from 19.1 (x = -0.1537) to 865.4 (x = +0.1537), i.e. d log P / d x = log(865.4/19.1)/0.3074 = 12.4. Times sigma_x = 0.010458 gives 13.0%/month systematic return vol, which matches the measured 12.3-12.5%. By contrast d log P / d z = 0.29-0.36, times sigma_z = 0.014034 gives 0.45%/month. Cross-sectional sd(log P_ex) = 0.101, decomposing as 1.247 x sd(b)=0.0795 -> 0.099 from DEBT and 0.32 x sd(z)=0.0539 -> 0.017 from own productivity: 98% of the cross-sectional price dispersion comes from a quasi-discrete debt variable (book_lev takes ~101 distinct values with median 0.263, 95th pct 0.316, max 0.316) and only 2% from idiosyncratic productivity. Both x and z enter cash flow symmetrically as exp(x+z) with similar persistence (rho_x = 0.983, rho_z = 0.965), so the extra factor of ~40 is purely the aggregate discount-rate/risk-premium channel.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/GS21_solfiles/P_down.csv",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:285-290"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "GS21_SIGMA_Z was cut by 10x from the paper's calibration on 2026-06-09 (commit dc2462e), after an earlier 4x cut (eee2386). This is the proximate cause of the degenerate cross-section, and the solution files were re-solved for the reduced value.",
+   "evidence": "git log -p on config.py: 0.16*sqrt(...) -> 0.25*0.16*sqrt(...) (eee2386, Jun 9 12:36) -> 0.1*0.16*sqrt(...) (dc2462e, Jun 9 13:03). Current GS21_SIGMA_Z = 0.014034, stationary sd(z) = 0.05389. The solfiles are dated Jun 10 08:14 and zgrid spans +/-0.146826 = +/-2.7247 stationary sd of the NEW sigma_z (it would be +/-1.09 sd under the 0.25x value), so the MATLAB solve is consistent with the current 0.1x parameter. Consequence: idiosyncratic monthly return vol is 2.1% and systematic 12.3%, i.e. idio/systematic = 0.17. In real US equities the ratio is roughly the inverse (~2.2: idio ~13%, systematic ~6%, average pairwise correlation ~0.15-0.20). GS21 as run is off by a factor of ~13 in that ratio.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:289"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The 6 GS21 characteristics are ALGEBRAICALLY the model's state vector, which is why an MLP on chars explains 98.3% of the true SDF weight. This is a property of a 3-dimensional noiselessly-observed state, not evidence of a rich nonlinear truth.",
+   "evidence": "From create_panel: mve = book*P_ex with book = k, so bm = book/mve = 1/P_ex EXACTLY (verified np.allclose(bm * P_ex, 1) = True); mkt_lev = book_lev*bm = b/P_ex; size = log k + log P_ex; roe_t = op_cashflow_{t-1}/book_{t-1} = (1-tau)exp(x_{t-1}+z_{t-1}) - delta, which since x is cross-sectionally constant is a strictly monotone transform of z_{t-1}, so rank-standardized roe IS the rank of lagged z. Given (bm, mkt_lev, size, roe) one recovers (P_ex, b, k, z) exactly. The state is (k, b, z) plus the common (x, eta). Hence correlations.csv gs21 true corr_fitted_vs_truth = 0.983. Two of the six chars are near-degenerate: agr takes exactly 2 values (0 and 0.14) and is 0 in 98.8% of firm-months (investment probability = cutoff/imax, mean 1.21%/month; realized cutoff quantiles [9.76, 24.15, 43.37] against imax = 2000); book_lev takes ~101 distinct values with 9.4% exactly zero.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:228-302",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/MLP Analyze/Full run/results/correlations.csv"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The correlations.csv table quoted in the task brief (gs21 methods at 0.004) is from the ORIGINAL-vol GS21 run, not the current calibration. Under the current (0.1x sigma_z) calibration all three methods recover the truth well and DKKM is already marginally best -- so GS21's problem is not 'no method recovers the truth', it is 'everyone recovers it and there is nothing left to win'.",
+   "evidence": "'MLP Analyze'/README.md documents two runs: 'Full run/' = 'original-vol GS21', 'GS21 low vol/' = 'GS21 only, low-volatility calibration'. Full run/results/correlations.csv gives gs21 fm 0.0058, ff 0.0036, dkkm 0.0045 (fitted 0.093/0.086/0.069). GS21 low vol/results/correlations.csv gives corr_actual_vs_truth = dkkm 0.8030, ff 0.7715, fm 0.7464 and corr_fitted_vs_truth = dkkm 0.8971, fm 0.8874, ff 0.8152, truth 0.9653. The current config.py sigma_z is the low-vol value, so the low-vol table is the one that describes the current pipeline. DKKM's edge there (0.803 vs 0.746-0.771) is exactly the 1-3% Sharpe headroom I computed independently from population moments.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/MLP Analyze/README.md",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/MLP Analyze/GS21 low vol/results/correlations.csv",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/MLP Analyze/Full run/results/correlations.csv"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "No zero/negative-book singularity exists in GS21 (unlike BGN/KP14): book = k is always strictly positive and P_ex is floored strictly positive, so ER is numerically healthy. The GS21 analogue of that pathology is instead the arbitrary P_ex floor, which only bites in higher-sigma_z calibrations.",
+   "evidence": "book = k, initialized to 1, multiplied by g=1.14 on investment, and on default reset to alpha*mean(k) = 0.2*mean(k) > 0 -- it can never reach 0. bm = 1/P_ex is bounded in [0.0033, 0.021] over 24,000 firm-months. Numerically at N=200, t=251: ER has min eigenvalue 2.391e-4, ZERO negative eigenvalues, cond(ER) = 8.86e5; cond_var is exactly symmetric with min eigenvalue 2.391e-4 and cond = 1.27e4. Conditioning scales roughly linearly in N, so at the production N=1000 cond(ER) ~ 4e6 -- still ~10 orders of magnitude inside float64. The `assume_a='pos'` Cholesky path in sdf_loop is safe here. The residual risk is panel_functions_gs21.py line 131, `P_ex = np.maximum(0.05/k, P_ex)`: an arbitrary clamp that floors market equity at 0.05. It never binds in the current calibration (min k*P_ex = 30.4), but at the original sigma_z it produces firms with E[R] and Var[R] of order 1e3-1e6, which is the most plausible mechanism behind the 'true SDF weights up to 1e9 in GS21' noted in the MLP README (a near-singular cond_var passed to np.linalg.solve, which raises no error and silently returns garbage -- exactly the KP14 pathology already documented in memory).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:131",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:205-231",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/build_sdfwts_chars.py:52-60"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG: loadings_compute_gs21.py computes P_down_diff from itself instead of from P_down_mat, so P_down_diff is identically zero. Dormant now (all loadings calls are commented out), but it would silently zero out 99% of the Taylor loading.",
+   "evidence": "Lines 29-32 read: `P_down_diff = np.zeros_like(P_down_mat)` then `P_down_diff[:, 1:-1, :] = ((P_down_diff[:, 2:, :] - P_down_diff[:, :-2,:]) / ...)`. The right-hand side references P_down_diff, which is all zeros, not P_down_mat. The immediately preceding block for P_up_diff (lines 24-27) correctly uses P_up_mat. Since loadings_Taylor weights the down branch by (1-zeta) = 0.99, enabling it would return essentially zeta * P_up_diff = 1% of the correct loading. panel_functions_gs21.py lines 214-215 currently comment out both loadings calls, so nothing downstream consumes it today.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/loadings_compute_gs21.py:29-32",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:214-215"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG (dormant): in the all-firms-default branch, the freshly drawn aggregate state xt is never written back into x[t], so the returned x path would be inconsistent with the prices and returns actually computed. Related: the surrounding `while (P[t] <= 0).sum() > 0` loop has no iteration cap and can spin forever if replacement firms also default.",
+   "evidence": "panel_functions_gs21.py lines 81-89: the `else` branch (ndefaults == N) executes `xt = np.random.normal(xbar, np.sqrt(sigma_x**2/(1.0-rho_x**2)))` and then recomputes P[t] with that xt, but x[t] is left untouched and x is returned in arr_tuple and used by sdf_compute (line 197 passes x[t]) and by the erets loop (line 210). Neither is triggered in the current calibration (0 defaults in 2.16M firm-months), but both are latent traps if sigma_z is restored.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:73-89"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Metric artifact in HJD: the method return and sdf_ret are on uncontrolled and different scales, and the HJD-minimizing ridge alpha partly just selects a scale rather than accuracy.",
+   "evidence": "Over 114 eval months at N=200: sdf_ret has mean 0.0818 and sd 0.3184 (its own Sharpe 0.257, close to mean max_sr 0.294) -- this is the unit-COST HJ portfolio (port normalized so port.sum()==1). Method weights come from regressing y=1 on factor returns with no intercept (fama_functions.mve_data lines 264-269; dkkm ridge_regr), giving pi = E[RR']^{-1}E[R], whose scale is mean = SR^2/(1+SR^2) and sd = SR/(1+SR^2): 0.099 at span SR=0.10, 0.275 at SR=0.30, 0.369 at SR=0.44. So the scales are the same order of magnitude (H5 is not a degenerate failure) but differ by up to ~30% and nothing enforces a match. Critically, driving DKKM's ridge alpha up shrinks pi toward 0, giving HJD -> sqrt(0.0818^2 + 0.3184^2) = 0.329 regardless of economics; create_slides_tables.find_best_alpha_for_model(..., 'hjd') selects argmin HJD over the alpha grid, so it can reward shrinkage-to-zero over a correctly-directed but mis-scaled portfolio.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:44-56",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:81-95",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:248-272"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "claim": "With zero defaults the firm-size distribution is non-stationary: log capital is a pure Bernoulli random walk, so cross-sectional size dispersion grows as sqrt(t) and never reaches a stationary cross-section.",
+   "evidence": "k[t+1] = (1 + invest*(g-1))*k[t] with P(invest) = 1.21%/month and no reset (defaults = 0). Predicted sd(log k) at T months = sqrt(T*p*(1-p))*log(1.14) = sqrt(920*0.0121*0.9879)*0.1310 = 0.437; measured 0.401/0.440/0.411 across 3 seeds at T=920, and 0.246 at T=320. Total sd(log mve) = 0.285 at T=320. For comparison, real CRSP sd(log market cap) is roughly 2.0 and sd(log book-to-market) roughly 0.8, versus GS21's 0.29 and 0.101. The cross-section is 7-8x too compressed, and what dispersion exists is an artifact of the burn-in length rather than an economic steady state.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/panel_functions_gs21.py:106",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/gs21_default.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Minor code-hygiene issues that are currently harmless: scipy.linalg is used without being imported, and i_cut_* is floored at 0 but never capped at imax.",
+   "evidence": "sdf_compute_gs21.py line 207 calls scipy.linalg.solve, but the module imports only `from scipy import interpolate`, `import scipy.special`, `from scipy.sparse import ...` and `from scipy.interpolate import RegularGridInterpolator`. It resolves only because a transitively-imported submodule binds scipy.linalg as an attribute of the scipy package -- fragile across scipy versions. Separately, pos_interp clamps i_cut below at 0 but nothing clamps it above at GS21_IMAX = 2000, so prob_i = (cutoff-imin)/(imax-imin) could exceed 1 and give a negative no-invest weight; measured cutoff maxes at 43.4, so there is a 46x safety margin today.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:1-19",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:53-64",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:207"
+   ],
+   "confidence": "medium"
+  }
+ ],
+ "verdict_on_hypotheses": [
+  {
+   "hypothesis": "H1 SPAN",
+   "verdict": "CONFIRMED",
+   "reasoning": "Confirmed as strongly as the data can confirm anything, and this is THE binding constraint for GS21. One aggregate shock, a numerically exact rank-1-plus-diagonal conditional covariance, and 6 characteristics that algebraically recover the full (k,b,z) state. Population span calculation (N=500, 30 months, zero estimation error): the span of 6 linear rank-standardized characteristic portfolios captures 87.1% of the maximum squared Sharpe; the actual Fama-MacBeth portfolios capture 93.2%; RFF with 180 features captures 95.0% and with 360 features 98.8%. In Sharpe units that is FM 0.965 vs DKKM-ceiling 0.975 (RFF180) to 0.994 (RFF360) of the maximum. BLUNT ANSWER TO Q1: the largest DKKM-over-FM out-of-sample Sharpe advantage GS21 can ever produce, even with a perfect estimator, is about +3%, and the realistic figure is +1%. Real-data DKKM-over-FF gaps are 2-5x. GS21 as specified is off by two orders of magnitude in what it can deliver, and no amount of tuning nfeatures, alpha, or the RFF bandwidth changes that -- the model simply does not contain a nonlinear cross-sectional payoff to find. The only genuinely large gap on the table is DKKM over FF (0.994 vs 0.857 of max Sharpe, +16%), but that is FF's tercile-sorting inefficiency, not complexity: FM, a linear method, already closes almost all of it."
+  },
+  {
+   "hypothesis": "H2 RATIO NONLINEARITY",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The mechanism is exactly right and I verified it to machine precision: w* = D^{-1}(mu - beta*lambda), with corr(w*, alpha/idio_var) = -1.000 (sign = SDF convention) at all three test dates, and 89-97% of the max squared Sharpe coming from that alpha/d leg rather than the market leg. So GS21's true MVE IS the ratio object H2 describes. But the ratio is nearly linear in the characteristics because both numerator and denominator are: R^2 of the true weight on 6 linear chars = 0.79-0.90, rising only to 0.88-0.94 with all 21 quadratic terms; R^2 of diag(Sigma) on linear chars = 0.68-0.84 -> 0.82-0.95 quadratic. And the dispersion in d_i is far too small to make the ratio bite: idio sd ranges only 1.54%-2.67%/month, a 3:1 spread. Cashing out: the entire quadratic nonlinearity is worth 87.1% -> 90.9% of max SR^2, i.e. +2.2% in Sharpe. To make H2 pay you would need idiosyncratic variance to be strongly and NONLINEARLY char-linked with order-of-magnitude dispersion -- GS21 has neither."
+  },
+  {
+   "hypothesis": "H3 RFF BANDWIDTH MIS-SCALING",
+   "verdict": "REFUTED",
+   "reasoning": "The diagnosis of the bandwidth is arithmetically right but the prescription is backwards for GS21. With L=6 rank-standardized chars, sd(W'x) = gamma*sqrt(6/12) which is in [0.354, 0.707] over GAMMA_GRID, so sin() is ~92% linear and cos() ~pure quadratic: the RFF basis is effectively {linear, quadratic}, exactly as H3 says (RFF36 attains 0.879 of max SR^2, essentially the same as the explicit quadratic basis at 0.909). But I tested the proposed fix directly. Multiplying gamma by 2 changes the population span by at most +0.01-0.02 at 90 features; multiplying by sqrt(130/6) = 4.65 makes it WORSE (36 feats: 0.879 -> 0.799 mean; 90 feats: 0.947 -> 0.950, flat); multiplying by 10 is catastrophic (36 feats: 0.879 -> 0.376). The reason is that GS21's truth is nearly linear, so a narrow-bandwidth (near-linear) kernel is close to the right kernel and widening it wastes the feature budget on high-frequency noise. Bandwidth rescaling is not the GS21 fix."
+  },
+  {
+   "hypothesis": "H4 CHARACTERISTIC POVERTY",
+   "verdict": "CONFIRMED",
+   "reasoning": "Confirmed, but with the sign of the problem inverted from the usual reading: GS21's characteristics are not too WEAK, they are too STRONG and too few. bm = 1/P_ex exactly (verified), mkt_lev = b/P_ex, size = log k + log P_ex, and rank-standardized roe is exactly the cross-sectional rank of lagged z. Four chars invert the entire 3-dimensional firm state (k, b, z) with zero measurement error, which is why an MLP on chars explains 98.3% of the true SDF weight. Two of the six are near-degenerate: agr takes literally two values and is 0 in 98.8% of firm-months (investment probability 1.21%/month), and book_lev takes ~101 values concentrated on {0, 0.21, 0.26, 0.32}. The virtue-of-complexity theory needs the truth to be dense and high-dimensional in feature space with a low per-signal SNR; GS21 supplies a 3-dimensional, noiselessly observed, near-log-linear truth. Under those conditions a small model is the correct model and ridge on 3600 features has nothing to buy. This is H1's cause, not a separate channel."
+  },
+  {
+   "hypothesis": "H5 HJD SCALE MISMATCH",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "Not structurally degenerate, but the metric is contaminated. Measured over 114 eval months at N=200: sdf_ret has sd 0.3184 and mean 0.0818. Method returns are w'xret with w = E[RR']^{-1}E[R] (unnormalized, from regressing y=1 on factors with no intercept), whose sd is SR/(1+SR^2) = 0.099 at span Sharpe 0.10, 0.275 at 0.30, 0.369 at 0.44. Same order of magnitude, so HJD is not a constant across methods and can in principle discriminate -- H5's strong form fails. However two real problems remain: (i) nothing enforces scale agreement between the unit-cost HJ portfolio and the unnormalized regression weights, so a 30% scale error contributes as much to HJD as a substantial direction error; (ii) driving the ridge alpha up shrinks the DKKM weights toward zero, giving HJD -> sqrt(0.0818^2 + 0.3184^2) = 0.329 mechanically, and create_slides_tables.find_best_alpha_for_model(..., 'hjd') picks argmin over the alpha grid, so it can select shrinkage-to-nothing over a correctly-directed portfolio. Recommend normalizing both legs to unit cost or unit variance before differencing."
+  },
+  {
+   "hypothesis": "H6 EVALUATION HORIZON / SNR",
+   "verdict": "REFUTED",
+   "reasoning": "The premise that GS21 has 'far higher cross-sectional predictability than real data' is false, and estimation noise is nevertheless NOT the binding constraint -- so H6 fails in both directions. On predictability: the cross-sectional sd of true conditional expected excess returns is 3.9-5.6 basis points per month against a cross-sectional mean of 35-133 bp; real US data has a cross-sectional sd of expected returns on the order of 50-100 bp. GS21's cross-section is FLATTER than reality by roughly an order of magnitude. On estimation noise: because idiosyncratic vol is only 2.0-2.4%/month (vs ~13% in real data), the per-firm monthly information ratio is 4.33e-4/0.0203 = 0.0213 and the aggregate max Sharpe is a huge 0.44/month at N=500 (~0.62 at N=1000). Estimating 7 factor weights from 360 months at a span Sharpe of 0.42 loses only ~9% of Sharpe (plug-in efficiency SR/sqrt(1 + K/(T*SR^2))). My population span computation removes estimation error entirely and STILL finds FM at 96.5% of the maximum Sharpe and the DKKM ceiling at 99.4%. The gap is a span gap, not a noise gap. Lengthening the sample or the eval window will not create a DKKM advantage."
+  }
+ ],
+ "quantitative_claims": [
+  "Default frequency in the current GS21 calibration: 0 out of 2,163,000 post-burnin firm-months (N=1000, T=920, seeds 0/1/2). Minimum post-burnin equity price P = 30.4 (default triggers at P<=0).",
+  "Global minimum of the solved value function over the entire 200x20x20 grid: min(P_down) = 4.728, min(P_up) = 10.064, both at (z=-2.72sd, x=-2.69sd, b=1.0). No grid point has P<=0. z_cut_down is pinned at the zgrid floor (-0.146826) at every (x,b).",
+  "Realized market leverage b/P_ex: median 0.0019, 95th pct 0.0040, maximum over 2.16M firm-months 0.0104. GS21 firms are effectively all-equity.",
+  "GS21_ZETA = 0.03/3 = 0.01 is the monthly refinancing (eta=1) probability, NOT a default hazard. Measured eta mean = 0.0097. Investment probability = cutoff/imax, mean 1.21%/month (cutoff quantiles [9.8, 24.2, 43.4] vs imax = 2000).",
+  "Conditional covariance spectrum at N=200, t=251: eigenvalues [3.0471, 5.2053e-4, 5.2029e-4, 5.1994e-4, ...]. Exactly one systematic eigenvalue = 97.34% of total variance; the remaining 199 lie in the idiosyncratic bulk [2.39e-4, 5.2e-4]. Sigma = beta beta' + D exactly.",
+  "Mean pairwise conditional stock-return correlation: 0.9733 (t=251), 0.9533 (t=281), 0.9443 (t=311); realized panel correlation 0.9751. Real US equities: ~0.15-0.20.",
+  "Idiosyncratic monthly return sd 2.03-2.42% vs systematic 10.0-12.3%. idio/systematic = 0.17; real data ~2.2. Off by ~13x.",
+  "Cross-sectional sd of TRUE conditional expected excess return: 5.59e-4, 4.02e-4, 3.87e-4 per month, against cross-sectional means of 1.33e-2, 6.59e-3, 3.51e-3.",
+  "Max conditional Sharpe decomposition: market/beta leg SR = 0.1074/0.0626/0.0350; alpha-leg appraisal ratio = 0.3036/0.2169/0.2129; total max_sr = 0.3206/0.2249/0.2149 (N=200). Alpha leg = 89%/92%/97% of max SR^2. At N=500 mean max_sr = 0.438/month.",
+  "corr(true SDF weight, alpha_i/idio_var_i) = -1.000 at all three dates (minus = SDF-vs-MVE sign convention). sd(1-factor alpha) = 4.33e-4 / 3.51e-4 / 3.59e-4 per month. Per-firm monthly information ratio = 0.0213.",
+  "POPULATION HEADROOM (N=500, 30 months, zero estimation error), fraction of max SR^2: EW/market 0.042; Fama-French 2x3 sorts 0.734; Fama-MacBeth 0.932; 6 linear rank-std chars 0.871; +21 quadratics 0.909; RFF-6 0.811; RFF-36 0.879; RFF-180 0.950; RFF-360 0.988.",
+  "Same, as fraction of max SHARPE: EW 0.205; FF 0.857; FM 0.965; linear-6 0.933; quadratic 0.954; RFF-36 0.937; RFF-180 0.975; RFF-360 0.994. Max possible DKKM-over-FM Sharpe gain = +3.0% (RFF360) or +1.0% (RFF180). Max DKKM-over-FF = +16%, but FM already closes 13 of those 16 points with a purely linear method.",
+  "Placebo (N=200): a basis of 150 RANDOM Gaussian directions carrying zero characteristic information already attains 0.74-0.82 of max SR^2; 90 random directions attain 0.44-0.52; 36 attain 0.19-0.29 (vs RFF-36 at 0.85-0.92). Much of the RFF-360 number is dimension counting.",
+  "RFF bandwidth test (fraction of max SR^2 at N=200): gamma x1 -> RFF36 0.923/0.848/0.878, RFF90 0.970/0.925/0.946; gamma x2 -> 0.919/0.859/0.882 and 0.974/0.949/0.952; gamma x4.65 -> 0.852/0.752/0.794 and 0.964/0.947/0.939; gamma x10 -> 0.404/0.336/0.389 and 0.764/0.718/0.672. Widening HURTS.",
+  "Price elasticities: d log P / d x = 12.4 (P at z=0,b=0 goes 19.1 -> 865.4 across x = -0.1537 -> +0.1537); d log P / d z = 0.29-0.36; d log P / d b = -1.247 (constant to 3 decimals across dates). Ratio x:z = 40:1.",
+  "Cross-sectional log-price regression on (z,b): R^2 = 0.9951/0.9890/0.9508. sd(log P_ex) = 0.101, of which 1.247 x sd(b)=0.0795 -> 0.099 from debt and 0.32 x sd(z)=0.0539 -> 0.017 from own productivity. 98% of cross-sectional price dispersion is a quasi-discrete debt variable.",
+  "sigma_x = 0.010458, rho_x = 0.98305, stationary sd(x) = 0.05704. sigma_z = 0.014034, rho_z = 0.96549, stationary sd(z) = 0.05389. sigma_z was cut 10x from the paper value (commits eee2386 then dc2462e, 2026-06-09); solfiles re-solved 2026-06-10 for the reduced value (zgrid spans exactly +/-2.7247 stationary sd).",
+  "Cross-sectional dispersion: sd(log mve) = 0.285 at T=320, sd(log k) = 0.401-0.440 at T=920 (non-stationary, grows as sqrt(T) since zero defaults; predicted sqrt(920*0.0121*0.9879)*log(1.14) = 0.437). sd(log bm) = sd(log P_ex) = 0.101. Real data: ~2.0 and ~0.8.",
+  "HJD scale: sdf_ret has mean 0.0818 and sd 0.3184 over 114 months (own Sharpe 0.257 vs mean max_sr 0.294). Unnormalized method weights pi = E[RR']^{-1}E[R] give sd(pi'R) = SR/(1+SR^2) = 0.099 / 0.275 / 0.369 at span Sharpe 0.10 / 0.30 / 0.44. Shrinking DKKM to zero yields HJD = sqrt(0.0818^2+0.3184^2) = 0.329 mechanically.",
+  "Numerical conditioning at N=200: ER min eigenvalue 2.391e-4, zero negative eigenvalues, cond(ER) = 8.86e5; cond_var symmetric, min eigenvalue 2.391e-4, cond = 1.27e4. Scales ~linearly in N, so cond(ER) ~ 4e6 at N=1000 -- safe in float64.",
+  "Characteristic identities verified: bm * P_ex == 1 exactly (np.allclose True); mkt_lev = b/P_ex; size = log k + log P_ex; roe_t = (1-tau)exp(x_{t-1}+z_{t-1}) - delta. agr has exactly 2 distinct values with 98.8% at 0; book_lev has ~101 distinct values with 9.4% exactly 0.",
+  "correlations.csv, GS21 low-vol (= current calibration, defaults filtered): corr_actual_vs_truth dkkm 0.803 > ff 0.771 > fm 0.746; corr_fitted dkkm 0.897, fm 0.887, ff 0.815, truth 0.965. The 0.004-level GS21 numbers in the Full-run table are from the original-vol calibration."
+ ],
+ "blockers": [
+  "ONE PRICED SHOCK, RANK-1 COVARIANCE. GS21 has a single aggregate state x; z is idiosyncratic and the moment code integrates z_i' and z_j' independently, producing a conditional covariance that is numerically exactly rank-1 systematic plus diagonal (top eigenvalue = 97.3% of total variance, remaining spectrum = the idio bulk). With one factor, the true conditional MVE is one factor-mimicking portfolio plus a D^{-1} tilt. There is no multi-factor rotation, no state-dependent factor structure, and therefore no nonlinear object for a rich basis to approximate. This alone caps the DKKM-over-FM Sharpe gain at +3%.",
+  "THE PRICE FUNCTION IS LOG-LINEAR IN THE CROSS-SECTION. Cross-sectional log(P_ex) regresses on (z, b) with R^2 = 0.95-0.995 and a leverage elasticity of -1.247 that is constant to three decimals across dates and price levels. Conditional beta is 83-91% linear in the 6 chars and only 91-95% after adding all 21 quadratic terms. GS21's advertised nonlinearity does not exist in the region of the state space the simulation visits.",
+  "DEFAULT IS UNREACHABLE, SO THE KINK IS NOT MEASURE-ZERO -- IT IS EMPTY. Zero defaults in 2,163,000 firm-months; minimum realized equity price 30.4 against a default boundary of 0; the solved value function's global minimum over the entire grid including b=1 and z,x at -2.7sd is P_down = 4.73; z_cut_down is pinned at the grid floor everywhere. Maximum market leverage ever observed is 1.04%. There is no default region, no size x value x leverage interaction, and nothing for a nonlinear basis to earn. This is the single most fixable blocker: GS21 must be recalibrated (higher sigma_z, higher tau/lower delta, or a bgrid extended past the equity-value scale) until default is a live event, and the value function re-solved.",
+  "IDIOSYNCRATIC RISK WAS CUT 10x AND THE CROSS-SECTION COLLAPSED WITH IT. GS21_SIGMA_Z was reduced from the paper's 0.16-based value to 0.1x that on 2026-06-09. Result: average pairwise return correlation 0.95-0.975 (real data ~0.17), idio/systematic vol ratio 0.17 (real ~2.2), and only 2% of cross-sectional price dispersion coming from own productivity (98% from a quasi-discrete debt variable that itself only moves value by 10%). Restoring sigma_z is the obvious lever, but it re-opens the default region AND the P_ex-floor pathology that produced the 1e9 SDF weights in the original-vol run -- both must be fixed together, not separately.",
+  "THE CHARACTERISTICS ARE THE STATE VECTOR, EXACTLY. bm = 1/P_ex identically, mkt_lev = b/P_ex, size = log k + log P_ex, and rank-standardized roe is the exact rank of lagged z. Four chars invert the whole 3-dimensional firm state with zero measurement error, which is why an MLP recovers 98.3% of the true SDF weight. Virtue-of-complexity requires many weak, partly-independent, noisily-measured signals over a dense high-dimensional truth. Here the truth is 3-dimensional and observed perfectly, so a 6-regressor linear model is the correctly specified model and 3600 ridge features cannot beat it. Adding measurement noise to chars and adding chars that are genuinely non-redundant would be a minimal, defensible fix -- but it will not help while the underlying state stays 3-dimensional.",
+  "TWO OF THE SIX CHARACTERISTICS ARE NEARLY DEGENERATE. Investment occurs 1.21% of firm-months, so agr takes literally two values (0 and 0.14) and is 0 in 98.8% of observations; book_lev takes ~101 values concentrated on {0, 0.21, 0.26, 0.32}. After rank-standardization agr is essentially a constant with a 1.2% tail. Effective characteristic dimension for the RFF input is ~4, not 6, which further shrinks the feature space DKKM can exploit.",
+  "THE MODEL'S MAXIMUM SHARPE IS ITSELF AN ARTIFACT OF THE COLLAPSED CROSS-SECTION. Max conditional Sharpe is 0.44/month at N=500 (roughly 0.62 at N=1000, i.e. ~2.1 annualized), and 89-97% of the squared Sharpe comes from diversifying 3.5-4.3 basis points of per-firm alpha across N nearly identical firms with 2% idio vol. That is a near-arbitrage that scales as sqrt(N) and has no real-data counterpart. Any Sharpe comparison against this benchmark is measuring how well a method diversifies a synthetic near-arbitrage, not how well it prices risk.",
+  "SECONDARY / METRIC-LEVEL: HJD differences an unnormalized regression MVE return (sd 0.10-0.37 depending on attained Sharpe) against a unit-cost HJ portfolio return (sd 0.318). Shrinking DKKM's weights to zero mechanically yields HJD = 0.329, and the reported alpha is chosen by argmin HJD, so the metric can reward shrinkage over accuracy. Normalize both legs to unit cost or unit variance before differencing.",
+  "SECONDARY / CODE: loadings_compute_gs21.py lines 29-32 compute P_down_diff from itself rather than from P_down_mat, leaving it identically zero (dormant -- callers are commented out, but it would silently zero 99% of the Taylor loading). panel_functions_gs21.py lines 81-89 redraw the aggregate xt in the all-firms-default branch without writing it back into x[t], and the enclosing while-loop has no iteration cap. panel_functions_gs21.py line 131 floors P_ex at 0.05/k, an arbitrary clamp that is inert now but is the most plausible source of the 1e9 true SDF weights in the original-vol run (near-singular cond_var passed to np.linalg.solve, which raises no error). i_cut_* is clamped below at 0 but never above at imax. scipy.linalg is used at sdf_compute_gs21.py:207 without being imported."
+ ]
+}

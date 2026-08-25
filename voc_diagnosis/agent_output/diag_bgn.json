@@ -1,0 +1,235 @@
+{
+ "scope": "Deep structural analysis of the BGN (Berk\u2013Green\u2013Naik 1999) model as implemented in /Users/sjpruitt/GitHub/bop-run-upload: full reads of utils_bgn/panel_functions_bgn.py, utils_bgn/sdf_compute_bgn.py, utils_bgn/vasicek.py, utils_bgn/loadings_compute_bgn.py, the BGN blocks of config.py, plus utils_factors/dkkm_functions.py, utils_factors/fama_functions.py, utils/generate_dkkm_factors.py, utils/estimate_sdf_dkkm.py, utils/calculate_moments.py, utils/evaluate_sdfs.py and bop-analyze-remote/create_slides_tables.py for metric definitions. All quantitative claims come from live simulations I ran of the actual code: (a) N=200, T=200, moments at t=180 (panel month 181); (b) N=500, T=240, moments at t=220 (panel month 221); (c) a 30-replication Monte Carlo of the actual FF/FM/DKKM estimators (T=360 rolling window, real rank_standardize/rff/ridge code paths) evaluated against the model's TRUE conditional (rp, Sigma). Scratch code in /private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/.",
+ "findings": [
+  {
+   "claim": "There is exactly ONE priced aggregate shock. log M_{t+1} = -r_t - 0.5*sigma_z^2 - sigma_z*nu_{t+1} with sigma_z=0.4. nu is decomposed into two ORTHOGONAL aggregate factors, xi (interest-rate innovation) and mu, via nu = corr_zr*xi + sqrt(1-corr_zr^2)*mu with corr_zr = beta_zr/(sigma_z*sigma_r) = -0.00014/0.0008 = -0.175. Prices of risk are lambda_mu = sigma_z*sqrt(1-corr_zr^2) = +0.3938 and lambda_xi = sigma_z*corr_zr = -0.0700 per month. The price-of-risk vector is therefore rank-1 in a 2-dimensional factor space, and the HJ bound is sqrt(exp(sigma_z^2)-1) = 0.4165/month.",
+   "evidence": "panel_functions_bgn.py:34-36 constructs xi and mu from nu exactly as above. The SDF specification is pinned down by the valuation identity: cash flow C_j = exp(Cbar - 0.5*sigmaj^2 + eps_j*sigmaj) with eps_j = corr_zj*nu + sqrt(1-corr_zj^2)*z_j (lines 69-75, 121), and corr_zj := beta_j/(sigma_z*sigmaj) (line 61). Hence cov(log M, log C_j) = -sigma_z*corr_zj*sigmaj = -beta_j exactly, so the risk-neutral expected cash flow is Chat*exp(-beta_j) \u2014 which is exactly what the code uses to value assets in place (A = book*Chat*beta_avg*bond_values, line 153, with beta_avg = mean of exp(-beta) over live projects, lines 148-149). vasicek.py:26-42 confirms the same SDF: phi1 accumulates +0.5*sigma_z^2, sigma1_sq accumulates +sigma_z^2 (the two cancel in B(k,r)) and sigma12 accumulates beta_zr = cov(sigma_z*nu, sigma_r*xi).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:26-36",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:44-75",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:121-153",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/vasicek.py:24-55",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:200-208"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The firm's cash-flow (mu) risk loading is EXACTLY a constant times book-to-market times the arithmetic mean of the live projects' betas: A_mu,it = [pi*Chat*sqrt(1-corr_zr^2)/sigma_z] * bm_it * betabar_it = 0.0602 * bm_it * betabar_it. Numerically corr(A_mu, bm*betabar) = 1.000000.",
+   "evidence": "loadings_projection (loadings_compute_bgn.py:82) sets A_mu = pi*sqrt(1-corr_zr^2)*summ/B with summ = sum over live projects of sigmaj*corr_zj and B = P/(Chat*I). But sigmaj*corr_zj = sigmaj * beta_j/(sigma_z*sigmaj) = beta_j/sigma_z identically, so summ = num*betabar/sigma_z, and book = I*num (panel_functions_bgn.py:144), giving A_mu = [pi*Chat*sqrt(1-corr_zr^2)/sigma_z]*(book/P)*betabar. Constant = 0.99*0.024724*0.98457/0.4 = 0.0602. Simulated check at N=200, t=180: corr(A_mu, bm*betabar) = 1.000000; mean A_mu = 0.01297, sd 0.00342.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/loadings_compute_bgn.py:64-88",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:61",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:144"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The interest-rate (xi) loading is A_xi = pi*(A/P)*(cov_{D,xi}/D) + (Chat*I/P)*(cov_{J*,xi}+cov_{opt,xi}) + pi*corr_zr*Chat*bm*betabar/sigma_z, i.e. an affine function of 1/mve and bm*betabar with date-t coefficients depending only on r_t. Empirically corr(A_xi, 1/mve) = -0.975. A_xi DOMINATES return variance (mean -0.0391 vs A_mu mean +0.0130, a 9:1 variance ratio) but is nearly irrelevant for expected returns because |lambda_xi|/lambda_mu = 0.178.",
+   "evidence": "loadings_compute_bgn.py:83-86, with A/P = 1 - G(r)/P since P = G(r) + A (panel_functions_bgn.py:161-164). Simulated at N=200,t=180: sd(A_mu*lambda_mu) = 0.00135 versus sd(A_xi*lambda_xi) = 0.00019 \u2014 the mu loading accounts for 98% of the cross-sectional dispersion in expected returns. corr(rp, A_mu*lambda_mu + A_xi*lambda_xi) = 0.9934 against the exact rp returned by sdf_loop, confirming the 2-factor risk-premium decomposition is essentially exact.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/loadings_compute_bgn.py:83-86",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:323-334"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BGN's 'size and book-to-market are sufficient statistics for risk' is LITERALLY true here, up to ~1% of variance. The entire date-t cross-section is a 2-dimensional sufficient statistic (num_i, S_i = sum_j exp(-beta_j)) which maps BIJECTIVELY onto (book_i, mve_i) given r_t: book = I*num and mve = I*Chat*Jstar(r) + Chat*D(r)*S (verified to machine precision, max abs error 0.0). The risk loadings need a third aggregator, betabar = mean(beta_j), but R^2(betabar | polynomial in num and S/num) = 0.9905, because the Jensen gap between mean(beta) and -log(mean(exp(-beta))) is second order when scale = 0.1368 is small.",
+   "evidence": "Reconstructed mve from book*Chat*expbar*D(r[t+1]) + I*Chat*Jstar(r[t+1]) and got max abs deviation 0.0 at N=200, t=180. Regressing betabar on [1, num, expbar, num*expbar, num^2, expbar^2, log(expbar), 1/num] gives R^2 = 0.9905 (residual sd 0.0061 vs betabar sd 0.0629). beta_star = 0.7721 and scale = 0.1368 from vasicek.py:75-77 (fit to prob_in_money(0)=0.10, prob_in_money(rbar)=0.05).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/vasicek.py:59-77",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:144-164"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The conditional covariance matrix is essentially a 1-strong-factor + 1-weak-factor + near-homogeneous-diagonal structure. Mean pairwise return correlation is 0.565; the top eigenvalue is 56.2% of total variance while the second is 60x smaller (0.00549 vs 0.36359); the 2-factor loadings (A_mu, A_xi) reproduce 94% of the off-diagonal covariance (mean |residual off-diag| 1.03e-4 vs mean |off-diag| 1.80e-3).",
+   "evidence": "Direct eigendecomposition of the cond_var returned by sdf_compute_bgn.sdf_loop at N=200, t=180: eigenvalues [0.36359, 0.00549, 0.00266, 0.00244, 0.00241, 0.00240], trace 0.6473. Fitting Sigma - B B' with B = [A_mu, A_xi] from loadings_projection leaves mean |off-diagonal| residual 1.03e-4.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:151-335"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Idiosyncratic variance d_i is strongly characteristic-linked (H2's precondition holds: R^2(log d_i | degree-3 polynomial in the 5 rank-standardized chars) = 0.984; corr(log d_i, log(bm/mve)) = 0.910, consistent with d_i proportional to num_i/P_i^2 = bm_i/mve_i) but it is FAR too homogeneous to generate exploitable ratio nonlinearity: sd(log d_i) = 0.263 and max/min = 3.65. Real US equity idiosyncratic variance has sd(log) of order 1.0-1.3 and a range of 100x or more.",
+   "evidence": "d_i computed as diag(cond_var) - diag(B B'). Mean d = 1.519e-3 (idiosyncratic sd 3.90%/month) against mean total variance 3.236e-3 (total sd 5.67%/month); idiosyncratic share 46.9%. Cross-sectional statistics: sd 4.08e-4, min 7.53e-4, max 2.75e-3.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:238-257",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:51-55"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The true MVE weight is w* = D^{-1} B (I + B'D^{-1}B)^{-1} lambda with B = [A_mu, A_xi]. At N=200 B'D^{-1}B = [[26.0, -71.7], [-71.7, 210.2]] and (I+B'D^{-1}B)^{-1}lambda = (0.1408, 0.0475), so w* is dominated by the A_mu/d term. Since A_mu ~ bm*betabar and d ~ bm/mve, the bm CANCELS and w*_i ~ mve_i * betabar_i \u2014 i.e. the true SDF weight is (size x average project beta), which is why H2's b/d ratio structure is real but has almost no residual characteristic content beyond size.",
+   "evidence": "Woodbury applied to the numerical cond_var and the loadings: corr(w*, D^{-1}B k) = 0.774, corr(w*, A_mu/d) = 0.746, corr(w*, mve*betabar) = 0.604. w* itself was computed as Sigma^{-1}rp from the exact sdf_loop output. Note the parallel to the recorded KP14 memo (docs/kp14_size_idio_var.md): when d_i is char-linked, Sigma^{-1}mu collapses toward inverse-variance weighting and hence toward size.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:301-328"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "HEADROOM (the decisive result): in POPULATION, a portfolio in the span of {1, size, bm} in RAW levels already attains 91.7% of the true conditional maximum Sharpe, and the actual FM portfolio span attains 91.8%. A PERFECT nonlinear model \u2014 the full degree-3 polynomial in all 5 rank-standardized chars, 56 basis functions estimated with zero error \u2014 attains 92.5%. Total nonlinearity headroom for DKKM over FM is therefore 0.7 percentage points of the maximum Sharpe. FF's actual 7 factor weight vectors attain only 35.8%.",
+   "evidence": "N=500, t=220, using the exact cond_var and rp from sdf_loop and computing max_{a} SR(Xa) = sqrt(z' P_{L^{-1}X} z) with z = L^{-1}rp, L = chol(Sigma): FULL max SR 0.2985; EW market 0.0464 (15.5%); {1,5 raw chars} 0.2740 (91.8%); {1,size,bm} raw 0.2738 (91.7%); {1,5 rank chars} 0.2194 (73.5%); deg-2 rank poly (21 terms) 0.2320 (77.7%); deg-3 rank poly (56 terms) 0.2761 (92.5%); FF actual weight vectors from fama_functions.fama_french 0.1068 (35.8%); FM actual from fama_functions.fama_macbeth 0.2740 (91.8%). Replicated at N=200, t=180: FULL 0.2562; {1,size,bm} 0.2349 (91.7%); FM 0.2374 (92.6%); deg-3 rank poly 0.2494 (97.3%); FF 0.1301 (50.8%).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:41-176",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:323-335"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "A 30-replication Monte Carlo of the ACTUAL estimators (T=360 window, real rank_standardize/rff/ridge code paths, evaluated at the model's true rp and Sigma) reproduces the paper's null result exactly: FM realizes population SR 0.2114 (70.8% of max 0.2985), DKKM with 3600 features at its best ridge realizes 0.2091 (70.0%), FF realizes 0.1997 (66.9%). DKKM's estimation-variance advantage is real (sd across reps 0.0038-0.0155 vs FM's 0.0149) but is exactly offset by the bias of its restricted basis.",
+   "evidence": "MC results, mean population Sharpe of the resulting stock weights: FF 0.1997; FM 0.2114; DKKM6 best 0.1929; DKKM36 best 0.2059; DKKM360 best 0.2085; DKKM3600 best 0.2091 (at scaled alpha 0.001-0.01). Caveat: chars and Sigma were held at their t=220 values across the 360 estimation months (i.i.d. return draws), which removes time-variation equally for all methods and is therefore favourable to none.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:76-110",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:124-180",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:112-170"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The RFF basis is not a Gaussian-kernel basis at all \u2014 it is a random-direction {monotone-CDF-of-linear-index, V-shaped-of-linear-index} basis, and 93.6% of its variance lies inside the 56-dimensional cubic polynomial span of the 5 rank chars. The bandwidth argument sd is only 0.481 (per-feature mean; max 1.489), only 1.11% of |W x| entries exceed pi/2, and 78.8% of the sin features are EXACTLY monotone in w'x across the realized cross-section \u2014 so for those features rank_standardize(sin(w'x+b)) equals rank_standardize(w'x) identically.",
+   "evidence": "With the actual chars at N=200, real GAMMA_GRID = arange(0.5,1.1,0.1) and the actual rff() code: sd(Z) = 0.5385 overall, per-feature mean 0.4812, max |Z| = 3.511, P(|Z| > pi/2) = 0.0111, P(|Z| > pi) = 1e-5. Mean cross-sectional R^2 of the pre-rank features on the linear rank-char span: sin 0.9893, cos 0.1656; on degree-2: sin 0.9923, cos 0.9972. After the second rank_standardize the mean R^2 is 0.5469 (linear), 0.8807 (deg-2), 0.9360 (deg-3). Theoretical corroboration: the Gaussian-kernel exponent gamma^2*|x-x'|^2/2 has expectation gamma^2*(5/12) = 0.417 at gamma=1, so the kernel is nearly constant across all firm pairs.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:76-110",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:211"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "rf_stand is NOT a rank_standardize bug \u2014 it is column-stacked AFTER the chars are ranked, so rank_standardize never sees a constant column. Functionally it supplies the RFF phase/bias term b_d = W_{d,6}*rf_stand_t that the canonical Rahimi-Recht construction needs and that the kp14/gs21 RFFs entirely lack. But it is almost completely annihilated by the SECOND rank_standardize: 65.6% of the sin features are literally IDENTICAL (corr = 1.000000) whether rf_stand is -0.5 or +0.5, because rank-standardizing a monotone function kills any additive phase. It buys zero span: 36 RFF features with the rf column reach 89.9% of max Sharpe versus 90.1% without it.",
+   "evidence": "dkkm_functions.rff lines 92-96: X = rank_standardize(data.values); then if model=='bgn': X = np.column_stack([X, rf.values]) \u2014 the rf column is appended raw. rf_stand is (rf - burnin_mean)/(4*burnin_sd) (panel_functions_bgn.py:270-271), giving sd exactly 0.25 and range [-0.614, 0.570]. Comparing feats(-0.5) with feats(+0.5): sin half mean corr 0.9713 with 65.6% exactly 1.0; cos half mean corr -0.1339 with 0% exactly 1.0. Span test: 36 features with rf 0.2304 (89.9%), 36 features with no rf column 0.2310 (90.1%). Note also that rf_stand is a DKKM-ONLY input \u2014 MODEL_CHARS['bgn'] omits it, so FF and FM never see the interest rate at all.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:92-110",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:270-272",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:219",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:119-120"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG: agr is 91-92% ties at exactly 0 (only 13 distinct values in a typical month, because book = I*num is a small integer that changes only when a project is created or dies). rank_standardize breaks those ties with np.argsort (dkkm_functions.py:57), spreading the tied mass uniformly over [-0.4995, 0.4995] in a quicksort-determined order that is 92% PERSISTENT month to month. This injects a persistent, purely artificial, unpriced characteristic into 1 of DKKM's 6 RFF inputs \u2014 hence into every one of the 3600 features multiplicatively \u2014 while polluting only 1 of FM's 6 regressors additively.",
+   "evidence": "At N=200, month 181: 91.0% of firms have agr exactly 0, 13 unique values; pooled over months 100-199, 87.5% of all non-missing agr values equal 0. Autocorrelation of the rank-standardized agr column: 0.506 for the whole column, 0.919 restricted to firms with agr==0 in both adjacent months. Effect on the feature space: the number of RFF principal components needed for 99% of feature variance rises from 59 (agr zeroed out) to 95 (agr included), and mean feature R^2 on the deg-2 polynomial falls from 0.8948 to 0.8807.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:39-64",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:254-260"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG (same root cause, different consumer): the FF 'cma' 2x3 sort on agr is degenerate. quantile(0.3) = quantile(0.7) = 0, so low = (agr <= 0) captures 92% of firms, high = (agr > 0) captures 8%, and med = 1 - low - high is identically zero \u2014 the medium portfolios are empty and the '2x3' is really a 2x2 with a 92/8 split.",
+   "evidence": "Computed on the N=500, t=220 cross-section with the exact quantile logic of fama_functions.fama_french lines 82-84: agr q30 = q70 = 0.0000, frac low 0.920, mid 0.000, high 0.080. For comparison bm/roe/mom all split cleanly 0.300/0.400/0.300.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:80-107"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG / numerical degeneracy: ridge_regr's alpha=0 path in the P>=T branch computes 1/(eigenvalues + 360*0) with no truncation, and mve_data ALWAYS emits an alpha=0 column first regardless of the grid. In the Monte Carlo the resulting DKKM weights realize 1.4% of the maximum Sharpe at 360 features and 13.0% at 3600 features (versus 70% at scaled alpha=0.001). 360 features with T=360 sits exactly at the interpolation threshold P=T (P=361 with the market column) \u2014 the double-descent peak.",
+   "evidence": "dkkm_functions.py:168-178 (kernel branch) and 301 (unconditional alpha=0 call). MC means: DKKM360_a0 = 0.0041 (1.4%), DKKM3600_a0 = 0.0388 (13.0%), DKKM360_a0.001 = 0.2081 (69.7%), DKKM3600_a0.001 = 0.2091 (70.0%). My MC used np.linalg.lstsq (min-norm pseudo-inverse with default rcond truncation), which is STRICTLY better conditioned than the code's 1/(eig+0), so the code's alpha=0 columns are at least this bad.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:165-180",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:296-316",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:190"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The 'added a factor of 0.1' on the idiosyncratic cash-flow band makes firm cash flows 96% systematic. sigmaj ~ U[|beta|/sigma_z, |beta|/sigma_z + 0.1*0.3*|Cbar|] = U[|beta|/0.4, |beta|/0.4 + 0.111]; since |beta|/0.4 averages 1.59, the idiosyncratic width is only 7% of the lower bound, forcing corr_zj toward 1. Simulated mean corr_zj = 0.958, mean (1 - corr_zj^2) = 0.071. Without the 0.1 factor the band would be 1.11 wide and mean (1-corr_zj^2) would be roughly 6x larger.",
+   "evidence": "panel_functions_bgn.py:51-55 with the inline comment '# added a factor of 0.1'. Simulated at N=200, T=200: corr_zj mean 0.9583, min -0.9976, max 1.0000; mean(1-corr_zj^2) = 0.0710; sigmaj mean 1.649; beta mean 0.636 sd 0.136. Cbar = -3.7, sigma_z = 0.4.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:49-61",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:205-206"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "H5 as stated is wrong about the mechanism but right about the outcome. sdf_ret and the OLS-based method returns are the SAME object mathematically \u2014 both are projections of the constant 1 onto a return span \u2014 so their scales are commensurate by construction and HJD^2 = S^2/(1+S^2) - S_f^2/(1+S_f^2) exactly, where S is the true max Sharpe and S_f the span's Sharpe. HJD therefore CAN separate methods sharply (FF floor 0.2656 vs FM floor 0.1095), but it cannot separate DKKM from FM (0.1048 vs 0.1095, a 4% gap) for exactly the same span reason as the Sharpe. The genuine scale problem is on the ridge side: for alpha>0 the penalty is 360*nfeatures*alpha, which shrinks the DKKM return's scale below the population projection and pushes its HJD toward the no-position value 0.2860.",
+   "evidence": "Derivation: the min-second-moment unit-cost portfolio is w = -Rf*(Sigma + mu mu')^{-1}mu, so sdf_ret = Rf*mu'(Sigma+mu mu')^{-1}x with mean Rf*S^2/(1+S^2) and sd Rf*S/(1+S^2); population OLS of y=1 on span factors gives the identical form with S_f. At N=500 with S=0.2985 and Rf=exp(r)=1.006: mean(sdf_ret) = 0.0823, sd(sdf_ret) = 0.2757, sqrt(E[sdf_ret^2]) = 0.2860. Floors: max/true 0; DKKM-ideal (deg-3, S_f=0.2761) 0.1048; FM (S_f=0.2740) 0.1095; FF (S_f=0.1068) 0.2656; zero weights 0.2860. The evaluation code applies no scale matching (create_slides_tables.py sq_error = (xret - sdf_ret)^2, evaluate_sdfs.py xret = weights_on_stocks @ data_xret).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:305-321",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:44-56",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/evaluate_sdfs.py:182-209",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:304-315"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "BUG (currently dead code, but the config still advertises it): loadings_Taylor and loadings_projection mutate the caller's A array in place, and they set A[0,:]=0 BEFORE the shift A[1:,:]=A[:-1,:], so A[1] becomes 0 rather than the intended A_old[0]. Both call sites in panel_functions_bgn.py are commented out, so no A_1_/A_2_ loading columns are ever written into the BGN panel \u2014 yet config.LOADING_KEYS['bgn'] and FACTOR_KEYS['bgn'] still list ['A_1_','A_2_'] and ['f_1_','f_2_'].",
+   "evidence": "loadings_compute_bgn.py:45-47 and 66-67 (in-place mutation and mis-ordered shift); panel_functions_bgn.py:189-191 and 220-231 (call sites and DataFrame columns commented out); config.py:305-315.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/loadings_compute_bgn.py:45-47",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/loadings_compute_bgn.py:64-68",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:189-191",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:305-315"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "claim": "Minor smells verified but harmless: sdf_compute_bgn.py:24 re-derives Chat = np.exp(Cbar) after importing CHAT from config (identical value, shadowing); sdf_compute_bgn.py:30 rebinds the imported D() to a linear interpolant of itself. Timing alignment IS correct throughout: moments[month] = sdf_loop(month-1) returns rp/cond_var for date `month`, matching the panel row where mve = P[month] and book = book[month-1], and where xret is the return from month to month+1 \u2014 no look-ahead, and the sdf 'keep' filter (book[t,:]>0) matches the panel's drop of book==0 firms.",
+   "evidence": "sdf_compute_bgn.py:24, 30; calculate_moments.py:77-79; panel_functions_bgn.py:206-216, 263; verified numerically by reconstructing mve = book*Chat*expbar*D(r[t+1]) + I*Chat*Jstar(r[t+1]) at panel month t+1 to 0.0 error.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:24-30",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/calculate_moments.py:75-88",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:206-264"
+   ],
+   "confidence": "high"
+  }
+ ],
+ "verdict_on_hypotheses": [
+  {
+   "hypothesis": "H1 SPAN",
+   "verdict": "CONFIRMED",
+   "reasoning": "Decisively confirmed and quantified. In population, {1, size, bm} in raw levels attains 91.7% of the true conditional max Sharpe (0.2738 vs 0.2985 at N=500; 0.2349 vs 0.2562 at N=200), and the actual FM span attains 91.8%. A perfectly-estimated degree-3 polynomial in all 5 rank chars attains 92.5%. The entire population headroom for nonlinearity is 0.7 percentage points of Sharpe. Structurally this follows from one priced shock (nu), a rank-1 price-of-risk vector, and a date-t cross-section that is a bijective function of exactly two state variables (num_i, sum_j exp(-beta_j)) <-> (book_i, mve_i). Complexity has essentially nothing to buy."
+  },
+  {
+   "hypothesis": "H2 RATIO NONLINEARITY",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The mechanism is exactly present: w* = D^{-1}B(I+B'D^{-1}B)^{-1}lambda, A_mu = 0.0602*bm*betabar, d_i proportional to bm/mve, so the bm cancels and w* ~ size*betabar \u2014 a genuine ratio. And d_i IS strongly char-linked, R^2(log d | deg-3 rank chars) = 0.984. But it is quantitatively inert because d_i is far too homogeneous: sd(log d_i) = 0.263 and max/min = 3.65, versus roughly 1.0-1.3 and 100x in real data. The nonlinearity that the ratio creates is worth 0.7pp of Sharpe. Making d_i much more dispersed and char-linked (e.g. restoring the pre-'0.1 factor' idiosyncratic cash-flow band and adding a firm-size- or age-dependent idiosyncratic volatility) is the single most economically defensible lever, but it must be combined with more priced dimensions to matter."
+  },
+  {
+   "hypothesis": "H3 RFF BANDWIDTH MIS-SCALING",
+   "verdict": "CONFIRMED",
+   "reasoning": "Confirmed and stronger than stated. Per-feature sd(W x) = 0.481 (max 1.489); only 1.11% of arguments exceed pi/2; 78.8% of sin features are exactly monotone across the cross-section, so for them the subsequent rank_standardize makes the feature IDENTICAL to the rank of the linear index; cos features reduce to ranks of -(w'x+b)^2 (R^2 = 0.997 on a degree-2 polynomial before ranking). The whole 3600-feature basis lies 93.6% inside the 56-dimensional cubic polynomial span. The Gaussian kernel exponent gamma^2 E|x-x'|^2/2 is at most 0.417, i.e. the kernel is near-constant. HOWEVER, fixing the bandwidth cannot fix the result: the perfect degree-3 span, which strictly contains what a wider bandwidth would deliver at these dimensions, is worth only 92.5% versus FM's 91.8%."
+  },
+  {
+   "hypothesis": "H4 CHARACTERISTIC POVERTY",
+   "verdict": "CONFIRMED",
+   "reasoning": "Confirmed and worse than stated. The true cross-section has exactly 2 latent degrees of freedom per firm; 'agr' is 91-92% ties at zero and after rank_standardize is a persistent pseudo-random noise column (0.92 month-to-month autocorrelation among the tied mass); expected returns are a single index rp_i ~ 0.0237*bm_i*betabar_i with 98% of cross-sectional dispersion from one loading. So the effective characteristic dimension is 2, one of the 5 nominal chars is noise, and the truth is neither dense nor high-dimensional in the feature space. The virtue-of-complexity theory has no dense high-dimensional signal to aggregate here."
+  },
+  {
+   "hypothesis": "H5 HJD SCALE MISMATCH",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The stated mechanism is wrong: sdf_ret and the method returns are both projections of the constant 1, so HJD^2 = S^2/(1+S^2) - S_f^2/(1+S_f^2) exactly and the scales are commensurate by construction. HJD is NOT structurally incapable of discriminating \u2014 the population floors are FF 0.2656 vs FM 0.1095, a 2.4x gap. What IS true: (a) the absolute level is huge, sd(sdf_ret) = 0.276/month and sqrt(E[sdf_ret^2]) = 0.286, so all HJD numbers are large and the 'do nothing' benchmark is 0.286; (b) DKKM's floor (0.1048) is only 4% below FM's (0.1095), so HJD cannot separate them for exactly the H1 reason; (c) there IS a real DKKM-specific scale penalty, because the ridge penalty 360*nfeatures*alpha shrinks the DKKM return's amplitude below the population projection and drives HJD back toward 0.286 at high nfeatures*alpha."
+  },
+  {
+   "hypothesis": "H6 EVALUATION HORIZON / SNR",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The literal statement is refuted: cross-sectional return predictability is TINY, not high \u2014 sd(rp) = 0.117% vs sd(return) = 5.67%, a monthly cross-sectional R^2 of 0.043%, below real data's ~0.5%. But the relevant SNR is the FACTOR Sharpe, and that is very high: the FM 6-factor span has population monthly Sharpe 0.274 (annual 0.95). With T=360 and only 6-7 parameters, OLS is near-efficient \u2014 my Monte Carlo shows FM realizes 70.8% of the max, and DKKM's 3600-feature ridge realizes 70.0%. DKKM's variance IS lower (sd 0.0038-0.0111 vs FM's 0.0149), so the estimation-variance channel that complexity is supposed to exploit works; it is simply cancelled by the bias of the restricted basis. So: complexity has no variance advantage worth having because the small model is already almost unbiased AND almost efficient."
+  }
+ ],
+ "quantitative_claims": [
+  "Calibrated project-beta distribution: beta_star = 0.77213, scale = 0.13681, beta = beta_star - Exp(scale); E[beta] = 0.6353, sd 0.1368; E[exp(-beta)] = exp(-beta_star)/(1-scale) = 0.5353. Investment-selected betas have mean 0.296 (selection: invest iff beta < Cbar + log D(r) ~ 0.362 at rbar).",
+  "One priced shock: corr_zr = beta_zr/(sigma_z*sigma_r) = -0.00014/(0.4*0.002) = -0.175; lambda_mu = 0.4*0.98457 = +0.39383/month, lambda_xi = 0.4*(-0.175) = -0.07000/month; |lambda| = sigma_z = 0.40; HJ bound sqrt(exp(0.16)-1) = 0.41655/month.",
+  "Cash flows are 96% systematic: sigmaj ~ U[|beta|/0.4, |beta|/0.4 + 0.111] (the '0.1 factor'); simulated mean corr_zj = 0.9583, mean(1 - corr_zj^2) = 0.0710, mean sigmaj = 1.649.",
+  "Firm state: P(invest) = 0.2096 / 0.0500 / 0.0124 at r = rbar-2sd / rbar / rbar+2sd, so E[num] = P/(1-pi) = 20.96 / 5.00 / 1.24. Realized num at t=180: mean 5.95, sd 2.43, range 1-14. book = I*num is a small integer. G(rbar) = I*Chat*Jstar(rbar) = 1.2492; mean mve 8.06; mean bm 0.720; D(rbar) = 58.11.",
+  "Risk loadings: A_mu = [pi*Chat*sqrt(1-corr_zr^2)/sigma_z]*bm*betabar = 0.0602*bm*betabar, corr(A_mu, bm*betabar) = 1.000000; mean A_mu = 0.01297 (sd 0.00342). A_xi mean -0.03912 (sd 0.00269), corr(A_xi, 1/mve) = -0.9751. sd(A_mu*lambda_mu) = 0.00135 vs sd(A_xi*lambda_xi) = 0.00019 (98% of the expected-return cross-section from A_mu). corr(rp, A_mu*lambda_mu + A_xi*lambda_xi) = 0.9934.",
+  "Covariance structure (N=200, t=180): total return sd 5.67%/month; mean pairwise correlation 0.5648; eigenvalues [0.36359, 0.00549, 0.00266, 0.00244, 0.00241] of trace 0.6473 (eig1 = 56.2%, eig1/eig2 = 66x); 2-factor residual mean |off-diagonal| 1.03e-4 vs 1.80e-3 (94% captured).",
+  "Idiosyncratic variance: mean d_i = 1.519e-3 (idio sd 3.90%/month, 46.9% of total variance); sd(d) 4.08e-4, min 7.53e-4, max 2.75e-3, max/min 3.65, sd(log d) 0.263; corr(log d, log(bm/size)) = 0.9104; R^2(log d | deg-3 poly in 5 rank chars) = 0.9843.",
+  "True MVE weight: B'D^{-1}B = [[25.99, -71.73], [-71.73, 210.23]] at N=200; k = (I+B'D^{-1}B)^{-1}lambda = (0.1408, 0.0475); corr(w*, D^{-1}Bk) = 0.7739; corr(w*, A_mu/d) = 0.7462; corr(w*, size*betabar) = 0.6035; corr(w*, bm) = 0.6434. R^2(w* | 5 raw chars linear) = 0.4986; R^2(w* | deg-3 poly in (size,bm)) = 0.8300; R^2(w* | deg-3 poly in 5 rank chars) = 0.8465. Char-measurability ceilings: R^2(betabar | deg-3) = 0.9619, R^2(A_mu | deg-3) = 0.9774, R^2(rp | deg-3) = 0.9800.",
+  "HEADROOM N=500, t=220 (max SR 0.2985/month): EW market 0.0464 (15.5%); FF actual 0.1068 (35.8%); {1,5 rank chars} 0.2194 (73.5%); deg-2 rank poly 0.2320 (77.7%); {1,size,bm} raw 0.2738 (91.7%); FM actual 0.2740 (91.8%); deg-3 rank poly (56 terms) 0.2761 (92.5%). N=200 replication (max 0.2562): FF 0.1301 (50.8%); {1,size,bm} 0.2349 (91.7%); FM 0.2374 (92.6%); deg-3 rank poly 0.2494 (97.3%); RFF D=6 0.1895 (74.0%), D=36 0.2332 (91.0%), D>=360 spans R^N trivially.",
+  "Monte Carlo of the actual estimators (30 reps, T=360, N=500, max SR 0.2985): FM 0.2114 (70.8%, sd 0.0149); DKKM3600 alpha=0.001 0.2091 (70.0%, sd 0.0155) and alpha=0.01 0.2090 (70.0%, sd 0.0111); DKKM360 alpha=0.01 0.2085 (69.9%); DKKM36 alpha=0.01 0.2059 (69.0%); FF 0.1997 (66.9%, sd 0.0210); DKKM6 alpha=0 0.1929 (64.6%). Ridgeless collapse: DKKM360 alpha=0 gives 0.0041 (1.4%) and DKKM3600 alpha=0 gives 0.0388 (13.0%).",
+  "HJD algebra (N=500): mean(sdf_ret) = 0.0823, sd(sdf_ret) = 0.2757, sqrt(E[sdf_ret^2]) = 0.2860 per month. Population HJD floors: perfect 0; DKKM-ideal deg-3 0.1048; FM 0.1095; FF 0.2656; zero weights 0.2860.",
+  "RFF diagnostics: per-feature sd(Wx) mean 0.4812 (overall 0.5385, max 1.4891, max|Z| 3.511); P(|Z|>pi/2) = 0.0111, P(|Z|>pi) = 1e-5; 78.8% of sin features exactly monotone in w'x. Mean feature R^2 pre-ranking: sin on linear 0.9893, cos on linear 0.1656, cos on deg-2 0.9972. Mean R^2 of rank-standardized features: linear 0.5469, deg-2 0.8807, deg-3 0.9360. Feature PCs for 99% of variance: 95 with agr, 59 with agr removed.",
+  "rf_stand: sd exactly 0.25, range [-0.6139, 0.5701]. Flipping rf_stand from -0.5 to +0.5 leaves 65.6% of sin features literally unchanged (corr = 1.000000, sin-half mean corr 0.9713) and inverts the cos half (mean corr -0.1339). Span with rf column 0.2304 (89.9% of max) vs without 0.2310 (90.1%).",
+  "agr degeneracy: 91.0% of firms have agr exactly 0 in a typical month (13 distinct values at N=200; 87.5% zeros pooled over months 100-199). Rank-standardized agr autocorrelation 0.506 overall, 0.919 among firms tied at zero in both months. FF cma sort: q30 = q70 = 0, split 92.0% low / 0.0% medium / 8.0% high, versus clean 30/40/30 for bm, roe, mom.",
+  "Cross-sectional predictability: sd(rp) = 0.117%/month against return sd 5.67%/month, i.e. a monthly cross-sectional R^2 of 4.3e-4 (0.043%), BELOW real-data levels (~0.5%). The high max Sharpe comes from a large common premium (rp mean 0.604%/month) plus 500-1000-fold idiosyncratic diversification, not from high per-stock predictability."
+ ],
+ "blockers": [
+  "POPULATION SPAN: two linear characteristic portfolios (size and bm in raw levels) already attain 91.7% of the true conditional maximum Sharpe (0.2738 of 0.2985 at N=500), and the actual FM portfolio span attains 91.8%. A perfectly estimated 56-term degree-3 nonlinear model attains 92.5%. The entire nonlinearity headroom available to DKKM over FM is 0.7 percentage points of Sharpe. No estimator improvement, bandwidth fix, or feature-count increase can beat this ceiling \u2014 the model must be changed, not the estimator.",
+  "ONE PRICED SHOCK, ONE PRICED INDEX: log M = -r - 0.5*sigma_z^2 - sigma_z*nu makes the price-of-risk vector rank-1 in the 2-dimensional (xi, mu) factor space, and lambda_xi/lambda_mu = -0.178 makes the interest-rate factor nearly unpriced. Expected excess returns collapse to a single index rp_i ~ 0.0237*bm_i*betabar_i with 98% of the cross-sectional dispersion coming from one loading. A one-dimensional truth cannot reward a high-dimensional estimator.",
+  "TWO-DIMENSIONAL CROSS-SECTION: the date-t state of every firm is exhausted by (num_i, sum_j exp(-beta_j)), which maps bijectively onto (book_i, mve_i) given r_t (verified to machine precision). All five characteristics are deterministic functions of those two numbers plus history, and R^2(betabar | num, S/num) = 0.9905, so BGN's 'size and B/M are sufficient statistics for risk' holds literally at the 99% level. There is no dense, high-dimensional, weakly-informative signal set for complexity to aggregate.",
+  "IDIOSYNCRATIC VARIANCE IS BOTH TOO HOMOGENEOUS AND TOO CHAR-MEASURABLE: sd(log d_i) = 0.263 and max/min = 3.65 (real data: ~1.0-1.3 and 100x), while R^2(log d_i | degree-3 char polynomial) = 0.984. The D^{-1}B ratio structure that H2 relies on is present (w* ~ size*betabar because bm cancels between numerator and denominator) but is worth nothing because d varies by only +/-26% in logs. Note the '# added a factor of 0.1' on the sigmaj band (panel_functions_bgn.py:54) is what suppressed both idiosyncratic dispersion and cash-flow idiosyncrasy \u2014 mean corr_zj rose to 0.958.",
+  "RFF BANDWIDTH IS ~5x TOO SMALL AND THE SECOND RANK-STANDARDIZATION DESTROYS THE KERNEL: per-feature sd(Wx) = 0.48 keeps 98.9% of arguments inside sin's monotone arch, so 78.8% of the sin features become exact monotone transforms of a linear index once rank_standardize is applied, and the cos features become V-shapes. The 3600-feature basis lies 93.6% inside a 56-dimensional cubic span. This is a real defect, but fixing it alone buys at most the 0.7pp of blocker #1.",
+  "CHARACTERISTIC CONTAMINATION IS ASYMMETRICALLY WORSE FOR DKKM: agr is 91-92% ties at exactly zero, and rank_standardize's argsort tie-breaking turns it into a persistent (0.92 month-to-month autocorrelation) pseudo-random characteristic. In FM this pollutes 1 of 6 regressors additively and in FF it degenerates 1 of 7 sorts; in DKKM it enters every one of the 3600 features multiplicatively, raising the number of feature PCs needed for 99% of variance from 59 to 95.",
+  "HJD CANNOT SEPARATE DKKM FROM FM, AND ITS RIDGE-SCALE PENALTY WORKS AGAINST DKKM: the population floors are DKKM-ideal 0.1048 vs FM 0.1095 (a 4% gap) against a no-position benchmark of 0.2860. Separately, mve_data's penalty of 360*nfeatures*alpha shrinks the DKKM return's amplitude below the population projection specifically at high complexity, and the unconditional alpha=0 column (1/(eigenvalue+0) in the P>=T branch) realizes only 1.4% of the max Sharpe at 360 features and 13.0% at 3600 features \u2014 360 features with T=360 sits exactly at the P=T double-descent peak."
+ ]
+}
