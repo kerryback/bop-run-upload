@@ -1,0 +1,323 @@
+diff --git a/config.py b/config.py
+index b2ee35a..f0a6c3d 100644
+--- a/config.py
++++ b/config.py
+@@ -235,6 +235,60 @@ CHAR_TO_FACTOR = {
+ }
+ FACTOR_TO_CHAR = {v: k for k, v in CHAR_TO_FACTOR.items()}
+ 
++# =============================================================================
++# EXTRA AGGREGATE FACTORS  (raises K, the dimension of the priced-risk space)
++#
++# WHY: see voc_diagnosis/findings.md section B3. With K priced aggregate shocks and L
++# characteristic portfolios, the best Sharpe attainable inside the linear characteristic
++# span is SR_lin/SR* ~ sqrt(L/K). BGN/KP14 have K=2 and GS21 K=1, so 6 Fama factors
++# OVER-span the SDF and the population ceiling on any DKKM-over-FM advantage is 1.01-1.03x.
++# Raising K is the only lever that moves that ceiling.
++#
++# CONSTRUCTION (BGN): the SDF is log M = -r - 0.5|lambda|^2 - lambda'nu, and a project's
++# price depends on its loading b_s ONLY through the scalar lambda'b_s. So write
++#     b_s = (beta_s / sigma_z) * u  +  g_s ,      lambda = sigma_z * u,  u'g_s = 0
++# and every price, expected return, investment decision, Jstar, D(r) and the (beta_star,
++# scale) calibration is LITERALLY unchanged -- only the cross-firm covariance moves.
++# Total cash-flow variance is preserved by taking the g_s budget out of the idiosyncratic
++# remainder:  |g_s|^2 = OMEGA * sigmaj^2 * (1 - corr_zj^2).
++#
++# The g_s directions are smooth Fourier modes of an OBSERVABLE firm coordinate tau_i, with
++# mode amplitudes decaying as k^(-DECAY/2). The decay exponent is DKKM's Theorem 3 axis:
++# their APT calibration has eigenvalues ~ p^(-2) (no virtue of complexity), their AIPT
++# calibration ~ p^(-0.5) (virtue of complexity). Loadings must be smooth functions of an
++# observable, NOT a latent categorical -- otherwise no method can hedge them and the
++# horse race is vacuous (and if they were categorical, FM plus dummies would span them).
++#
++# N_EXTRA_FACTORS = 0 reproduces the published models EXACTLY: no extra random draws are
++# consumed, so the panel is bit-identical. Verified by
++# voc_diagnosis/refactor_checks/golden.py.
++# =============================================================================
++
++BGN_SIGMAJ_BAND = 0.1 * 0.3  # width of the idiosyncratic cash-flow band at
++                             # panel_functions_bgn.py:54. The 0.1 was hand-inserted (see
++                             # the "# added a factor of 0.1" comment that used to be there)
++                             # and leaves mean(1 - corr_zj^2) = 0.071, i.e. only ~7% of
++                             # log-cash-flow variance is non-systematic. That 7% is the
++                             # entire budget the extra-factor block can draw on, so this
++                             # knob gates whether N_EXTRA_FACTORS does anything at all.
++                             # sigmaj enters NO valuation object (verified: prices, Jstar,
++                             # D(r), the investment rule and (beta_star, scale) are all
++                             # sigmaj-free), so raising it is a pure covariance change.
++                             # Critics capped the multiplier at 1.25x the unscaled 0.3;
++                             # 1.75x gives cash-flow CV 121 and excess kurtosis 149.
++
++BGN_N_EXTRA_FACTORS = 0      # K - 1. 0 => published model. Try 20-40 (see findings.md B3).
++BGN_EXTRA_OMEGA = 0.75       # share of NON-systematic cash-flow variance moved to the
++                             # common block. Capped below 1 so idiosyncratic variance
++                             # stays strictly positive.
++BGN_EXTRA_DECAY = 1.0        # mode amplitudes ~ k^(-DECAY/2), so kernel eigenvalues
++                             # ~ k^(-DECAY). 0.5 = AIPT-like, 2.0 = APT-like.
++
++# NOTE: BGN currently has mean corr_zj = 0.958, i.e. only ~7% of log-cash-flow variance is
++# non-systematic, so the common block is capped at ~7% of cash-flow variance no matter what
++# OMEGA is. Widening the sigmaj band at panel_functions_bgn.py:54 (the hand-inserted 0.1)
++# is a prerequisite for this lever to bite. See findings.md section G.
++
+ # =============================================================================
+ # KP14 Model Parameters
+ # =============================================================================
+diff --git a/utils_bgn/panel_functions_bgn.py b/utils_bgn/panel_functions_bgn.py
+index 9887e96..34a3a00 100644
+--- a/utils_bgn/panel_functions_bgn.py
++++ b/utils_bgn/panel_functions_bgn.py
+@@ -11,7 +11,9 @@ from .sdf_compute_bgn import *
+ from config import (
+     PI as pi, RBAR as rbar, KAPPA as kappa, SIGMA_R as sigma_r,
+     BETA_ZR as beta_zr, SIGMA_Z as sigma_z, CBAR as Cbar,
+-    CHAT as Chat, I, BGN_BURNIN as burnin, GAMMA_GRID as gamma_grid
++    CHAT as Chat, I, BGN_BURNIN as burnin, GAMMA_GRID as gamma_grid,
++    BGN_N_EXTRA_FACTORS as n_extra, BGN_EXTRA_OMEGA as extra_omega,
++    BGN_EXTRA_DECAY as extra_decay, BGN_SIGMAJ_BAND as sigmaj_band
+ )
+ 
+ # Get path to solution files relative to this module
+@@ -51,7 +53,7 @@ def create_arrays(N, T):
+     sigmaj = np.random.uniform(
+         size=(T - 1, N),
+         low=np.abs(beta[:-1, :]) / sigma_z,
+-        high=np.abs(beta[:-1, :]) / sigma_z + 0.1*0.3 * np.abs(Cbar), # added a factor of 0.1
++        high=np.abs(beta[:-1, :]) / sigma_z + sigmaj_band * np.abs(Cbar),
+     )
+     # dct["sigmaj"] = sigmaj
+ 
+@@ -69,11 +71,6 @@ def create_arrays(N, T):
+     cash_shocks = np.random.standard_normal((T - 1, T - 1, N))
+     # dct["cash_shocks"] = cash_shocks
+ 
+-    term1 = np.zeros_like(cash_shocks)
+-    for t in range(cash_shocks.shape[0]):
+-        term1[t, :, :] = nu[t + 1] * corr_zj
+-    eps = term1 + np.sqrt(1 - corr_zj**2) * cash_shocks
+-    # dct["eps"] = eps
+ 
+     # invest is TxN
+     # invest[t, :] is N-dim array of investment decisions at date t+1
+@@ -110,6 +107,64 @@ def create_arrays(N, T):
+     for t in range(T - 1):
+         chi[t + 1, : t + 1, :] = chi[t, : t + 1, :] * alive[t, : t + 1, :]
+ 
++    # NOTE ON ORDERING: the extra-aggregate-factor draws below are deliberately placed
++    # AFTER every pre-existing draw (nu, rate_shock, beta, sigmaj, cash_shocks, alive), so
++    # that turning them on cannot perturb the RNG stream that produces beta, chi, prices or
++    # expected returns. That is what makes rp invariant in K -- the specification test in
++    # voc_diagnosis/refactor_checks/check_f_K.py asserts exactly this. eps is only consumed
++    # by C below, so computing it here rather than earlier changes nothing at K = 0.
++    # ---------------------------------------------------------------------
++    # EXTRA AGGREGATE FACTORS (see the block in config.py for the derivation)
++    #
++    # b_s = (beta_s/sigma_z) * u + g_s with u'g_s = 0, so lambda'b_s = beta_s is unchanged
++    # and every price / policy / solfile is untouched. |g_s|^2 is taken out of the
++    # idiosyncratic remainder so total cash-flow variance sigmaj^2 is preserved exactly.
++    #
++    # The draws below are GUARDED on n_extra > 0, so at n_extra = 0 the RNG stream is
++    # byte-for-byte what it was and the panel is bit-identical to the published model.
++    # ---------------------------------------------------------------------
++    gload = None
++    if n_extra > 0:
++        # tau_i: a fixed, OBSERVABLE firm coordinate on the unit circle. All of a firm's
++        # projects share it, so exposures are firm-level and can be handed to every
++        # estimator as a characteristic (see create_panel, which stores it as "tau").
++        tau = np.random.uniform(size=(1, N))
++        psi = np.random.uniform(0.0, 2 * np.pi, size=(n_extra, 1, 1))
++        k_modes = np.arange(1, n_extra + 1).reshape(n_extra, 1, 1)
++
++        # Fourier modes with amplitudes k^(-decay/2) => kernel eigenvalues ~ k^(-decay)
++        raw = (k_modes ** (-extra_decay / 2.0)) * np.sqrt(2.0) * np.cos(
++            2 * np.pi * k_modes * tau[None, :, :] + psi
++        )                                          # (n_extra, 1, N)
++        raw = np.repeat(raw, sigmaj.shape[0], axis=1)          # (n_extra, T-1, N)
++        raw = np.moveaxis(raw, 0, 2)                           # (T-1, N, n_extra)
++
++        # scale so |g_s|^2 = omega * sigmaj^2 * (1 - corr_zj^2) exactly, i.e. the common
++        # block takes a share omega of whatever variance was NOT already systematic.
++        budget = extra_omega * sigmaj**2 * (1 - corr_zj**2)     # (T-1, N)
++        raw_sq = (raw**2).sum(axis=2)
++        scale_g = np.sqrt(np.divide(budget, raw_sq,
++                                    out=np.zeros_like(budget), where=raw_sq > 0))
++        gload = raw * scale_g[:, :, None]                       # (T-1, N, n_extra)
++
++    # idiosyncratic loading: what is left after the systematic and common blocks
++    idio_var = sigmaj**2 * (1 - corr_zj**2)
++    if gload is not None:
++        idio_var = idio_var - (gload**2).sum(axis=2)
++        assert idio_var.min() > -1e-12, f"negative idiosyncratic variance: {idio_var.min()}"
++        idio_var = np.maximum(idio_var, 0.0)
++
++    term1 = np.zeros_like(cash_shocks)
++    for t in range(cash_shocks.shape[0]):
++        term1[t, :, :] = nu[t + 1] * corr_zj
++    eps = term1 + np.sqrt(idio_var) / sigmaj * cash_shocks
++    if gload is not None:
++        # common component: eps gains sum_k (g_k/sigmaj) * nu_extra_k
++        nu_extra = np.random.standard_normal((cash_shocks.shape[0], n_extra))
++        for t in range(cash_shocks.shape[0]):
++            eps[t, :, :] += (gload * nu_extra[t]).sum(axis=2) / sigmaj
++    # dct["eps"] = eps
++
+     # C is (T-1)x(T-1)xN
+     # C[0, :1, :] is cash flows at date 2 from projects that arrived at date 1,
+     # ignoring whether investments were actually made
+@@ -190,12 +245,16 @@ def create_arrays(N, T):
+     # loadings_mu_taylor, loadings_xi_taylor = loadings_Taylor(r, P, A, chi, sigmaj, corr_zj, T, N)
+     # loadings_mu_proj, loadings_xi_proj = loadings_projection(r, P, A, chi, sigmaj, corr_zj, T, N)
+ 
+-    return r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow
++    # gload is appended LAST so existing 13-element _arr/ directories still load; both
++    # create_panel and sdf_compute_bgn.sdf_compute accept either length.
++    return (r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book,
++            op_cash_flow, gload if gload is not None else np.zeros((1, 1, 0)))
+ 
+ 
+ def create_panel(N, T, arr_tuple):
+ 
+-    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow = arr_tuple
++    (r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book,
++     op_cash_flow) = arr_tuple[:13]
+     r = pd.DataFrame(
+         {
+             "month": range(1, T),
+diff --git a/utils_bgn/sdf_compute_bgn.py b/utils_bgn/sdf_compute_bgn.py
+index c5d3e01..ecf7e75 100644
+--- a/utils_bgn/sdf_compute_bgn.py
++++ b/utils_bgn/sdf_compute_bgn.py
+@@ -127,8 +127,62 @@ interp_integ_Jsexpy = integ_expy(Jstar, y_pts)
+ interp_integ_optvalexpy = integ_expy(integrand_optval, y_pts)
+ 
+ 
++# =============================================================================
++# term4: sum over live PROJECT PAIRS of exp(b_s . b_s'), aggregated to firms
++#
++#     term4[i, j] = sum_{s in live(i)} sum_{s' in live(j)} exp( b_s . b_s' )
++#
++# where b_s is project s's loading vector on the aggregate shocks, so b_s . b_s' is
++# cov(log C_s, log C_s'). This replaces
++#     r = kron(col2, col2); r.data = np.exp(r.data); r.sum(axis=0).reshape(N, N)
++# which materialises nnz^2 sparse entries to produce an N x N result.
++#
++# term4 is the ONLY term that needs a genuine project-pair double sum: exp() is applied
++# entrywise BEFORE the sum, so it does not factor into column sums the way terms 3, 5, 7
++# and 8 do (see the comment at the term3 site).
++#
++# Verified in voc_diagnosis/refactor_checks/:
++#   - identical to the kron path to 1.4e-16..3.9e-16 relative on real BGN slices (check_b, B4)
++#   - identical to an independent brute-force triple loop at K = 1, 3, 7 (check_a, A3)
++#   - 1.29x faster than kron at K = 1 and ~41x faster at K = 40 (check_e)
++# The sparse aggregator matters: a DENSE S costs O(M^2 N) and is SLOWER than kron.
++# =============================================================================
++def _term4_gram(col2, N, extra=None):
++    """
++    Args:
++        col2:  sparse (S, N) matrix of the price-of-risk-direction loading, nonzero
++               exactly on live project slots.
++        N:     number of firms.
++        extra: optional dense (S, N, K-1) array of additional aggregate-shock loadings.
++               None => K = 1, which reproduces the published one-shock model exactly.
++
++    Returns:
++        (N, N) ndarray.
++    """
++    c = col2.tocoo()
++    M = c.nnz
++    if extra is None:
++        B = c.data.reshape(M, 1)
++    else:
++        B = np.empty((M, 1 + extra.shape[2]), dtype=np.float64)
++        B[:, 0] = c.data
++        B[:, 1:] = extra[c.row, c.col, :]
++
++    E = np.exp(B @ B.T)                       # (M, M); K enters only this GEMM
++    S = csr_matrix((np.ones(M), (np.arange(M), c.col)), shape=(M, N))
++    return np.asarray(S.T @ np.asarray(S.T @ E).T)
++
++
+ def sdf_compute(N, T, arr_tuple):
+-    r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow = arr_tuple
++    (r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book,
++     op_cash_flow) = arr_tuple[:13]
++    # Extra aggregate-factor loadings, shape (T-1, N, K-1). Absent (or width 0) for the
++    # published one-shock model and for _arr/ directories saved before this was added.
++    gload = None
++    if len(arr_tuple) > 13:
++        g = np.asarray(arr_tuple[13])
++        if g.ndim == 3 and g.shape[2] > 0:
++            gload = g
+ 
+     # precompute some of the integrals to be used below
+ 
+@@ -148,6 +202,14 @@ def sdf_compute(N, T, arr_tuple):
+     exp_beta = np.exp(-beta)
+     exp_corr_zr = np.exp(-0.5 * sigmaj**2 * corr_zj**2 * corr_zr**2)
+ 
++    # |b_s|^2, the systematic variance of project s's log cash flow. With one aggregate
++    # shock b_s is the scalar sigmaj*corr_zj = beta/sigma_z, so |b_s|^2 = sigmaj^2*corr_zj^2.
++    # When extra aggregate factors are switched on this gains their sum of squares; the
++    # diagonal correction to term4 below reads it from here so that site never changes.
++    bsq = sigmaj**2 * corr_zj**2
++    if gload is not None:
++        bsq = bsq + (gload**2).sum(axis=2)
++
+     def sdf_loop(t, iter):
+         # compute sparse matrices to be used repeatedly
+         # chi_{s, t}^i for t going from date 1, ..., T-1, s going from dates 1 to t,
+@@ -174,19 +236,38 @@ def sdf_compute(N, T, arr_tuple):
+         integ_optvalexpy_data.data = interp_integ_optvalexpy((rdata, integ_y.data))
+ 
+         # generate terms corresponding to ERiRj, i != j
+-        result3 = kron(col1, col1)
++        #
++        # For sparse (S, N) matrices A and B,
++        #     kron(A, B).sum(axis=0).reshape(N, N)[i, j]
++        #         = sum_{s, s'} A[s, i] * B[s', j]
++        #         = (colsum A)[i] * (colsum B)[j],
++        # i.e. a rank-1 OUTER PRODUCT. So term3 and term5 never needed a kron at all: the
++        # old code materialised nnz^2 sparse entries to build an N x N rank-1 matrix.
++        # Verified identical to 8e-16 relative on real BGN slices and ~279x faster
++        # (voc_diagnosis/refactor_checks/RESULTS.md, sections A1 and D1). terms 7 and 8
++        # below already used np.sum(col1, axis=0) directly -- this makes the file consistent.
++        #
++        # term4 is the exception: exp() is applied entrywise before the sum, so it does not
++        # factor. See _term4_gram above.
++        col1_sum = np.asarray(col1.sum(axis=0)).ravel()
+         term3 = (
+             (Chat * I * pi) ** 2
+-            * result3.sum(axis=0).reshape(N, N).A
++            * np.outer(col1_sum, col1_sum)
+             * data_integ_D_sq[t]
+         )
+ 
+-        result4 = kron(col2, col2).copy()
+-        result4.data = np.exp(result4.data)  # only exponentiate non-zero entries
+-        term4 = (Chat * I * pi) ** 2 * result4.sum(axis=0).reshape(N, N).A
++        # Guard: col2's stored pattern must be exactly the live-project set. If a zero
++        # loading were dropped, that project would vanish from term4 while still being
++        # counted in term3 and in the diagonal corrections below.
++        assert col2.nnz == chisp.nnz, (
++            f"col2 lost {chisp.nnz - col2.nnz} live projects at t={t}"
++        )
++        term4 = (Chat * I * pi) ** 2 * _term4_gram(
++            col2, N, None if gload is None else gload[: t + 1, :, :]
++        )
+ 
+-        result5 = kron(col1, col3.multiply(integ_Dexpy_data))
+-        term5 = (Chat * I * pi) ** 2 * result5.sum(axis=0).reshape(N, N).A
++        col5_sum = np.asarray(col3.multiply(integ_Dexpy_data).sum(axis=0)).ravel()
++        term5 = (Chat * I * pi) ** 2 * np.outer(col1_sum, col5_sum)
+ 
+         term6 = 2 * I**2 * Chat * data_integ_J_optval[t]
+         term7 = (
+@@ -236,7 +317,7 @@ def sdf_compute(N, T, arr_tuple):
+                 (
+                     (Chat * I * pi) ** 2
+                     * chi_slice
+-                    * np.exp(sigmaj[: t + 1, :] ** 2 * corr_zj[: t + 1, :] ** 2)
++                    * np.exp(bsq[: t + 1, :])
+                 ).sum(axis=0)
+             ).reshape(
+                 N,

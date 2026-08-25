@@ -61,6 +61,70 @@ workflow that produced the audit.
 Paths in `surface.py` and `wstar2.py` point at
 `~/ASU Dropbox/Seth Pruitt/BGN and Kelly Malamud/` — adjust on another machine.
 
+## Dead ends
+
+Recording these so nobody re-derives them. Each was implemented, verified correct, and
+abandoned on measured grounds.
+
+### Raising K by adding aggregate factors to BGN's cash-flow shock (abandoned 2026-08-25)
+
+**The idea.** BGN's SDF is `log M = -r - 0.5|lambda|^2 - lambda'nu` and a project's price
+depends on its loading `b_s` ONLY through the scalar `lambda'b_s`. So write
+`b_s = (beta_s/sigma_z)*u + g_s` with `u'g_s = 0`, take the `|g_s|^2` budget out of the
+idiosyncratic remainder, and every price, expected return, investment decision, `Jstar`,
+`D(r)` and the `(beta_star, scale)` calibration is *exactly* unchanged while the systematic
+covariance rank rises. `findings.md` section B3 predicted this should push
+SR_lin/SR* down like sqrt(L/K) and open a 2-3x DKKM-over-FM gap.
+
+**It was built and it was correct.** Panel bit-identical at K=0 (no extra RNG draws
+consumed); `beta`, `chi`, `P` bit-identical and `max|rp - rp_0| = 0.000e+00` at K = 5, 20, 40,
+confirming the null-space pinning. Implementation preserved at
+`dead_end_K/K_factors.patch`.
+
+**It does not move the objective.** SR_lin/SR* — the fraction of the maximum conditional
+Sharpe attainable in the linear characteristic span, which *is* Fama-MacBeth's feasible set
+(X = [1, log mve, bm]):
+
+| sigmaj band | K=0 | K=5 | K=20 | K=40 |
+|---|---|---|---|---|
+| 0.030 (shipped) | 0.9203 | 0.9199 | 0.9201 | **0.9202** |
+| 0.300 | 0.9228 | 0.8739 | 0.8955 | 0.9030 |
+| 0.375 (critics' cap) | 0.9107 | **0.8255** | 0.8631 | 0.8761 |
+
+At the shipped calibration K does *nothing* — 0.9203 to 0.9202. (This independently
+reproduces the audit's 91.7% figure for the {1, size, bm} span.) Best case anywhere in the
+grid is 0.826, i.e. **a ceiling of DKKM/FM ~ 1.21x** against a ~2.5x target. Participation-
+ratio effective rank of `cond_var` moves 4.01 -> 4.03 at the shipped band, 7.50 -> 8.97 at
+band 0.375.
+
+**It is non-monotonic in K** — K=5 beats K=40. With a fixed variance budget `omega` and a
+k^(-decay) mode spectrum, more modes means less variance each. **omega, not K, is binding.**
+
+**The reason, and it is not what I first guessed.** My hypothesis was that the extra factors
+being *unpriced* was the problem. `refactor_checks/check_i_priced.py` refutes that: at K=20,
+unpriced extras give SR_lin/SR* = 0.319 and fully-priced extras 0.248 — both roughly
+tracking sqrt(L/K). The construction is sound; the exact-invariance version is not what
+holds it back.
+
+The binding constraint is **where the variance is**. In the synthetic control the common
+block is ~86% of return variance. In BGN it is capped at `omega*(1-corr_zj^2)` of *cash-flow*
+variance, and cash flows reach returns only through the dividend, with `Chat = exp(-3.7) =
+0.0247`. So it can never exceed a few percent of return variance. Meanwhile eig1 — 36-50% of
+BGN's return variance — is the interest-rate/discount channel.
+
+**Implication if anyone revives this.** Inject into the discount-rate channel, not the
+dividend channel: multiple aggregate discount/term-structure factors loading through project
+duration. That is the audit's "heterogeneous project durability" proposal, rejected on cost
+(per-type `Jstar.csv` re-solves). This experiment shows the cheap cash-flow route cannot
+substitute for it, so that cost/benefit deserves a second look.
+
+**What was retained.** Only the speed-up found alongside it, in
+`utils_bgn/sdf_compute_bgn.py`: `term3` and `term5` are rank-1 outer products of column
+sums (the `kron` they used was materialising nnz^2 entries to build an N x N rank-1 matrix,
+279x slower), and `term4` uses a Gram matrix with sparse aggregation instead of
+`kron`+`exp`+`sum`. **~3.5x faster `sdf_loop`, numerically equivalent.** No K machinery
+remains in the model code. See `refactor_checks/RESULTS.md`.
+
 ## Provenance
 
 `journal.jsonl` (574 KB) is the raw workflow transcript: one `{"type":"result",...}` line
