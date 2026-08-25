@@ -127,6 +127,44 @@ interp_integ_Jsexpy = integ_expy(Jstar, y_pts)
 interp_integ_optvalexpy = integ_expy(integrand_optval, y_pts)
 
 
+# =============================================================================
+# term4: sum over live PROJECT PAIRS of exp(b_s * b_s'), aggregated to firms
+#
+#     term4[i, j] = sum_{s in live(i)} sum_{s' in live(j)} exp( b_s * b_s' )
+#
+# where b_s = sigmaj_s * corr_zj_s = beta_s / sigma_z is project s's loading on the
+# aggregate SDF shock, so b_s * b_s' = cov(log C_s, log C_s'). This replaces
+#     r = kron(col2, col2); r.data = np.exp(r.data); r.sum(axis=0).reshape(N, N)
+# which materialised nnz^2 sparse entries to produce an N x N result.
+#
+# term4 is the ONLY term here that needs a genuine project-pair double sum: exp() is
+# applied entrywise BEFORE the sum, so it does not collapse into a product of column sums
+# the way terms 3, 5, 7 and 8 do (see the comment at the term3 site below).
+#
+# Verified in voc_diagnosis/refactor_checks/:
+#   - identical to the kron path to 1.4e-16..3.9e-16 relative on real BGN slices (check_b, B4)
+#   - identical to an independent brute-force triple loop (check_a, A3)
+#   - 1.29x faster than kron (check_e); the whole sdf_loop is ~3.5x faster (timing.py)
+# The SPARSE aggregator matters: a dense S costs O(M^2 N) and is SLOWER than kron.
+# =============================================================================
+def _term4_gram(col2, N):
+    """
+    Args:
+        col2: sparse (S, N) matrix of the aggregate-shock loading, nonzero exactly on
+              live project slots.
+        N:    number of firms.
+
+    Returns:
+        (N, N) ndarray.
+    """
+    c = col2.tocoo()
+    M = c.nnz
+    B = c.data.reshape(M, 1)
+    E = np.exp(B @ B.T)                       # (M, M)
+    S = csr_matrix((np.ones(M), (np.arange(M), c.col)), shape=(M, N))
+    return np.asarray(S.T @ np.asarray(S.T @ E).T)
+
+
 def sdf_compute(N, T, arr_tuple):
     r, mu, xi, sigmaj, chi, beta, corr_zj, eret, ret, P, corr_zr, book, op_cash_flow = arr_tuple
 
@@ -174,19 +212,37 @@ def sdf_compute(N, T, arr_tuple):
         integ_optvalexpy_data.data = interp_integ_optvalexpy((rdata, integ_y.data))
 
         # generate terms corresponding to ERiRj, i != j
-        result3 = kron(col1, col1)
+        #
+        # For sparse (S, N) matrices A and B,
+        #     kron(A, B).sum(axis=0).reshape(N, N)[i, j]
+        #         = sum_{s, s'} A[s, i] * B[s', j]
+        #         = (colsum A)[i] * (colsum B)[j],
+        # i.e. a rank-1 OUTER PRODUCT. term3 and term5 therefore never needed a kron: the
+        # old code materialised nnz^2 sparse entries to build an N x N rank-1 matrix.
+        # Verified identical to 8e-16 relative on real BGN slices and ~279x faster
+        # (voc_diagnosis/refactor_checks/RESULTS.md, sections A1 and D1). terms 7 and 8
+        # below already used np.sum(col1, axis=0) directly; this makes the file consistent.
+        #
+        # term4 is the exception -- exp() is applied entrywise before the sum, so it does
+        # not factor. See _term4_gram above.
+        col1_sum = np.asarray(col1.sum(axis=0)).ravel()
         term3 = (
             (Chat * I * pi) ** 2
-            * result3.sum(axis=0).reshape(N, N).A
+            * np.outer(col1_sum, col1_sum)
             * data_integ_D_sq[t]
         )
 
-        result4 = kron(col2, col2).copy()
-        result4.data = np.exp(result4.data)  # only exponentiate non-zero entries
-        term4 = (Chat * I * pi) ** 2 * result4.sum(axis=0).reshape(N, N).A
+        # Guard: col2's stored pattern must be exactly the live-project set. If a zero
+        # loading were dropped, that project would vanish from term4 while still being
+        # counted in term3 and in the diagonal corrections below. Measured zero stored
+        # zeros on real slices (check_b, B1), so this cannot fire spuriously today.
+        assert col2.nnz == chisp.nnz, (
+            f"col2 lost {chisp.nnz - col2.nnz} live projects at t={t}"
+        )
+        term4 = (Chat * I * pi) ** 2 * _term4_gram(col2, N)
 
-        result5 = kron(col1, col3.multiply(integ_Dexpy_data))
-        term5 = (Chat * I * pi) ** 2 * result5.sum(axis=0).reshape(N, N).A
+        col5_sum = np.asarray(col3.multiply(integ_Dexpy_data).sum(axis=0)).ravel()
+        term5 = (Chat * I * pi) ** 2 * np.outer(col1_sum, col5_sum)
 
         term6 = 2 * I**2 * Chat * data_integ_J_optval[t]
         term7 = (
