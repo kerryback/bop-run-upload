@@ -1,0 +1,234 @@
+{
+ "scope": "Forensic audit of the ESTIMATION and EVALUATION pipeline only (not the structural models). Read in full: utils_factors/dkkm_functions.py, fama_functions.py, factor_utils.py, sdf_utils.py; utils/generate_dkkm_factors.py, generate_fama_factors.py (via fama_functions), estimate_sdf_dkkm.py, estimate_sdf_fama.py, evaluate_sdfs.py, calculate_moments.py, generate_25_portfolios.py, generate_panel.py; config.py; the sdf_ret/max_sr blocks of utils_bgn/sdf_compute_bgn.py, utils_kp14/sdf_compute_kp14.py, utils_gs21/sdf_compute_gs21.py; utils_bgn/panel_functions_bgn.py (timing + rf_stand); and in bop-analyze-remote: create_slides_tables.py, analyze.py, compute_pricing_errors.py, config.py. Two Monte Carlo experiments were run to get real numbers (scratchpad/rff_diag.py = RFF basis geometry with N=1000, D=3600; scratchpad/ridge_diag.py = ridge effective-df on a simulated 360-month RFF factor panel), plus closed-form algebra for the sin/cos linearity and the HJD decomposition. No *_results.pkl were available locally, so alpha-boundary and true-SDF-Sharpe claims are stated as testable diagnostics with the exact quantity to look up.",
+ "findings": [
+  {
+   "claim": "H3 is CONFIRMED and is the single largest estimator-side defect: at gamma ~ U{0.5..1.0} with L=5 rank-standardized characteristics, sin(Wx) is 97-99.8% a LINEAR function of the characteristics, so the 3600-feature RFF map is essentially FM plus a quadratic term. The bandwidth is off by a factor of ~5 in standard deviation relative to a 130-characteristic implementation.",
+   "evidence": "Pre-activation z = gamma * g'x with g~N(0,I_L) and each rank-standardized char having variance 1/12 (dkkm_functions.rank_standardize line 62 maps to (rank-0.5)/N-0.5). Hence sd(z) = gamma*sqrt(L/12) = 0.6455*gamma for L=5; simulated mean sd(Wx)=0.458, 99th pct |Wx|=1.445, and only 0.62% of firm-feature pairs have |Wx|>pi/2. Closed form for u~N(0,s^2): R2 of the L2 projection of sin(u) on u is 2s^2 e^{-s^2}/(1-e^{-2s^2}). Values: gamma=0.5 (s=0.323) -> 0.9982; gamma=0.75 (s=0.484) -> 0.9909; gamma=1.0 (s=0.645) -> 0.9716. Monte Carlo on the whole 1800-column sin block against the 6-dim linear span of x: 98.47% of variance (raw), 97.49% (after the second rank-standardization). Cos block: 99.05% of variance in the 21-dim quadratic span (raw), 74.35% after rank-standardization. Whole 3600-feature matrix: 48.9% of variance in the linear span (6 dims), 86.7% in the quadratic span (21 dims), 88.4% in the cubic span (56 dims). Participation-ratio effective rank of the 3600-column feature matrix = 14.4-16.5; 21 principal components capture 90%, 161-170 capture 99%. By contrast, real-data DKKM with L=130: sd = gamma*sqrt(130/12) = 3.291*gamma, and R2_lin(sin) = 0.363 (gamma=0.5), 0.0275 (gamma=0.75), 0.00043 (gamma=1.0).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:39-64",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:92-110",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/generate_dkkm_factors.py:112-119",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:211",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/rff_diag.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The correct bandwidth fix is to multiply GAMMA_GRID by sqrt(L_real/L_sim). For L=5 that is sqrt(130/5)=5.099, i.e. GAMMA_GRID = [2.55, 3.06, 3.57, 4.08, 4.59, 5.10]; for GS21's L=6, sqrt(130/6)=4.655 -> [2.33, 2.79, 3.26, 3.72, 4.19, 4.66]. This is a pure estimator change and it materially enriches the basis.",
+   "evidence": "Monte Carlo with gamma rescaled by 5.099 (L=5, rho=0.3): mean sd(Wx) rises 0.459 -> 2.368; P(|Wx|>pi/2) rises 0.74% -> 48.4%; fraction of features for which sin is monotone over the whole cross-section falls 76% -> 0.4%; the linear-span share of the whole feature matrix falls 48.9% -> 14.1%, the quadratic share 86.7% -> 34.6%, the cubic share 88.4% -> 52.4%; participation-ratio effective rank rises 14.4 -> 77.8 (k90 rises 20 -> 228, k99 161 -> 570). An intermediate 3x rescaling (gamma in [1.5,3.0]) gives effective rank 24.7 and a 33% linear share, so the effect is smooth and tunable.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:211",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/rff_diag.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The double rank-standardization (dkkm_functions.rff line 110) makes GAMMA_GRID a near-exact NO-OP. Rank-standardization is invariant to strictly monotone transformations, and sin is monotone over the realized range of Wx for 76.2% of features (and monotone over >99% of firms for the rest), so rank_standardize(sin(gamma*g'x)) is numerically identical to rank_standardize(g'x) regardless of gamma. Likewise rank_standardize(cos(z)) equals rank_standardize(-|z|) exactly.",
+   "evidence": "Simulated mean corr(rank_standardize(sin z), rank_standardize(z)) = 0.9997-0.9999 as coded; mean corr(rank_standardize(cos z), rank_standardize(-|z|)) = 1.0000. Under the rescaled gamma these fall to 0.40 and 0.72, i.e. gamma only starts to matter once sin folds. Consequence: the effective feature dictionary is indexed ONLY by the DIRECTION of w on the unit sphere in R^L (a 4-dim index for L=5), with exactly two fixed shapes per direction (a probability-integral-transform sigmoid of the index, and the same transform of the absolute index). Two features with the same direction but different |w| are the SAME column. This also breaks the Rahimi-Recht kernel identity: (1/D)sum_j [sin(w'x)sin(w'x') + cos(w'x)cos(w'x')] -> exp(-gamma^2|x-x'|^2/2), but after per-column rank-standardization the induced kernel is no longer shift-invariant and no longer depends on gamma, so the RKHS is not the Gaussian RKHS the construction is supposed to deliver.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:104-110",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:39-64"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "PARTIAL REFUTATION of the premise in the task: the second rank-standardization does NOT on net reduce the nonlinear content of the basis \u2014 it increases it, because it equalizes the sin and cos amplitudes. It does destroy amplitude/frequency information, which is the real cost.",
+   "evidence": "For u~N(0,s^2) with s=0.46: Var(sin u) = (1-e^{-2s^2})/2 = 0.1725 (sd 0.415) but Var(cos u) = (1+e^{-2s^2})/2 - e^{-s^2} = 0.0183 (sd 0.135), i.e. the even/nonlinear block has ~3x smaller raw amplitude. Rank-standardization forces every column to the identical marginal (uniform on [-0.4995, 0.4995]), which upweights the cos block ~3x. Empirically the linear-span share of the whole feature matrix is 86.4% WITHOUT the second rank-standardization and only 48.9% WITH it, and the participation-ratio effective rank rises from 5.1-6.6 to 14.4-16.5. So removing the second rank-standardization alone would make things WORSE. The genuine costs of it are (a) the gamma collapse above and (b) every column is forced to the same bounded uniform marginal, so no single feature can be spiky/large-amplitude on a small subset of firms \u2014 which is exactly the shape needed to represent w*(x) = b(x)/d(x) when d(x) is small for some firms. I could not verify from this repo whether DKKM's published code rank-standardizes the random features; the file header says it is copied from an external root codebase. It is definitely not part of the canonical Rahimi-Recht / Gaussian-kernel construction.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:1-16",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:104-110"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "NO BIAS TERM IS NOT A PROBLEM. Including both sin(Wx) and cos(Wx) without a random phase is the standard, LOWER-VARIANCE alternative to the sqrt(2)cos(Wx+b), b~U[0,2pi] construction; it spans exactly the same function class.",
+   "evidence": "(1/D) sum_j [sin(w_j'x)sin(w_j'x') + cos(w_j'x)cos(w_j'x')] = (1/D) sum_j cos(w_j'(x-x')) -> E_w[cos(w'(x-x'))] = the Gaussian kernel, with no dependence on any phase. The random-phase version is an unbiased but strictly higher-variance estimator of the same kernel. So dkkm_functions.py line 107 is correct as written. (Separately, BGN accidentally acquires a small random phase from rf_stand \u2014 see the rf_stand finding.)",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:104-107"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The ridge alpha grid for BGN/KP14 has a large hole exactly where the virtue of complexity lives. Effective degrees of freedom at P=3600, T=360 for ALPHA_LST=[0,.001,.01,.05,.1,1] are df = [360, 63, 22, 9.5, 6.2, 1.15]. There is NO grid point in df in (63, 360) \u2014 the entire mildly-overparameterized region just past the interpolation threshold. Four of the six points sit at df<=22, where DKKM is no richer than a 22-factor model.",
+   "evidence": "Effective penalty is 360*z with z = nfeatures*alpha (dkkm_functions.ridge_regr lines 162/176; estimate_sdf_dkkm.py line 128), so z_eff = 360*P*alpha; since trace(X'X) is proportional to P, the relative shrinkage is P-invariant and the df numbers transfer from the P=1800 simulation. Simulated 360-month RFF factor panel (N=1000, idio vol 10%/mo, char-linked expected returns): sd of an RFF factor return = 1.14/month (features are rank weights summing to zero with sum of squares N/12=83), sd(mkt_rf)=0.051, trace(X'X)=9.73e5, top eigenvalue 4.83e5 = 49.7% of trace, top 10 = 82.9%, top 30 = 96.1%. df(alpha) = sum lambda/(lambda + 360*P*alpha) gives the table above. GS21's ALPHA_LST_GS (=/100) gives df = [360, 283, 157, 85, 63, 22], which is actually the BETTER-centered grid. Required alpha for a target df: df=180 -> 6.6e-5; df=100 -> 3.4e-4; df=50 -> 1.7e-3; df=20 -> 1.2e-2; df=5 -> 1.4e-1; df=1 -> 1.18. A defensible replacement grid for all models: alpha in {0, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 1}, or better, reparameterize alpha as a fraction of trace(X'X)/P so it is scale-free across models (this is why GS21 needed a hand-tuned /100).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:150-180",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:271-324",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:122-128",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:190-193",
+    "/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/ridge_diag.py"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The market factor is appended to X and explicitly EXEMPTED from the ridge penalty, so the alpha->infinity limit of DKKM is EXACTLY the CAPM. At alpha=1 (df=1.15) the DKKM row is a CAPM re-run. The whole DKKM alpha grid therefore interpolates between 'min-norm interpolation of 3600 features' and 'CAPM' \u2014 if neither end is good, DKKM can never beat FF.",
+   "evidence": "dkkm_functions.mve_data lines 289-290 always column_stack mkt_rf; lines 306-312 build X_aug = [X; sqrt(360*alph)*eye(p)[:-1]] and y_aug = [y; 0], i.e. the augmentation rows omit the LAST column, so the market coefficient is never penalized. estimate_sdf_dkkm.py line 150 always sets fw_i['mkt_rf'] = market_weight (the value-weighted market from fama_french's last column), so every DKKM stock-weight vector contains an unshrunk market component. With df=1.15 at alpha=1, that surviving direction is the market.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:286-315",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:145-154",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:115"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "NMAT=5 weight-averaging is NOT equivalent to one big feature set, and it actively suppresses the mechanism that produces a complexity effect. Averaging M independent random-feature ridge fits converges to KERNEL ridge with the SAME explicit penalty, thereby removing the implicit extra regularization that a finite-width random-feature model carries. It flattens the Sharpe-vs-nfeatures curve and mislabels the complexity axis by 5x.",
+   "evidence": "estimate_sdf_dkkm.py lines 134-169: for each of the 5 W draws it computes pof_i = ridge on that draw's 3600 factors with the same scaled_alphas, forms sw_i = fw_i @ pof_i, accumulates, then divides by NMAT. Formally, ensemble = (1/M) sum_m f_hat_m where each f_hat_m is fit to the SAME target y=1 on the SAME 360 months. Decomposing f_hat_m = E_W[f_hat] + eta_m, the eta_m are the draw-specific components and average away at rate 1/M, while the common component (the kernel-ridge limit) is preserved unchanged. So (i) the ensemble is NOT the MP=18000-feature model (a joint fit lets draws orthogonalize and explain different parts of y; the ensemble makes each draw fit ALL of y then cancels the disagreement); (ii) since finite-P random-feature ridge is known to behave like kernel ridge with a LARGER effective penalty, averaging over draws REDUCES the effective regularization at any nominal alpha; (iii) the eta_m that cancel are precisely the high-frequency, draw-specific directions, so the ensemble is strictly smoother/more linear than any single draw; (iv) because the M->infinity limit depends on P only through the (vanishing) implicit ridge, the Sharpe-vs-nfeatures curve mechanically flattens. Note the root codebase used nmat=1 (config.py line 177 comment); NMAT=5 is a local deviation. Recommendation: set NMAT=1 and treat the 5 draws as independent REPLICATIONS reported as a distribution, not averaged into one estimator.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:122-169",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:177-178",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/generate_dkkm_factors.py:108-126"
+   ],
+   "confidence": "medium"
+  },
+  {
+   "claim": "The FF/FM-vs-DKKM comparison is NOT statistically rigged toward FF/FM \u2014 if anything DKKM gets an oracle tuning advantage \u2014 but it IS structurally rigged, because DKKM's only possible edge is nonlinearity in the SAME 5-6 characteristics that FM already spans linearly, and (per the bandwidth finding) the implemented basis is 49% linear and 87% cubic in those chars.",
+   "evidence": "FF/FM use K=7 factors over T=360 with alpha=0 (fama_functions.mve_data lines 266-271, config.ALPHA_LST_FAMA=[0]). Plug-in MVE loses roughly 2K/T = 3.9% of squared Sharpe at K=7, T=360, so FF/FM sit essentially at their population optimum; ridge would buy them almost nothing. DKKM at P/T = 10 pays a large estimation cost even at the optimal ridge, so it needs a population span whose max squared Sharpe exceeds FF/FM's by tens of percent just to break even. The measured span premium is small: the DKKM feature matrix has effective rank 14-16 versus FF/FM's 7, and 86.7% of its variance lies in the 21-dim quadratic span of the same chars. Meanwhile DKKM gets an ORACLE advantage FF/FM do not: create_slides_tables.find_best_alpha_for_model (lines 81-97) picks the alpha with the best mean Sharpe (or lowest HJD) ACROSS all iterations and then reports that same alpha's per-iteration values \u2014 post-hoc selection over 6 alphas using the evaluation metric itself. So the headline 'DKKM ties FF/FM' is already an oracle-tuned DKKM tying an untuned FF/FM.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:248-274",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:186-193",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:81-97",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:104-125"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "rf_stand is NOT a dead input in the mechanical sense (it is column_stacked AFTER rank_standardize, so it enters raw), but it is nearly dead in effect: it acts as a small per-feature, per-month PHASE SHIFT of sd ~0.19 rad, and because sin is monotone over the realized range for 76% of features and the features are then rank-standardized, the phase has essentially ZERO within-month effect on the sin block. It has a small real effect on the cos block only (it moves the vertex of |Wx| off zero). It is nevertheless an unfair extra conditioning variable in principle, and it makes the DKKM feature definition time-varying while the 360-month ridge assumes a stable factor.",
+   "evidence": "dkkm_functions.rff line 92 rank-standardizes data.values, then line 96 does X = column_stack([X, rf.values]) \u2014 rf is appended raw. panel_functions_bgn.py line 271 defines rf_stand = (df.rf - rf.mean())/(4*rf.std()), a date-level variable that is CONSTANT across firms within a month; generate_dkkm_factors.py line 113 gives W an extra column only when MODEL=='bgn'. Hence Z_ij = w_j'x_i + w_{j,6}*rf_stand_t: a constant added to the whole cross-section. sd of that phase = 0.25 * E|N(0,1)| * E[gamma] = 0.25*0.798*0.75 = 0.15 rad (up to 0.19 at gamma=1). A constant shift cannot change the cross-sectional ordering of z, and rank_standardize(sin(z+b)) = rank_standardize(sin(z)) exactly whenever sin is monotone on the shifted range, which holds for 76.2% of features. FF/FM never see rf (fama_functions._compute_monthly_fama line 200 passes only data[chars]).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:91-99",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:269-272",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/generate_dkkm_factors.py:112-114",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:192-203"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The Sharpe metric is a fair, noise-free scale-invariant DIRECTION test, but it has one substantive bias and one robustness problem. The substantive bias: because it is scale-invariant month by month, it gives ZERO credit for conditional TIMING/SCALING \u2014 which is one of the two channels through which complexity pays in the DKKM/KMZ theory. The robustness problem: mean-of-ratios is dominated by months with a small conditional-vol denominator.",
+   "evidence": "evaluate_sdfs.py lines 183-184/198-199 compute stdev = sqrt(w' Sigma_t w) and mean = w' rp_t from the TRUE conditional moments; create_slides_tables.py lines 34-42 and analyze.py lines 154/215 form sharpe = mean/stdev per month and then take a simple mean over the 360 eval months. Since SR_t = (w'rp)/sqrt(w'Sigma w) is homogeneous of degree 0 in w, multiplying w_t by ANY month-specific positive scalar leaves the metric unchanged: a method that correctly levers up when the conditional max Sharpe is high gets no credit. The right complement is the unconditional Sharpe of the actual position, mean_t(w'rp) / sqrt(mean_t(w'Sigma w) + var_t(w'rp)), which is scale-sensitive only through the time-variation of the scale. Robustness: at nfeatures=3600, alpha=0 the ridge is the min-norm INTERPOLATOR (dkkm_functions.mve_data line 301 always calls ridge_regr with shrinkage 0, and ridge_regr takes the P>=T kernel branch at lines 165-178), which can produce nearly hedged w_t with a tiny denominator and a huge |SR_t| of either sign; the mean over 360 months is then not robust. Report the median and the pooled version alongside.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/evaluate_sdfs.py:182-209",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:34-42",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/analyze.py:154",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:296-315"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "H5 CONFIRMED, but the mechanism in the hypothesis is wrong. The UNITS actually match to within 0.6% (both sdf_ret and the method's xret are 'projection of the constant 1 onto excess returns'). The real defect is a LEVEL/leverage gap: E[sdf_ret] = Rf*SR*^2/(1+SR*^2) approaches Rf ~ 1.006 as the true max Sharpe grows, while the method's mean is SR_m^2/(1+SR_m^2) ~ 0.06. As SR* grows, HJD for EVERY method converges to ~Rf and the metric's entire dynamic range between 'no skill' and 'perfect correlation' collapses.",
+   "evidence": "Units derivation. TRUTH: port = ER^{-1}1 normalized by port.sum(), so R* = w'R is the unit-cost minimum-second-moment gross return; solving min E[(Rf + w'x)^2] over excess returns x gives w = -Rf*Sigma^{-1}mu/(1+SR*^2). sdf_ret = -(port[1:] . (1+ret-e^r)) = -(w'x) = Rf - R*, hence E[sdf_ret] = Rf*SR*^2/(1+SR*^2) and sd(sdf_ret) = Rf*SR*/(1+SR*^2), where SR*^2 = mu'Sigma^{-1}mu is the TRUE conditional max squared Sharpe over the 1000 stocks. METHOD: pi = argmin ||1 - F pi||^2 = (E[ff'])^{-1}E[f] = Sigma_f^{-1}mu_f/(1+SR_m^2), so E[pi'f] = SR_m^2/(1+SR_m^2) and sd = SR_m/(1+SR_m^2). Identical functional form; the only unit discrepancy is the factor Rf = e^0.006236 = 1.0063. HJD^2 = (mu*-mu_m)^2 + sd*^2 + sd_m^2 - 2*rho*sd**sd_m. With SR_m=0.25 (mu_m=0.0588, sd_m=0.2353): SR*=0.5 -> HJD spans 0.488 (rho=0) to 0.220 (rho=1), a 54.9% range, mean-gap share 8.5%; SR*=1 -> 0.711 to 0.519, 27.1% range, gap share 39.0%; SR*=2 -> 0.880 to 0.765, 13.1% range, gap share 71.9%; SR*=3 -> 0.929 to 0.849, 8.6% range, gap share 83.0%; SR*=5 -> 0.958 to 0.910, 5.1% range, gap share 89.9%. The zero-portfolio HJD is Rf*SR*/sqrt(1+SR*^2) -> Rf as SR*->infinity. DIAGNOSTIC YOU CAN RUN IMMEDIATELY: create_slides_tables.py lines 60-68 report 'SDF Sharpe' = mean(sdf_ret)/sd(sdf_ret), which by the algebra above EQUALS SR*. If that reported number exceeds ~1.5 (monthly), HJD as coded is structurally incapable of separating methods at the two decimals printed in the tables.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:303-320",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:273-288",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_gs21/sdf_compute_gs21.py:205-218",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:44-68",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:266-271"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Correct scale-free replacement for HJD: report HJD_scaled = sqrt( min_c E[(c*xret_m - sdf_ret)^2] / E[sdf_ret^2] ) = sqrt(1 - rho_unc^2), where rho_unc = E[xret_m*sdf_ret]/sqrt(E[xret_m^2]E[sdf_ret^2]) is the UNCENTERED correlation. It runs 0 (perfect) to 1 (orthogonal), is comparable across models with different SR*, and removes the leverage artifact entirely.",
+   "evidence": "min over c of E[(c*y - z)^2] = E[z^2](1 - (E[yz])^2/(E[y^2]E[z^2])), directly by least squares through the origin. Using the uncentered correlation is the right choice because both sdf_ret and xret_m are excess returns whose MEAN carries the pricing information, so demeaning would throw away the object of interest. The current code (create_slides_tables.py lines 51-56, analyze.py lines 158/219) uses the raw squared difference with no scaling. Note also that this fix removes an asymmetry the current metric has in DKKM's FAVOR: DKKM gets 6 alphas whose optimum is chosen post hoc, i.e. 6 chances at the right leverage, while FF/FM have only alpha=0 and no way to rescale. Separately, compute_pricing_errors.py already computes the statistically correct object, alpha' Sigma^{-1} alpha with each method's MVE return as a single factor \u2014 that is the right pricing-error metric and should carry the argument instead of HJD.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/create_slides_tables.py:44-56",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/analyze.py:156-176",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/compute_pricing_errors.py:84-120"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "TIMING AND ALIGNMENT ARE CLEAN \u2014 I found no look-ahead. Characteristics at month m are dated at the START of the return period, xret at month m is the FORWARD return, moments[m]['rp'] is exactly E_m[xret_m], and the rolling ridge uses only months m-360..m-1. This rules out a whole class of explanations.",
+   "evidence": "panel_functions_bgn.py line 159/166 comments: 'P[t] is price at date t' and 'ret[t] is return from date t to t+1'; line 212 sets mve = P[:-1] so panel row m carries P[m] while xret row m carries ret[m] (the forward return). calculate_moments.py line 79 calls sdf_loop(month-1), and sdf_compute_bgn.py line 331 returns rp = 1 + eret[t+1] - exp(r[t+1]) = the conditional mean of ret[month], matching panel_functions_bgn.py line 266 (df.ret -= exp(df.rf)-1). dkkm_functions.mve_data line 287 uses f.loc[month-360:month-1] and factor_utils/estimate_sdf_dkkm form the month-m weight from month-m chars only. Eval window: calculate_moments start_month = burnin+360 and estimate_sdf_* eval_start = start+360 with start = burnin, so both are burnin+360 and there are exactly 360 eval months out of T=720. The rff feature rank-standardization is purely cross-sectional within a month (no cross-month information). Also verified nesting consistency: nf_indx = [0..num-1, half..half+num-1] in estimate_sdf_dkkm line 125 correctly selects the sin and cos columns generated by W[:num,:], matching the layout np.vstack([sin(Z),cos(Z)]).T in rff line 107, and the alpha keys stored are the UNSCALED alphas (line 157) while mve_data receives the nfeatures-scaled ones (line 128) \u2014 consistent across nfeatures.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/panel_functions_bgn.py:159-212",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/calculate_moments.py:77-88",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/calculate_moments.py:216-224",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/estimate_sdf_dkkm.py:122-158",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:286-294"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The 25-portfolio pricing-error test has essentially no power to reveal a complexity advantage, because the test assets are sorted only on mve and bm \u2014 two of the five characteristics all methods already span LINEARLY.",
+   "evidence": "generate_25_portfolios.py lines 107-119 forms 5x5 quintile sorts on mve and bm only. compute_pricing_errors.py runs 25 time-series regressions on each method's MVE return as a SINGLE factor. Any method that spans size and value (FF by construction, FM by construction, DKKM whose basis is 49% linear in the same chars) will price these similarly. To have power, the test assets must load on the part of the true MVE that only a rich basis can reach: e.g. portfolios sorted on interactions (size x bm, roe x agr), on nonmonotone functions (|bm - median|, extreme deciles), or directly on the model's TRUE conditional SDF weight decile.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/generate_25_portfolios.py:107-125",
+    "/Users/sjpruitt/GitHub/bop-analyze-remote/compute_pricing_errors.py:53-120"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Two smaller pipeline items worth fixing: (a) fama_macbeth regresses on RAW, unstandardized characteristics via pinvh, mixing log-size (O(5)) with bm (O(1)), so the FM portfolios are conditioned on an ill-scaled design; (b) the evaluation universe for sdf_ret differs from the universe used for the method returns.",
+   "evidence": "(a) fama_functions.fama_macbeth lines 152-165: the standardization block is commented out (copied from root), X = [1, raw chars], P = X pinvh(X'X), then P *= 2/P.abs().sum(). With log-mve around 5 and bm around 1 the Gram matrix is poorly scaled; pinvh's default rcond can truncate directions and the resulting FM portfolios are not the clean characteristic-managed portfolios one would want as the linear benchmark. Since FM is the key linear competitor, this understates FM (and therefore flatters the 'DKKM ties FM' reading in the other direction). (b) evaluate_sdfs.py lines 170-171 subset rp and cond_var to firm_ids (the prepare_panel-surviving firms: non-NaN chars, mve, xret), but sdf_ret comes straight from moments[month]['sdf_ret'] which was computed in sdf_compute over the book>0 universe. Those universes need not coincide, so the HJ benchmark and the method returns are not defined over the same set of assets.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:149-181",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/evaluate_sdfs.py:166-179",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_bgn/sdf_compute_bgn.py:299-320",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/factor_utils.py:102-105"
+   ],
+   "confidence": "medium"
+  }
+ ],
+ "verdict_on_hypotheses": [
+  {
+   "hypothesis": "H1 SPAN",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "I can confirm the estimator half of H1 with hard numbers: as implemented, the DKKM span is only about 3x richer than FF/FM's, not 500x. The 3600-feature matrix has participation-ratio effective rank 14-16 (k90 = 20-21 principal components), and 48.9% of its variance sits in the 6-dim LINEAR span of the same characteristics with 86.7% in the 21-dim quadratic span. FM already spans the linear part exactly. So the marginal span DKKM buys over FM is roughly 'quadratics and absolute-values of linear indices in 5 chars' \u2014 about 14 extra effective dimensions. Whether the TRUE conditional MVE is over-spanned by 6 linear characteristic portfolios is a model question I did not test; but the estimator side means that even if the truth had rich nonlinearity, this implementation could not reach it."
+  },
+  {
+   "hypothesis": "H2 RATIO NONLINEARITY",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "Confirmed on the estimator side, undetermined on the model side. If w*(x) = b(x)/d(x) with d(x) small for some firms, the target is a spiky, high-curvature function. The implemented basis cannot represent it: (i) every feature is 97-99% linear in x at the coded bandwidth; (ii) after the per-column rank-standardization every feature has the identical bounded uniform marginal, so no single feature can be large-amplitude on a small subset of firms; (iii) the whole basis is 88.4% inside CUBIC polynomials of the 5 chars. A ratio with a nearly-vanishing denominator is exactly what a cubic cannot approximate. Whether d_i is in fact strongly char-linked in these three models is outside my scope. Note that with the rescaled bandwidth the cubic share falls to 52.4%, so the fix in H3 is also the enabling condition for H2."
+  },
+  {
+   "hypothesis": "H3 RFF BANDWIDTH MIS-SCALING",
+   "verdict": "CONFIRMED",
+   "reasoning": "Quantitatively confirmed and it is the highest-leverage non-model change. sd(Wx) = gamma*sqrt(L/12) = 0.6455*gamma for L=5, so with gamma in {0.5..1.0} the mean sd is 0.458 and only 0.62% of |Wx| exceeds pi/2. Closed form R2 of the linear projection of sin(u), u~N(0,s^2), is 2s^2 e^{-s^2}/(1-e^{-2s^2}): 99.8% at gamma=0.5, 99.1% at gamma=0.75, 97.2% at gamma=1.0. Real-data DKKM with L=130 gives sd = 3.291*gamma and R2_lin of 0.363 / 0.028 / 0.0004 at the same gammas. The fix is GAMMA_GRID *= sqrt(130/L) = 5.099 for L=5 and 4.655 for L=6, which raises effective rank from 14 to 78, cuts the linear share from 49% to 14% and the cubic share from 88% to 52%. IMPORTANT CAVEAT: the bandwidth fix is necessary but NOT sufficient on its own, because the double rank-standardization currently makes gamma a no-op for 76% of features. Both must be fixed together, or the gamma rescale will be partly absorbed."
+  },
+  {
+   "hypothesis": "H4 CHARACTERISTIC POVERTY",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The dimensional part of H4 is not a separate problem from H3 \u2014 it IS H3, since L enters the estimator only through sd(Wx) = gamma*sqrt(L/12), and rescaling gamma by sqrt(130/L) exactly restores the real-data effective bandwidth. So 'only 5 chars' does not by itself kill the RFF basis. What DOES remain of H4 and is not fixable by gamma: (i) the 5-6 chars are measured WITHOUT noise and with no missing data, and N is fixed at 1000 with no entry/exit, so the small correctly-specified model is genuinely the right model and shrinkage-on-many-features cannot pay; (ii) the truth being low-dimensional and near-deterministic in those chars is a model property I did not test. Verdict: the 'poverty' channel is real but operates through measurement-error-free, redundant chars rather than through the count L."
+  },
+  {
+   "hypothesis": "H5 HJD SCALE MISMATCH",
+   "verdict": "CONFIRMED",
+   "reasoning": "Confirmed as a conclusion, with the stated mechanism corrected. The units do NOT differ by an order of magnitude \u2014 both sdf_ret and the method's xret are 'best approximation of the constant 1 by excess returns', identical up to the factor Rf = 1.0063. The actual defect is a LEVEL gap: E[sdf_ret] = Rf*SR*^2/(1+SR*^2) versus E[xret_m] = SR_m^2/(1+SR_m^2), and sd(sdf_ret) = Rf*SR*/(1+SR*^2) is NON-MONOTONE in SR* and tends to 0. So the better the model's true max Sharpe, the more the true HJ portfolio return degenerates to the constant Rf and the more HJD for every method converges to ~1.0. At SR* = 2 the entire range between rho = 0 and rho = 1 is 13.1% of the level and 72% of HJD^2 is the irreducible mean gap; at SR* = 3 the range is 8.6% with an 83% gap share. The immediate diagnostic is the 'SDF Sharpe' column already in create_slides_tables.py, which algebraically EQUALS SR*."
+  },
+  {
+   "hypothesis": "H6 EVALUATION HORIZON / SNR",
+   "verdict": "UNDETERMINED",
+   "reasoning": "I cannot settle this from the pipeline code alone \u2014 no *_results.pkl or *_moments.pkl are present on this machine (both bop-analyze-remote/config.py resolution paths are absent). What I can establish: the pipeline provides no barrier here (720 months, 360-month rolling window, 360 eval months, no look-ahead), and the estimation problem for FF/FM at K=7, T=360 is genuinely easy (expected squared-Sharpe loss ~2K/T = 3.9%), which is consistent with H6's premise. The decisive number is the cross-sectional R2 of monthly returns on the 5 chars in the simulated panels versus ~0.5%/month in real data; that requires the panels and belongs to another agent. Note also that H6 is partly a restatement of H5's diagnostic: a very high true SR* implies both easy estimation and a degenerate HJD."
+  }
+ ],
+ "quantitative_claims": [
+  "sd of the RFF pre-activation: sd(Wx) = gamma*sqrt(L/12); L=5 gives 0.6455*gamma, mean 0.484 over GAMMA_GRID (simulated mean of per-feature sd = 0.458). L=130 (real-data DKKM) gives 3.291*gamma.",
+  "P(|Wx| > pi/2) as coded = 0.62-0.74%; 76.2-77.2% of the 1800 random directions have sin MONOTONE over the entire 1000-firm cross-section.",
+  "Closed form R2 of the linear projection of sin(u), u~N(0,s^2): 2 s^2 e^{-s^2} / (1 - e^{-2 s^2}). Values: gamma=0.5 -> 0.9982, gamma=0.75 -> 0.9909, gamma=1.0 -> 0.9716 (L=5); gamma=1.0, L=6 -> 0.9595. Real data L=130: 0.363 / 0.0275 / 0.00043.",
+  "Simulated variance shares of the RAW sin block: 98.47% in the 6-dim linear span of x. Raw cos block: 99.05% in the 21-dim quadratic span, 0.25% linear.",
+  "Simulated variance shares of the FULL 3600-column feature matrix AS CODED (with the second rank-standardization): linear span 48.9%, quadratic span 86.7%, cubic span 88.4%. WITHOUT the second rank-standardization: 86.4% / 98.7% / 99.9%.",
+  "Participation-ratio effective rank of the 3600-column feature matrix: 14.4-16.5 as coded (k90 = 20-21, k99 = 161-170); 5.1-6.6 without the second rank-standardization; 77.8 with gamma rescaled by 5.099 (k90 = 228, k99 = 570).",
+  "corr(rank_standardize(sin(Wx)), rank_standardize(Wx)) = 0.9997-0.9999 as coded (0.40 with rescaled gamma). corr(rank_standardize(cos(Wx)), rank_standardize(-|Wx|)) = 1.0000 as coded (0.72 rescaled). Hence GAMMA_GRID is a near-exact no-op.",
+  "Raw amplitude asymmetry that the second rank-standardization removes: at s=0.46, sd(sin u) = 0.415 but sd(cos u) = 0.135, a 3.1x ratio.",
+  "Recommended GAMMA_GRID: multiply by sqrt(130/L). L=5 -> [2.55, 3.06, 3.57, 4.08, 4.59, 5.10]; L=6 (GS21) -> [2.33, 2.79, 3.26, 3.72, 4.19, 4.66].",
+  "Simulated DKKM factor-return scale: sd = 1.14/month per RFF factor (rank weights sum to zero with sum of squares N/12 = 83.3), |mean| = 0.156, per-factor Sharpe 0.137; sd(mkt_rf) = 0.051.",
+  "Simulated X'X spectrum (T=360, P=1800 RFF factors + market): trace = 9.73e5; top eigenvalue 4.83e5 = 49.7% of trace; top 3 = 62.3%; top 10 = 82.9%; top 30 = 96.1%.",
+  "Ridge effective df = sum lambda/(lambda + 360*P*alpha), P-invariant. BGN/KP14 grid [0, .001, .01, .05, .1, 1] -> df = [360, 63.1, 21.9, 9.5, 6.2, 1.15]. GS21 grid (/100) -> df = [360, 282.6, 157.3, 85.3, 63.1, 21.9].",
+  "Alpha required for a target df: df=180 -> 6.6e-5; df=100 -> 3.4e-4; df=50 -> 1.7e-3; df=20 -> 1.2e-2; df=10 -> 4.6e-2; df=5 -> 1.4e-1; df=2 -> 4.9e-1; df=1 -> 1.18.",
+  "sdf_ret algebra: E[sdf_ret] = Rf*SR*^2/(1+SR*^2), sd(sdf_ret) = Rf*SR*/(1+SR*^2), with Rf = exp(0.006236) = 1.0063 and SR*^2 = mu'Sigma^{-1}mu the true conditional max squared Sharpe. Therefore mean(sdf_ret)/sd(sdf_ret) = SR* exactly \u2014 the 'SDF Sharpe' already printed by create_slides_tables.py IS the true max Sharpe.",
+  "Method-return algebra: pi = (E[ff'])^{-1}E[f] gives E[pi'f] = SR_m^2/(1+SR_m^2), sd = SR_m/(1+SR_m^2). Same functional form as the truth up to the factor Rf, i.e. the two are on the SAME scale to within 0.6%.",
+  "HJD dynamic range with SR_m = 0.25 (mean 0.0588, sd 0.2353). SR*=0.5: 0.488 (rho=0) to 0.220 (rho=1), 54.9% range, mean-gap share of HJD^2 = 8.5%. SR*=1: 0.711 -> 0.519, 27.1%, 39.0%. SR*=2: 0.880 -> 0.765, 13.1%, 71.9%. SR*=3: 0.929 -> 0.849, 8.6%, 83.0%. SR*=5: 0.958 -> 0.910, 5.1%, 89.9%. Zero-portfolio HJD = Rf*SR*/sqrt(1+SR*^2) -> Rf as SR* grows.",
+  "FF/FM estimation cost: plug-in MVE at K=7, T=360 loses roughly 2K/T = 3.9% of squared Sharpe, so FF/FM sit essentially at their population optimum; ridge would buy them almost nothing. DKKM at P/T = 10 needs a population span premium of tens of percent in squared Sharpe just to break even.",
+  "rf_stand phase magnitude for BGN: sd = 0.25 * E|N(0,1)| * E[gamma] = 0.25 * 0.798 * 0.75 = 0.15 rad (0.19 at gamma=1), versus sd(Wx) = 0.46 \u2014 and it is a pure cross-sectional constant, so it has zero effect on the sin block for the 76% of features where sin is monotone."
+ ],
+ "blockers": [
+  "RFF BANDWIDTH + DOUBLE RANK-STANDARDIZATION, acting together. sd(Wx) = 0.46 makes sin 97-99% linear in the characteristics, and the per-column rank-standardization of the features (dkkm_functions.py line 110) then makes gamma a literal no-op for 76% of features because rank-standardization is invariant to monotone transformations. The resulting dictionary is indexed only by the DIRECTION of w (a 4-dim index for L=5) with two fixed shapes per direction, and 87% of its variance lies inside cubic polynomials of the same 5 chars. DKKM cannot beat FM because its basis IS essentially FM plus a quadratic. Fix both together: GAMMA_GRID *= sqrt(130/L), and replace the second rank-standardization with per-column standardization to unit variance (which preserves the gamma dependence while keeping the sin/cos amplitude equalization that rank-standardization was accidentally providing).",
+  "NO POPULATION SPAN PREMIUM TO WIN. FM's X(X'X)^{-1} portfolios span exactly the linear characteristic-managed portfolios, which is 49% of the DKKM feature variance and, in these models, likely most of the true MVE. FF/FM at K=7, T=360 sit within 4% of their population optimum, so they leave DKKM nothing to recover from estimation efficiency. For complexity to pay, the truth must have material MVE content OUTSIDE the linear span of the given chars \u2014 which is a model change, not an estimator change.",
+  "NMAT=5 WEIGHT AVERAGING KILLS THE COMPLEXITY MECHANISM. estimate_sdf_dkkm.py lines 134-169 average the stock weights across 5 independent W draws. This converges to kernel ridge with the SAME explicit penalty, removing the implicit extra regularization that finite-width random features supply, cancelling exactly the draw-specific high-frequency components, and mechanically flattening the Sharpe-vs-nfeatures curve since the M-large limit depends on P only through that vanishing implicit ridge. The root codebase used nmat=1. Set NMAT=1 and report the 5 draws as replications, not as an ensemble.",
+  "THE ALPHA GRID SKIPS THE VoC REGION. For BGN/KP14, effective df jumps from 360 (alpha=0, pure interpolation) straight to 63 (alpha=0.001); there is no grid point anywhere in df in (63, 360), which is precisely the mildly-overparameterized region just past the interpolation threshold where the virtue of complexity peaks. Four of six points sit at df <= 22. Also, alpha is not scale-free across models (hence GS21's hand-tuned /100); reparameterize it as a fraction of trace(X'X)/P.",
+  "THE MARKET IS NEVER PENALIZED, so the alpha->infinity limit of DKKM is EXACTLY the CAPM (df = 1.15 at alpha=1). Every DKKM cell is anchored on a line between 'min-norm interpolation' and 'CAPM'. Combined with the post-hoc best-alpha selection in create_slides_tables.py, a reported 'DKKM ~ FF' can literally be 'DKKM collapsed to CAPM, and CAPM ~ FF'. Check whether the selected best alpha is 0.05/0.1/1 \u2014 if so DKKM is not being evaluated as a complex model at all.",
+  "HJD IS DOMINATED BY A LEVERAGE/LEVEL GAP AND DEGENERATES AS THE MODEL GETS BETTER. Because sd(sdf_ret) = Rf*SR*/(1+SR*^2) tends to 0 while E[sdf_ret] tends to Rf, a high true max Sharpe drives HJD for every method to ~1.0. At SR* = 2 the entire span between zero skill and perfect correlation is 13% of the level and 72% of HJD^2 is the irreducible mean gap; at two printed decimals nothing separates. Replace it with sqrt(1 - rho_unc^2) (equivalently the optimally-rescaled relative distance), or lean on the alpha' Sigma^{-1} alpha statistic that compute_pricing_errors.py already computes.",
+  "THE SHARPE METRIC DELETES THE TIMING CHANNEL. mean_t(w'rp_t / sqrt(w'Sigma_t w)) is homogeneous of degree zero in w each month, so a method that correctly levers up when the conditional max Sharpe is high gets exactly zero credit. Conditional scaling is one of the two channels through which complexity pays in the DKKM/KMZ theory, and this metric removes it by construction. Add the unconditional Sharpe mean_t(w'rp) / sqrt(mean_t(w'Sigma w) + var_t(w'rp)) alongside, and report a median as well because mean-of-ratios is fragile when the interpolating solution produces a near-hedged w_t.",
+  "THE 25 SIZE/BM TEST ASSETS HAVE NO POWER against nonlinear-in-characteristics mispricing: they are sorted on two of the five chars that every method already spans linearly. Add test assets sorted on interactions, on nonmonotone transforms, or directly on deciles of the model's TRUE conditional SDF weight.",
+  "THE SIMULATED DATA IS TOO CLEAN FOR COMPLEXITY TO PAY IN PRINCIPLE: 5-6 characteristics observed WITHOUT measurement error, no missing values, no firm entry/exit, N fixed at 1000. In this environment the small model is correctly specified and ridge-on-many-features can only add variance. Adding independent measurement noise to the chars, or a set of weak/nuisance characteristics, is the minimal defensible change that makes shrinkage-over-a-rich-basis the right answer."
+ ]
+}

@@ -1,0 +1,214 @@
+{
+ "scope": "Deep structural analysis of the KP14 (Kogan\u2013Papanikolaou 2014) model exactly as implemented in /Users/sjpruitt/GitHub/bop-run-upload: full reading of utils_kp14/panel_functions_kp14.py, utils_kp14/sdf_compute_kp14.py, utils_kp14/kp14_fd.py, utils_kp14/integ_kp14.py, utils_kp14/loadings_compute_kp14.py, the KP14 block of config.py, plus the shipped solution files utils_kp14/KP14_solfiles/{G_func.csv, integ_results.npz}. All quantitative claims were produced by re-running the actual simulation code (N=250 firms, T=250 months, seed 7) and by a dense re-implementation of sdf_compute_kp14.sdf_loop that reproduces the shipped max_sr/sdf_ret exactly, evaluated at t=200..248. Also re-solved the G Feynman\u2013Kac ODE and the CIR conditional-expectation integrals independently to test the shipped solfiles.",
+ "findings": [
+  {
+   "claim": "The shipped solution files are STALE: G_func.csv was solved under the PRE-Jun-18 parameters (GAMMA_X=1.38, SIGMA_EPS=0.2) and is wrong by a factor of ~49 under the current config.py parameters. This is the single largest defect in the KP14 truth.",
+   "evidence": "I re-solved the same upwind FD system as kp14_fd.py, (rho - L)G1 = C*A(eps,1)^{1/(1-alpha)}, on the identical 1000-point grid. Recover G1 from the file as G1 = a*G_up + (1-a)*G_down with a = mu_L/(mu_L+mu_H) = 0.6809 (the weighting kp14_fd.py itself uses at lines 100-101). At eps = 1.009: G1(file) = 1409.5; G1 re-solved with CURRENT config params (rho = 0.015753, A_0 = 4.3535, sigma_eps = 0.02) = 69,013; G1 re-solved with OLD params (gamma_x = 1.38 -> CONST = 0.3194, A_0 = 3.1309, rho = 0.105453, sigma_eps = 0.2) = 1431.1. Ratio file/NEW = 0.0204; ratio file/OLD = 0.9849. Same verdict for G2 (file 359.3, new 4372.3, old 425.2). kp14_fd.py line 7 imports `from parameters_kp14 import *`, a module that does not exist anywhere in the repo, so the solfiles cannot be regenerated from this repo and were in fact never regenerated after commit 77c5ffc.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/KP14_solfiles/G_func.csv",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/kp14_fd.py:7",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/kp14_fd.py:99-107",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:248-272"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "integ_results.npz is CORRUPT: scipy.integrate.quad silently failed on ~68% of the eps grid, returning exact zeros. Critically, it returns ZERO over the entire eps interval where the simulated panel actually lives, so Et_A_mod, Et_G_up, Et_G_down and every squared/cross integral are ~0 for essentially every firm-month.",
+   "evidence": "Counting nonzeros in the shipped file: A_mod_lst 322/1000 nonzero, G_up_lst 317/1000, G_down_lst 311/1000, A_mod2_lst 364/1000, etc. The nonzero indices are isolated islands (30, 106-108, 208-221, 283-295, ...). The simulated eps distribution is eps ~ 1.0003 with sd 0.0237, range [0.930, 1.066] -> grid indices 184-211; ALL of 184..207 are zero. Direct comparison against a correct 4001-point trapezoid quadrature over the noncentral-chi2 CIR transition density: E_t[G_up] at eps=0.95: shipped 3.0e-121 vs correct 1548.3; at eps=1.00: shipped 8.8e-48 vs correct 1622.5; at eps=1.05 (inside a working island): shipped 1703.1 = correct 1703.1. E_t[A_mod] at eps=1.05: shipped 2348.7 vs correct 20614 (9x too small, because the stale file used A_0 = 3.13 not 4.35). Root cause is integ_kp14.py:43: `quad(integrand, 0, 10, epsabs=1e-10, epsrel=1e-10, limit=500)` on a density whose sd is ~0.006 for sigma_eps=0.02 (and ~0.057 even for sigma_eps=0.2) \u2014 Gauss-Kronrod on [0,10] never samples the spike, the error estimate is ~0, and quad returns 0 with no warning.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/KP14_solfiles/integ_results.npz",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/integ_kp14.py:33-52",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:61-71"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Because Et_G is ~0, the model's TRUE conditional risk premium rp is a pure numerical artifact equal to minus the PVGO share of firm value. It has the wrong sign, the wrong level, and a cross-sectional dispersion 173x the economically correct value.",
+   "evidence": "erets (panel_functions_kp14.py:199) = (term1 + term2 + term3 + term4)/price - 1 where term2 = Et_z_alph*Et_x*Et_G is the PVGO continuation value. Measured at t=240 over 238 non-degenerate firms: term1/P = 0.90685, term2/P = 0.00115, term3/P = 0.01744, term4/P = 7.8e-06, while PVGO/P = 0.0863. So term2 delivers 1.3% of the PVGO it should. Consequence: shipped rp mean = -0.03206/mo (-38.5%/yr), sd = 0.03616/mo (43.4%/yr); corr(shipped rp, -PVGOshare) = +0.9505, R^2(rp on PVGOshare) = 0.9034 with slope -0.9491. Replacing only Et_G_up/Et_G_down/Et_A_mod with correct quadrature gives repaired rp mean = +0.01102/mo, sd = 0.00356/mo. The continuous-time theory value is rp_i = gamma_x*sigma_x*dt + alph*gamma_z*sigma_z*dt*share_i, which gives mean +0.00724/mo (8.69%/yr, matching gamma_x*sigma_x + alph*gamma_z*sigma_z*E[share] = 0.0869) and sd 0.000210/mo (0.25%/yr). Shipped sd / theory sd = 173x.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:182-199",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:96",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:299"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q1 CONFIRMED with a sharp qualification: the code implements KP14's economics correctly in sign (assets-in-place load on x at 8.97%/yr, growth options carry a NEGATIVE IST premium of -6.94%/yr), but EVERY firm has an exposure to the x shock of EXACTLY 1. There is zero cross-sectional dispersion in the loading on the dominant priced shock.",
+   "evidence": "gamma_x*sigma_x = 0.69*0.13 = 0.0897/yr; alph = alpha/(1-alpha) = 5.6667; alph*gamma_z*sigma_z = 5.6667*(-0.35)*0.035 = -0.06942/yr. Both enter only through discount rates: KP14_CONST = r + gamma_x*sigma_x + delta - mu_x (config.py:264, giving A_0 = 1/CONST) and KP14_RHO which contains +alph*gamma_z*sigma_z (config.py:270-272). So E[R^AIP]-r = 8.97%/yr, E[R^PVGO]-r = 8.97 - 6.94 = 2.03%/yr, and firm i's premium = gamma_x*sigma_x + alph*gamma_z*sigma_z*share_i. Value-premium spread AIP vs PVGO = 6.94%/yr. But price = VAP + PVGO with VAP = x*sum K^alpha A(eps,u) (line 165) and PVGO = z^alph * x * lambda_f * G(eps) (line 173) \u2014 x factors out of BOTH exactly, so P_t = x_t * Q_t with Q free of x, and P_{t+1}/P_t has unit x-elasticity for every firm. sdf_compute_kp14.py:167 makes this explicit: Et_x2[t] multiplies the whole (term1+term2+term3) block with no firm index. Numerically: the leading eigenvector of the systematic covariance has loading mean 0.03581 with cross-sectional sd 0.00133 (CV = 3.7%), and sigma_x*sqrt(dt) = 0.03753. So beta_x = 1 for all firms to within 4%.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:138",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:163-176",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:167",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:259-273"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "The TRUE conditional covariance matrix has systematic rank EXACTLY 2, and the second (IST/z) factor accounts for 0.034% of the systematic variance. The entire economic mechanism of KP14 is numerically invisible in this calibration.",
+   "evidence": "Algebraically: term1+term2+term3 in sdf_compute_kp14.py:138-146 is (1-d*dt)^2 s1 s1' + Ez(part1 part2' + part2 part1') + Ez2 part1 part1' with part2 = (1-d*dt)*s1, so it is rank <= 2 spanned by {s1, part1}; term4 adds only {cf/P, 1+eret}, and 1+eret is itself in span{s1/P, part1/P, cf/P}. Numerically at t=240 on the 238 kept firms, eigenvalues of the off-diagonal-formula (systematic) block are [3.03e-15, 3.10e-15, 3.25e-15, 1.0268e-04, 3.0556e-01]; np.linalg.matrix_rank = 2. Second/first eigenvalue = 3.4e-4. Second-factor loading sd = 0.000657 vs the prediction alph*sigma_z*sqrt(dt)*sd(share) = 0.002073. PVGO/P on kept firms: mean 0.0403, sd 0.0363, p10 0.0146, p90 0.0836 \u2014 so the p10-p90 value-premium spread is only 0.0694*(0.0836-0.0146) = 0.48%/yr. Avg pairwise conditional return correlation = 0.3907, exactly (sigma_x*sqrt(dt)/total sd)^2 = (0.03753/0.05987)^2 = 0.392, i.e. ALL of the common variation is the uniform-loading x factor.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:134-167",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:291"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q3: after the 10x cut, the CIR shocks (eps, uj) contribute only 2.2% of idiosyncratic return variance (was 69.2%). 97.8% of firm-specific risk now comes from Poisson project death and arrival. Idiosyncratic variance FELL 3.18x and the systematic share ROSE from 14% to 34%. Conditioning of cond_var worsened 4.1x but is not catastrophic once zero-capital firms are excluded.",
+   "evidence": "Recomputing diag(cond_var) at t=240 with sigma multipliers applied to Et_epsm1_sq/Et_um1_sq: total var 3.765e-03 (current) vs 9.172e-03 (10x sigmas, i.e. pre-Jun-18) vs 3.711e-03 (sigmas set to 0). Systematic part 1.284e-03 is unaffected by the sigmas. Idio residual: current 2.481e-03, pre-Jun-18 7.887e-03 (ratio 3.179), zero-sigma 2.427e-03. So CIR-driven share of idio var = 1 - 2.427/2.481 = 2.2% now, vs 1 - 2.427/7.887 = 69.2% before. Idio share of TOTAL variance: 0.659 now vs 0.860 before. Per-project Var_t(A(eps,u)) at eps=u=1 = 0.003475 = 0.0183% of A_0^2 = 18.953. Condition number of cond_var on kept firms: 680.4 now vs 165.1 with 10x sigmas (max eig 0.30798, min eig 4.526e-04). Cross-sectional dispersion sd(log diag) = 0.405 now vs 0.499 before; sd(log idio var) = 0.664.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:248",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:250",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:76-86",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:170-198"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q4 CONFIRMED, and the mechanism is more specific than 'inverse-idio-variance': idio variance scales as 1/(number of live projects) because project death is a Poisson thinning, and project count IS size. corr(log idio var, log nlive) = -0.971 with slope -0.866; regressed on log(mve) the slope is -0.704 with R^2 = 0.743.",
+   "evidence": "With CIR shocks contributing only 2.2%, firm-level idiosyncratic variance is driven by independent Bernoulli(delta*dt) deaths across the firm's live projects: the diagonal picks up weight (1-delta*dt) per project whereas the off-diagonal formula uses (1-delta*dt)^2, leaving excess delta*dt*(1-delta*dt)*sum_j (K_j^a A_j)^2, i.e. a 1/n_projects diversification term after dividing by P^2 (sdf_compute_kp14.py:171 vs :138). Measured: corr(log idio var, log nlive) = -0.9713, OLS slope -0.8658; log(total diag) on log(mve) slope -0.4143 R^2 0.6917; log(idio var) on log(mve) slope -0.7039 R^2 0.7432. Resulting MVE tilts: corr(w*, log size) = +0.601, corr(w*, 1/d) = +0.326, corr(w*, bm) = +0.612, corr(w*, PVGO share) = -0.784, corr(w*, rp) = +0.814. Note rp itself already correlates +0.716 with log size (big firms = many projects = low PVGO share = less negative artifact rp), so BOTH channels push w* toward +size, exactly the anti-size-premium artifact recorded in the memory note.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:130-135",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:138",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:171"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q4 split of max_sr: 99.3% of the squared maximum Sharpe comes from cross-sectional alpha-harvesting against idiosyncratic variance, and only 0.7% from bearing priced aggregate risk.",
+   "evidence": "At t=240 (238 kept firms): mu' Sigma^-1 mu = 109.911 -> SR 10.484/mo = 36.3/yr. mu' D^-1 mu (no factor hedging) = 124.755, so hedging the 2 factors removes only 12%. SR^2 of the pure equal-weighted market bet = 0.795 (0.72% of total); value-weighted market = 0.293 (0.27%). Market-neutral cross-sectional part S2 - S1^2/S0 = 71.987 (65.5%). SR of the pure inverse-variance portfolio 1/d (ignoring rp) = -0.737 and equal-weight = -0.892, i.e. essentially just the (wrong-signed) market \u2014 so the MVE is NOT a min-variance portfolio; it is (rp - rp_bar)/d, dispersion-in-rp weighted by 1/d. Averaged over 13 months t=200..248 the shipped max_sr is 10.006/mo = 34.66/yr, whereas the model's economically correct upper bound is sqrt(gamma_x^2 + gamma_z^2) = 0.774/yr \u2014 a factor of 45.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:270-294",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/calculate_moments.py:79-87"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q5 HEADROOM: FF/FM's linear-in-characteristics span already captures 70% of the true maximum Sharpe. The missing 30% is exactly the 1/d ratio \u2014 and enriching the basis in RANK space (which is what DKKM does) makes things WORSE, not better.",
+   "evidence": "Population-optimal weights restricted to w = X a for various bases, evaluated with the TRUE rp and cond_var (no estimation error), n=238, full-MVE SR = 10.484: X = [1, 5 raw chars] (the FM span) -> SR 7.352 = 70.1%; X = [1, 5 rank-standardized chars] -> SR 6.729 = 64.2%; X = [1, ranks, all 15 quadratic rank interactions] -> SR 7.190 = 68.6%, i.e. BELOW the raw-linear basis; X = [1, ranks, 1/d, rp/d] -> SR 10.294 = 98.2%. So the entire remaining headroom is two ratio terms, and a nonlinear expansion in bounded rank features does not recover them. Even a single-regressor basis [1, log size] gets SR 6.735 = 64%.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/fama_functions.py:41-116",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:76-110"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q2 characteristic recoverability: {size, bm, agr, roe, mom} recover the project COUNT and the idio-variance almost fully, the arrival intensity and regime partially, and the CIR states essentially not at all. Adding quadratic terms buys little for the objects that matter.",
+   "evidence": "Cross-sectional R^2 at t=240 (n=238), columns = [5 raw chars linear | 5 rank chars linear | ranks + all quadratic interactions]: nlive 0.817/0.800/0.882; log d (idio+sys variance) 0.880/0.793/0.847; PVGO share 0.717/0.464/0.677; lambda_f 0.387/0.347/0.515; mean project-level u 0.239/0.352/0.522; high regime dummy 0.212/0.220/0.315; eps (firm CIR) 0.056/0.027/0.150; true rp 0.644/0.415/0.597; true MVE weight w* 0.471/0.369/0.433. So: RECOVERABLE = capital/project stock and idio variance (~80-88%); PARTIALLY = lambda_f (39-52%) and the H/L regime (21-32%); NOT RECOVERABLE = eps (6-15%) and, weakly, project-level u. Information loss for the truth: ~36% of the variance of rp and ~53-63% of the variance of w* is not a function of the 5 chars. This is consistent with the reported corr_fitted_vs_truth = 0.568 for 'true' in correlations.csv (R^2 = 0.32).",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:210-278",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/factor_utils.py:66-110"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q6 BUG: mu_H and mu_L are swapped between the simulated regime chain and the LAMBDA_L normalization. The unconditional project-arrival multiplier is 1.717 instead of the intended 1.0, and the G ODE's flow coefficient is correspondingly wrong.",
+   "evidence": "panel_functions_kp14.py:98 sets switch_prob = mu_H*dt from the HIGH state and mu_L*dt from LOW, so stationary P(high) = mu_L/(mu_H+mu_L) = 0.6809 (simulated 0.650 over t>=100, consistent given regime persistence 1/0.00625 = 160 months). config.py:257 defines LAMBDA_L = (1 - w*LAMBDA_H)/(1-w) with w = mu_H/(mu_H+mu_L) = 0.3191, giving LAMBDA_L = 0.36719 and 0.3191*2.35 + 0.6809*0.36719 = 1.000. But under the SIMULATED chain the unconditional multiplier is 0.6809*2.35 + 0.3191*0.36719 = 1.7172. Separately, kp14_fd.py:100-101 weights G2 by mu_L/(mu_L+mu_H) = 0.6809, which is the SIM convention, yet solves rho*G1 = util + L*G1 with a unit flow coefficient (rhs1 at line 79) \u2014 correct only if the stationary-weighted lambda equals 1, which it does not. Note also config.KP14_PROB_H = 0.6809 is used at line 95 only to initialize the chain and is consistent with the sim, so the inconsistency is entirely on the LAMBDA_L / kp14_fd side.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:92-109",
+    "/Users/sjpruitt/GitHub/bop-run-upload/config.py:253-263",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/kp14_fd.py:79-81",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/kp14_fd.py:99-101"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q6: the intra-month cash flow is deterministic conditional on t, which removes an entire natural source of idiosyncratic return risk and makes the cross-section easier.",
+   "evidence": "panel_functions_kp14.py:154 sets cashflow[:,1:,:] = eps[:-1]*x[:-1]*uj[:-1]*K[:-1]^alpha*dt, i.e. the payout received AT t+1 uses eps_t, x_t, u_t, K_t \u2014 all known at t. sdf_compute_kp14.py:163-165 correctly treats it as known (term4 = outer(cf/P, 1+eret) + transpose - outer(cf/P, cf/P), a construction that contributes exactly zero conditional variance). So the only conditional randomness in R_{t+1} is x_{t+1}, z_{t+1}, eps_{t+1}, u_{t+1}, deaths, arrivals \u2014 no dividend surprise at all.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:151-161",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:162-167"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "Q6 degeneracy: ~5% of firms per month have zero live projects (book = 0, PVGO/P = 1, rp = -1.0). They are excluded from the SDF solve but their pathological rp = -1.004 still enters the saved rp vector and the saved cond_var, and evaluate_sdfs.py subsets by firm_ids rather than by book>0.",
+   "evidence": "At t=240, 12/250 firms (4.8%) have nlive = 0; PVGO/P = 1.0 for them and eret = -1.0 exactly (eret min = -1.00000 in the simulation). sdf_compute_kp14.py:269-270 masks them out of the ER solve (keep = book[t,:] > 0), but lines 291 and 299 return the FULL cond_var and rp including the degenerate rows. utils/evaluate_sdfs.py:170-171 then subsets rp and cond_var by firm_ids taken from the estimator's panel. The panel drops them via the book==0 -> ret=NaN rule (panel_functions_kp14.py:271) and the roe/agr NaN screen, so in practice they are excluded \u2014 but this is an implicit coupling, not a guarantee.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:262-301",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/panel_functions_kp14.py:271",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils/evaluate_sdfs.py:166-179"
+   ],
+   "confidence": "high"
+  },
+  {
+   "claim": "H5 CONFIRMED for KP14: HJD has a hard floor of 0.269 set by the true HJ-portfolio return alone, and the HJ portfolio carries gross leverage of 9x to 44x.",
+   "evidence": "Over 13 months t=200,204,...,248: sdf_ret mean -0.1788, sd 0.2091, RMS 0.2689; individual values range from -0.5130 to +0.1493. Gross leverage sum|port[1:]| ranges 9.18 to 44.40. Since HJD = sqrt(mean_t (xret_method,t - sdf_ret_t)^2) and the DKKM/FF ridge targets y = 1 (dkkm_functions.mve_data line 292, fama mve uses sklearn Ridge alpha=0 on 6-7 factors), the method portfolio return is bounded by SR^2/(1+SR^2) in mean and SR/(1+SR^2) in sd, both <= 0.5, and is essentially uncorrelated with sdf_ret (corr_actual_vs_truth ~ -0.007 in correlations.csv). Hence HJD ~ sqrt(0.0723 + var_method) for every method, and method differences are second-order.",
+   "file_refs": [
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_kp14/sdf_compute_kp14.py:287-288",
+    "/Users/sjpruitt/GitHub/bop-run-upload/utils_factors/dkkm_functions.py:286-295"
+   ],
+   "confidence": "high"
+  }
+ ],
+ "verdict_on_hypotheses": [
+  {
+   "hypothesis": "H1 SPAN \u2014 with only 1-2 priced aggregate shocks and 5-6 characteristics near-deterministic in 2-3 latent states, the true conditional MVE is already (over-)spanned by 6 linear characteristic portfolios; complexity has nothing to buy.",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "The premise is confirmed far more strongly than stated. The systematic conditional covariance has rank EXACTLY 2 (eigenvalues 0.3056, 1.027e-04, then 3e-15), the first factor has an identical loading of 1 for every firm (loading CV = 3.7%; loading mean 0.03581 vs sigma_x*sqrt(dt) = 0.03753), and the second (IST) factor is 0.034% of the first. So there is effectively ZERO cross-sectional dispersion in priced-risk exposure. BUT the conclusion 'FF over-spans the tangency' is false: population-optimal weights linear in the 5 raw chars attain SR 7.35 out of 10.48 = 70.1%, not 100%. FF/FM leave 30% on the table. The reason DKKM does not collect that 30% is H2/H3, not H1. The correct statement is: the priced-risk dimension is 1 (not 2), and the remaining tangency headroom is not a risk-exposure dimension at all but a variance-weighting ratio."
+  },
+  {
+   "hypothesis": "H2 RATIO NONLINEARITY \u2014 w* = D^-1 B c is a ratio b(x)/d(x); FF/FM cannot form it; currently d_i may be too homogeneous or too weakly char-linked.",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "CONFIRMED as the identity of the headroom: adding {1/d, rp/d} to the linear rank-char basis raises the attainable SR from 6.73 to 10.29 = 98.2% of the full MVE, so the entire missing 30% IS the ratio. The MVE weight is w* ~ (rp - rp_bar)/d and corr(w*, 1/d) = +0.326, corr(w*, rp) = +0.814. REFUTED, however, is the diagnosis that d is too homogeneous or weakly char-linked: sd(log idio var) = 0.664 (ample dispersion) and log d is 88% explained by a linear regression on the 5 raw chars (R^2 = 0.880), because idio var ~ 1/nlive ~ 1/size (slope -0.866 on log nlive, corr -0.971). The obstacle is representational, not economic: 1/d is a heavy-tailed, scale-carrying function that the rank-standardized RFF basis cannot express."
+  },
+  {
+   "hypothesis": "H3 RFF BANDWIDTH MIS-SCALING \u2014 with L=5 rank-standardized chars, sd(w'x) <= 0.65 so sin is essentially linear; the basis is barely richer than FM.",
+   "verdict": "CONFIRMED",
+   "reasoning": "Arithmetic confirmed: rank_standardize gives per-char variance 1/12, W = gamma*N(0,1) with gamma <= 1.0, so sd(W x) <= sqrt(5/12) = 0.645, where sin is linear to within 3% and cos is a pure quadratic. Directly tested on the true moments: the best weights in span{1, 5 rank chars} give SR 6.729 (64.2% of full) and adding ALL 15 quadratic rank interactions gives only 7.190 (68.6%) \u2014 still BELOW the raw-linear-char basis at 7.352 (70.1%). So the entire sin/cos expansion at this bandwidth is worth less than not rank-transforming at all. A further compounding defect: dkkm_functions.rff line 110 rank-standardizes the sin/cos features a SECOND time, capping every feature in [-0.5, 0.5] and destroying the scale information needed to represent 1/d, whose cross-sectional log-sd is 0.66. Rescaling gamma by sqrt(130/5) = 5.1 would make the features genuinely nonlinear but would still not fix the second rank-standardization."
+  },
+  {
+   "hypothesis": "H4 CHARACTERISTIC POVERTY \u2014 real DKKM uses ~130 weak, partly independent chars; here 5-6 mutually redundant noiseless ones; the truth must be dense and high-dimensional for complexity to pay.",
+   "verdict": "PARTIALLY_CONFIRMED",
+   "reasoning": "CONFIRMED that the truth is low-dimensional and mostly char-spanned: 5 raw chars linearly explain R^2 = 0.880 of log d, 0.817 of nlive, 0.717 of the PVGO share and 0.644 of the true rp, and a quadratic expansion adds nothing (0.847, 0.882, 0.677, 0.597 respectively \u2014 several go DOWN). A small model is the right model. However the chars are NOT noiseless proxies for everything: the firm-level CIR state eps is essentially unrecoverable (R^2 = 0.056 linear, 0.150 with quadratics) and the project-level u average only 0.24-0.52, leaving ~36% of var(rp) and ~53% of var(w*) outside the char span. That residual is pure unlearnable noise for every estimator, which is why all three methods have near-zero corr_actual_vs_truth \u2014 it does not differentially favor DKKM."
+  },
+  {
+   "hypothesis": "H5 HJD SCALE MISMATCH \u2014 if sd(sdf_ret) >> sd(xret_method) then HJD ~ sd(sdf_ret) for every method and the metric cannot separate them.",
+   "verdict": "CONFIRMED",
+   "reasoning": "Measured over 13 evaluation months: sdf_ret mean -0.1788, sd 0.2091, RMS 0.2689, range [-0.513, +0.149]; the HJ portfolio's gross leverage is 9.2x to 44.4x. HJD therefore has a floor of 0.269 attained by a method that holds nothing. The DKKM/FF/FM MVE portfolios are normalized by regressing factor returns on y = 1, so their return has mean SR^2/(1+SR^2) and sd SR/(1+SR^2), both bounded by 0.5 and in practice much smaller; with correlation to sdf_ret near zero (corr_actual_vs_truth ~ 0.007 in correlations.csv), HJD = sqrt(0.0723 + var_method - 2cov) is dominated by the constant 0.0723 for every method. The metric is structurally incapable of separating them in KP14."
+  },
+  {
+   "hypothesis": "H6 EVALUATION HORIZON / SNR \u2014 if the panel has far higher cross-sectional predictability than real data (~0.5%/month), estimation is easy, OLS on 6 factors is efficient, and ridge-on-many-features never wins.",
+   "verdict": "CONFIRMED",
+   "reasoning": "Three independent measurements, all ~50-170x too easy. (i) Cross-sectional predictive R^2 = var(rp)/(var(rp)+mean idio var) = 0.345 (34.5%) versus ~0.005 in real US data \u2014 70x. (ii) Maximum conditional Sharpe = 10.006/month = 34.66 annualized (mean over 13 months, range 5.18 to 17.71), versus the model's own economically correct upper bound sqrt(gamma_x^2 + gamma_z^2) = 0.774/yr \u2014 45x. (iii) Cross-sectional sd of true conditional excess returns = 3.62%/month = 43.4%/yr versus the correct alph*|gamma_z*sigma_z|*sd(share) = 0.021%/month = 0.25%/yr \u2014 173x. At this SNR a 6-parameter OLS on 360 monthly observations is already near-efficient and shrinkage across 3600 features has nothing to add. Note the SNR excess is not a calibration choice \u2014 it is entirely produced by the corrupt integ_results.npz."
+  }
+ ],
+ "quantitative_claims": [
+  "alph = alpha/(1-alpha) = 5.6667; assets-in-place expected excess return = gamma_x*sigma_x = 0.69*0.13 = 8.97%/yr; growth-option premium = 8.97 - alph*|gamma_z*sigma_z| = 8.97 - 5.6667*0.35*0.035*100 = 2.03%/yr; AIP-minus-PVGO spread = 6.94%/yr",
+  "Firm i's true conditional excess return should be rp_i = gamma_x*sigma_x*dt + alph*gamma_z*sigma_z*dt*(PVGO_i/P_i); beta_x = 1 for EVERY firm exactly, beta_z = alph*(PVGO_i/P_i)",
+  "PVGO/P on kept firms at t=240: mean 0.0403, sd 0.0363, p10 0.0146, p90 0.0836 -> p10-p90 value-premium spread only 0.48%/yr",
+  "Shipped true rp at t=240 (n=238): mean -0.03206/mo = -38.5%/yr, sd 0.03616/mo = 43.4%/yr. Correct theory: mean +0.00724/mo = +8.69%/yr, sd 0.000210/mo = 0.25%/yr. Level sign-flipped; dispersion 173x too large",
+  "R^2 of shipped rp on PVGO share = 0.9034, slope -0.9491, corr(rp, -share) = +0.9505 \u2014 rp IS minus the growth-option share",
+  "eret term decomposition at t=240: term1/P = 0.90685, term2/P (PVGO continuation) = 0.00115, term3/P = 0.01744, term4/P = 7.85e-06, while PVGO/P = 0.0863. term2 delivers 1.3% of the value it should",
+  "integ_results.npz nonzero counts out of 1000 grid points: A_mod_lst 322, G_up_lst 317, G_down_lst 311, ep_A_mod_lst 326, A_mod2_lst 364, G_up2_lst 358, G_down2_lst 346, A_mod_G_up_lst 361. Simulated eps range [0.930, 1.066] (sd 0.0237) maps to grid indices 184-211, of which 184-207 are ALL zero",
+  "E_t[G_up] at eps=1.00: shipped 8.8e-48, correct 1622.5. At eps=0.95: shipped 3.0e-121, correct 1548.3. E_t[A_mod] at eps=1.05: shipped 2348.7, correct 20614 (9x)",
+  "G_func.csv G1 at eps=1.009: file 1409.5; re-solved with CURRENT params 69,013 (ratio 0.0204); re-solved with pre-Jun-18 params (gamma_x=1.38, sigma_eps=0.2, rho=0.10545, A_0=3.1309) 1431.1 (ratio 0.9849). G2: file 359.3, new 4372.3, old 425.2",
+  "Systematic conditional covariance eigenvalues (238 kept firms, t=240): [3.03e-15, 3.10e-15, 3.25e-15, 1.0268e-04, 3.0556e-01]; numeric rank 2; second/first = 3.4e-04",
+  "Leading systematic loading: mean 0.03581, cross-sectional sd 0.00133 (CV 3.7%); sigma_x*sqrt(dt) = 0.03753. Second loading sd 0.000657 vs alph*sigma_z*sqrt(dt)*sd(share) = 0.002073",
+  "Average pairwise conditional return correlation 0.3907 = (0.03753/0.05987)^2 = 0.392 exactly; total conditional return sd mean 0.05987/mo, systematic 0.03581, idio 0.04693",
+  "diag(cond_var) at t=240: total 3.765e-03; systematic 1.284e-03; idio 2.481e-03. With pre-Jun-18 sigmas (x10): total 9.172e-03, idio 7.887e-03 (3.179x larger). With sigma_eps=sigma_u=0: total 3.711e-03. => CIR share of idio variance = 2.2% now vs 69.2% before; idio share of TOTAL variance 0.659 now vs 0.860 before",
+  "Per-project Var_t(A(eps,u)) at eps=u=1 = 0.003475 = 0.0183% of A_0^2 = 18.953",
+  "Condition number of cond_var (kept firms) = 680.4 (max eig 0.30798, min eig 4.526e-04); with 10x sigmas it would be 165.1 \u2014 the cut worsened conditioning 4.1x",
+  "log(idio var) on log(nlive): slope -0.866, corr -0.9713. log(idio var) on log(mve): slope -0.7039, R^2 0.7432. log(total diag) on log(mve): slope -0.4143, R^2 0.6917",
+  "MVE decomposition at t=240: mu'Sigma^-1 mu = 109.911 (SR 10.484/mo = 36.32/yr); mu'D^-1 mu = 124.755; market-neutral CS part S2-S1^2/S0 = 71.987 (65.5%); SR^2 of equal-weight market bet = 0.795 (0.72% of total); value-weight market = 0.293 (0.27%). => 99.3% of max Sharpe is cross-sectional alpha harvesting, 0.7% is priced aggregate risk",
+  "SR of pure inverse-variance 1/d portfolio = -0.737; equal-weight = -0.892; RP/d = 1.797 (unhedged); full MVE = 10.484",
+  "max_sr over 13 months t=200..248: 5.47, 5.18, 6.47, 7.87, 9.80, 11.81, 14.58, 17.71, 10.00, 9.51, 10.48, 10.39, 10.81; mean 10.006/mo = 34.66/yr vs correct bound sqrt(0.69^2+0.35^2) = 0.774/yr -> 45x",
+  "Cross-sectional predictive R^2 = var(rp)/(var(rp)+idio var) = 0.345; var(rp)/var(realized cross-sectional xret) = 0.245. Real data ~0.005 -> 50-70x too easy",
+  "HEADROOM (population-optimal restricted weights, true moments, n=238, full MVE SR = 10.484): [1, log size] -> 6.735 (64.2%); [1, 5 rank chars] -> 6.729 (64.2%); [1, 5 raw chars] -> 7.352 (70.1%); [1, ranks + 15 quadratic rank interactions] -> 7.190 (68.6%); [1, ranks, 1/d, rp/d] -> 10.294 (98.2%)",
+  "Characteristic R^2 (raw-linear / rank-linear / rank+quadratic): nlive 0.817/0.800/0.882; log d 0.880/0.793/0.847; PVGO share 0.717/0.464/0.677; lambda_f 0.387/0.347/0.515; mean project u 0.239/0.352/0.522; high regime 0.212/0.220/0.315; eps 0.056/0.027/0.150; true rp 0.644/0.415/0.597; true w* 0.471/0.369/0.433",
+  "MVE weight correlations at t=240: corr(w*, rp) = +0.814; corr(w*, PVGO share) = -0.784; corr(w*, bm) = +0.612; corr(w*, log size) = +0.601; corr(w*, 1/d) = +0.326; corr(w*, nlive) = +0.457. And corr(rp, log size) = +0.716",
+  "sdf_ret over 13 months: mean -0.1788, sd 0.2091, RMS 0.2689, range [-0.513, +0.149]; HJ-portfolio gross leverage 9.18 to 44.40. HJD floor for a method holding nothing = 0.2689",
+  "Regime bug: simulated stationary P(high) = mu_L/(mu_H+mu_L) = 0.6809 (measured 0.650), but LAMBDA_L = 0.36719 was normalized assuming P(high) = mu_H/(mu_H+mu_L) = 0.3191. Actual unconditional arrival multiplier = 0.6809*2.35 + 0.3191*0.36719 = 1.7172 instead of 1.0 (72% too high)",
+  "Firms with zero live projects: 12/250 = 4.8% at t=240 (mean live projects 5.83, sd 4.38, max 24); these have book = 0, PVGO/P = 1, eret = -1.0 exactly",
+  "lambda_f ~ 0.2 + 0.2*Exp(1): measured mean 0.3987, sd 0.1995, min 0.2015, max 1.5105"
+ ],
+ "blockers": [
+  "THE 'TRUTH' IS A NUMERICAL ARTIFACT, NOT KP14 ECONOMICS. integ_results.npz returns exactly 0 for E_t[G_up], E_t[G_down], E_t[A_mod] over the entire eps interval where 98% of firm-months live (scipy.quad missed the narrow CIR transition spike, integ_kp14.py:43). This deletes the PVGO continuation value from erets, making the true conditional risk premium rp = -PVGO/P (R^2 = 0.90, slope -0.95): mean -38.5%/yr with the wrong sign and cross-sectional sd 173x the correct value. Every downstream object (rp, cond_var, max_sr, sdf_ret, the 'true SDF weights' in correlations.csv) is corrupted. No comparison of DKKM vs FF/FM in KP14 can be interpreted until this is fixed. Compounding it, G_func.csv itself was solved under the pre-Jun-18 parameters (gamma_x=1.38, sigma_eps=0.2) and is 49x off under current config.py; kp14_fd.py cannot even be re-run because its `from parameters_kp14 import *` module is absent from the repo.",
+  "EVERY FIRM HAS beta_x = 1 EXACTLY. price = VAP + PVGO is homogeneous of degree 1 in x (panel_functions_kp14.py:165, 173), so P_{t+1}/P_t has unit x-elasticity for all firms; sdf_compute_kp14.py:167 makes this structural by factoring Et_x2[t] out of the whole cross-firm block. The dominant priced shock therefore generates NO cross-sectional dispersion in exposure. Measured: leading-factor loading has cross-sectional CV of 3.7%. There is no multi-beta cross-section for a rich nonlinear model to discover \u2014 the systematic covariance is algebraically rank <= 2 and numerically rank 2, with the second eigenvalue 0.034% of the first.",
+  "THE IST (z) CHANNEL \u2014 THE ENTIRE ECONOMIC CONTENT OF KP14 \u2014 IS NUMERICALLY ABSENT. Because the stale G_func understates PVGO ~49x (and the LAMBDA_L bug a further 1.72x), PVGO/P has mean 0.040 and sd 0.036 on kept firms. beta_z = alph*share is therefore ~0.23 with sd 0.21, the z factor contributes 0.034% of systematic variance, and the p10-p90 value premium is 0.48%/yr. Growth-option risk cannot drive an interesting cross-section at this magnitude, so there is nothing for complexity to exploit even after the quadrature is fixed.",
+  "SIGNAL-TO-NOISE IS 50-170x TOO HIGH. Cross-sectional predictive R^2 = 34.5% (real data ~0.5%); max conditional Sharpe 34.7 annualized (model's own correct bound 0.77); cross-sectional sd of true expected returns 43%/yr (correct 0.25%/yr). At this SNR a 6-factor OLS on 360 months is already near-efficient; ridge over 3600 features has no variance to shrink away, which is precisely the regime in which the virtue of complexity does not operate.",
+  "THE ONLY REMAINING TANGENCY HEADROOM IS A SINGLE RATIO, AND THE DKKM BASIS REPRESENTS IT WORSE THAN RAW LINEAR CHARS. FF/FM's linear-in-chars span already attains 70.1% of the true max Sharpe; adding {1/d, rp/d} attains 98.2%. But 1/d ~ nlive^0.87 ~ size is heavy-tailed and scale-carrying, and dkkm_functions.rff rank-standardizes the characteristics AND then rank-standardizes the sin/cos features again (line 110), capping every regressor in [-0.5, 0.5]. Empirically the rank-linear basis gets 64.2% and the rank+full-quadratic basis 68.6% \u2014 both BELOW the 70.1% of raw linear chars. Enriching the feature count cannot help when the feature construction destroys the one function that matters.",
+  "THE MODEL'S IDIOSYNCRATIC RISK IS NOW PURE PROJECT-COUNT LUMPINESS, NOT PRODUCTIVITY RISK. After the 10x cut to SIGMA_EPS/SIGMA_U, the CIR shocks supply only 2.2% of idiosyncratic variance (was 69.2%); 97.8% is Poisson project death and arrival, so idio var ~ 1/nlive ~ 1/size (slope -0.87 on log nlive, corr -0.97). This makes the true MVE weight mechanically proportional to size, guaranteeing the negative corr_fitted_vs_truth of -0.12 to -0.15 with no sign bug anywhere, and it makes idio variance 88% linearly predictable from the chars \u2014 leaving no informational advantage for a flexible model.",
+  "THE HJD METRIC CANNOT SEPARATE METHODS IN KP14. sdf_ret has RMS 0.2689 (mean -0.179, sd 0.209, gross leverage 9x-44x), so HJD has a floor of 0.269 for a method holding nothing, while the y=1-normalized method portfolios have returns bounded by SR/(1+SR^2) <= 0.5 and are essentially uncorrelated with sdf_ret. All three methods land within noise of the floor regardless of the economics.",
+  "CALIBRATION INCONSISTENCY: mu_H and mu_L are swapped between the simulated regime chain (panel_functions_kp14.py:98, giving stationary P(high) = 0.6809) and the LAMBDA_L normalization (config.py:257, assuming 0.3191) and kp14_fd.py's unit flow coefficient. The unconditional project-arrival multiplier is 1.7172 instead of the intended 1.0, so firms are 72% larger and more growth-heavy than calibrated and the H/L regime is the majority state rather than the minority state \u2014 further compressing the one dimension of arrival-rate heterogeneity."
+ ]
+}
