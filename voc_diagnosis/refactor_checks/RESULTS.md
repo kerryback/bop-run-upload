@@ -243,3 +243,28 @@ The same free `kron` -> `outer` win exists in KP14's `term1`
 (`utils_kp14/sdf_compute_kp14.py`, `result = kron(col, col)` summed over axis 0). Not
 applied — KP14's truth is corrupt (see `../README.md`), so there is no baseline to regress
 against. GS21 uses quadrature, not `kron`, and is unaffected.
+
+## Follow-up: in-place exp in `_term4_gram` (2026-08-25)
+
+`E = np.exp(B @ B.T)` holds the Gram AND its exponential at the same time. Replaced with
+
+    E = B @ B.T
+    np.exp(E, out=E)
+
+Measured peak RSS growth at the production-scale BGN peak of M = 8,671 live projects
+(`E` itself is 0.60 GB):
+
+| variant | peak RSS growth |
+|---|---|
+| `np.exp(B @ B.T)` | **1.21 GB** |
+| `np.exp(E, out=E)` | **0.61 GB** |
+
+Identical checksum, no timing change (3.33x - 3.81x, unchanged). This matters because
+`config.py` pins the BGN moments step to `n_jobs: 1` with the comment "OOM-killed workers
+cause indefinite hangs" -- the one step already known to be memory-fragile, where the
+refactor swaps a sparse peak for a dense one.
+
+Note M is LIVE PROJECTS, not firms, and it swings ~2x over a run because BGN's investment
+rule is interest-rate dependent (`check_c_M.py`: 4.3 to 8.7 projects/firm). Size for the
+worst month. If M ever exceeds ~15,000, block the Gram over firm pairs -- the N x N output
+is only 8 MB, so blocking is cheap.

@@ -160,7 +160,17 @@ def _term4_gram(col2, N):
     c = col2.tocoo()
     M = c.nnz
     B = c.data.reshape(M, 1)
-    E = np.exp(B @ B.T)                       # (M, M)
+
+    # MEMORY: E is dense (M, M). M is the number of LIVE PROJECTS, not firms -- measured
+    # peak ~8,700 for BGN at N=1000 (it swings ~2x with the interest-rate path because
+    # investment is r-dependent), so E is ~0.60 GB. The exp is done IN PLACE: writing
+    # np.exp(B @ B.T) would hold the Gram and its exponential simultaneously and double
+    # that to ~1.2 GB. This matters because config.py pins the BGN moments step to
+    # n_jobs=1 precisely because OOM-killed workers hang the job.
+    # If M ever grows past ~15,000, block this over firm pairs -- the N x N output is only
+    # 8 MB, so blocking is cheap. See voc_diagnosis/refactor_checks/check_c_M.py.
+    E = B @ B.T                               # (M, M)
+    np.exp(E, out=E)
     S = csr_matrix((np.ones(M), (np.arange(M), c.col)), shape=(M, N))
     return np.asarray(S.T @ np.asarray(S.T @ E).T)
 
