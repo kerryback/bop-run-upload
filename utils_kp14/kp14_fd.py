@@ -4,7 +4,25 @@ import scipy.sparse as sp
 from scipy.sparse import csr_matrix, hstack, vstack
 import scipy.sparse.linalg as spla
 
-from parameters_kp14 import *
+import os
+import sys
+
+# parameters_kp14.py was never committed to this repo; config.py is the single
+# source of truth for KP14 parameters. Import the same names sdf_compute_kp14.py
+# does (see sdf_compute_kp14.py:5-22) so this producer and its consumer cannot
+# drift apart. KP14_DT is deliberately NOT imported:
+# `dt` below is the pseudo-time step of the implicit FD iteration, not the
+# model's time step.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import (
+    KP14_THETA_EPS as theta_eps, KP14_SIGMA_EPS as sigma_eps,
+    KP14_ALPHA as alpha, KP14_RHO as rho, KP14_C as C,
+    KP14_MU_H as mu_H, KP14_MU_L as mu_L,
+    KP14_LAMBDA_H as lambda_H, KP14_LAMBDA_L as lambda_L,
+    KP14_A_0 as A_0, KP14_A_1 as A_1, KP14_A_2 as A_2, KP14_A_3 as A_3,
+)
+
+A = lambda ep, u: (A_0 + (ep - 1) * A_1 + (u - 1) * A_2 + (ep - 1) * (u - 1) * A_3)
 
 # G value grid
 n = 1000
