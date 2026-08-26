@@ -123,5 +123,7 @@ df_out = pd.DataFrame({
     'G_up' : G_out[:, 0],
     'G_down' : G_out[:, 1]
 })
-df_out.to_csv('G_func.csv')
+_SOLFILES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'KP14_solfiles')
+OUT_DIR = sys.argv[1] if len(sys.argv) > 1 else _SOLFILES_DIR   # override for dry runs
+df_out.to_csv(os.path.join(OUT_DIR, 'G_func.csv'))
 

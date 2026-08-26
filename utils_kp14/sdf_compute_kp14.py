@@ -32,12 +32,15 @@ from scipy.sparse import csr_matrix, diags, kron, vstack
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'KP14_solfiles')
 
-# Phase 1 provenance check (warn-only): these solution files are committed
-# artifacts produced offline, and nothing has ever verified that they match the
-# code and parameters that claim to produce them. Flips to mode='error' once
-# they are regenerated and stamped. See utils/solfile_stamp.py.
+# Provenance check: these solution files are committed artifacts produced
+# offline by utils_kp14/regen_solfiles.py. This refuses to run if they do not
+# match the code and parameters that claim to produce them -- config.py drift, a
+# producer edited without regenerating, or a stale G_func.csv paired with fresh
+# integrals. All three have happened. Regenerate with:
+#     python utils_kp14/regen_solfiles.py
+# See utils/solfile_stamp.py and kp14_crash_20260826.md.
 from .solfile_spec import verify as _verify_solfiles
-_verify_solfiles(mode='warn')
+_verify_solfiles(mode='error')
 
 # read in G functions estimated in kp14_fd.py
 # recall they don't include lambda_ft, which varies across firms and time

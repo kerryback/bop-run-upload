@@ -30,9 +30,16 @@ A = lambda ep, u: (A_0 + (ep - 1) * A_1 + (u - 1) * A_2 + (ep - 1) * (u - 1) * A
 
 n_jobs = 7 # number of jobs in parallelized tasks
 
-# read in G functions estimated in kp14_fd.py 
+# Solution files live in KP14_solfiles/, not the CWD. Both this script and
+# kp14_fd.py used to read and write bare filenames, which made regeneration a
+# manual cd-into-the-right-directory ritual and let a stale G_func.csv be paired
+# with fresh integrals without anything noticing.
+_SOLFILES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'KP14_solfiles')
+OUT_DIR = sys.argv[1] if len(sys.argv) > 1 else _SOLFILES_DIR   # override for dry runs
+
+# read in G functions estimated in kp14_fd.py
 # recall they don't include lambda_ft, which varies across firms and time
-G_in = pd.read_csv('G_func.csv')
+G_in = pd.read_csv(os.path.join(_SOLFILES_DIR, 'G_func.csv'))
 eps_grid = G_in.eps.values
 G_up = interpolate.interp1d(eps_grid, G_in.G_up.values, fill_value="extrapolate")
 G_down = interpolate.interp1d(eps_grid, G_in.G_down.values, fill_value="extrapolate")
@@ -54,15 +61,37 @@ def expected_f_eps(x0):
         integr = fun(eps) * ncx2.pdf(eps / c, d, lam) / c # integrate over CIR transition density
         return integr
     
-    eps_max = 10
-    result = [quad(lambda ep: integrand(fun, ep), 0, eps_max, epsabs = 1e-10, epsrel = 1e-10, limit = 500)[0] for fun in funcs]
+    # Integrate over the support the transition density actually occupies.
+    # This used to be a fixed [0, 10]. The density is a spike of sd ~0.006
+    # (sigma_eps=0.02, dt=1/12), so QUADPACK's initial 21-point Gauss-Kronrod
+    # rule on [0, 10] had no node within ~17 sd of it: the estimate AND its
+    # error estimate were both ~0, so quad returned 0 and never subdivided. That
+    # zeroed these integrals over the eps band holding ~98% of firm-months and
+    # made every KP14 expected return and SDF quantity void for two months.
+    # Using the density's own quantiles keeps the interval matched to the spike
+    # for any (sigma_eps, theta_eps, dt).
+    lo = c * ncx2.ppf(1e-13, d, lam)
+    hi = c * ncx2.ppf(1 - 1e-13, d, lam)
 
-    if integrand(A_mod, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
-    if integrand(G_up, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
-    if integrand(G_down, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
+    # epsabs is what carries funcs[3:6] -- the (eps-1)*f(eps) integrals, whose true
+    # value passes through 0 near eps=1, where no relative tolerance is attainable.
+    # epsrel carries the rest, which peak around 1e8. Tightening either to 1e-12
+    # only buys QUADPACK roundoff warnings and ~30% more time for the same answer
+    # (verified: agrees to 1.7e-9). Accuracy is checked against a delta-method
+    # reference in diag_integ_kp14.py, not assumed from the tolerance.
+    result = [quad(lambda ep: integrand(fun, ep), lo, hi, epsabs = 1e-8, epsrel = 1e-10, limit = 500)[0] for fun in funcs]
+
+    # The density must integrate to 1 at every grid point. This is the check
+    # whose absence let the [0, 10] bug ship: the three checks that used to be
+    # here tested the integrand at eps_max = 10, i.e. the far tail -- the one end
+    # that cannot fail. Raise rather than print: a silent zero is what caused the
+    # original damage, and these values are unusable if the mass is lost.
+    mass = quad(lambda ep: ncx2.pdf(ep / c, d, lam) / c, lo, hi,
+                epsabs = 1e-12, epsrel = 1e-10, limit = 500)[0]
+    if not abs(mass - 1) < 1e-8:
+        raise RuntimeError(
+            f'CIR transition density integrates to {mass!r}, not 1, at eps={x0!r} '
+            f'(interval [{lo!r}, {hi!r}]). Integrals would be silently wrong.')
 
     return result
 
@@ -84,7 +113,7 @@ A_mod_G_up_lst = np.array([integ_lst[i][9] for i in range(len(eps_grid))])
 A_mod_G_down_lst = np.array([integ_lst[i][10] for i in range(len(eps_grid))])
 
 # Save all arrays to one .npz file
-np.savez("integ_results.npz",
+np.savez(os.path.join(OUT_DIR, "integ_results.npz"),
          A_mod_lst=A_mod_lst,
          G_up_lst=G_up_lst,
          G_down_lst=G_down_lst,
