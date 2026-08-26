@@ -287,10 +287,20 @@ GS21_G = 1.14
 GS21_ALPHA = 0.2
 GS21_DELTA = 0.02/3
 GS21_RHO_X = 0.95**(1/3)
-GS21_SIGMA_X = 0.012*np.sqrt((1 - 0.95**(3/2))/(1 - 0.95**2))
+# 2026-08-26: exponents corrected 3/2 -> 2/3 to match GS21.m:24-25 AND the
+# committed solution files. Identified, not guessed: xgrid.csv and zgrid.csv are
+# pure functions of (sigma, rho, mnstdev, num) via tauchen.m, so they pin the
+# sigma that built them. Reproducing them exactly requires
+#     sigma_x = 0.012*sqrt((1 - 0.95**(2/3))/(1 - 0.95**2))          -> 3.6e-16
+#     sigma_z = 0.1*0.16*sqrt((1 - 0.9**(2/3))/(1 - 0.9**2))         -> 5.4e-16
+# The 3/2 exponents reproduced neither (off by 7.4e-2 and 6.9e-2). Note the
+# solfiles are a hybrid: GS21.m's 2/3 exponent plus the 0.1 factor on sigma_z
+# that GS21.m as committed lacks. GS21.m needs that 0.1 added to agree.
+# See kp14_crash_20260826.md for the identical failure mode in KP14.
+GS21_SIGMA_X = 0.012*np.sqrt((1 - 0.95**(2/3))/(1 - 0.95**2))
 GS21_XBAR = 0
 GS21_RHO_Z = 0.90**(1/3)
-GS21_SIGMA_Z = 0.1*0.16*np.sqrt((1 - 0.9**(3/2))/(1 - 0.9**2))
+GS21_SIGMA_Z = 0.1*0.16*np.sqrt((1 - 0.9**(2/3))/(1 - 0.9**2))
 GS21_ZBAR = 0
 GS21_CHI = 1
 GS21_TAU = 0.2/3
@@ -300,7 +310,47 @@ GS21_KAPPA_B = 0.004
 GS21_ZETA = 0.03/3
 GS21_IMIN = 0
 GS21_IMAX = 2000
-GS21_R = 0.074830/12
+
+# Grid construction. These lived only in GS21.m (lines 41-51) until 2026-08-26;
+# the Python consumers inferred them from the solfile lengths (`zpts =
+# len(zgrid)`), which is why nothing broke -- and why a grid-size change could
+# not have been detected. Confirmed against the committed grid files to <=5e-16.
+GS21_BMIN = 0.00
+GS21_BMAX = 1.0
+GS21_BNUM = 20
+GS21_INUM = 40
+# GS21_XNUM = 20 is LOAD-BEARING for solver stability, not just accuracy. The
+# price operator reduces exactly to P = P0 + (PI-P0)^2/(2*imax), with gain
+# E[M]*(1 + (PI-P0)*(g-1)/imax); it contracts only while i_cut << imax. A coarse
+# x grid lets i_cut saturate, flipping the gain from E[M] = 0.992 to
+# g*E[M] = 1.131, and the solve diverges outright (verified: xnum=5 overflows
+# within one sweep, in both gs21_solve.py and GS21.m). GS21_ZNUM can be cut
+# freely -- it is only cost.
+GS21_XNUM = 20
+GS21_ZNUM = 200
+GS21_MNSTDEV = 4
+
+# 2026-08-26: the last three GS21 parameters, identified rather than guessed.
+# gs21_solve.py (the Python port of GS21.m) now consumes all three, so config.py
+# is the single source of truth and the .m file is archival only.
+#
+# How they were identified: feed the COMMITTED solution files through the ported
+# operator once. A faithful operator returns them nearly unchanged, so the
+# parameter set that minimises that residual is the set that built them. On the
+# core value functions:
+#     r = 0.1/12,  xi = 0.01   ->  3.556e-04   <-- winner, 6x margin
+#     r = config,  xi = 0.01   ->  2.131e-03
+#     r = config,  xi = 0.03   ->  2.266e-03
+#     r = 0.1/12,  xi = 0.03   ->  2.638e-03
+# and sweeping gamma_x: 0.5 -> 9.5e-07, versus 0.4 -> 1.10e-02, 0.6 -> 1.52e-02.
+#
+# GS21_R was 0.074830/12, which is the COMMENTED-OUT alternative on GS21.m:27;
+# the active value there is 0.1/12 and that is what built the solfiles.
+# GS21_ZETA = 0.03/3 = 0.01 above is correct -- GS21.m:35's `0.03/3*3` is the
+# erroneous one (the *3 should not be there).
+GS21_R = 0.1/12
+GS21_GAMMA_X = 0.5          # GS21.m:28, price of x risk
+GS21_SIGMA_M = 5            # GS21.m:53, sd of the price-adjustment shock
 
 # =============================================================================
 # MODEL MAPPINGS

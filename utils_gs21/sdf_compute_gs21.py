@@ -18,10 +18,17 @@ import scipy.special
 from scipy.sparse import csr_matrix, diags, kron, vstack
 from scipy.interpolate import RegularGridInterpolator
 
-# define functions outputted from matlab
+# define functions read from the solution files
 
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'GS21_solfiles')
+
+# Provenance check. GS21's producer is now Python (utils_gs21/gs21_solve.py) and
+# reads every parameter from config.py, so there is one source of truth and the
+# check is fatal: a config edit without `python utils_gs21/regen_solfiles.py`
+# stops the run instead of silently pricing a different economy.
+from .solfile_spec import verify as _verify_solfiles
+_verify_solfiles(mode='error')
 
 # read in grids
 zgrid = np.array(pd.read_csv(os.path.join(_SOLFILES_DIR, 'zgrid.csv'), header=None)).reshape(-1)
