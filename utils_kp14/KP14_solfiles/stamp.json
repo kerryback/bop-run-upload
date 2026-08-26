@@ -1,0 +1,44 @@
+{
+  "note": "Written by utils_kp14/regen_solfiles.py. Do not hand-edit: the hashes are what make this checkable.",
+  "solfiles": {
+    "G_func.csv": {
+      "inputs": {},
+      "params": {
+        "KP14_ALPHA": "0.85",
+        "KP14_A_0": "3.1308703819661865",
+        "KP14_A_1": "1.4938751120406335",
+        "KP14_A_2": "1.2204051745179398",
+        "KP14_A_3": "0.8551393877201984",
+        "KP14_C": "0.05972165551735604",
+        "KP14_LAMBDA_H": "2.35",
+        "KP14_LAMBDA_L": "0.36718749999999983",
+        "KP14_MU_H": "0.075",
+        "KP14_MU_L": "0.16",
+        "KP14_RHO": "0.10545277777777773",
+        "KP14_SIGMA_EPS": "0.020000000000000004",
+        "KP14_THETA_EPS": "0.35"
+      },
+      "producer": "kp14_fd.py",
+      "producer_sha256": "2fdc4bf398ea998db7bcae6364a8a3546418ad40e6af8d775dfc6c575610dd9d",
+      "sha256": "4948bc804abb93867b4b244a4d1dd4ac77385de58cedc96b86793946fb432b2c"
+    },
+    "integ_results.npz": {
+      "inputs": {
+        "G_func.csv": "4948bc804abb93867b4b244a4d1dd4ac77385de58cedc96b86793946fb432b2c"
+      },
+      "params": {
+        "KP14_ALPHA": "0.85",
+        "KP14_A_0": "3.1308703819661865",
+        "KP14_A_1": "1.4938751120406335",
+        "KP14_A_2": "1.2204051745179398",
+        "KP14_A_3": "0.8551393877201984",
+        "KP14_DT": "0.08333333333333333",
+        "KP14_SIGMA_EPS": "0.020000000000000004",
+        "KP14_THETA_EPS": "0.35"
+      },
+      "producer": "integ_kp14.py",
+      "producer_sha256": "09909e7f21c76c27113d3b08c2ef29e937d042b268e44ac313de8864bf7b3ba9",
+      "sha256": "68f2f2f500f5b05f6d869713c0681a0b5fb03be741e98c039f4ca58453ef26b8"
+    }
+  }
+}

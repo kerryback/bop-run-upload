@@ -256,7 +256,11 @@ KP14_MU_L = 0.16
 KP14_LAMBDA_H = 2.35
 KP14_LAMBDA_L = (1 - KP14_MU_H/(KP14_MU_H + KP14_MU_L)*KP14_LAMBDA_H)/(1 - KP14_MU_H/(KP14_MU_H + KP14_MU_L))
 KP14_R = 0.05
-KP14_GAMMA_X = 0.69
+# 2026-08-26: set deliberately to 1.38 (= 0.69*2). Do NOT "revert the *2" -- the
+# 0.69 -> 1.38 -> 0.69 round trip in Apr-Jun 2026 is what desynchronized the KP14
+# solution files from config.py for two months. Kerry Back's original value was
+# 0.69; 1.38 was chosen here as a team decision. See kp14_crash_20260826.md.
+KP14_GAMMA_X = 1.38
 KP14_GAMMA_Z = -0.35
 KP14_ALPHA = 0.85
 

@@ -160,6 +160,41 @@ def check(solfiles_dir, spec, producer_dir=None):
     return problems, digests
 
 
+def write_stamp(solfiles_dir, spec, producer_dir=None, extra=None):
+    """Record the provenance of the solfiles currently on disk.
+
+    Called by the regeneration driver AFTER the producers have run, so the
+    hashes describe the files that were actually just written. Returns the
+    stamp dict it wrote.
+    """
+    if producer_dir is None:
+        producer_dir = solfiles_dir
+    digests = {name: digest(os.path.join(solfiles_dir, name)) for name in spec}
+    missing = [n for n, d in digests.items() if d is None]
+    if missing:
+        raise FileNotFoundError(f'cannot stamp, files not on disk: {missing}')
+
+    stamp = {'note': 'Written by utils_kp14/regen_solfiles.py. Do not hand-edit: '
+                     'the hashes are what make this checkable.',
+             'solfiles': {}}
+    if extra:
+        stamp.update(extra)
+    for name, want in spec.items():
+        producer = want.get('producer')
+        stamp['solfiles'][name] = {
+            'sha256': digests[name],
+            'params': {k: repr(v) for k, v in sorted(want['params'].items())},
+            'producer': producer,
+            'producer_sha256': digest(os.path.join(producer_dir, producer)) if producer else None,
+            'inputs': {i: digests[i] for i in want.get('inputs', [])},
+        }
+    path = os.path.join(solfiles_dir, STAMP_FILENAME)
+    with open(path, 'w') as f:
+        json.dump(stamp, f, indent=2, sort_keys=True)
+        f.write('\n')
+    return stamp
+
+
 def banner(label, solfiles_dir, spec, problems, digests, known_issue=None):
     """Render the report. Deterministic: no timestamps, no per-call-site text,
     so the same text appears wherever verify() is called and is greppable."""
@@ -181,7 +216,7 @@ def banner(label, solfiles_dir, spec, problems, digests, known_issue=None):
 
 
 def verify(label, solfiles_dir, spec, mode='warn', known_issue=None,
-           producer_dir=None, once=True):
+           producer_dir=None, once=True, extra_problems=None):
     """Check solfile provenance and report.
 
     mode='warn'  -- print the banner, return the problem list (Phase 1)
@@ -189,13 +224,18 @@ def verify(label, solfiles_dir, spec, mode='warn', known_issue=None,
 
     Returns the list of problems (empty means everything agrees).
     """
-    key = (label, os.path.abspath(solfiles_dir))
-    if once and key in _ANNOUNCED and mode != 'error':
-        return []
-    _ANNOUNCED.add(key)
-
+    # Always re-run the check -- a hard gate must never be skipped because some
+    # other module already looked. Only the *banner* is deduplicated, and it is
+    # keyed on the findings, not just the directory: an unchanged verdict is not
+    # worth reprinting (GS21 has two consumers that import together), but a
+    # verdict that CHANGES within a process always prints.
     problems, digests = check(solfiles_dir, spec, producer_dir=producer_dir)
-    print(banner(label, solfiles_dir, spec, problems, digests, known_issue), flush=True)
+    problems = list(extra_problems or []) + problems
+    key = (label, os.path.abspath(solfiles_dir), tuple(problems))
+    first = key not in _ANNOUNCED
+    if first or not once:
+        _ANNOUNCED.add(key)
+        print(banner(label, solfiles_dir, spec, problems, digests, known_issue), flush=True)
     if problems and mode == 'error':
         raise SolfileStaleError(
             f'{label} solution files failed provenance verification '

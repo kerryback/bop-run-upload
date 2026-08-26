@@ -58,17 +58,14 @@ def spec():
     }
 
 
-# Stated rather than inferred, so a reader of the log does not have to work out
-# what the unverified provenance actually implies today. Remove once the files
-# are regenerated and stamped.
+# Extra context appended to the banner when verification FAILS. Kept short: the
+# per-problem messages already say what disagreed. This is for the reader who
+# needs to know what to do about it.
 KNOWN_ISSUE = """\
-Known stale as of 2026-08-26, independently of the missing stamp:
-  * integ_results.npz encodes KP14_GAMMA_X=1.38; config.py has 0.69.
-  * Its quadrature returns exact 0 where ~98% of firm-months live, so
-    erets, ER, cond_var, max_sr and the returned risk premia are all void.
-  * G_func.csv is on the same stale KP14_GAMMA_X.
-Realized returns and the FF/FM/DKKM panel are unaffected. Do not use any
-KP14 moment computed from these files. See kp14_crash_20260826.md."""
+To regenerate and re-stamp both solution files, from the repo root:
+    python utils_kp14/regen_solfiles.py
+G_func.csv must be rebuilt before integ_results.npz (integ_kp14.py reads it);
+the driver enforces that order. Background: kp14_crash_20260826.md."""
 
 
 def verify(mode='warn'):
