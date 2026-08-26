@@ -92,7 +92,11 @@ Et_A_G_down = lambda eps, u: (A_0 + A_2 * Et_um1(u))*Et_G_down(eps) + (A_1 + A_3
 
 # Covariance computations
 def sdf_compute(N, T, arr_tuple):
-    K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, ret, eret, lambda_f = arr_tuple
+    # NOTE: this must match the arr_tuple that generate_panel.py SAVES, which is the
+    # 16-array version -- generate_panel.py strips book and op_cashflow for kp14 before
+    # writing <panel_id>_arr/. Do not add them back here (that was commit 005a63e0, which
+    # crashed every kp14 job with "expected 18, got 16"; see also ada933a).
+    K, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, ret, eret, lambda_f = arr_tuple
     part1 = (C*rate*dt*Et_A_mod(eps) + Et_G)
 
     # MEMORY OPTIMIZATION: part2 is now computed on-demand inside sdf_loop()
@@ -266,7 +270,9 @@ def sdf_compute(N, T, arr_tuple):
         # silently return garbage (100% portfolio weight on these firms, max_sr ~1e57)
         # without raising. They are not in the investable universe (the panel drops
         # book<=0 firms downstream), so they get zero SDF weight. See diag_singular.py.
-        keep = book[t,:] > 0                          # risky firms with capital
+        # book = x/z * K.sum(axis=0) with x, z > 0 (both GBM), so book[t,:] > 0 is
+        # exactly K_slice.sum(axis=0) > 0. Use K_slice: book is not in the saved arr_tuple.
+        keep = K_slice.sum(axis=0) > 0                # risky firms with capital
         idx = np.concatenate(([0], 1 + np.flatnonzero(keep)))  # always keep risk-free (col 0)
 
         # invert ER (on the non-degenerate sub-universe)
