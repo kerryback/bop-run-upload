@@ -27,7 +27,16 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(_HERE))
 
 from utils.solfile_stamp import write_stamp, verify          # noqa: E402
-from utils_kp14 import solfile_spec                          # noqa: E402
+# Import solfile_spec WITHOUT going through utils_kp14/__init__.py. That __init__
+# imports the consumers, and the consumers verify(mode='error') at import time,
+# so importing the package while the stamp is stale raises SolfileStaleError --
+# i.e. the tool that repairs staleness could not start precisely when it was
+# needed. A producer must not depend on the consumer package.
+import importlib.util as _ilu
+_spec = _ilu.spec_from_file_location('_utils_kp14_solfile_spec',
+                                     os.path.join(_HERE, 'solfile_spec.py'))
+solfile_spec = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(solfile_spec)
 
 # In dependency order. Do not reorder.
 PRODUCERS = ['kp14_fd.py', 'integ_kp14.py']
