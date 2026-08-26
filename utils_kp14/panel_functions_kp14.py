@@ -28,6 +28,13 @@ from .sdf_compute_kp14 import *
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'KP14_solfiles')
 
+# Phase 1 provenance check (warn-only): these solution files are committed
+# artifacts produced offline, and nothing has ever verified that they match the
+# code and parameters that claim to produce them. Flips to mode='error' once
+# they are regenerated and stamped. See utils/solfile_stamp.py.
+from .solfile_spec import verify as _verify_solfiles
+_verify_solfiles(mode='warn')
+
 # script to simulate panel for discretized Kogan Papanikolaou (2014) model
 
 def create_arrays(N, T):
