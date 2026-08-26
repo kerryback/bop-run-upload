@@ -16,6 +16,13 @@ from .sdf_compute_gs21 import *
 # Get path to solution files relative to this module
 _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'GS21_solfiles')
 
+# Provenance check. GS21's producer is now Python (utils_gs21/gs21_solve.py) and
+# reads every parameter from config.py, so there is one source of truth and the
+# check is fatal: a config edit without `python utils_gs21/regen_solfiles.py`
+# stops the run instead of silently pricing a different economy.
+from .solfile_spec import verify as _verify_solfiles
+_verify_solfiles(mode='error')
+
 P_up_mat = np.array(pd.read_csv(os.path.join(_SOLFILES_DIR, 'P_up.csv'), header=None)).reshape(zpts, xpts, bpts)
 P_down_mat = np.array(pd.read_csv(os.path.join(_SOLFILES_DIR, 'P_down.csv'), header=None)).reshape(zpts, xpts, bpts)
 
