@@ -1,0 +1,21 @@
+{
+  "note": "Written by utils_kp14/regen_solfiles.py. Do not hand-edit: the hashes are what make this checkable.",
+  "solfiles": {
+    "Jstar.csv": {
+      "inputs": {},
+      "params": {
+        "BETA_ZR": "-0.00014",
+        "CBAR": "-3.7",
+        "KAPPA": "0.95",
+        "PI": "0.99",
+        "RBAR": "0.006236",
+        "SIGMA_R": "0.002",
+        "SIGMA_Z": "0.4",
+        "__vasicek.py__": "'b750ad2ac78dccb40aef3cc8c7244276e9b1f1e9535f504ad30963b2bba6da58'"
+      },
+      "producer": "make_jstar.py",
+      "producer_sha256": "216415a15221f2f3c51df0826713f4c64d72e25aee33750fecec5eaeee3f5339",
+      "sha256": "739997869ce9e86c9eb887e2ad39c8ae3025346d50e84587c7c3d512d5575107"
+    }
+  }
+}

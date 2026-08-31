@@ -6,6 +6,14 @@ import os
 from scipy import interpolate
 from scipy.stats import expon
 from .vasicek import *
+
+# Provenance check. Jstar.csv is produced by utils_bgn/make_jstar.py from
+# config.py; this makes a config edit without `python utils_bgn/regen_solfiles.py`
+# stop the run instead of silently pricing a different economy. BGN was the last
+# of the three models with no guard at all.
+from .solfile_spec import verify as _verify_solfiles
+_verify_solfiles(mode='error')
+
 from .sdf_compute_bgn import *
 # from .loadings_compute_bgn import *
 from config import (
