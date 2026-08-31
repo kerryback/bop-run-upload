@@ -29,6 +29,14 @@ TEMP=/scratch/sjpruitt/bop_temp_kp14         # intermediate _arr/ directories la
 
 module load mamba/latest
 source activate $CONDA_ENV
+# `source activate` sets CONDA_PREFIX but does NOT prepend the env's bin/ to PATH
+# in a non-interactive shell (which is what sbatch gives you). Without this,
+# `python` resolves to the mamba BASE interpreter and every task dies instantly
+# with `ModuleNotFoundError: No module named 'numpy'` -- the traceback names
+# /etc/python/sitecustomize.py, which is the tell. Hit on Phoenix 2026-08-31,
+# all 11 array tasks, ~1 s each.
+export PATH="$CONDA_PREFIX/bin:$PATH"
+echo "python: $(which python)"          # must be under .../envs/$CONDA_ENV/bin
 
 export BOP_SCRATCH_DIR=$SCRATCH
 export BOP_TEMP_DIR=$TEMP

@@ -1,0 +1,30 @@
+Jstar.csv: 201 rows, r in [-0.018682, 0.031174]
+
+beta_star = np.float64(0.772132826296215), scale = np.float64(0.1368073070332127)
+
+=== 1. does Jstar.csv reproduce from current config.py? ===
+/private/tmp/claude-503/-Users-sjpruitt-GitHub-bop-run-upload/c19e08d3-1736-4cbf-9117-7e2b1e92760e/scratchpad/bgn_audit.py:64: RuntimeWarning: divide by zero encountered in log
+  - np.log(self.B(bm, strike)) + 0.5*self.alpha1[bm]**2*self.sigma2_sq[om])
+  r=-0.018682  stored 129.4248827831  recomputed 129.4248827831  rel 5.75e-14  (18s)
+  r=-0.008711  stored 84.3434349217  recomputed 84.3434349217  rel 7.77e-14  (19s)
+  r=+0.006246  stored 50.5120112364  recomputed 50.5120112364  rel 1.06e-13  (20s)
+  r=+0.021203  stored 33.1068934072  recomputed 33.1068934072  rel 1.21e-13  (19s)
+  r=+0.031174  stored 25.6683211442  recomputed 25.6683211442  rel 1.29e-13  (19s)
+
+=== 2. k-truncation (shipped 400) ===
+  r=-0.016189 om=100: k<=400 captures 99.870212% of k<=1200   (missing 0.1298%)
+  r=+0.006246 om=100: k<=400 captures 99.870265% of k<=1200   (missing 0.1297%)
+  r=+0.028681 om=100: k<=400 captures 99.870318% of k<=1200   (missing 0.1297%)
+
+=== 3. s-truncation (shipped 950, no discount factor) ===
+  r=-0.016189: s<=950 captures 99.927978% of s<=2000   (missing 0.0720%)
+     inner_sum at s=950: 6.031e-04   at s=2000: 3.058e-07
+  r=+0.028681: s<=950 captures 99.876104% of s<=2000   (missing 0.1239%)
+     inner_sum at s=950: 2.459e-04   at s=2000: 1.246e-07
+
+=== 4. Laguerre nodes (shipped 100) ===
+  nlag=  50: rel diff vs 100 = 7.727e-05
+  nlag= 200: rel diff vs 100 = 9.870e-07
+/Users/sjpruitt/anaconda3/envs/anaconda_env_20260224/lib/python3.11/site-packages/scipy/special/_orthogonal.py:582: RuntimeWarning: overflow encountered in multiply
+  - (n + alpha) * _ufuncs.eval_genlaguerre(n - 1, alpha, x)) / x
+  nlag= 400: rel diff vs 100 = nan
