@@ -65,3 +65,6 @@ Thumbs.db
 /debugging
 /logs
 /outslurm
+
+# Claude working files -- durable across tmp cleanup, never committed
+_scratch/
