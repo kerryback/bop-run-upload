@@ -120,55 +120,11 @@ def Jstar(r):
 
 print(f"finished import of vasicek at {datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')}")
 
-'''
-nsim = int(1.0e8)
-r = np.zeros(nsim+1)
-r[0] = rbar
-xi = norm.rvs(size=nsim)
-const = (1-kappa) * rbar
-for i in range(nsim):
-    r[i+1] = kappa*r[i] + const + sigma_r * xi[i]
-
-r = pd.Series(r)
-rmin = r.quantile(1-0.99995)
-rmax = r.quantile(0.99995)
-print(f"99.99% of the distribution is between {rmin} and {rmax}")
-
-from joblib import Parallel, delayed
-
-grid1 = np.linspace(rmin, rmax, 51)
-J1 = np.array(Parallel(n_jobs=4)(delayed(Jstar)(r) for r in grid1))
-df = pd.DataFrame(
-        {"r": grid1, "J": J1}
-)
-df = df.sort_values(by="r")
-df.to_csv(os.path.join(_SOLFILES_DIR, 'Jstar.csv'), index=False)
-
-
-maxerr = 1
-iter = 0
-while maxerr > 0.0001:
-    print(iter)
-
-    grid2 = 0.5*(grid1[:-1] + grid1[1:])
-    J2 = np.array(Parallel(n_jobs=4)(delayed(Jstar)(r) for r in grid2))
-
-    grid = np.concatenate((grid1, grid2))
-    Jvals = np.concatenate((J1, J2))
-
-    df = pd.DataFrame(
-        {"r": grid, "J": Jvals}
-    )
-    df = df.sort_values(by="r")
-    df.to_csv(os.path.join(_SOLFILES_DIR, 'Jstar.csv'), index=False)
-
-    J2hat = np.interp(grid2, grid1, J1)
-    err = np.abs(np.array(J2) - J2hat) / J2
-    maxerr = np.max(err)
-
-    grid1 = df.r.to_numpy()
-    J1 = df.J.to_numpy()
-
-    iter += 1
-
-'''
+# The grid-construction code that used to sit here inside a string literal --
+# i.e. unrunnable -- is now utils_bgn/make_jstar.py, a real script. It also
+# replaces the unseeded 1e8-draw simulation of the r quantiles with their closed
+# form, which is what made regeneration non-reproducible.
+#
+# NOTE for anyone touching the sums above: k is truncated at 400 in inner_sum and
+# s at 950 in Jstar, which biases Jstar DOWN by ~0.2% (unevenly in r). Measured
+# 2026-08-31; see make_jstar.py's docstring for the numbers.
