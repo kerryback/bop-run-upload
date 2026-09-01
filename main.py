@@ -415,13 +415,25 @@ def run_workflow_for_index(panel_id, log_file):
 if __name__ == "__main__":
     overall_start = time.time()
 
-    # Set up logging
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, f"{model}_{start_idx}_{end_idx}.log")
-
-    # Redirect stdout/stderr to log file
+    # Set up logging.
+    #
+    # Under SLURM, sbatch's `-o` already captures stdout AND stderr to
+    # outslurm/, so teeing to logs/ as well wrote every line twice to two files
+    # that differed only by the mamba banner -- 51 KB and 50 KB per task, same
+    # content. When BOP_LOG_FILE is exported (run_bop_job.sh sets it to match
+    # its own `-o` path) we skip the tee entirely and just point the S3 uploader
+    # at SLURM's file. Off SLURM there is no capture, so the tee is still the
+    # only log and logs/ is still used.
     import io
+    slurm_log = os.environ.get('BOP_LOG_FILE')
+    if slurm_log:
+        log_file = os.path.abspath(slurm_log)
+        log_fh = None
+    else:
+        log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, f"{model}_{start_idx}_{end_idx}.log")
+        log_fh = None
     class TeeOutput(io.TextIOBase):
         def __init__(self, *streams):
             self.streams = streams
@@ -440,9 +452,10 @@ if __name__ == "__main__":
                 except ValueError:
                     pass
 
-    log_fh = open(log_file, 'w')
-    sys.stdout = TeeOutput(sys.__stdout__, log_fh)
-    sys.stderr = TeeOutput(sys.__stderr__, log_fh)
+    if not slurm_log:
+        log_fh = open(log_file, 'w')
+        sys.stdout = TeeOutput(sys.__stdout__, log_fh)
+        sys.stderr = TeeOutput(sys.__stderr__, log_fh)
 
     print(f"Started at {now()}")
     print(f"\nConfiguration:")
@@ -451,7 +464,7 @@ if __name__ == "__main__":
     print(f"  Total runs: {end_idx - start_idx}")
     print(f"  DKKM features: {N_DKKM_FEATURES_LIST}")
     print(f"  N_JOBS: {config.MODEL_N_JOBS[model]}")
-    print(f"  Log file: {log_file}")
+    print(f"  Log file: {log_file}" + ("  (SLURM -o; not duplicated)" if slurm_log else ""))
     print(f"\nDirectories:")
     print(f"  DATA_DIR: {DATA_DIR}")
     print(f"  TEMP_DIR: {TEMP_DIR}")
@@ -506,6 +519,7 @@ if __name__ == "__main__":
             print(f"\n[MONITOR] Failed to notify monitor: {e}")
 
     # Restore original stdout/stderr before closing log file
-    sys.stdout = sys.__stdout__
-    sys.stderr = sys.__stderr__
-    log_fh.close()
+    if log_fh is not None:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        log_fh.close()
