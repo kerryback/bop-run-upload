@@ -21,6 +21,12 @@ from config import (
 # Define A function (from parameters_kp14.py)
 A = lambda ep, u: (A_0 + (ep - 1) * A_1 + (u - 1) * A_2 + (ep - 1) * (u - 1) * A_3)
 
+# Analytic Hansen-Jagannathan bound: sd(M)/E[M] for the lognormal SDF
+# M = exp(-r dt - 0.5|g|^2 dt - g'dW). This is the maximum Sharpe ratio any
+# portfolio can attain over one dt, and it is constant. See the long note at the
+# max_sr assignment for why the estimated version was withdrawn.
+MAX_SHARPE = np.sqrt(np.exp((gamma_x**2 + gamma_z**2) * dt) - 1.0)
+
 import scipy.special
 from scipy.sparse import csr_matrix, diags, kron, vstack
 
@@ -305,9 +311,57 @@ def sdf_compute(N, T, arr_tuple):
 
         # conditional variance of risky assets
         cond_var = ER[1:, 1:] - np.outer(1 + eret[t, :], 1 + eret[t, :])  
-        max_sr = -(port[1:] * (1 + eret[t, :] - np.exp(r*dt))).sum() / np.sqrt(
-            port[1:] @ (cond_var @ port[1:])
-        )
+
+        # ------------------------------------------------------------------
+        # max_sr is now the ANALYTIC Hansen-Jagannathan bound, not an estimate.
+        #
+        # The SDF here is exogenous and lognormal,
+        #     M = exp(-r dt - 0.5|g|^2 dt - g'dW),   g = (gamma_x, gamma_z),
+        # so E[M] = exp(-r dt) and sd(M)/E[M] = sqrt(exp(|g|^2 dt) - 1) exactly.
+        # That is the maximum Sharpe ratio ANY portfolio can attain, it is a
+        # constant (the prices of risk do not vary with the state), and it costs
+        # nothing to evaluate. The estimated version below inverted a 1001x1001
+        # near-singular second-moment matrix to recover a number we can write
+        # down in closed form.
+        #
+        # WHY IT WAS REPLACED (measured 2026-08-31 on the 11-panel Phoenix run,
+        # 3,960 panel-months). The estimate VIOLATED the bound it was estimating
+        # in 770 of 3,960 months (19.4%), by up to 6.7%. Per panel the violation
+        # rate ranged from 0/360 (panels 1, 5, 6) to 266/360 (panel 3, whose mean
+        # was 101.3% of the bound). A conditional Sharpe cannot exceed the HJ
+        # bound, so the estimator was the problem, not the economics.
+        #
+        # It was not the portfolio solve: computing sqrt(mu' Sigma^-1 mu)
+        # directly reproduces max_sr to <1%, and both exceed the bound. It was
+        # not a broken covariance: cond_var is PD everywhere (eig_min ~1e-4). It
+        # was not conditioning: corr(max_sr, log cond) = +0.26 only.
+        #
+        # It is error accumulation in near-idiosyncratic directions. Scaling the
+        # statistic in the number of assets n shows a CONSTANT per-asset
+        # increment in SR^2 at large n -- 4.6e-5 for panel 3, 1.2e-5 for panel 1
+        # -- where an exact factor model requires exactly zero, since mu lies in
+        # the span of the loadings and those directions carry no premium. Backing
+        # it out, the implied inconsistency between mu and Sigma is only
+        # eps ~ 2-4e-4, i.e. 1.5-2.8% of mean mu. Sigma^-1 weights the
+        # tiny-variance directions so heavily that a sub-percent inconsistency in
+        # mu is levered into a 5% overshoot, and it grows with N.
+        #
+        # So the old max_sr was a noisy, upward-biased, panel-dependent estimate
+        # of a constant. Anything that used it as a benchmark -- e.g. "fraction
+        # of maximum Sharpe attained" in the DKKM-vs-FF/FM comparison -- was
+        # biased DOWN by 0-7%, inconsistently across panels, which is the same
+        # order as the effects being measured.
+        #
+        # The underlying mu/Sigma inconsistency is real and still open; it is
+        # just no longer amplified into this statistic. cond_var is returned
+        # unchanged, so downstream users of it are unaffected by this edit.
+        #
+        # Previous estimated version, kept for reference:
+        #     max_sr = -(port[1:] * (1 + eret[t, :] - np.exp(r*dt))).sum() / np.sqrt(
+        #         port[1:] @ (cond_var @ port[1:])
+        #     )
+        # ------------------------------------------------------------------
+        max_sr = MAX_SHARPE
 
         return (
             sdf_ret,
