@@ -45,8 +45,35 @@ def create_arrays(N, T):
     # recall they don't include lambda_f, which varies across firms
     G_in = pd.read_csv(os.path.join(_SOLFILES_DIR, 'G_func.csv'))
     eps_grid = G_in.eps.values
-    G_up = interpolate.interp1d(eps_grid, G_in.G_up.values, fill_value="extrapolate")
-    G_down = interpolate.interp1d(eps_grid, G_in.G_down.values, fill_value="extrapolate")
+    # Interpolation order, set 2026-08-31: cubic, NOT the interp1d default (linear).
+    #
+    # These are tabulated on a 1000-point uniform eps grid (h = 4.995e-3) and
+    # evaluated at FIRM-SPECIFIC eps, so every firm picks up an independent error.
+    # Linear was costing real accuracy on the three (eps-1)*f(eps) integrals, which
+    # cross zero at eps ~ 1 -- exactly where the CIR distribution for eps
+    # concentrates -- and which are the ones carrying the risk premium:
+    #
+    #     ep_A_mod_lst    RMS relative linear-interp error 7.8e-03 (max 3.7e-01)
+    #     ep_G_up_lst                                      2.5e-03
+    #     ep_G_down_lst                                    2.0e-03
+    #     the other eight                           1.6e-06 to 8.1e-05
+    #
+    # The driver is the curvature-to-level ratio |f''|max/|f|: 133, 35 and 18 for
+    # those three against 0.8-64 for the rest. Linear error is h^2*f''/8, so
+    # dividing by a level that passes through zero is what inflates it.
+    #
+    # Consequence: mu carried a diffuse per-firm error of ~2-4e-4 (1.5-2.8% of its
+    # mean) with no factor structure. Sigma^-1 at N=1000 levered that into
+    # sqrt(mu' Sigma^-1 mu) exceeding the analytic Hansen-Jagannathan bound in 770
+    # of 3,960 panel-months. See the note at max_sr in sdf_compute_kp14.py.
+    #
+    # Cubic, not pchip: all eleven integrals are strictly MONOTONE with zero turning
+    # points over the eps band, so there is no shape hazard for pchip to guard
+    # against, and measured cubic overshoot outside the data range is exactly zero.
+    # Held-out tests put cubic 2-6x ahead of pchip at the shipped spacing and
+    # 40-130x ahead as spacing coarsens; akima is worse than pchip throughout.
+    G_up = interpolate.interp1d(eps_grid, G_in.G_up.values, kind='cubic', fill_value="extrapolate")
+    G_down = interpolate.interp1d(eps_grid, G_in.G_down.values, kind='cubic', fill_value="extrapolate")
 
     # Load integrals file
     integ_data = np.load(os.path.join(_SOLFILES_DIR, 'integ_results.npz'))
@@ -56,9 +83,9 @@ def create_arrays(N, T):
     G_up_lst = integ_data["G_up_lst"]
     G_down_lst = integ_data["G_down_lst"]
 
-    Et_A_mod = interpolate.interp1d(eps_grid, A_mod_lst, fill_value="extrapolate")
-    Et_G_up = interpolate.interp1d(eps_grid, G_up_lst, fill_value="extrapolate") # again - be sure to adjust any G term by lambda_f
-    Et_G_down = interpolate.interp1d(eps_grid, G_down_lst, fill_value="extrapolate")
+    Et_A_mod = interpolate.interp1d(eps_grid, A_mod_lst, kind='cubic', fill_value="extrapolate")
+    Et_G_up = interpolate.interp1d(eps_grid, G_up_lst, kind='cubic', fill_value="extrapolate") # again - be sure to adjust any G term by lambda_f
+    Et_G_down = interpolate.interp1d(eps_grid, G_down_lst, kind='cubic', fill_value="extrapolate")
 
     # simulates length x N matrix of Cox-Ingersoll-Ross processes
     # each column is a separate process for each firm
