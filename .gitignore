@@ -68,3 +68,10 @@ Thumbs.db
 
 # Claude working files -- durable across tmp cleanup, never committed
 _scratch/
+
+# variants/: large reproducible binaries stay out of git (see variants/README.md)
+variants/gs_bx/sol_*/
+variants/results/*.parquet
+variants/results/*_moments_*.npz
+variants/results/logs/
+variants/results/log_*.txt
