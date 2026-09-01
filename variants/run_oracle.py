@@ -1,0 +1,147 @@
+"""
+Oracle decomposition of the achievable Sharpe ratio for the BGN or KP14 economy (see common/oracle.py).
+
+usage:
+  python run_oracle.py --model bgn --N 300 --T 360 --tag baseline
+  BGN_PARAM_OVERRIDES='{"sigma_r":0.004}' python run_oracle.py --model bgn --tag sigma_r4
+  KP_PARAM_OVERRIDES='{"gamma_z":-0.7}'   python run_oracle.py --model kp  --tag gz7
+"""
+import argparse, json, os, sys, time
+import numpy as np
+import pandas as pd
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "common"))
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx"], required=True)
+ap.add_argument("--N", type=int, default=300)
+ap.add_argument("--T", type=int, default=360, help="months after burn-in")
+ap.add_argument("--seed", type=int, default=0)
+ap.add_argument("--tag", type=str, default="baseline")
+ap.add_argument("--rff", type=str, default="36,360,3600")
+ap.add_argument("--nmat", type=int, default=2, help="independent RFF draws")
+ap.add_argument("--no_rf", action="store_true", help="BGN: do not feed the interest rate to the feature bases")
+ap.add_argument("--save_panel", action="store_true")
+ap.add_argument("--levels", action="store_true", help="add fixed-stats level features (and rffL bases)")
+args = ap.parse_args()
+
+os.chdir(os.path.join(HERE, args.model))
+sys.path.insert(0, os.getcwd())
+np.random.seed(args.seed)
+rng = np.random.default_rng(args.seed + 1000)
+
+if args.model == "bgn_gam":
+    from parameters import *              # noqa
+    import panel_functions as mod
+    import sdf_compute as sdf
+    ov_env = "BGN_PARAM_OVERRIDES"
+elif args.model == "kp_vy":
+    from parameters_kp14 import *         # noqa
+    import panel_functions_kp14 as mod
+    import sdf_compute_kp14 as sdf
+    chars = ["size", "bm", "agr", "roe", "mom"]; gamma_grid = np.arange(0.5, 1.1, 0.1)
+    ov_env = "KP_PARAM_OVERRIDES"
+else:  # gs_bx
+    import gs_sim_bx as mod
+    import gs_sim_bx as sdf
+    from gs_sim_bx import burnin, chars, gamma_grid
+    ov_env = "GS_SIM_OVERRIDES"
+from oracle import rank_standardize, draw_W, build_feature_sets, evaluate_bases, max_sr, level_standardize
+
+t0 = time.time()
+N, T = args.N, args.T
+arr_tuple = mod.create_arrays(N, T + burnin)
+panel = mod.create_panel(N, T + burnin, arr_tuple)
+sdf_loop = sdf.sdf_compute(N, T + burnin, arr_tuple)
+print(f"[{args.model}/{args.tag}] panel built in {time.time()-t0:.0f}s", flush=True)
+
+panel["size"] = np.log(panel.mve)
+panel = panel[panel.month >= 2]
+panel.replace([np.inf, -np.inf], np.nan, inplace=True)
+panel.set_index(["month", "firmid"], inplace=True)
+nans = panel[chars + ["mve", "xret"]].isnull().any(axis=1)
+panel = panel.loc[nans[~nans].index]
+months = panel.index.unique("month")
+months = months[(months >= burnin + 14) & (months <= T + burnin - 2)]
+d = len(chars)
+n_rf = 2 if args.model in ("bgn_gam", "gs_bx") else 1
+use_rf = not args.no_rf   # all three economies expose conditioning variables
+
+# ---- collect true conditional moments (N x N per month) -------------------------------------------
+months_data, rows = [], []
+for k, month in enumerate(months):
+    sdf_ret, sr_max_code, rp, cond_var, w_true = sdf_loop(month - 1)
+    data = panel.loc[month]
+    keep = data.index.to_numpy()
+    mu = rp[keep]; Sigma = cond_var[np.ix_(keep, keep)]
+    X_raw = data[chars].to_numpy()
+    md = {"month": month, "mu": mu, "Sigma": Sigma, "X_raw": X_raw, "X_rank": rank_standardize(X_raw),
+          "rf": ((np.array([data.rf_stand.iloc[0], data.gam_stand.iloc[0]]) if args.model in ("bgn_gam", "gs_bx")
+                  else float(data.rf_stand.iloc[0])) if use_rf else None), "w_true": w_true[keep], "keep": keep}
+    months_data.append(md)
+    rows.append({"month": month, "n": len(keep), "sr_max": max_sr(mu, Sigma), "sr_max_code": sr_max_code,
+                 "rf": float(np.atleast_1d(md["rf"])[0]) if md["rf"] is not None else None, "mean_mu": mu.mean(), "sd_mu": mu.std(),
+                 "mean_idio_sd": np.sqrt(np.diag(Sigma)).mean()})
+    if k % 100 == 0:
+        print(f"  moments month {month} ({k+1}/{len(months)}) n={len(keep)} SRmax={rows[-1]['sr_max']:.3f}  {time.time()-t0:.0f}s", flush=True)
+ts = pd.DataFrame(rows)
+
+# ---- feature bases ---------------------------------------------------------------------------------
+Plist = [int(p) for p in args.rff.split(",") if p]
+Wdict = {f"rff{P}_{m}": draw_W(P, d + (n_rf if use_rf else 0), gamma_grid, rng) for P in Plist for m in range(args.nmat)}
+Wdict_lev, med, iqr = None, None, None
+if args.levels:
+    allX = np.vstack([m["X_raw"] for m in months_data])
+    med = np.median(allX, axis=0)
+    iqr = np.subtract(*np.percentile(allX, [75, 25], axis=0)); iqr[iqr == 0] = 1.0
+    Wdict_lev = {f"rffL{P}_{m}": draw_W(P, 2 * d + (n_rf if use_rf else 0), gamma_grid, rng) for P in Plist for m in range(args.nmat)}
+def feature_fn(md):
+    X_lev = level_standardize(md["X_raw"], med, iqr) if args.levels else None
+    return build_feature_sets(md["X_raw"], md["X_rank"], md["rf"], Wdict, X_lev=X_lev, Wdict_lev=Wdict_lev)
+names = list(feature_fn(months_data[0]).keys())
+
+res = evaluate_bases(months_data, feature_fn, names, verbose=True)
+
+# ---- report ----------------------------------------------------------------------------------------
+def agg_rff(res):
+    """average the RFF draws with the same P"""
+    out = {}
+    for name, r in res.items():
+        key = name.split("_")[0] if name.startswith("rff") else name
+        out.setdefault(key, []).append(r)
+    agg = {}
+    for key, lst in out.items():
+        agg[key] = {"P": lst[0]["P"], "zgrid_rel": lst[0]["zgrid_rel"],
+                    "cond_sr_mean": np.mean([r["cond_sr_mean"] for r in lst], 0),
+                    "unc_sr": np.mean([r["unc_sr"] for r in lst], 0),
+                    "cond_oracle_mean": float(np.mean([r["cond_oracle_mean"] for r in lst]))}
+    return agg
+agg = agg_rff(res)
+
+summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "overrides": os.environ.get(ov_env, "{}"),
+           "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
+           "mean_mu": float(ts.mean_mu.mean()), "sd_mu": float(ts.sd_mu.mean()), "mean_idio_sd": float(ts.mean_idio_sd.mean()),
+           "bases": {}}
+print(f"\n=== {args.model}/{args.tag}: mean SR_max = {ts.sr_max.mean():.4f}  N={N} months={len(ts)}  "
+      f"E[mu]={ts.mean_mu.mean():.4f} sd_cs(mu)={ts.sd_mu.mean():.4f} idio sd={ts.mean_idio_sd.mean():.3f}  overrides={summary['overrides']}")
+print(f"{'basis':>12} {'P':>5} | {'cond.oracle':>11} | {'const-theta z=0':>15} | {'best z (rel)':>18} | unc SR(best)")
+for name, r in agg.items():
+    zs = r["zgrid_rel"]; sr = r["cond_sr_mean"]; j = int(np.argmax(sr))
+    rec = {"P": r["P"], "cond_oracle": r["cond_oracle_mean"], "const_z0": float(sr[0]), "const_best": float(sr[j]),
+           "best_zrel": zs[j], "unc_best": float(r["unc_sr"][j]), "sr_by_z": [float(x) for x in sr]}
+    summary["bases"][name] = rec
+    print(f"{name:>12} {r['P']:>5} | {r['cond_oracle_mean']:11.4f} | {sr[0]:15.4f} | {sr[j]:8.4f} ({zs[j]:7.0e}) | {r['unc_sr'][j]:.4f}")
+
+out = os.path.join(HERE, "results")
+ts.to_csv(os.path.join(out, f"{args.model}_oracle_{args.tag}_ts.csv"), index=False)
+json.dump(summary, open(os.path.join(out, f"{args.model}_oracle_{args.tag}.json"), "w"), indent=1)
+if args.save_panel:
+    panel.reset_index().to_parquet(os.path.join(out, f"{args.model}_panel_{args.tag}.parquet"))
+    np.savez_compressed(os.path.join(out, f"{args.model}_moments_{args.tag}.npz"),
+                        months=np.array([m["month"] for m in months_data]),
+                        mu=np.array([np.pad(m["mu"], (0, N - len(m["mu"]))) for m in months_data]).astype(np.float32),
+                        Sigma=np.array([np.pad(m["Sigma"], ((0, N - len(m["mu"])), (0, N - len(m["mu"])))) for m in months_data]).astype(np.float32),
+                        w_true=np.array([np.pad(m["w_true"], (0, N - len(m["w_true"]))) for m in months_data]),
+                        keep=np.array([np.pad(m["keep"], (0, N - len(m["keep"])), constant_values=-1) for m in months_data]))
+print(f"done in {time.time()-t0:.0f}s")
