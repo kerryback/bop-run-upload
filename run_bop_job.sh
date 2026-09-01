@@ -41,6 +41,12 @@ echo "python: $(which python)"          # must be under .../envs/$CONDA_ENV/bin
 export BOP_SCRATCH_DIR=$SCRATCH
 export BOP_TEMP_DIR=$TEMP
 
+# Tell main.py that sbatch's `-o` is already capturing stdout+stderr, so it
+# should NOT also tee to logs/. Keep this path in sync with the #SBATCH -o line
+# at the top -- SBATCH directives cannot use shell variables, so the model name
+# appears in both places and must match.
+export BOP_LOG_FILE="outslurm/bop.${MODEL}.${SLURM_ARRAY_TASK_ID}.log"
+
 mkdir -p $SCRATCH
 mkdir -p $TEMP
 mkdir -p outslurm
