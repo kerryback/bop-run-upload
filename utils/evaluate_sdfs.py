@@ -6,7 +6,8 @@ from calculate_moments.py, then computes mean, stdev, xret for each method.
 
 Output: {panel_id}_results.pkl containing:
   - fama_results: DataFrame (month, method, alpha, stdev, mean, xret)
-  - dkkm_results: DataFrame (month, nfeatures, alpha, stdev, mean, xret)
+  - dkkm_results: DataFrame (month, nfeatures, alpha, mat, stdev, mean, xret)
+    one row per random-feature draw (mat); average across mat downstream
   - returns: DataFrame (month, sdf_ret, mkt_rf)
 
 Usage:
@@ -193,8 +194,8 @@ def main():
                 'xret': xret,
             })
 
-        # DKKM results
-        for (nfeatures, alpha), weights_on_stocks in w['dkkm'].items():
+        # DKKM results: one row per (nfeatures, alpha, mat) — draws are not averaged
+        for (nfeatures, alpha, mat), weights_on_stocks in w['dkkm'].items():
             stdev = np.sqrt(weights_on_stocks @ stock_cov @ weights_on_stocks)
             mean = weights_on_stocks @ rp
             xret = weights_on_stocks @ data_xret
@@ -203,6 +204,7 @@ def main():
                 'month': month,
                 'nfeatures': nfeatures,
                 'alpha': alpha,
+                'mat': mat,
                 'stdev': stdev,
                 'mean': mean,
                 'xret': xret,
