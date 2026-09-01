@@ -34,9 +34,11 @@ _SHARED_DATA = {}
 # Value-weighted within each of the 6 portfolios.
 # Returns (N, K+1) array including market portfolio.
 #
-# DEVIATION FROM ROOT: SMB is computed from a simple value-weighted size sort
-# (long small-cap, short large-cap) rather than the traditional 2x3 BM sort.
-# This decouples SMB from BM, so "bm" need not be in chars to get SMB.
+# SMB follows ROOT (and Fama-French): the average of the three small
+# size x BM portfolios minus the average of the three big ones, so SMB is
+# BM-neutral. This needs "bm" among the chars; only when it is absent
+# (a --chars subset without hml) does SMB fall back to a plain value-weighted
+# size sort.
 # =============================================================================
 def fama_french(data, chars, **kwargs):
     """
@@ -44,8 +46,9 @@ def fama_french(data, chars, **kwargs):
 
     ROOT: fama_functions.py lines 9-71
 
-    Always produces SMB (from a simple value-weighted size sort) and market
-    (mkt_rf) regardless of which chars are supplied. Additional factors are
+    Always produces SMB and market (mkt_rf). SMB is the Fama-French
+    construction from the six size x BM portfolios when "bm" is in chars,
+    otherwise a plain value-weighted size sort. Additional factors are
     produced for each non-size characteristic in chars.
 
     Args:
@@ -69,15 +72,8 @@ def fama_french(data, chars, **kwargs):
     small = 1 - big
     mve = kwargs["mve"]
 
-    # SMB: simple value-weighted size sort (small minus big).
-    # Does not require "bm" in chars; always produced.
-    smb_small = mve * small
-    smb_big = mve * big
-    if smb_small.sum() != 0:
-        smb_small = smb_small / smb_small.sum()
-    if smb_big.sum() != 0:
-        smb_big = smb_big / smb_big.sum()
-    factor_dct["smb"] = (smb_small - smb_big).to_numpy()
+    # SMB placeholder keeps it as the first column; filled in below.
+    factor_dct["smb"] = None
 
     # For each non-size characteristic: 2x3 sort → long-short factor
     for char in [c for c in chars if c != "size"]:
@@ -102,6 +98,22 @@ def fama_french(data, chars, **kwargs):
         # Long-short factor (high minus low, averaged across size groups)
         factor = 0.5 * (high_big + high_small - low_big - low_small)
         factor_dct[name_dct[char]] = factor.to_numpy()
+
+        # SMB the original Fama-French way, from the BM sort only (ROOT lines 53-59)
+        if char == "bm":
+            smb = (high_small + med_small + low_small
+                   - high_big - med_big - low_big) / 3
+            factor_dct["smb"] = smb.to_numpy()
+
+    # Fallback when "bm" is not among chars: plain value-weighted size sort
+    if factor_dct["smb"] is None:
+        smb_small = mve * small
+        smb_big = mve * big
+        if smb_small.sum() != 0:
+            smb_small = smb_small / smb_small.sum()
+        if smb_big.sum() != 0:
+            smb_big = smb_big / smb_big.sum()
+        factor_dct["smb"] = (smb_small - smb_big).to_numpy()
 
     # Create output DataFrame
     df = pd.DataFrame(factor_dct)

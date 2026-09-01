@@ -16,6 +16,7 @@ KEY DIFFERENCES FROM noipca/utils_factors/dkkm_functions.py:
 """
 
 import numpy as np
+from scipy.stats import rankdata
 import pandas as pd
 from joblib import Parallel, delayed
 
@@ -41,11 +42,18 @@ def rank_standardize(values):
     DKKM rank-based standardization.
 
     ROOT: dkkm_functions.py lines 10-13
-    Formula: (ranks - 0.5) / N - 0.5
+    Formula: (ranks - 0.5) / N - 0.5, with ties given their AVERAGE rank
+    (pandas .rank() default, which is what ROOT uses).
 
-    Uses numpy argsort instead of pandas .rank() for speed.
-    Produces ordinal ranks (ties broken by position), which is equivalent
-    to pandas method='average' when data is continuous with no ties.
+    Ties matter here: asset growth is discrete in these economies (book
+    equity moves in project units), so ~90% of firm-months share their agr
+    value with another firm in the same month. Average ranks map all tied
+    firms to one value; ordinal ranks (a plain argsort) would instead spread
+    them uniformly over [-0.5, 0.5] in sort-implementation order, injecting
+    an arbitrary firm-level noise characteristic into the RFF inputs.
+
+    scipy.stats.rankdata is vectorized along axis=0, so this keeps the speed
+    of the earlier argsort version.
 
     Args:
         values: (N, P) numpy ndarray to rank-standardize
@@ -54,14 +62,10 @@ def rank_standardize(values):
         (N, P) numpy ndarray with values in ~[-0.5, 0.5], C-contiguous
     """
     n = values.shape[0]
-    order = np.argsort(values, axis=0, kind='quicksort')
-    # Pre-allocate with C-contiguous layout
-    ranks = np.empty(values.shape, dtype=np.float64, order='C')
-    col_idx = np.arange(values.shape[1])
-    ranks[order, col_idx] = np.arange(1, n + 1, dtype=np.float64).reshape(-1, 1)
+    ranks = rankdata(values, method='average', axis=0)
     result = (ranks - 0.5) / n - 0.5
     # Ensure result is C-contiguous for downstream operations
-    return np.ascontiguousarray(result)
+    return np.ascontiguousarray(result, dtype=np.float64)
 
 
 # =============================================================================

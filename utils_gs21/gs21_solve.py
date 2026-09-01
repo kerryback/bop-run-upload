@@ -41,6 +41,15 @@ Faithfulness
        no break and why the committed solfiles are an interrupted run. With the
        exact expectations a single fused iteration converges to 9.1e-13.
        quad='gh' restores GS21.m's rule for comparison. See solve().
+    4. Kernel row renormalisation (default on). E[M|x] = e^{-r} is an identity
+       of the continuous model, but the tauchen chain truncates the tails the
+       lognormal kernel weights, so the discrete row sums drift from e^{-r} --
+       worst at the edge x rows, where risk-neutral mass piles up. Since the
+       discrete economy's SDF is the discretised kernel itself, each row of K
+       is rescaled so the identity holds exactly (also making the Bellman
+       operator a contraction on any grid). The pre-fix error is printed at
+       setup; --no-renorm restores the raw kernel of GS21.m and the committed
+       solfiles.
 
 MATLAB conventions preserved exactly
     * state ordering is b fastest, then x, then z  (GS21.m:95-97)
@@ -86,7 +95,8 @@ from tauchen import tauchen                      # noqa: E402
 class Setup:
     """Grids, transition matrices, payoffs and the SDF -- everything before the VFI."""
 
-    def __init__(self, gamma_x=None, sigma_m=None, r=None, xi=None, quad='exact'):
+    def __init__(self, gamma_x=None, sigma_m=None, r=None, xi=None, quad='exact',
+                 renorm=True):
         c = config
         self.beta, self.gamma = c.GS21_BETA, c.GS21_GAMMA
         self.g, self.alpha, self.delta = c.GS21_G, c.GS21_ALPHA, c.GS21_DELTA
@@ -107,6 +117,7 @@ class Setup:
         self.r = c.GS21_R if r is None else r
         self.xi = c.GS21_ZETA if xi is None else xi
         self.quad = quad
+        self.renorm = renorm
 
         self._build()
 
@@ -159,6 +170,17 @@ class Setup:
                                      - (1 - self.rho_x) * self.x_bar
                                      - self.rho_x * self.xgrid[:, None]) / self.sigma_x)
         self.K = M * self.pr_x                    # (xnum, xnum), [x, x']
+        # E[M|x] = e^{-r} is an identity of the continuous model, but on the
+        # tauchen chain it holds only to discretization error: the lognormal
+        # kernel weights the tail states pr_x truncates, so row sums drift from
+        # e^{-r} -- worst at the edge x rows, exactly where risk-neutral mass
+        # piles up. The discrete economy's SDF is this K itself, so renormalise
+        # each row to make the identity exact (this also makes the Bellman
+        # operator a contraction on any grid). --no-renorm restores the raw
+        # kernel for comparison with the committed solfiles.
+        self.kernel_rf_err = float(np.abs(self.K.sum(axis=1) - np.exp(-self.r)).max())
+        if self.renorm:
+            self.K = self.K * (np.exp(-self.r) / self.K.sum(axis=1))[:, None]
 
     # ---------------------------------------------------------- operators
 
@@ -417,6 +439,9 @@ def main():
     # only so the identification experiment can be reproduced.
     ap.add_argument('--r', type=float, default=None, help='override GS21_R')
     ap.add_argument('--xi', type=float, default=None, help='override GS21_ZETA')
+    ap.add_argument('--no-renorm', action='store_true',
+                    help='skip the kernel row renormalisation (departure 4 in '
+                         'the docstring); reproduces the raw GS21.m kernel')
     ap.add_argument('--label', default='', help='tag for the run, printed in output')
     ap.add_argument('--write', metavar='DIR', default=None)
     ap.add_argument('--quiet', action='store_true')
@@ -426,11 +451,15 @@ def main():
     args = ap.parse_args()
 
     t0 = time.time()
-    su = Setup(gamma_x=args.gamma_x, r=args.r, xi=args.xi, quad=args.quad)
+    su = Setup(gamma_x=args.gamma_x, r=args.r, xi=args.xi, quad=args.quad,
+               renorm=not args.no_renorm)
     print(f'setup{" [" + args.label + "]" if args.label else ""}: '
           f'statenum={su.statenum:,}  xz={su.xz:,}  {len(su.nodes)} shock nodes  '
           f'({time.time() - t0:.2f}s)')
-    print(f'  r={su.r!r}  xi={su.xi!r}  gamma_x={su.gamma_x!r}  quad={su.quad!r}')
+    print(f'  r={su.r!r}  xi={su.xi!r}  gamma_x={su.gamma_x!r}  quad={su.quad!r}  '
+          f'renorm={su.renorm!r}')
+    print(f'  raw kernel max |E[M|x] - e^-r| = {su.kernel_rf_err:.3e}'
+          + ('  (corrected to 0 by renormalisation)' if su.renorm else '  (LEFT IN)'))
     if args.check:
         return
 

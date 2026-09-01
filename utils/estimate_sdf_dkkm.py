@@ -6,7 +6,12 @@ ridge regression on factor returns and combining with factor weights.
 
 Requires fama_weights.pkl for market weights (pre-computed by estimate_sdf_fama.py).
 
-Output: {panel_id}_dkkm_weights.pkl containing stock weights per month for DKKM.
+Output: {panel_id}_stock_weights_dkkm.pkl containing stock weights per month for
+DKKM, keyed by (nfeatures, alpha, mat): one weight vector per random-feature
+draw W_mat. Draws are NOT averaged here. As in ROOT (main.py / port_compare.py),
+each draw is evaluated on its own and performance measures are averaged across
+draws downstream; averaging the weights first would diversify away RFF-draw
+noise and overstate DKKM performance.
 
 Usage:
     python estimate_sdf_dkkm.py [panel_id] [--config CONFIG_MODULE]
@@ -109,7 +114,7 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
     market_weight = market_weights[month]
 
     # =========================================================================
-    # DKKM WEIGHTS WITH NMAT AVERAGING
+    # DKKM WEIGHTS, ONE ENTRY PER W DRAW (no averaging across NMAT)
     # =========================================================================
     dkkm_weights = {}
 
@@ -126,12 +131,6 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
 
         # Scaled alphas for ridge regression
         scaled_alphas = np.array([nfeatures * a for a in alpha_lst])
-
-        # Accumulate stock weights across NMAT iterations
-        # (Must compute stock_weights = factor_weights @ port_of_factors for each W_i,
-        # then average. Cannot average factor_weights and port_of_factors separately
-        # due to cross-terms in matrix multiplication.)
-        stock_weights_sum = {alpha: None for alpha in alpha_lst}
 
         for mat_idx in range(NMAT):
             W_i = W_list[mat_idx]
@@ -153,20 +152,11 @@ def compute_month_weights_dkkm(month_data, half, nfeatures_lst, alpha_lst, CHARS
             # Portfolio of factors from ridge regression
             pof_i = dkkm.mve_data(f_subset_i, month, scaled_alphas, mkt_rf)
 
-            # Compute stock weights for this W matrix and accumulate
+            # Stock weights for this W draw, stored per draw (ROOT main.py:262)
             for i, alpha in enumerate(alpha_lst):
                 pof_alpha = pof_i.values[:, i]
                 sw_i = fw_i.values @ pof_alpha
-
-                if stock_weights_sum[alpha] is None:
-                    stock_weights_sum[alpha] = sw_i.copy()
-                else:
-                    stock_weights_sum[alpha] += sw_i
-
-        # Average stock weights across NMAT iterations
-        for alpha in alpha_lst:
-            key = (nfeatures, alpha)
-            dkkm_weights[key] = (stock_weights_sum[alpha] / NMAT).astype(np.float32)
+                dkkm_weights[(nfeatures, alpha, mat_idx)] = sw_i.astype(np.float32)
 
     month_elapsed = time.time() - month_t0
     print(f"  Month {month}: done in {fmt(month_elapsed)} at {now()}")

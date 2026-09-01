@@ -209,7 +209,7 @@ Key parameters in `config.py`:
 ### Factor Construction
 
 **Fama-French Method:**
-- SMB computed from a simple size median split (independent of other characteristics)
+- SMB computed the Fama-French way from the 2×3 size × book-to-market sort (small minus big, averaged over the three BM groups)
 - All other factors use 2×3 double sorts on size and the relevant characteristic
 - Value-weighted portfolios
 - Factors: MKT, SMB, HML, CMA, RMW, UMD
