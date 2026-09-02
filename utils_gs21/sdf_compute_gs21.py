@@ -132,11 +132,11 @@ def integ_zi_zj_x(N, Pi, i_cutoff, bi, zi, eta, x, n = 10):
     
     mean_i_cost = (i_cutoff + imin)/2
     '''
-    prof_I_down = (((1 - tau)*np.exp(x_prev + zi_prev) - delta)-mean_i_cost - (1 - tau)*bi_prev)                                        # invest and eta = 0
-    prof_0_down = (((1 - tau)*np.exp(x_prev + zi_prev) - delta) - (1 - tau)*bi_prev)                                                    # no invest and eta = 0
-    prof_I_up = (((1 - tau)*np.exp(x_prev + zi_prev) - delta)-mean_i_cost - (1 - tau)*bi_prev +                                         # invest and eta = 1            
+    prof_I_down = (((1 - tau)*(np.exp(x_prev + zi_prev) - delta))-mean_i_cost - (1 - tau)*bi_prev)                                        # invest and eta = 0
+    prof_0_down = (((1 - tau)*(np.exp(x_prev + zi_prev) - delta)) - (1 - tau)*bi_prev)                                                    # no invest and eta = 0
+    prof_I_up = (((1 - tau)*(np.exp(x_prev + zi_prev) - delta))-mean_i_cost - (1 - tau)*bi_prev +                                         # invest and eta = 1            
                   (1 - kappa_b)*Q_I((zi_prev, x_prev, b_refin_I((zi_prev, x_prev, bi_prev)))) - Q_I((zi_prev, x_prev, bi_prev/g)))      
-    prof_0_up = (((1 - tau)*np.exp(x_prev + zi_prev) - delta) - (1 - tau)*bi_prev +                                                     # no invest and eta = 1
+    prof_0_up = (((1 - tau)*(np.exp(x_prev + zi_prev) - delta)) - (1 - tau)*bi_prev +                                                     # no invest and eta = 1
                  (1 - kappa_b)*Q_0((zi_prev, x_prev, b_refin_0((zi_prev, x_prev, bi_prev)))) - Q_0((zi_prev, x_prev, bi_prev)))
     
     # aggregate today's cash flow across today's eta

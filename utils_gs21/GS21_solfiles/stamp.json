@@ -5,7 +5,7 @@
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -22,11 +22,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -35,14 +35,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "9ca6d141be3316ec80802c15cc6e79bdc0cc16c6fbd2af4639deaf4fd4a4aa15"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "fdd3dd68e26c68bce6e76255c106179c49ea9e63e844947e68b5e05aac1a0221"
     },
     "P0_up.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -59,11 +59,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -72,14 +72,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "9d446618a25d2bfa8d9e3261d9485a05afc3cf5dfae8a365d3507c5b832d0196"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "8b56aa79f1ec8854db1cfc03c9eb6b37e3fc5a5245203baa418af32a921468eb"
     },
     "PI_down.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -96,11 +96,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -109,14 +109,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "24addea9218f5bf8c4d95f6ab7422124b3e0acc63850a8d9fc3aef54dfcc0f2f"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "2bded542db313ad3336af3a392b9201f49e71c129f1b97d9558eb6056e63657e"
     },
     "PI_up.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -133,11 +133,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -146,14 +146,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "d9c3fa5d2c9921042887dbbd25b122c27779a6956fd17c81c2fbfbf06da4ced4"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "43291d43a5a2c9c7a44db1637a9d3298ac1d39ea0e72f9b8eccb1566592e9b52"
     },
     "P_down.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -170,11 +170,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -183,14 +183,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "230196b70f86fce2648fdd98442d8187eb27ab87fffdf7559ff82b6d2eb70c8c"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "2c553aef39512872f3594cb82bd238e4d642c96a292a640ece0bd91d89b7f817"
     },
     "P_up.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -207,11 +207,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -220,14 +220,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "c2456ad8c6765410c5916f2deba17336b2c49341159a8bea2ea5f6cae9a0e76e"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "9afc080c7b608530d355a6b70c99f923ee48e8fadfd404f7b94b783ce3f68cdf"
     },
     "Q_0.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -244,11 +244,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -257,14 +257,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "58fc29ba1a82c03076a88284f98a9d955921491dc6e5794e83cf70f7fd2d69bd"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "b33870cd6e017fe738d6630ec0ccc6c06c6354a68ec7bb75723574141f25ddf6"
     },
     "Q_I.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -281,11 +281,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -294,14 +294,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "27606b44f7fa3bca43ed6212a296fad699ad4cf368ab2b6880a162500851d75a"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "c8e6533655e289c19ed3e423b6190eac96608920a829d332122465720363b299"
     },
     "b_refin_0.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -318,11 +318,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -331,14 +331,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "175e0a3d7643611b3bb419dd09c6e3833d8b0c13058fe9bed4296ac5d61ba33e"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "929ab0ab24f308f05cb78ec312b2ec394c1cfa70e29177dde44eef041fa97641"
     },
     "b_refin_I.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -355,11 +355,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -368,14 +368,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "175e0a3d7643611b3bb419dd09c6e3833d8b0c13058fe9bed4296ac5d61ba33e"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "929ab0ab24f308f05cb78ec312b2ec394c1cfa70e29177dde44eef041fa97641"
     },
     "bgrid.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -392,11 +392,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -405,14 +405,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
       "sha256": "601723f6c3a7cf85de725db4fe08fcbe8fcfcb9f21c14388f60d5cf2e61e0afe"
     },
     "i_cut_down.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -429,11 +429,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -442,14 +442,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "ef93ce21a2d2e6ce085965fe5f7be47bbfdf9df100839452b0d031126c02359f"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "e3ffc8b60ac4e526215abb28ca4954ebdc32152f3b6c644582a4b4da07be0b72"
     },
     "i_cut_up.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -466,11 +466,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -479,14 +479,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "00021b76e26bd6f245987b5eef06c80d689d67845598869441038bd5dc0e44a5"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "8e58752424297506260416c93989261149256830886f97b16e6992887bd4d87e"
     },
     "igrid.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -503,11 +503,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -516,14 +516,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
       "sha256": "e35bffe44d309ea9a59e9c15333875b9d674f558e0cfaff3f600b27e3d1d0a62"
     },
     "xgrid.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -540,11 +540,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -553,14 +553,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "ed0a86b90b0ae7e28f8320fcba99c023d1bc9a61cb7a3ae103ae5ba549aab792"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "cd2e386a342eaf507ccbf03e62fc2fcb67c94ddaf8dd6e016e6f4751cb3ef9ad"
     },
     "z_cut_down.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -577,11 +577,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -590,14 +590,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "bf94c7c9e5e5e67056ec025961750ad93d46a7b6e83af196324dbf4b152d5a78"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "931b8304a7e41f0330a95608e7b0650896b3e21c15992f4cfbc2482263e9be6b"
     },
     "z_cut_up.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -614,11 +614,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -627,14 +627,14 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "bf94c7c9e5e5e67056ec025961750ad93d46a7b6e83af196324dbf4b152d5a78"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "931b8304a7e41f0330a95608e7b0650896b3e21c15992f4cfbc2482263e9be6b"
     },
     "zgrid.csv": {
       "inputs": {},
       "params": {
         "GS21_ALPHA": "0.2",
-        "GS21_BETA": "0.994",
+        "GS21_BETA": "0.9979959866130975",
         "GS21_BMAX": "1.0",
         "GS21_BMIN": "0.0",
         "GS21_BNUM": "20",
@@ -651,11 +651,11 @@
         "GS21_MNSTDEV": "4",
         "GS21_PHI": "0.4",
         "GS21_R": "0.008333333333333333",
-        "GS21_RHO_X": "0.9830475724915585",
+        "GS21_RHO_X": "0.986484829732188",
         "GS21_RHO_Z": "0.9654893846056297",
         "GS21_SIGMA_M": "5",
-        "GS21_SIGMA_X": "np.float64(0.00704630524128845)",
-        "GS21_SIGMA_Z": "np.float64(0.009559933809158556)",
+        "GS21_SIGMA_X": "np.float64(0.007022255094127575)",
+        "GS21_SIGMA_Z": "np.float64(0.09559933809158556)",
         "GS21_TAU": "0.06666666666666667",
         "GS21_XBAR": "0",
         "GS21_XNUM": "20",
@@ -664,8 +664,8 @@
         "__tauchen.py__": "'5f3a09e3b20579b8db9746ff8accc248a8d44bc94e654887f1a210f5d40f7e7f'"
       },
       "producer": "gs21_solve.py",
-      "producer_sha256": "9ec8c2ed850c6fb1a6ccba910562601122c41fa35a2b72659d69e439964e4f08",
-      "sha256": "3cbb4aaa892d728333a75b3aee3897dec743f4e418d1abd4d290ca139dda5a66"
+      "producer_sha256": "d4713a80f59a8fd6ec9910d52a23b82ac366348180f6b2d9f7faf678bd54b206",
+      "sha256": "fb61d098c9e74f1a32d35468246c6c5070a204ec9b2b96a4b778850fbf9e982e"
     }
   }
 }

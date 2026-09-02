@@ -110,11 +110,11 @@ def create_arrays(N, T):
     ##### compute returns after computing cash flows ######
     xfull = x.reshape(-1, 1)*np.ones_like(z)
     # compute cashflows contingent on eta and investment decision
-    prof_I_down = (((1 - tau)*np.exp(xfull + z) - delta) - (1 - tau)*b)                      # invest and eta = 0
-    prof_0_down = (((1 - tau)*np.exp(xfull + z) - delta) - (1 - tau)*b)                             # no invest and eta = 0
-    prof_I_up = (((1 - tau)*np.exp(xfull + z) - delta) - (1 - tau)*b +                       # invest and eta = 1
+    prof_I_down = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)                      # invest and eta = 0
+    prof_0_down = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)                             # no invest and eta = 0
+    prof_I_up = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +                       # invest and eta = 1
                  (1 - kappa_b)*Q_I((z, xfull, b_refin_I((z, xfull, b)))) - Q_I((z, xfull, b/g)))
-    prof_0_up = (((1 - tau)*np.exp(xfull + z) - delta) - (1 - tau)*b +                              # no invest and eta = 1
+    prof_0_up = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +                              # no invest and eta = 1
                     (1 - kappa_b)*Q_0((z, xfull, b_refin_0((z, xfull, b)))) - Q_0((z, xfull, b)))
     
     
@@ -130,7 +130,7 @@ def create_arrays(N, T):
     # put lower bound on P
     P_ex = np.maximum(0.05/k, P_ex)
 
-    op_cashflow = (1 - tau)*np.exp(xfull + z) - delta
+    op_cashflow = (1 - tau)*(np.exp(xfull + z) - delta)
         
     # rets is T by N
     # no ret in final period
@@ -171,11 +171,11 @@ def create_arrays(N, T):
         # compute todays profits when eta = 0 (down), eta = 1 (up)
         # and when investment occurs (I), or no investments (0)
         '''
-        prof_I_down = (((1 - tau)*np.exp(x + zi) - delta)-(icutoff + imin)/2 - (1 - tau)*bi)
-        prof_0_down = (((1 - tau)*np.exp(x + zi) - delta) - (1 - tau)*bi)
-        prof_I_up = (((1 - tau)*np.exp(x + zi) - delta)-(icutoff + imin)/2 - 
+        prof_I_down = (((1 - tau)*(np.exp(x + zi) - delta))-(icutoff + imin)/2 - (1 - tau)*bi)
+        prof_0_down = (((1 - tau)*(np.exp(x + zi) - delta)) - (1 - tau)*bi)
+        prof_I_up = (((1 - tau)*(np.exp(x + zi) - delta))-(icutoff + imin)/2 - 
                      (1 - tau)*bi + (1 - kappa_b)*Q_I((zi, x, b_refin_I((zi, x, bi)))) - Q_I((zi, x, bi/g)))
-        prof_0_up = (((1 - tau)*np.exp(x + zi) - delta) - (1 - tau)*bi + 
+        prof_0_up = (((1 - tau)*(np.exp(x + zi) - delta)) - (1 - tau)*bi + 
                      (1 - kappa_b)*Q_0((zi, x, b_refin_0((zi, x, bi)))) - Q_0((zi, x, bi)))
        
         # compute cashflow, integrating over investment decision

@@ -59,7 +59,7 @@ def create_arrays(N, T):
     sigmaj = np.random.uniform(
         size=(T - 1, N),
         low=np.abs(beta[:-1, :]) / sigma_z,
-        high=np.abs(beta[:-1, :]) / sigma_z + 0.1*0.3 * np.abs(Cbar), # added a factor of 0.1
+        high=np.abs(beta[:-1, :]) / sigma_z + 0.3 * np.abs(Cbar),  # BGN Table I: range 0.3|C|
     )
     # dct["sigmaj"] = sigmaj
 
