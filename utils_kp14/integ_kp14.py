@@ -39,7 +39,11 @@ OUT_DIR = sys.argv[1] if len(sys.argv) > 1 else _SOLFILES_DIR   # override for d
 
 # read in G functions estimated in kp14_fd.py
 # recall they don't include lambda_ft, which varies across firms and time
-G_in = pd.read_csv(os.path.join(_SOLFILES_DIR, 'G_func.csv'))
+# Read G from OUT_DIR, not _SOLFILES_DIR: in a dry run (--out DIR) kp14_fd.py has
+# just written the fresh G there, and reading the committed copy would silently
+# pair these integrals with a stale G (the failure mode regen_solfiles.py exists
+# to prevent). In a normal run the two directories coincide.
+G_in = pd.read_csv(os.path.join(OUT_DIR, 'G_func.csv'))
 eps_grid = G_in.eps.values
 # Interpolation order, set 2026-08-31: cubic, NOT the interp1d default (linear).
 #

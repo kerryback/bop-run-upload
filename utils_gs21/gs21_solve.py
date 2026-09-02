@@ -50,6 +50,8 @@ Faithfulness
        operator a contraction on any grid). The pre-fix error is printed at
        setup; --no-renorm restores the raw kernel of GS21.m and the committed
        solfiles.
+    5. Operating profit is taxed, as in GS21 eq. (5): Pi = (1-tau)(e^{x+z}-delta)
+       - (1-tau) b. GS21.m:127 applied (1-tau) to the coupon only.
 
 MATLAB conventions preserved exactly
     * state ordering is b fastest, then x, then z  (GS21.m:95-97)
@@ -159,7 +161,9 @@ class Setup:
         self.x_ind = np.tile(np.repeat(np.arange(xnum), bnum), znum)
 
         # --- payoffs (GS21.m:127, 135) ---
-        self.pi_Rmat = (np.exp(x_v + z_v) - self.delta) - (1 - self.tau) * b_v
+        # GS21 eq. (5): Pi = (1-tau)(e^{x+z} - delta) - (1-tau) b. GS21.m:127 left the
+        # operating profit untaxed (only the coupon carried (1-tau)); fixed 2026-09-01.
+        self.pi_Rmat = (1 - self.tau) * (np.exp(x_v + z_v) - self.delta) - (1 - self.tau) * b_v
         self.def_Rmat_pre = self.phi * (1 - self.delta + np.exp(x_v + z_v))
 
         # --- SDF kernel, collapsed to (xnum, xnum) (GS21.m:138) ---
