@@ -75,3 +75,7 @@ variants/results/*.parquet
 variants/results/*_moments_*.npz
 variants/results/logs/
 variants/results/log_*.txt
+
+# local reference copies, never committed
+Code_light/
+gap_experiments/
