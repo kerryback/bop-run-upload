@@ -29,6 +29,9 @@ DESC = {
     ("GS", "exposure-types x regime"): "Firm types with heterogeneous production exposure e^{beta x} (3 types) crossed with regime-gamma [0.6,3.0].",
     ("GS", "exposure-types comp."): "Same exposure types + calm-value compensation (a-shifts dosed from measured calm log-value gaps) so values do not reveal types monotonically.",
     ("GS", "exposure-types wide (bx7)"): "5 types, beta 1-7, compensation dosed by value-gap slope, leverage characteristic added. Room +0.018, harvested vs classical methods: rff beats FMR by +0.016 (t=10.4); linear ranks+levels ridge comes within 0.001 of DKKM. FMR overflows in 0.8% of months (extreme raw levels).",
+    ("BGN", "regime-g extreme (g0235)"): "Regime multipliers pushed to [0.2, 3.5], near the closed-form frontier. Room saturates (+0.023, same as [0.3,3.0]) but the realized gap GROWS: +0.030 over the best linear and +0.108 over FMR (t=29) - the wilder regime breaks rolling FMR/FF/linlev while DKKM's rank features are immune. Largest relative gap of the project (~160% over FMR).",
+    ("KP", "priced-vol extreme (vyx)"): "kp_vy pushed to gamma_v=1.8, beta=[0.02,0.07,0.14] (premia ~6/15/28%/yr). Room +0.350 (largest of project) AND capture jumps from ~10% to ~29%: rff_ens 0.848 vs FMR 0.741 - gap +0.108 (t=21.6), +0.101 over the best linear. The data-magnitude KP win; stronger cross-sectional signal lifts both room and capture.",
+    ("GS", "exposure-types extreme (bx9)"): "5 types beta 1-9, harsher regime [0.5,4.0]. Room triples to +0.054 but the harvest COLLAPSES: linrank 0.210 ~ rff 0.209 (DKKM edge over linear gone; both beat FMR by ~+0.022, t~5). The wilder economy inflates theta-estimation noise faster than the room grows - GS's harvest frontier at T=360 is the bx7 calibration.",
 }
 
 COLS = ["model", "variant", "SR_max", "lin_ceil", "nl_ceil", "room", "FMR", "FF", "lin", "RFF", "gap_RFF-lin", "t_vs_FMR"]
@@ -50,9 +53,25 @@ COLDEF = [
 with open(os.path.join(HERE, "results", "grid_summary.csv")) as f:
     rows = list(csv.DictReader(f))
 
+HEADLINES = [
+    ("BGN", "regime-g extreme (g0235)", "flagship", "Gap +0.030 vs best linear, +0.108 vs FMR (t=29, 160% relative). Regime-whipsawed levels break FMR/FF/linlev; DKKM's rank features are immune."),
+    ("KP", "priced-vol extreme (vyx)", "flagship", "Room +0.350 and capture ~29%: gap +0.101 vs best linear, +0.108 vs FMR (t=21.6). The data-magnitude win - premium-side extremity raises room AND capture."),
+    ("GS", "exposure-types wide (bx7)", "flagship", "Gap +0.016 vs FMR (t=10.4), ~1:1 harvest of the +0.018 room; ranks+levels linear ridge comes within 0.001. GS's harvestable optimum - pushing further (bx9) triples room but capture collapses."),
+    ("", "", "law", "Realized gap = room x capture. Premium-side extremity (bigger priced exposure spreads) raises both. Volatility-side extremity either breaks the classical methods (BGN: relative gap explodes) or breaks theta estimation itself (GS bx9: gap vanishes). All three models need the same ingredient the published versions lack: heterogeneous firm-level exposures bent nonlinearly by an aggregate state, confined to rank/interaction space."),
+]
+
 wb = Workbook()
-ws = wb.active
-ws.title = "Summary grid"
+ws0 = wb.active
+ws0.title = "Headlines"
+ws0.append(["model", "economy", "", "result"])
+for r in HEADLINES:
+    ws0.append(list(r))
+for j, w in enumerate([7, 26, 9, 120], 1):
+    ws0.column_dimensions[ws0.cell(row=1, column=j).column_letter].width = w
+for i in range(1, ws0.max_row + 1):
+    ws0.cell(row=i, column=4).alignment = Alignment(wrap_text=True, vertical="top")
+
+ws = wb.create_sheet("Summary grid")
 hdr_fill = PatternFill("solid", fgColor="1F4E79")
 hdr_font = Font(bold=True, color="FFFFFF")
 thin = Border(bottom=Side(style="thin", color="D0D0D0"))

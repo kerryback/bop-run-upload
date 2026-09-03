@@ -1045,3 +1045,35 @@ interaction (full capture), kp_vy's is high-P curvature (capture bounded by P/T,
 virtue-of-complexity comparative static itself), gs_bx's is partly linear-in-levels (capture split with
 linlev). Getting all three to show room required, in every case, the same structural ingredient the
 published models lack: heterogeneous firm-level exposures that an aggregate state bends nonlinearly.
+
+## 19d. The extreme variants: how large can the gap get? (2026-09-02)
+
+Each winner pushed to its frontier — three different answers:
+
+**BGN `g0235` (gmult [0.2, 3.5], near the closed-form bound gmult < 3.65): the room channel saturates but
+the gap channel does not.** Population room is unchanged (+0.023, ratio 1.17 — same as [0.3, 3.0]; the
+wilder stress regime adds variance as fast as premium). But the realized gap GROWS on both margins:
+rff_ens 0.1752 vs linrank 0.1455 (+0.030, more than g0330's +0.024) and vs FMR 0.0674 — **+0.108, a 160%
+relative gain at t = 29.1**, with linlev collapsing outright (0.034, negative t). Mechanism: regime-whipsawed
+raw levels destroy every method that touches them, while DKKM's rank features are invariant; and rolling θ
+lifts DKKM above its own constant-θ ceiling (0.175 > 0.158). The largest *relative* gap of the project.
+
+**KP `vyx` (γ_v = 1.8, β = [0.02, 0.07, 0.14] → premia ~6/15/28%/yr): everything scales — the
+data-magnitude KP win.** Room +0.350 (SR_max 1.26, RFF-3600 ceiling 1.092 vs linear 0.743, ratio 1.47),
+and, decisively, capture jumps from ~10% to ~29%: **rff_ens 0.8484 vs FMR 0.7408 — gap +0.108 (t = 21.6),
++0.101 over the best linear method.** The 70% stronger cross-sectional signal (cs-sd(μ) 0.0064 vs 0.0038)
+raises the signal-to-noise of θ-estimation at fixed T, so the realized gap grows FASTER than the room —
+the vys bottleneck was noise, not room. Clause-(iii) signature intact: rff_lev < rff, linlev ≈ linrank.
+
+**GS `bx9` (β up to 9, regime [0.5, 4.0]): the room triples, the harvest collapses — the capture
+frontier found.** Room +0.054 (three × bx7; poly2 trails RFF by 0.031, deep curvature), but realized:
+linrank 0.2097 ≈ rff_ens 0.2090 — the DKKM edge over linear is GONE (both beat FMR by ~+0.022, t≈5).
+The harsher economy inflates conditional-moment noise faster than it adds room; at T=360 the P≫T ridge
+gives the surplus back. GS's harvestable optimum is the bx7 calibration (+0.016 vs FMR, t=10.4).
+
+**The design law, final form:** the realized gap = room × capture, and the extreme variants show the two
+factors respond to "more extreme" in opposite ways depending on WHERE the extremity lands. Premium-side
+extremity (KP: bigger priced spreads) raises both room and capture. Volatility-side extremity (BGN wide
+regimes: variance grows with premium; GS β=9: exploding conditional moments) leaves room flat-to-up but
+degrades classical methods faster than DKKM (BGN — relative gap explodes) or degrades DKKM's own
+θ-estimation (GS — gap vanishes). The empirically-relevant frontier is premium-side.
