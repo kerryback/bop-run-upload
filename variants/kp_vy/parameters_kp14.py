@@ -31,7 +31,13 @@ g_file, integ_file = 'G_func.csv', 'integ_results.npz'
 
 globals().update(json.loads(os.environ.get('KP_PARAM_OVERRIDES', '{}')))
 lambda_L = (1 - mu_H/(mu_H + mu_L)*lambda_H)/(1 - mu_H/(mu_H + mu_L))
-prob_H = (mu_L)/(mu_H + mu_L)
+# 2026-09-04: mu_H/mu_L are ENTRY rates (named for the state they lead TO),
+# so P(high) = mu_H/(mu_H+mu_L) = 0.3191, matching the lambda_L line above and
+# the G recombination in kp14_fd.py:100-101. Was mu_L/(mu_H+mu_L) = 0.6809,
+# which made E[lambda] = 1.7172 instead of the intended 1.0.
+# See ../../docs/kp14_regime_labels.md.
+prob_H = mu_H/(mu_H + mu_L)
+exit_H, exit_L = mu_L, mu_H   # rates of LEAVING the high / low state
 
 type_share = _np.array(type_share, float); type_share /= type_share.sum()
 type_bv = _np.array(type_bv, float)

@@ -11,7 +11,7 @@ def loadings_Taylor(K, x, z, eps, uj, rate, high, lambda_f, P, G_up, G_down):
     Et_uj = 1 + (uj - 1)*np.exp(-theta_u*dt)
     EtA = A(1+ (eps[np.newaxis, :, :] -1)*np.exp(-theta_eps*dt), Et_uj)
     G_approx = lambda_f*(G_down(Et_eps) + 
-                        (high*(1 - mu_H*dt) + (1-high)*mu_L*dt)*(G_up(Et_eps) - G_down(Et_eps)))
+                        (high*(1 - mu_L*dt) + (1-high)*mu_H*dt)*(G_up(Et_eps) - G_down(Et_eps)))
     
     # compute A_z
     term1 = alph*rate*dt*C*Et_z**((2*alpha-1)/(1 - alpha))*Et_x*A(Et_eps, 1)**(1/(1 - alpha))
@@ -39,8 +39,8 @@ def loadings_projection(K, x, z, eps, uj, rate, high, lambda_f, P, eret, Et_G_up
     Et_x2 = x**2*np.exp(2*mu_x*dt + sigma_x**2*dt)
 
     EtA = A(1+ (eps[np.newaxis, :, :] -1)*np.exp(-theta_eps*dt), 1 + (uj - 1)*np.exp(-theta_u*dt))
-    Et_G = ((high == 0)*lambda_f*((1 - mu_L*dt)* Et_G_down(eps) + mu_L*dt* Et_G_up(eps)) + 
-        (high == 1)*lambda_f*((1 - mu_H*dt)* Et_G_up(eps) + mu_H*dt * Et_G_down(eps)))
+    Et_G = ((high == 0)*lambda_f*((1 - mu_H*dt)* Et_G_down(eps) + mu_H*dt* Et_G_up(eps)) + 
+        (high == 1)*lambda_f*((1 - mu_L*dt)* Et_G_up(eps) + mu_L*dt * Et_G_down(eps)))
     rate = lambda_f*(lambda_L + (lambda_H - lambda_L)*high)
 
     term1 = (1 - delta*dt)*np.sum(EtA*K**alpha, axis = 0)

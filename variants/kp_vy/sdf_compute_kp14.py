@@ -128,8 +128,8 @@ def sdf_compute(N, T, arr_tuple):
             _t2 = lambda name: (lambda e: ebq**2 * _tab_at(name, yv)(e))              # squared/cross tables x e^{2 b y'}
             EtA_b = coef[0] + (_eE - 1)*coef[1] + (_uE - 1)*coef[2] + (_eE - 1)*(_uE - 1)*coef[3]
             part2 = (1 - delta*dt)*np.sum(chi[:t + 1, t, :]*EtA_b*Ktalpha, axis=0)
-            EtGb = ((high[t, :] == 0)*lambda_f*((1 - mu_L*dt)*_t1("Et_G_down")(eps[t, :]) + mu_L*dt*_t1("Et_G_up")(eps[t, :])) +
-                    (high[t, :] == 1)*lambda_f*((1 - mu_H*dt)*_t1("Et_G_up")(eps[t, :]) + mu_H*dt*_t1("Et_G_down")(eps[t, :])))
+            EtGb = ((high[t, :] == 0)*lambda_f*((1 - mu_H*dt)*_t1("Et_G_down")(eps[t, :]) + mu_H*dt*_t1("Et_G_up")(eps[t, :])) +
+                    (high[t, :] == 1)*lambda_f*((1 - mu_L*dt)*_t1("Et_G_up")(eps[t, :]) + mu_L*dt*_t1("Et_G_down")(eps[t, :])))
             part1 = C*rate[t, :]*dt*_t1("Et_A_mod")(eps[t, :]) + EtGb
 
             col = csr_matrix(Ktalpha).multiply(csr_matrix(EtA_b * (Ktalpha > 0)))
@@ -147,15 +147,15 @@ def sdf_compute(N, T, arr_tuple):
             Sv, S2vv, S2v2 = (Ktalpha*v).sum(axis=0), (Ktalpha**2*v).sum(axis=0), (Ktalpha**2*v**2).sum(axis=0)
             term2_diag = (1 - delta*dt)**2*(c0*(S1v**2 - S2v) + 2*c1*(S1v*Sv - S2vv) + c2*(Sv**2 - S2v2))
             term3_diag = 2*Et_z_alph[t]*C*rate[t, :]*dt*(1 - delta*dt)*(_Et_A_mod_A_s(eps_rep, ujt, coef, yv, ebq)*Ktalpha).sum(axis=0)
-            Et_A_Gb = ((high[t, :] == 0)*lambda_f*((1 - mu_L*dt)*_Et_A_G_s(eps_rep, ujt, coef, yv, "down", ebq) + mu_L*dt*_Et_A_G_s(eps_rep, ujt, coef, yv, "up", ebq)) +
-                       (high[t, :] == 1)*lambda_f*((1 - mu_H*dt)*_Et_A_G_s(eps_rep, ujt, coef, yv, "up", ebq) + mu_H*dt*_Et_A_G_s(eps_rep, ujt, coef, yv, "down", ebq)))
+            Et_A_Gb = ((high[t, :] == 0)*lambda_f*((1 - mu_H*dt)*_Et_A_G_s(eps_rep, ujt, coef, yv, "down", ebq) + mu_H*dt*_Et_A_G_s(eps_rep, ujt, coef, yv, "up", ebq)) +
+                       (high[t, :] == 1)*lambda_f*((1 - mu_L*dt)*_Et_A_G_s(eps_rep, ujt, coef, yv, "up", ebq) + mu_L*dt*_Et_A_G_s(eps_rep, ujt, coef, yv, "down", ebq)))
             term4_diag = 2*Et_z_alph[t]*(1 - delta*dt)*(Et_A_Gb*Ktalpha).sum(axis=0)
             term5_diag = Et_z_alph2[t]*C**2*rate[t, :]*dt*_t2("Et_A_mod_sq")(eps[t, :])
-            Et_G_sqb = ((high[t, :] == 0)*lambda_f**2*((1 - mu_L*dt)*_t2("Et_G_down_sq")(eps[t, :]) + mu_L*dt*_t2("Et_G_up_sq")(eps[t, :])) +
-                        (high[t, :] == 1)*lambda_f**2*((1 - mu_H*dt)*_t2("Et_G_up_sq")(eps[t, :]) + mu_H*dt*_t2("Et_G_down_sq")(eps[t, :])))
+            Et_G_sqb = ((high[t, :] == 0)*lambda_f**2*((1 - mu_H*dt)*_t2("Et_G_down_sq")(eps[t, :]) + mu_H*dt*_t2("Et_G_up_sq")(eps[t, :])) +
+                        (high[t, :] == 1)*lambda_f**2*((1 - mu_L*dt)*_t2("Et_G_up_sq")(eps[t, :]) + mu_L*dt*_t2("Et_G_down_sq")(eps[t, :])))
             term6_diag = Et_z_alph2[t]*Et_G_sqb
-            Et_lAGb = ((high[t, :] == 0)*lambda_f*lambda_L*dt*lambda_f*((1 - mu_L*dt)*_t2("Et_A_mod_G_down")(eps[t, :]) + mu_L*dt*_t2("Et_A_mod_G_up")(eps[t, :])) +
-                       (high[t, :] == 1)*lambda_f*lambda_H*dt*lambda_f*((1 - mu_H*dt)*_t2("Et_A_mod_G_up")(eps[t, :]) + mu_H*dt*_t2("Et_A_mod_G_down")(eps[t, :])))
+            Et_lAGb = ((high[t, :] == 0)*lambda_f*lambda_L*dt*lambda_f*((1 - mu_H*dt)*_t2("Et_A_mod_G_down")(eps[t, :]) + mu_H*dt*_t2("Et_A_mod_G_up")(eps[t, :])) +
+                       (high[t, :] == 1)*lambda_f*lambda_H*dt*lambda_f*((1 - mu_L*dt)*_t2("Et_A_mod_G_up")(eps[t, :]) + mu_L*dt*_t2("Et_A_mod_G_down")(eps[t, :])))
             term7_diag = Et_z_alph2[t]*2*C*Et_lAGb
             offdiag = term1 + term2 + term3
             diag = term1_diag + term2_diag + term3_diag + term4_diag + term5_diag + term6_diag + term7_diag

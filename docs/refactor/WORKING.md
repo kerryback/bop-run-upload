@@ -433,14 +433,58 @@ lost either way; both run in Phase 1.
   0.005 perturbation of one `gs_ashift` in one of five solve stages trips two independent
   tests. **bx7's solve-stage spec is now recoverable from git.**
 
+- [x] **KP14 lambda-regime fix, variants tree** (`variants/kp_vy/`). Could not be fixed at
+  the import line like the main tree — that tree uses `from parameters_kp14 import *` —
+  so the 14 exit-rate expressions were swapped individually with a token-safe scripted
+  edit, reviewed line by line. Changed: `parameters_kp14.py` (`prob_H`, plus
+  `exit_H`/`exit_L`), `panel_functions_kp14.py` (3 lines), `loadings_compute_kp14.py`
+  (3), `sdf_compute_kp14.py` (8), `kp14_fd_vy.py` (2 — the OU generator `Qs`).
+  Deliberately **left alone**: `kp14_fd.py` and `rebuild_kp_tables.py` G recombination
+  (uses the entry rates, already correct) and the `(mu_H+mu_L)` sums (convention-
+  invariant). Verified: `prob_H` = 0.319149, `lambda_L` = 0.367187 > 0, E[λ] = 1.000000000,
+  and the OU generator's stationary P(high) = 0.319149. Guards extended to 13 tests.
+
+  *Note:* `loadings_compute_kp14.py` is CRLF; the first edit silently normalised it to LF
+  and showed as a 110-line diff. Redone preserving line endings — the diff is now 3 lines.
+  Watch for this on any scripted edit in `variants/`.
+
 **Remaining in Phase 0:**
 
-- [ ] Fix the same lambda-regime inconsistency in `variants/kp_vy/parameters_kp14.py`
-  (lines 10, 33–34). **Blocks any vyx run.**
+- [ ] **Rebuild the vyx G/integ tables.** `kp14_fd_vy.py` is a solve-stage producer, so
+  the fix invalidates them. **68 tracked table files** (`G_vyx*.csv`, `integ_vyx*.npz`)
+  were built under the old generator. `meta_vyx.json` has been **deleted and untracked** —
+  its cache key omitted `mu_H`/`mu_L` and any producer-source hash, so it would have
+  silently served the stale tables. This is the staleness hole predicted in §4; it fired.
+  Rebuild is running (long: a 1e6-iteration fixed point per type, then 63 integ jobs).
+  **Until this completes and the tables are re-committed, no vyx run is valid.**
 - [ ] Measure and record the before/after delta of the KP fix on one panel.
 - [ ] Recover the deleted pre-refactor simulators (`git show bba735f~1`) into
   `tests/fixtures/prerefactor/` with recorded sha256s.
-- [ ] Confirm `room` is computed on nested bases (decision 6) and fix or document.
+- [x] **Decision 6 — `room` nesting. It did not hold, and that is the negative-room bug.**
+  Measured directly (5 chars, N=500; worst unexplained fraction of a linear rank column):
+
+  | ceiling basis | cols | unexplained | nests? |
+  |---|---|---|---|
+  | `poly2` | 21 | 3.4e-28 | yes — it already contains `X_rank` |
+  | `bins` | 301 | 6.1e-03 | **no** — decile dummies cannot reproduce a line |
+  | `rff36` | 37 | 1.7e-02 | **no** |
+  | `rff360` | 361 | 4.1e-04 | **no** |
+
+  So `bins` and `rff*` could score *below* `lin_rank`, making `room = nl_ceil - lin_ceil`
+  negative — exactly the two GS gamma(x) rows (room −0.0004/−0.0005 with gap +0.038/+0.041).
+  Those numbers were never headroom; they were a basis-comparison artifact.
+
+  **Fix:** `build_feature_sets(..., nest_linear=True)` now also emits `bins_n` and
+  `rff*_n`, which append the linear columns (ranks, plus levels under `--levels`) so
+  nesting holds by construction and `room >= 0`. The originals are kept, so every
+  published number stays reproducible. Verified: all `*_n` bases nest to <2e-29.
+  Guard: `tests/test_oracle_nesting.py`, 6/6 — including a test that fires if `bins`/`rff*`
+  ever start nesting on their own, so the `_n` duplicates get removed rather than
+  silently doubling compute.
+
+  **Bonus finding:** `rff*_n − rff*` is a direct measure of *how much of the linear
+  signal pure RFF fails to span*. That is the GS gamma(x) estimation-efficiency channel
+  from PLAN.md §0.0, now measurable rather than inferred. Worth reporting alongside room.
 - [ ] `--chars` env-var fix (currently a silent no-op; small, and `run_bop_job.sh`
   advertises the flag).
 

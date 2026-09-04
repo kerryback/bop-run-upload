@@ -149,7 +149,8 @@ def level_standardize(X_raw, med, iqr, clip=3.0):
     return np.clip((X_raw - med) / iqr, -clip, clip)
 
 
-def build_feature_sets(X_raw, X_rank, rf, Wdict, include_rf=True, X_lev=None, Wdict_lev=None):
+def build_feature_sets(X_raw, X_rank, rf, Wdict, include_rf=True, X_lev=None, Wdict_lev=None,
+                       nest_linear=True):
     """Returns dict name -> Phi (N x P).  X_raw/X_rank: N x d arrays of the 5 characteristics.
     rf: scalar standardised rate (BGN) or None.  Wdict: name -> W matrix for RFF bases."""
     N, d = X_rank.shape
@@ -164,9 +165,37 @@ def build_feature_sets(X_raw, X_rank, rf, Wdict, include_rf=True, X_lev=None, Wd
     feats["bins"] = np.column_stack([one, bin_features(X_raw)])
     for name, W in Wdict.items():
         feats[name] = np.column_stack([one, rff_features(X_rank, W, rf if include_rf else None)])
+
+    # ---- nested ceiling bases (2026-09-04, decision 6: "require nesting") ----
+    # `room` is defined as nl_ceil - lin_ceil, i.e. what a NONLINEAR method can add
+    # on top of any linear one. That reading is only valid if the nonlinear basis
+    # SPANS the linear one. Measured (5 chars, N=500), the worst unexplained
+    # fraction of a linear rank column is:
+    #     poly2   3.4e-28  -> nests (it already contains X_rank)
+    #     bins    6.1e-03  -> does NOT nest (decile dummies cannot reproduce a line)
+    #     rff36   1.7e-02  -> does NOT nest
+    #     rff360  4.1e-04  -> does NOT nest
+    # so `bins` and `rff*` could score BELOW lin_rank and make `room` negative --
+    # which is what the two GS gamma(x) rows in results/grid_summary.csv show
+    # (room = -0.0004 / -0.0005 alongside gap = +0.038 / +0.041).
+    #
+    # These `*_n` bases append X_rank so nesting holds by construction and
+    # room >= 0. The originals are kept so every published number stays
+    # reproducible, and the difference (e.g. rff360_n - rff360) is itself the
+    # interesting quantity: how much of the LINEAR signal pure RFF fails to span.
+    if nest_linear:
+        _lin_cols = [X_rank] if X_lev is None else [X_rank, X_lev]
+        feats["bins_n"] = np.column_stack([one] + _lin_cols + [bin_features(X_raw)])
+        for name, W in Wdict.items():
+            feats[name + "_n"] = np.column_stack(
+                [one] + _lin_cols + [rff_features(X_rank, W, rf if include_rf else None)])
+
     if X_lev is not None:
         feats["lin_rank_lev"] = np.column_stack([one, X_rank, X_lev])
         XX = np.column_stack([X_rank, X_lev])
         for name, W in (Wdict_lev or {}).items():
             feats[name] = np.column_stack([one, rff_features(XX, W, rf if include_rf else None)])
+            if nest_linear:
+                feats[name + "_n"] = np.column_stack(
+                    [one, X_rank, X_lev, rff_features(XX, W, rf if include_rf else None)])
     return feats
