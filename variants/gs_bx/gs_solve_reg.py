@@ -38,6 +38,49 @@ globals().update(ov)
 gmreg = np.array(gmreg, float)
 psw = np.array([p01, p10])
 
+# ---- provenance / content-addressing (variants/common/solstamp.py) ----
+# Before 2026-09-04 a solution.npz recorded a 15-element `params` array that
+# omitted gmreg, gs_bx, gs_ashift, p01/p10 and every grid size, so it could not
+# identify its own exposure type; and run_gs_bx7.sh guarded sol_reg with a bare
+# `[ -f solution.npz ]` existence check, which is parameter-blind. Both are fixed
+# here: the snapshot below covers the WHOLE parameter namespace plus this file's
+# source, and the manifest is the durable record.
+sys.path.insert(0, os.path.dirname(HERE))          # variants/, for `common`
+from common import solstamp                        # noqa: E402
+
+# xnum/tol are module globals and so are already captured in the namespace;
+# outdir/HERE are plumbing and must NOT make the identity directory-dependent.
+_snap = solstamp.snapshot(
+    {k: v for k, v in globals().items() if not k.startswith('_')},
+    [os.path.join(HERE, "gs_solve_reg.py")],
+    model="gs_bx",
+    skip=("outdir", "HERE", "ov"),
+    extra={"outdir": os.path.basename(outdir)},
+)
+_solution = os.path.join(outdir, "solution.npz")
+print(f"[solstamp] gs_bx {os.path.basename(outdir)} solve_id={_snap.solve_id}", flush=True)
+
+_hit = solstamp.lookup(_snap.solve_id)
+if _hit and not os.environ.get("GS_SOLVE_FORCE"):
+    _probs = solstamp.artifact_problems(_hit)
+    if not _probs:
+        print(f"cached: solve_id {_snap.solve_id} already solved "
+              f"({_hit['total_bytes']:,} B) -- nothing to do")
+        sys.exit(0)
+    print("[solstamp] manifest exists but artifacts do not match; re-solving:")
+    for _p in _probs[:5]:
+        print(f"  - {_p}")
+elif os.path.exists(_solution):
+    _prior = solstamp._find_by_artifacts([_solution])
+    if _prior and _prior["solve_id"] != _snap.solve_id:
+        print(f"[solstamp] {os.path.basename(outdir)}/solution.npz belongs to solve_id "
+              f"{_prior['solve_id']}; this run wants {_snap.solve_id}. Differences:")
+        for _k, _a, _b in solstamp.diff_params(_prior["params"], _snap.params)[:10]:
+            print(f"    {_k}: {_a!r} -> {_b!r}")
+    else:
+        print(f"[solstamp] {os.path.basename(outdir)}/solution.npz exists but its "
+              f"provenance is unrecorded; re-solving")
+
 
 def tauchen(sigma, rho, multiple, n):
     sdz = np.sqrt(sigma ** 2 / (1 - rho ** 2))
@@ -215,5 +258,19 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     b_refin_0=np.stack([bgrid[S[s]["b0idx"]] for s in (0, 1)]),
                     b_refin_I=np.stack([bgrid[S[s]["bIidx"]] for s in (0, 1)]),
                     params=np.array([g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
-                                     kappa_b, xi, imin, imax, sigma_m]))
-print("saved", os.path.join(outdir, "solution.npz"))
+                                     kappa_b, xi, imin, imax, sigma_m]),
+                    # 2026-09-04: the 15-element `params` array above omits every
+                    # parameter that distinguishes one bx7 solve from another, so a
+                    # solution could not identify its own exposure type. These do.
+                    solve_id=_snap.solve_id,
+                    gs_bx=gs_bx, gs_ashift=gs_ashift, gmreg=gmreg,
+                    p01=p01, p10=p10, xnum=xnum, bnum=bnum, znum=znum, tol=tol,
+                    params_json=json.dumps(_snap.params, sort_keys=True, default=str))
+print("saved", _solution)
+
+_man = solstamp.record(_snap, [_solution], tag=os.path.basename(outdir))
+print(f"[solstamp] recorded solve_id {_snap.solve_id} "
+      f"({_man['total_bytes']:,} B, committable={_man['committable']})")
+if not _man["committable"]:
+    print(f"[solstamp] artifact exceeds {solstamp.SMALL_ARTIFACT_BYTES:,} B -- kept out of "
+          f"git; the manifest in experiments/solfiles/ is the durable record")

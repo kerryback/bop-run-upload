@@ -410,6 +410,40 @@ MODEL_ALPHA_LST = {
 }
 
 
+# =============================================================================
+# BOP_CHARS -- characteristic-subset override
+# =============================================================================
+# 2026-09-04: main.py's --chars flag used to work by mutating MODEL_CHARS in
+# main.py's own interpreter. main.py runs all eight workflow steps as SEPARATE
+# subprocesses (main.py:180), each of which re-imports this module from disk, so
+# the mutation reached nothing: a --chars run produced byte-identical output to a
+# full-set run, silently. It has to cross the process boundary the same way
+# BOP_SCRATCH_DIR does -- through the environment.
+#
+# Value is a comma-separated list of FACTOR names (hml, cma, rmw, umd, mkt_lev),
+# matching the --chars CLI surface. "size" is always prepended; "smb" is always
+# produced.
+def _apply_chars_env():
+    raw = os.environ.get('BOP_CHARS')
+    if not raw:
+        return
+    names = [f.strip().lower() for f in raw.split(',') if f.strip()]
+    unknown = [f for f in names if f not in FACTOR_TO_CHAR]
+    if unknown:
+        raise ValueError(
+            f"BOP_CHARS contains unknown factor name(s) {unknown}; "
+            f"valid: {sorted(FACTOR_TO_CHAR)}"
+        )
+    chars = ["size"] + [FACTOR_TO_CHAR[f] for f in names]
+    factors = ["smb"] + names
+    for _m in MODEL_CHARS:
+        MODEL_CHARS[_m] = list(chars)
+        MODEL_FACTOR_NAMES[_m] = list(factors)
+
+
+_apply_chars_env()
+
+
 def get_model_config(model_name):
     """
     Get configuration dictionary for a specific model.

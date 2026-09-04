@@ -79,3 +79,7 @@ variants/results/log_*.txt
 # local reference copies, never committed
 Code_light/
 gap_experiments/
+
+# variants/: solve manifests ARE tracked (a few KB each, and they outlive the
+# artifacts they describe). Large artifacts are not -- see variants/README.md.
+!experiments/solfiles/*.json
