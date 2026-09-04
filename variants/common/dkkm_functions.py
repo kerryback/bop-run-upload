@@ -74,13 +74,22 @@ def factors(panel, W, n_jobs, start, end, model, chars, rf_cols=None):
 
 '''
 # DKKM portfolio based on past 360 months of factor returns f
+# NOTE (2026-09-04): everything from the ''' above to the ''' below is a
+# block-commented earlier version of mve_data, superseded by the live one after
+# ridge_regr. It is inert. Left in place, but note it still carries hardcoded
+# 360s in the ridge augmentation and penalties below where the live version now
+# uses WINDOW -- so do not resurrect it without converting those too.
 def mve_data(f, month, alpha, mkt_rf = None):
 
     X = f.loc[month-WINDOW:month-1].dropna().to_numpy() 
     include_mkt = mkt_rf is not None
 
     if include_mkt:
-        X = np.column_stack((X, mkt_rf.loc[month-360:month-1].dropna().to_numpy()))
+        # 2026-09-04: was a hardcoded 360 while the factor slice above uses
+        # WINDOW. Benign for every shipped run (all used --window 360), but at
+        # any other window the two slices differ in length and column_stack
+        # either raises or silently misaligns the market column.
+        X = np.column_stack((X, mkt_rf.loc[month-WINDOW:month-1].dropna().to_numpy()))
     y = np.ones(len(X))
     
     if include_mkt and alpha > 0:
@@ -167,7 +176,11 @@ def mve_data(f, month, alpha_lst, mkt_rf = None):
     include_mkt = mkt_rf is not None
 
     if include_mkt:
-        X = np.column_stack((X, mkt_rf.loc[month-360:month-1].dropna().to_numpy()))
+        # 2026-09-04: was a hardcoded 360 while the factor slice above uses
+        # WINDOW. Benign for every shipped run (all used --window 360), but at
+        # any other window the two slices differ in length and column_stack
+        # either raises or silently misaligns the market column.
+        X = np.column_stack((X, mkt_rf.loc[month-WINDOW:month-1].dropna().to_numpy()))
 
     y = np.ones(len(X))
     index_cols = list(f.columns) + (['mkt_rf'] if include_mkt else [])

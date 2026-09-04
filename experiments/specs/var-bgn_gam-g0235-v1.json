@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-g0235-v1",
+  "title": "BGN with a 2-state regime multiplying the prices of risk, pushed near the closed-form frontier",
+  "question": "Does an extreme regime-gamma economy open enough room for a nonlinear SDF method to beat FMR/FFC?",
+  "notes": "Transcribed verbatim from variants/bgn_gam/run_g0235.sh on 2026-09-04. gmult max 3.5 sits just under the closed-form frontier 1/(2*scale)=3.6548 asserted at variants/bgn_gam/sdf_compute.py:46. Published: room +0.0233, gap_RFF-lin +0.0297, t 29.1 (rank 4 of 24 on gap).",
+  "lineage": {
+    "parent_spec": null,
+    "changes": [],
+    "supersedes": null
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 300
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle_default"
+  },
+  "params": {
+    "gmult": [
+      0.2,
+      3.5
+    ],
+    "jstar_gam_file": "Jstar_g0235.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "gmult": [
+            0.2,
+            3.5
+          ],
+          "jstar_gam_file": "Jstar_g0235.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/bgn_gam/run_g0235.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "42749cda51a35f93154896e39075f1583a98656ec391acec23dad97134f0fb15"
+}

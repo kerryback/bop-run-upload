@@ -374,7 +374,79 @@ See [PLAN.md §0.0](PLAN.md). Short version, verified directly from
 
 ---
 
-## 10. Task checklist
+---
+
+## 11. Decisions (answered by Seth, 2026-09-04)
+
+| # | question | answer |
+|---|---|---|
+| 1 | Restate the KP14 main-pipeline numbers? | **yes** |
+| 2 | Which GS21 calibration is base? | **the one currently in `config.py`** — the variant hybrid becomes an `_asrun` spec only |
+| 3 | GS21 `sigma_m`? | **5** (already `config.py:354`; the variant's 2.5 is the deviation) |
+| 4 | Keep the bug-compatible `_asrun` twins runnable forever? | **yes** |
+| 5 | `draw_pooling`? | follow recommendation — keep mean-of-ratios, state it explicitly in the spec |
+| 6 | Is `room` defined on nested bases? | **require nesting** |
+| 7 | First production economy = g0235? | **yes** |
+| 8 | Ask Kerry now or at Phase 4? | **"kerry is fine with edits"** — governance resolved, no gate |
+
+Standing calls:
+- **GS21 method: use main's AR(1) + cubic + Gauss-Hermite.** The variant's Tauchen-exact
+  discretisation is *not* adopted. This settles Phase 7's open method question in advance —
+  the cross-check becomes informational, not a gate.
+- `capture` will not be raised; accepted.
+- Increased compute is acceptable.
+- **Duplicate BGN/KP variant code may stay** — no rerun until all phases are done, so
+  interim numerical equivalence between the trees is not required. This relaxes Phase 6
+  substantially and removes the need for interim collapse gates.
+- Interim viability of intermediate phases is not a constraint.
+
+### Sequencing consequence to resolve
+
+`PLAN.md` §0.0 (my analysis) recommends **vyx first**, because it is the only economy in
+the grid with a gap of economically interesting size (+0.101 vs g0235's +0.030). `PLAN.md`
+§10.7 (the synthesis) recommends **g0235 first**, because vyx carried the KP bug. Decision
+7 endorses g0235. Since decision 1 also authorises the KP fix — now landed for the main
+tree — the two are no longer in tension: **run g0235 first (cheaper, one solve rebuild, no
+KP dependency), then vyx immediately after the variants-side KP fix lands.** Nothing is
+lost either way; both run in Phase 1.
+
+---
+
+## 12. Phase 0 — progress
+
+**Done 2026-09-04:**
+
+- [x] **KP14 lambda-regime fix, main tree.** `config.py` `KP14_PROB_H` corrected to
+  `MU_H/(MU_H+MU_L)` = 0.3191; `KP14_EXIT_H`/`KP14_EXIT_L` added; the three consumers
+  (`panel_functions_kp14`, `sdf_compute_kp14`, `loadings_compute_kp14`) repointed at the
+  exit rates at the import line. `kp14_fd.py` and `config.py:257` correctly left alone.
+  Derivation in [../kp14_regime_labels.md](../kp14_regime_labels.md).
+  **Verified: the solfile stamp still passes, so this needs re-simulation but NOT
+  re-solving.** Guard: `tests/test_kp14_regime_labels.py`, 7/7 passing, all 7 fail under
+  the old convention.
+- [x] **`variants/common/dkkm_functions.py` WINDOW fix.** Both the live `mve_data` and the
+  block-commented earlier copy. (Correction to an earlier note in this file: the first
+  `mve_data` is inside a `'''...'''` block, i.e. commented out — not shadowed.)
+- [x] **Spec transcription.** `experiments/specs/{var-bgn_gam-g0235-v1, var-kp_vy-vyx-v1,
+  var-gs_bx-bx7-v1}.json`, each content-hashed over a canonical view that excludes prose
+  fields. Guard: `tests/test_specs_match_shell.py`, 14/14 passing; mutation-tested — a
+  0.005 perturbation of one `gs_ashift` in one of five solve stages trips two independent
+  tests. **bx7's solve-stage spec is now recoverable from git.**
+
+**Remaining in Phase 0:**
+
+- [ ] Fix the same lambda-regime inconsistency in `variants/kp_vy/parameters_kp14.py`
+  (lines 10, 33–34). **Blocks any vyx run.**
+- [ ] Measure and record the before/after delta of the KP fix on one panel.
+- [ ] Recover the deleted pre-refactor simulators (`git show bba735f~1`) into
+  `tests/fixtures/prerefactor/` with recorded sha256s.
+- [ ] Confirm `room` is computed on nested bases (decision 6) and fix or document.
+- [ ] `--chars` env-var fix (currently a silent no-op; small, and `run_bop_job.sh`
+  advertises the flag).
+
+---
+
+## 13. Task checklist
 
 - [x] Job 1 understood and written up (§1)
 - [x] Job 3 divergences catalogued, 12 verified (§2)
@@ -383,6 +455,7 @@ See [PLAN.md §0.0](PLAN.md). Short version, verified directly from
 - [x] Repo-merge recommendation (§5)
 - [x] Integration architecture chosen — spec_first + unify config discipline
 - [x] Plan written to docs/refactor/PLAN.md
-- [ ] Plan presented to Seth + artifact published
-- [ ] **Seth to decide the 8 open questions in PLAN.md §10**
+- [x] Plan presented to Seth + artifact published
+- [x] **8 decisions answered — see §11**
+- [ ] Phase 0 (see §12) — 3 of 8 items done
 - [ ] — implementation phases TBD after plan approval —

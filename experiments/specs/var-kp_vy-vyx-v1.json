@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyx-v1",
+  "title": "KP14 with a priced OU volatility factor and three firm types with exponential exposure",
+  "question": "Does premium-side extremity in the priced-vol channel create both room and capture?",
+  "notes": "Transcribed verbatim from variants/kp_vy/run_vyx.sh on 2026-09-04. Premia approx 4.6/12/22 pct per year. Feasibility pre-checked: all A-coefficients finite, rho_ty > 0. Published: room +0.3496, gap_RFF-lin +0.1009, t 21.6 -- RANK 1 OF 24 ON GAP by a factor of 2.5. BLOCKED: variants/kp_vy/parameters_kp14.py:10,33-34 carries the same lambda-regime inconsistency fixed in config.py on 2026-09-04 (see docs/kp14_regime_labels.md). Must be fixed before this spec is run.",
+  "lineage": {
+    "parent_spec": null,
+    "changes": [],
+    "supersedes": null
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "fixed_eps10",
+    "kp_regime_labels": "legacy_swapped",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle_default"
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 1.8,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyx"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            0.02,
+            0.07,
+            0.14
+          ],
+          "gamma_v": 1.8,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyx"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/kp_vy/run_vyx.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "d6e2132da22ef4aea6c49c258eb6934c588e4fa99008e6fd6beefbea65f93a85"
+}
