@@ -22,8 +22,8 @@ lam_rate = np.tile([lambda_H, lambda_L], NY)
 rho_j = np.repeat(rho_y, 2)
 Qs = np.zeros((NS, NS))
 for iy in range(NY):
-    Qs[2 * iy, 2 * iy + 1] += mu_H
-    Qs[2 * iy + 1, 2 * iy] += mu_L
+    Qs[2 * iy, 2 * iy + 1] += mu_L
+    Qs[2 * iy + 1, 2 * iy] += mu_H
     for jy in range(NY):
         if jy != iy:
             Qs[2 * iy, 2 * jy] += Qy[iy, jy]

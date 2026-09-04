@@ -93,7 +93,7 @@ def create_arrays(N, T):
         state[0,:] = np.random.binomial(1, prob_H, size = (N, ))  # 1 = high, 0 = low
         for t in range(1, T + 1):
             curr = state[t - 1,:]
-            switch_prob = np.where(curr == 1, mu_H * dt, mu_L * dt)
+            switch_prob = np.where(curr == 1, mu_L * dt, mu_H * dt)
             state[t,:] =  np.where(np.random.random((N,)) < switch_prob, 1 - curr, curr)
 
         rate = lambda_L + state*(lambda_H - lambda_L)
@@ -230,8 +230,8 @@ def create_arrays(N, T):
                     row = row + ghw[q] * np.exp(type_bv[f] * yq[t_, q]) * at_y([tb[name] for tb in Et_ty[f]], yq[t_, q])(e[t_, cols])
                 out[t_, cols] = row
         return out
-    Et_G = ((high == 0)*lambda_f*((1 - mu_L*dt)* _mixG("Et_G_down", eps) + mu_L*dt* _mixG("Et_G_up", eps)) + 
-        (high == 1)*lambda_f*((1 - mu_H*dt)* _mixG("Et_G_up", eps) + mu_H*dt * _mixG("Et_G_down", eps)))
+    Et_G = ((high == 0)*lambda_f*((1 - mu_H*dt)* _mixG("Et_G_down", eps) + mu_H*dt* _mixG("Et_G_up", eps)) + 
+        (high == 1)*lambda_f*((1 - mu_L*dt)* _mixG("Et_G_up", eps) + mu_L*dt * _mixG("Et_G_down", eps)))
 
     term2 = Et_z_alph*Et_x*Et_G
     term3 = np.sum(chi*eps[np.newaxis, :, :]*uj*(x*ebv)[np.newaxis, :, :]*K**alpha*dt*tt[None, None, :], axis = 0)

@@ -101,6 +101,94 @@ def test_simulated_mean_lambda_is_one():
     assert abs(total / t - 1.0) < 0.02, f"E[lambda] = {total / t:.4f}, expected 1.0"
 
 
+# --------------------------------------------------------------------------
+# The variants/kp_vy tree carries an independent copy of the same convention.
+# It uses `from parameters_kp14 import *`, so it could not be fixed at the
+# import line the way the main tree was -- the exit-rate expressions were
+# swapped individually instead. These tests pin the result.
+# --------------------------------------------------------------------------
+
+VARIANTS_KP = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "variants", "kp_vy"
+)
+
+
+def _load_variant_params():
+    """Import variants/kp_vy/parameters_kp14.py under the vyx overrides."""
+    import importlib.util
+
+    os.environ.setdefault(
+        "KP_PARAM_OVERRIDES",
+        '{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],'
+        '"gamma_v":1.8,"bv_comp":1.2}',
+    )
+    path = os.path.join(VARIANTS_KP, "parameters_kp14.py")
+    sys.path.insert(0, VARIANTS_KP)
+    try:
+        spec = importlib.util.spec_from_file_location("_vparams", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    finally:
+        sys.path.remove(VARIANTS_KP)
+
+
+def test_variants_prob_h_matches_main():
+    v = _load_variant_params()
+    assert abs(v.prob_H - c.KP14_PROB_H) < 1e-15
+    assert abs(v.prob_H - P_H_EXPECTED) < 1e-15
+
+
+def test_variants_lambda_normalised_to_one():
+    v = _load_variant_params()
+    e_lambda = v.prob_H * v.lambda_H + (1 - v.prob_H) * v.lambda_L
+    assert abs(e_lambda - 1.0) < 1e-12, f"E[lambda] = {e_lambda}"
+
+
+def test_variants_exit_rates_defined_and_crossed():
+    v = _load_variant_params()
+    assert (v.exit_H, v.exit_L) == (v.mu_L, v.mu_H)
+
+
+def test_variants_ou_generator_has_the_right_stationary_split():
+    """kp14_fd_vy.py builds Qs with H->L = mu_L and L->H = mu_H.
+
+    Reproduces that 2x2 block and checks its stationary distribution. If someone
+    swaps those two lines back, P(high) flips to 0.6809 and the G tables are
+    solved on a different economy than the panel is simulated from -- silently.
+    """
+    v = _load_variant_params()
+    src = open(os.path.join(VARIANTS_KP, "kp14_fd_vy.py")).read()
+    assert "Qs[2 * iy, 2 * iy + 1] += mu_L" in src, "H->L rate is not mu_L"
+    assert "Qs[2 * iy + 1, 2 * iy] += mu_H" in src, "L->H rate is not mu_H"
+
+    Q = np.array([[-v.mu_L, v.mu_L], [v.mu_H, -v.mu_H]])
+    w, vec = np.linalg.eig(Q.T)
+    pi = np.real(vec[:, np.argmin(np.abs(w))])
+    pi /= pi.sum()
+    assert abs(pi[0] - v.prob_H) < 1e-12, f"generator P(high) = {pi[0]}"
+
+
+def test_variants_panel_transition_uses_exit_rates():
+    """panel_functions_kp14.py:96 must leave the HIGH state at rate mu_L."""
+    src = open(os.path.join(VARIANTS_KP, "panel_functions_kp14.py")).read()
+    assert "np.where(curr == 1, mu_L * dt, mu_H * dt)" in src, (
+        "the regime transition is not using exit rates"
+    )
+
+
+def test_variants_g_recombination_left_alone():
+    """kp14_fd.py:100-101 uses the ENTRY rates and was already correct.
+
+    Guards against an over-eager future swap: these two coefficients must stay
+    mu_L/(mu_L+mu_H) for G_up and mu_H/(mu_L+mu_H) for G_down.
+    """
+    for fn in ("kp14_fd.py", "rebuild_kp_tables.py"):
+        src = open(os.path.join(VARIANTS_KP, fn)).read()
+        assert "mu_L/(mu_L + mu_H) *(lambda_H - lambda_L)" in src, fn
+        assert "mu_H/(mu_L + mu_H) *(lambda_H - lambda_L)" in src, fn
+
+
 if __name__ == "__main__":
     import traceback
 
