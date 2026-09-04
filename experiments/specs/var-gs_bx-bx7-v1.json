@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-bx7-v1",
+  "title": "GS21 2-regime with five exposure types, each a separate solve",
+  "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
+  "notes": "Transcribed verbatim from variants/gs_bx/run_gs_bx7.sh on 2026-09-04. THIS SCRIPT WAS THE ONLY COMMITTED RECORD OF THIS EXPERIMENT: the oracle JSON at variants/results/gs_bx_oracle_bx7.json records overrides={} because run_oracle.py reads GS_SIM_OVERRIDES while the real spec lives in five GS_PARAM_OVERRIDES solve invocations plus three GS_BX_* env vars, and the five solution.npz embed a 15-element params array that excludes gs_bx and gs_ashift. Published: room +0.0182, gap_RFF-lin +0.0013, t 10.4 -- RANK 22 OF 24 ON GAP. Demoted out of the first production run. OPEN: gs_solve_reg.py:80-81 includes gs_ashift in the payoff tables while gs_sim_bx.py:212 omits it from op_cash_flow, which feeds the exported roe characteristic, for four of the five types. Resolve before scaling. Parameters here are the as-run hybrid, NOT config.py; per decision 2026-09-04, config.py is the base calibration and this spec is preserved for reproducibility only.",
+  "lineage": {
+    "parent_spec": null,
+    "changes": [],
+    "supersedes": null
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle_default",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      0.6,
+      3.0
+    ]
+  },
+  "types": {
+    "share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0,
+        2.5,
+        4.0,
+        5.5,
+        7.0
+      ],
+      "gs_ashift": [
+        0.0,
+        0.225,
+        0.45,
+        0.675,
+        0.9
+      ]
+    },
+    "soldirs": [
+      "sol_reg",
+      "sol_b25c",
+      "sol_b40c",
+      "sol_b55c",
+      "sol_b70c"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_reg",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ]
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      },
+      {
+        "name": "sol_b25c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 2.5,
+          "gs_ashift": 0.225
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 1
+      },
+      {
+        "name": "sol_b40c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 4.0,
+          "gs_ashift": 0.45
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 2
+      },
+      {
+        "name": "sol_b55c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 5.5,
+          "gs_ashift": 0.675
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 3
+      },
+      {
+        "name": "sol_b70c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 7.0,
+          "gs_ashift": 0.9
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 4
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c",
+    "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
+    "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1,
+      3,
+      10
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/gs_bx/run_gs_bx7.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "62940685af77a3da0796a268735887b77c1c8eee5187909b1905be36dc604bf5"
+}

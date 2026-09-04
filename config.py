@@ -266,7 +266,28 @@ KP14_GAMMA_X = 0.69
 KP14_GAMMA_Z = -0.35
 KP14_ALPHA = 0.85
 
-KP14_PROB_H = KP14_MU_L / (KP14_MU_H + KP14_MU_L)
+# 2026-09-04: KP14_MU_H / KP14_MU_L are ENTRY rates, named for the state they
+# lead TO -- MU_H is the low->high rate, MU_L is the high->low rate. Hence the
+# stationary P(high) = MU_H/(MU_H+MU_L) = 0.3191.
+#
+# This was previously MU_L/(MU_H+MU_L) = 0.6809, which contradicted the two
+# places that pin the same quantity independently:
+#   * KP14_LAMBDA_L (line 257) solves w*LAMBDA_H + (1-w)*LAMBDA_L = 1 with
+#     w = MU_H/(MU_H+MU_L), i.e. E[lambda] = 1 at P(high) = 0.3191.
+#   * utils_kp14/kp14_fd.py:118-119 recombines the (mean, difference) basis as
+#     G_up = Gbar + (1-P_H)*D and G_down = Gbar - P_H*D with coefficients
+#     MU_L/(MU_L+MU_H) and MU_H/(MU_L+MU_H), i.e. again P(high) = 0.3191.
+# At P(high) = 0.6809 the normalisation is infeasible: LAMBDA_L = -1.88, a
+# negative arrival rate. Under the old value the simulated economy had
+# E[lambda] = 1.7172 rather than the intended 1.0.
+# See docs/kp14_regime_labels.md. No solfile depends on this constant, so the
+# fix requires re-simulation but NOT re-solving.
+KP14_PROB_H = KP14_MU_H / (KP14_MU_H + KP14_MU_L)
+
+# Exit (hazard) rates, derived from the entry rates above. Consumers that ask
+# "given I am in state s, at what rate do I leave?" must use these, not MU_H/MU_L.
+KP14_EXIT_H = KP14_MU_L      # rate of leaving the HIGH state
+KP14_EXIT_L = KP14_MU_H      # rate of leaving the LOW state
 KP14_CONST = KP14_R + KP14_GAMMA_X * KP14_SIGMA_X + KP14_DELTA - KP14_MU_X
 KP14_A_0 = 1 / KP14_CONST
 KP14_A_1 = 1 / (KP14_CONST + KP14_THETA_EPS)

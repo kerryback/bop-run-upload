@@ -11,7 +11,10 @@ from config import (
     KP14_THETA_U as theta_u, KP14_SIGMA_U as sigma_u,
     KP14_DELTA as delta, KP14_MU_LAMBDA as mu_lambda,
     KP14_SIGMA_LAMBDA as sigma_lambda,
-    KP14_MU_H as mu_H, KP14_MU_L as mu_L,
+    # 2026-09-04: local mu_H/mu_L are EXIT rates (rate of LEAVING that state).
+    # config's KP14_MU_H/MU_L are ENTRY rates, so they map across. See
+    # docs/kp14_regime_labels.md and the note at config.py:KP14_PROB_H.
+    KP14_EXIT_H as mu_H, KP14_EXIT_L as mu_L,
     KP14_LAMBDA_H as lambda_H, KP14_LAMBDA_L as lambda_L,
     KP14_R as r, KP14_GAMMA_X as gamma_x, KP14_GAMMA_Z as gamma_z,
     KP14_ALPHA as alpha, KP14_PROB_H as prob_H,
