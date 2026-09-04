@@ -457,9 +457,46 @@ lost either way; both run in Phase 1.
   silently served the stale tables. This is the staleness hole predicted in §4; it fired.
   Rebuild is running (long: a 1e6-iteration fixed point per type, then 63 integ jobs).
   **Until this completes and the tables are re-committed, no vyx run is valid.**
+- [x] **Phase 0 item 5 — KP quadrature regression retired.** The plan said "delete
+  `variants/kp_vy/integ_kp14.py` and import main's (78.9% identical)". **That is
+  not feasible**: the two have different interfaces — the variant reads
+  `KP_VY_TYPE`/`KP_GAMY_YIDX` and emits one `.npz` per (type, y-node), which is the
+  entire point of `kp_vy`, while main's reads `config` and emits a single
+  `integ_results.npz` with no notion of a y-grid or firm types. What transferred is
+  the *technique*, ~5 lines, into both `integ_kp14.py` and `rebuild_kp_tables.py`:
+  the density's own quantiles as the interval, and a mass check that **raises**
+  instead of printing.
+
+  Demonstrated rather than asserted — the old fixed `[0,10]` interval reproduced
+  live:
+
+  | sigma_eps | mass, fixed [0,10] | mass, adaptive |
+  |---|---|---|
+  | 0.20 *(shipped)* | 1.000000 | 1.000000000 |
+  | 0.10 | 1.000000 | 1.000000000 |
+  | 0.05 | 1.000000 | 1.000000000 |
+  | **0.02** | **0.000000** | 1.000000000 |
+
+  At the shipped `sigma_eps = 0.2` the two agree to **1e-13**, so this removes a
+  landmine without moving any published number — and the in-flight rebuild's
+  integral tables stay numerically valid. Guard: `tests/test_kp_quadrature.py`, 8/8.
+
 - [ ] Measure and record the before/after delta of the KP fix on one panel.
-- [ ] Recover the deleted pre-refactor simulators (`git show bba735f~1`) into
-  `tests/fixtures/prerefactor/` with recorded sha256s.
+- [x] **Pre-refactor fixtures — the plan step was based on a false premise, and is
+  unnecessary.** `variants/` **did not exist before `bba735f`**; that commit *added* 130
+  files. Its message describes dropping 18 economies, but that happened in the source
+  tree (Alexander Ober's copy / the Dropbox `gap_experiments` folder), never in this
+  repo's history. `git diff --diff-filter=D bba735f~1 bba735f` returns **0 files**, so
+  `git show bba735f~1` cannot recover anything, and neither `gap_experiments/` nor
+  `Code_light/` exists on this machine (both gitignored).
+
+  **But no fixture is needed.** The collapse test wants a baseline to compare against,
+  and the real baseline is in this repo: `utils_bgn/` and `utils_kp14/`. The variants
+  ship the collapse defaults already — `variants/bgn_gam/parameters.py:34` has
+  `gmult = [1.0, 1.0]` ("reproduces baseline exactly") and
+  `variants/kp_vy/parameters_kp14.py:26-27` has `type_share=[1.0]`, `type_bv=[0.0]`.
+  So Phase 5's collapse identities run **variant-at-defaults vs `utils_*`**, which is
+  also the comparison that actually matters for Phase 6 unification. Plan corrected.
 - [x] **Decision 6 — `room` nesting. It did not hold, and that is the negative-room bug.**
   Measured directly (5 chars, N=500; worst unexplained fraction of a linear rank column):
 
@@ -485,8 +522,190 @@ lost either way; both run in Phase 1.
   **Bonus finding:** `rff*_n − rff*` is a direct measure of *how much of the linear
   signal pure RFF fails to span*. That is the GS gamma(x) estimation-efficiency channel
   from PLAN.md §0.0, now measurable rather than inferred. Worth reporting alongside room.
-- [ ] `--chars` env-var fix (currently a silent no-op; small, and `run_bop_job.sh`
-  advertises the flag).
+- [x] **`--chars` fixed.** It now travels as `BOP_CHARS`, the same way `BOP_SCRATCH_DIR`
+  already crosses the process boundary. `config.py` gained `_apply_chars_env()`, applied
+  at module level so every access path sees it (not just `get_model_config`); `main.py`
+  exports the env var *and* keeps the in-process mutation so its own view agrees with the
+  children's. Also fixed: the unguarded `sys.argv[chars_idx + 1]` (raised `IndexError` on
+  a bare `--chars`) and empty values.
+
+  **Plus a new guard.** Output filenames carry no chars token, and `main.py` short-circuits
+  the whole workflow when `{id}_results.pkl` exists — so fixing propagation alone would
+  have created a *fresh* silent-wrong-number path (a `--chars` run in a directory holding
+  a full-set run would return the full-set results as its own). The resume check now reads
+  the `chars` field already recorded at `evaluate_sdfs.py:237` and **exits with an error**
+  on mismatch instead of skipping.
+
+  Guard: `tests/test_chars_override.py`, 10/10, including one that spawns a real
+  subprocess exactly as `main.py:180` does — that is the test that would have caught the
+  original bug. Invalid factor names now fail loudly at config import.
+
+  Still outstanding (deliberately not done): the char→factor map is declared in **three**
+  private copies (`main.py:92`, `fama_functions.py:66` and `:182`) while
+  `config.CHAR_TO_FACTOR` sits unused. A test pins the canonical contents; collapsing the
+  copies touches numerical code and belongs with Phase 2.
+
+---
+
+## 14. KP table rebuilds — cost and the staleness hole (2026-09-04)
+
+**Does a new parametrization need a table rebuild? Yes, for every knob worth varying —
+and, worse, *silently not* for seven that also change the tables.**
+
+`build_vy_tables.py:9-13` caches on a hand-written 5-key stamp
+`{bv, gv, ky, comp, rho}`. Tested empirically by perturbing each parameter and
+recomputing the key:
+
+| parameter | key notices? | but does it change the tables? |
+|---|---|---|
+| `type_bv` | detected | yes — enters `rho_ty`, `const_ty`, `util` |
+| `gamma_v` | detected | yes — enters `rho_ty`, `const_ty` |
+| `kappa_y` | detected | yes — sets `sigma_y` and the OU drift |
+| `bv_comp` | detected | yes — scales the cash-flow level |
+| `delta` | **MISSED** | yes — `const_ty` → A-coefficients → `util` |
+| `theta_eps` | **MISSED** | yes — eps drift in the FD operator *and* A_1/A_3 |
+| `theta_u` | **MISSED** | yes — A_2/A_3 |
+| `sigma_eps` | **MISSED** | yes — eps diffusion in the FD operator |
+| `lambda_H` | **MISSED** | yes — `lam_rate` scales `util` directly |
+| `mu_H`, `mu_L` | **MISSED** | yes — the `Qs` regime generator ← *this is what just bit us* |
+
+The producer source is not hashed either, so editing `kp14_fd_vy.py` also reuses silently.
+
+**Consequences for the experiment sequence:**
+
+1. The four *detected* knobs are precisely the gap-driving ones REPORT identifies, so
+   **every new KP economy pays a full rebuild.** Cost = `ntypes` G solves + `ntypes × NY`
+   integral jobs, linear in the number of exposure types. Each G solve is one
+   42,000 × 42,000 sparse LU factorisation followed by an iterative loop to 1e-8;
+   currently **~35+ min per type**, so a 3-type economy is a multi-hour job before the
+   oracle can even start. Budget this per KP spec.
+2. The seven *missed* parameters are a live wrong-numbers path, not a theoretical one.
+3. `build_vy_tables.py:18` runs the solve with `stdout=subprocess.DEVNULL`, so
+   `kp14_fd_vy.py`'s own `flush=True` progress prints are discarded — **a multi-hour
+   rebuild shows nothing at all**, no iteration count, no ETA. Fix this before running
+   the experiment loop; a silent multi-hour job is indistinguishable from a hung one.
+
+**Fix, and it should move up the plan.** `utils/solfile_stamp.py` already does exactly the
+right thing for the main tree: it AST-parses the producer's own import statements to
+derive the parameter list, hashes those values plus the producer's source, and hard-fails
+at import. Pointing `build_vy_tables.py` at that mechanism instead of the hand-rolled key
+would have caught `mu_H`/`mu_L` automatically. This was Phase 7 work; it belongs in
+Phase 0/1, because every KP experiment depends on it and KP is the highest-gap model.
+
+Artifact sizes are small — ~2.4 MB of G CSVs plus ~5.7 MB of integral NPZs per economy,
+and tables are namespaced by prefix so economies accumulate rather than overwrite. Git is
+a fine home for them; the problem is staleness detection, not size.
+
+---
+
+## 15. Solve provenance generalized to all three models (2026-09-04)
+
+Moved up from Phase 7 per instruction. `variants/common/solstamp.py` now gives BGN,
+KP and GS one content-addressed identity + registry. 23/23 tests in
+`tests/test_solstamp.py`.
+
+### Why it could not just reuse `utils/solfile_stamp.py`
+
+That module derives a producer's parameter list by **AST-parsing its import
+statements**. The variants use `from parameters import *`, so the import statement
+enumerates nothing. `solstamp` instead snapshots the producer's *entire effective
+parameter namespace* after overrides, plus the sha256 of every source file that can
+change the output. Over-capture only ever triggers an unnecessary rebuild;
+under-capture produces wrong numbers — that is the right side to err on.
+
+### What each model had wrong, and what it has now
+
+| model | before | after |
+|---|---|---|
+| KP | hand-written 5-key stamp; **missed 7 params** + producer source | full namespace + 4 source digests |
+| BGN | **no stamp at all** — the output filename was the only identity | full namespace + 3 source digests + `JSTAR_TOL` |
+| GS | 15-element `params` array omitting `gmreg`/`gs_bx`/`gs_ashift`/`p01`/`p10`/grids; shell guard was a bare `[ -f solution.npz ]` | full namespace, `solve_id` + identifying params written into the npz, guard removed |
+
+Verified empirically, not by inspection:
+- KP: all 11 tested parameters now move the id, **including all 7 the old key
+  missed**; a whitespace-only edit to `kp14_fd_vy.py` moves it, and reverting
+  restores it (a true content hash, not a counter).
+- BGN: `gmult`, `sigma_z`, `kappa` and `JSTAR_TOL` all move the id.
+- GS: `gs_bx`, `gs_ashift`, `gmreg`, `xnum`, `tol`, `sigma_m` all move the id, while
+  **the same parameters written to a different `outdir` keep the same id** — so an
+  identical solve stays reusable.
+
+### Two bugs I introduced and caught in testing
+
+1. `extra` is descriptive and deliberately unhashed, but I first put BGN's
+   `JSTAR_TOL` there — it changes the table, so it was silently ignored. Added a
+   separate hashed `env_params`.
+2. GS snapshots `globals()`, which contains `outdir` and `HERE`, so the id was
+   machine- and directory-dependent. Added `skip=`.
+
+Both are now pinned by tests (`test_env_params_are_hashed`,
+`test_skip_excludes_path_plumbing`).
+
+### The registry — durable record of old experiments' solfiles
+
+`experiments/solfiles/<solve_id>.json`, committed. A few KB each; hundreds of
+experiments cost a few MB. Records parameters, source digests, and every artifact
+with size and sha256. **The manifest outlives the artifact** — after scratch is
+purged you can still say which parameters produced a number, and re-running the
+producer reproduces the same `solve_id`.
+
+    python variants/solfiles.py list | show <id> | diff <a> <b> | check | gc --dry-run
+
+Size policy: artifacts <= 32 MB are committed (BGN ~KB, KP ~8 MB); a `gs_bx` economy
+is five ~85 MB solutions and stays out of git, manifest-only. Each manifest's
+`committable` field says which case applies.
+
+### Also fixed
+
+- **The silent multi-hour solve.** `build_vy_tables.py` ran the G solve with
+  `stdout=subprocess.DEVNULL`, discarding `kp14_fd_vy.py`'s own `flush=True`
+  iteration prints — a running job was indistinguishable from a hung one. Now
+  streamed and prefixed. Pinned by `test_kp_streams_solver_progress`.
+- `KP_VY_ADOPT=1` records tables already on disk without re-solving, so a build
+  predating the registry does not cost another multi-hour rebuild to get a manifest.
+
+### Consequence for the plan
+
+**Every new parametrization needs a new solve** — the knobs that move the gap are
+exactly the ones that enter the value functions. Documented in `variants/README.md`
+with a per-model cost table. Budget the solve stage separately from the oracle
+stage: KP is ~45 min *per type* (multi-hour for a 3-type economy), GS ~a minute per
+type but ~85 MB each, BGN minutes and small.
+
+---
+
+## 16. Staged solve ids (2026-09-04)
+
+A design flaw in §15, found while sequencing Phase 0 item 5: `solstamp` bundled every
+source file into one `solve_id`, so touching the **cheap** producer (`integ_kp14.py`,
+63 short jobs) invalidated the **expensive** one (`kp14_fd_vy.py`, ~45 min per type).
+Fixing the quadrature would have forced a full G re-solve — hours, for a change that
+cannot affect the G tables at all.
+
+`utils/solfile_stamp.py` already models the right structure with its `inputs` field.
+`solstamp` now does too: `snapshot(..., stage=..., inputs=artifact_digests([...]))`.
+
+KP is now two independently cached stages, with the driver deliberately **excluded**
+from both source lists — it only orchestrates, and including it would recreate the
+coupling the split removes:
+
+| stage | sources | artifacts | cost |
+|---|---|---|---|
+| `G` | `kp14_fd_vy.py`, `parameters_kp14.py` | `G_<prefix><f>.csv` | ~45 min per type |
+| `integ` | `integ_kp14.py`, `parameters_kp14.py`, **+ the G tables as `inputs`** | `integ_<prefix><f>_<iy>.npz` | 63 short jobs |
+
+Verified end to end on the real files:
+
+- edit `integ_kp14.py` → **G id unchanged**, integ id moves ← the point of the split
+- edit `kp14_fd_vy.py` → G id moves
+- perturb `G_vyx0.csv` → integ id moves (mode 3: upstream moved, downstream follows)
+- restore everything → both ids return to baseline (a true content hash, not a counter)
+
+Also: the integ driver now keeps subprocess **stderr** and re-raises. `integ_kp14.py`
+raises on mass loss, and the previous `stderr=DEVNULL` would have swallowed exactly
+the signal the new guard exists to produce.
+
+Tests: `tests/test_solstamp.py` 27/27, `tests/test_kp_quadrature.py` 8/8.
 
 ---
 
@@ -501,5 +720,5 @@ lost either way; both run in Phase 1.
 - [x] Plan written to docs/refactor/PLAN.md
 - [x] Plan presented to Seth + artifact published
 - [x] **8 decisions answered — see §11**
-- [ ] Phase 0 (see §12) — 3 of 8 items done
-- [ ] — implementation phases TBD after plan approval —
+- [ ] Phase 0 (see §12) — 6 of 8 done; remaining: vyx table rebuild (running), KP delta measurement
+- [ ] Phase 1 — seeded oracle array, first cluster run (g0235, then vyx)

@@ -57,6 +57,68 @@ Each `run_*.sh` runs the same three stages:
 Model parameters are overridden through JSON in an environment variable (`BGN_PARAM_OVERRIDES`,
 `KP_PARAM_OVERRIDES`, `GS_PARAM_OVERRIDES` / `GS_SIM_OVERRIDES`); the run scripts set the winning values.
 
+## Solves are per-parametrization, and they are tracked
+
+**Every new parametrization needs a new solve.** This is not a limitation to work
+around; it is what the models are. The exposure betas, the price of the priced
+factor, its persistence, the regime multipliers — the knobs you vary to move the
+gap — all enter the value functions, so the tables and solutions have to be rebuilt
+before the oracle can run.
+
+| model | producer | artifact | rough cost | size |
+|---|---|---|---|---|
+| `bgn_gam` | `rebuild_jstar_gam.py` | one `Jstar_*.csv` | ~minutes | small |
+| `kp_vy` | `build_vy_tables.py` | `ntypes` G tables + `ntypes x NY` integral tables | **~45 min per type**, so a 3-type economy is multi-hour | ~8 MB |
+| `gs_bx` | `gs_solve_reg.py` | one `solution.npz` **per exposure type** | ~a minute each | ~85 MB each |
+
+Budget the solve stage separately from the oracle stage when planning a run.
+
+### The registry
+
+Each solve is content-addressed. `variants/common/solstamp.py` snapshots the
+producer's entire effective parameter namespace plus the sha256 of every source
+file that can change the output, and hashes both into a `solve_id`. Same
+parameters and same code means the same id, which means the artifacts are reusable
+— so re-running a producer on an unchanged spec exits immediately instead of
+re-solving.
+
+Every solve writes a manifest to `experiments/solfiles/<solve_id>.json`, committed
+to git. A manifest is a few KB, so hundreds of experiments cost a few MB, and it
+records the parameters, the source digests, and every artifact with its size and
+sha256. **The manifest outlives the artifact**: after scratch is purged you can
+still say exactly which parameters produced a number, and re-running the producer
+reproduces the same `solve_id`.
+
+    python variants/solfiles.py list                # every solve ever recorded
+    python variants/solfiles.py show <solve_id>     # its full parameter set
+    python variants/solfiles.py diff <id_a> <id_b>  # what changed between two
+    python variants/solfiles.py check               # are the artifacts still intact
+    python variants/solfiles.py gc --dry-run        # what is reclaimable, and how much
+
+Artifacts at or under 32 MB are committed alongside the manifest (BGN tables, KP
+tables). Larger ones are not — a `gs_bx` economy is five ~85 MB solutions, so those
+stay out of git and the manifest is the durable record. `committable` in each
+manifest says which case applies.
+
+To force a re-solve: `BGN_JSTAR_FORCE=1`, `KP_VY_FORCE=1`, `GS_SOLVE_FORCE=1`.
+
+### Why this replaced what was there
+
+All three producers previously got staleness detection wrong, in three different
+ways, and each had already produced or nearly produced wrong numbers:
+
+- **KP** cached on a hand-written 5-key stamp. Measured, it silently missed
+  `delta`, `theta_eps`, `theta_u`, `sigma_eps`, `lambda_H`, `mu_H` and `mu_L`, plus
+  any edit to the solver itself. The 2026-09-04 regime-label fix changed
+  `mu_H`/`mu_L`; without deleting the stamp by hand, the corrected simulator would
+  have run against tables solved on the old generator.
+- **BGN** had no stamp at all — `jstar_gam_file` names the output, so the filename
+  was the only identity.
+- **GS** wrote a 15-element `params` array omitting `gmreg`, `gs_bx`, `gs_ashift`,
+  `p01`/`p10` and every grid size, so a solution could not identify its own
+  exposure type; and `run_gs_bx7.sh` guarded with a bare `[ -f solution.npz ]`
+  existence check, blind to parameters.
+
 ## What is (not) in git
 
 Kept in git: all code, the solved tables that are small (`Jstar*.csv`, `G_*.csv`, `integ_*.npz`), the

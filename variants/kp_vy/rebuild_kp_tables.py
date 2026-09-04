@@ -155,15 +155,33 @@ def expected_f_eps(x0):
         integr = fun(eps) * ncx2.pdf(eps / c, d, lam) / c # integrate over CIR transition density
         return integr
     
-    eps_max = 10
-    result = [quad(lambda ep: integrand(fun, ep), 0, eps_max, epsabs = 1e-10, epsrel = 1e-10, limit = 500)[0] for fun in funcs]
+    # 2026-09-04: was a FIXED interval [0, 10] with a print-only check on the far
+    # tail. That is the exact pattern that produced the 2026-06 all-zeros bug in
+    # utils_kp14: at small sigma_eps the CIR density is a narrow spike, QUADPACK
+    # samples only flat regions, returns 0 with a ~0 error estimate, and never
+    # subdivides -- silently voiding every integral. The three checks above tested
+    # eps_max = 10, i.e. the one end that cannot fail.
+    #
+    # Ported from utils_kp14/integ_kp14.py:104-105,120-127 (the technique, not the
+    # file -- that version has no notion of the (type, y-node) structure this one
+    # exists for). Using the density's own quantiles keeps the interval matched to
+    # the spike for any (sigma_eps, theta_eps, dt).
+    lo = c * ncx2.ppf(1e-13, d, lam)
+    hi = c * ncx2.ppf(1 - 1e-13, d, lam)
 
-    if integrand(A_mod, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
-    if integrand(G_up, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
-    if integrand(G_down, eps_max) > 1e-12:
-        print(f'error: eps = {x0}')
+    # epsabs carries the (eps-1)*f(eps) integrals, whose true value passes through
+    # 0 near eps=1 where no relative tolerance is attainable; epsrel carries the rest.
+    result = [quad(lambda ep: integrand(fun, ep), lo, hi, epsabs = 1e-8, epsrel = 1e-10, limit = 500)[0] for fun in funcs]
+
+    # The density must integrate to 1 at every grid point. RAISE rather than print:
+    # a silent zero is what caused the original damage, and these values are
+    # unusable if the mass is lost.
+    mass = quad(lambda ep: ncx2.pdf(ep / c, d, lam) / c, lo, hi,
+                epsabs = 1e-12, epsrel = 1e-10, limit = 500)[0]
+    if not abs(mass - 1) < 1e-8:
+        raise RuntimeError(
+            f'CIR transition density integrates to {mass!r}, not 1, at eps={x0!r} '
+            f'(interval [{lo!r}, {hi!r}]). Integrals would be silently wrong.')
 
     return result
 

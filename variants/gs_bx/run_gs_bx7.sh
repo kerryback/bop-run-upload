@@ -2,7 +2,12 @@
 cd "$(dirname "$0")"
 mkdir -p ../results/logs
 PY=${PYTHON:-python3}   # any env with the repo requirements (numpy/pandas/scipy/joblib/statsmodels/sklearn/pyarrow)
-[ -f sol_reg/solution.npz ] || GS_PARAM_OVERRIDES='{"gmreg":[0.6,3.0]}' $PY -W ignore gs_solve_reg.py 161 1e-6 sol_reg > ../results/logs/log_gs_reg_solve.txt 2>&1
+# 2026-09-04: the old guard here was `[ -f sol_reg/solution.npz ] || ...` -- a bare
+# existence check, blind to parameters, so sol_reg was silently reused across
+# different economies. gs_solve_reg.py now caches on its own content-addressed
+# solve_id (variants/common/solstamp.py) and exits early on a genuine hit, so the
+# guard is both unnecessary and unsafe. Set GS_SOLVE_FORCE=1 to re-solve anyway.
+GS_PARAM_OVERRIDES='{"gmreg":[0.6,3.0]}' $PY -W ignore gs_solve_reg.py 161 1e-6 sol_reg > ../results/logs/log_gs_reg_solve.txt 2>&1
 echo "SOL_REG DONE"
 GS_PARAM_OVERRIDES='{"gmreg":[0.6,3.0],"gs_bx":2.5,"gs_ashift":0.225}' $PY -W ignore gs_solve_reg.py 161 1e-6 sol_b25c > ../results/logs/log_gs_b25c.txt 2>&1
 echo "B25 DONE"

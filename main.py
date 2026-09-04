@@ -86,7 +86,13 @@ model = sys.argv[1].lower()
 chars_override = None
 if '--chars' in sys.argv:
     chars_idx = sys.argv.index('--chars')
-    factor_names_arg = [f.strip() for f in sys.argv[chars_idx + 1].lower().split(',')]
+    if chars_idx + 1 >= len(sys.argv):
+        print("ERROR: --chars requires a value, e.g. --chars cma,umd")
+        sys.exit(1)
+    factor_names_arg = [f.strip() for f in sys.argv[chars_idx + 1].lower().split(',') if f.strip()]
+    if not factor_names_arg:
+        print("ERROR: --chars was given an empty value")
+        sys.exit(1)
     sys.argv.pop(chars_idx)
     sys.argv.pop(chars_idx)
     _FACTOR_TO_CHAR = {"hml": "bm", "cma": "agr", "rmw": "roe",
@@ -128,11 +134,20 @@ if scratch_dir:
     temp_dir = os.environ.get('BOP_TEMP_DIR')   # None → falls back to scratch_dir
     config.set_scratch_dir(scratch_dir, temp_dir=temp_dir)
 
-# Apply --chars override (must come after model validation and config setup)
+# Apply --chars override (must come after model validation and config setup).
+# Two things happen here and BOTH are required:
+#   1. os.environ['BOP_CHARS'] -- so the eight step SUBPROCESSES see it. They each
+#      re-import config from disk, so mutating the dicts below reaches only this
+#      interpreter. Before 2026-09-04 only the mutation was done, which made
+#      --chars a silent no-op on every computational step.
+#   2. the in-process mutation -- so main.py's own CONFIG (already imported above)
+#      agrees with what the children will compute.
 if chars_override:
+    os.environ['BOP_CHARS'] = ','.join(factor_names_arg)
     config.MODEL_CHARS[model] = chars_override
     config.MODEL_FACTOR_NAMES[model] = factor_names_override
     print(f"[CONFIG] --chars override: chars={chars_override}, factors={factor_names_override}")
+    print(f"[CONFIG] BOP_CHARS={os.environ['BOP_CHARS']} exported to step subprocesses")
 
 # Get references to config values
 DATA_DIR = config.DATA_DIR
@@ -232,6 +247,24 @@ def run_workflow_for_index(panel_id, log_file):
     # Short-circuit: whole workflow already done from a prior run.
     results_file = os.path.join(DATA_DIR, f"{full_panel_id}_results.pkl")
     if os.path.exists(results_file):
+        # Output filenames carry no chars token, so a prior full-set run and a
+        # --chars run collide. Refuse to hand back results built from a different
+        # characteristic set rather than silently reporting them as this run's.
+        _want = list(config.MODEL_CHARS[model])
+        try:
+            with open(results_file, 'rb') as _f:
+                _prev = pickle.load(_f).get('chars')
+        except Exception as _e:
+            _prev = None
+            print(f"[WARN] could not read chars from {os.path.basename(results_file)}: {_e}")
+        if _prev is not None and list(_prev) != _want:
+            print(f"ERROR: {os.path.basename(results_file)} was built with chars={list(_prev)}, "
+                  f"but this run wants chars={_want}.")
+            print("       Output filenames do not encode the characteristic set, so reusing it "
+                  "would silently mislabel the results.")
+            print("       Use a different BOP_SCRATCH_DIR for this subset, or delete the "
+                  "existing outputs.")
+            sys.exit(1)
         print(f"[SKIP] Workflow already complete — "
               f"{os.path.basename(results_file)} exists. Nothing to do.")
         return
