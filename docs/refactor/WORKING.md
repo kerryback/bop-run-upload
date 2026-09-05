@@ -1279,3 +1279,52 @@ Two things went right: `experiments/solfiles/` handled genuine concurrent writer
 construction" is now observed), and GS **fails clean on interrupt**: four SIGTERM'd solves
 left empty outdirs and no manifests, because `solstamp.record()` only runs after a
 successful save. That is better than `build_vy_tables.py` managed (§17).
+
+## §21 — oracle cost: N is the expensive dimension, and it is superlinear (2026-09-05)
+
+Measured on `bgn_gam`/g0235, full default basis (`--rff 36,360,3600 --nmat 2`), BLAS
+threads pinned to 4, load 5-8. Pinning is what made these reproducible — the same runs
+were unmeasurable an hour earlier (§19).
+
+| N | T | wall | per-month, net of the 159 s fixed cost |
+|---|---|---|---|
+| 100 | 30 | 180 s | 0.70 s |
+| 100 | 60 | 201 s | 0.70 s |
+| 200 | 60 | 251 s | 1.53 s |
+| 500 | 120 | **2321 s** | **18.02 s** |
+
+**A fitted model failed a validation test by 4x, which is why the test existed.** The
+first three points fit `t = 159 + 0.0070*N*T` to within 3% and projected the flagship
+`--N 500 --T 500` at **32 minutes**. The N=500/T=120 check predicted 579 s and measured
+**2321 s**. Had that projection been acted on instead of tested, Phase 1 would have been
+sized ~5x short.
+
+**What the fit missed.** Per-month cost is 0.70 / 1.53 / 18.02 s at N = 100 / 200 / 500 —
+2.19x for the first doubling of N, then 11.8x for a 2.5x rise. Superlinear and
+accelerating, roughly `N^2`, consistent with O(N^2)-O(N^3) work on the N x N conditional
+covariance. The `N*T` form assumed linearity in N; the three fitted points were all at
+N <= 200, where the quadratic term is still small enough to hide inside a 159 s intercept.
+
+**Projection, extrapolating only in the dimension that is verified linear.** T-linearity
+holds exactly at N=100 (0.70 s/month at both T=30 and T=60). Applying the *measured*
+N=500 rate:
+
+```
+N=500, T=500:  159 + 500 * 18.02  =  9159 s  ~=  2.5 hours per seed
+```
+
+This is a 4x extrapolation in T at fixed N, not a 20x extrapolation in N*T. T-linearity is
+unverified at N=500; treat 2.5 h as a floor and request walltime accordingly.
+
+**Consequences for Phase 1**
+
+1. **g0235 goes to the cluster.** Hours per seed, several seeds. Same conclusion as
+   before, now for a measured reason rather than a guessed one.
+2. **N is the knob, not T.** Cost is ~`T * N^2`, so halving N buys ~4x while halving T
+   buys 2x. Any budget pressure should come off N first — but note `sr_max_mean` is
+   N-dependent (§17g), so N must be held fixed across anything being compared.
+3. **Pin BLAS threads in the SLURM script.** Non-negotiable: it is the difference between
+   reproducible-to-3% and unmeasurable.
+4. The 159 s fixed cost is basis setup (P=3600, twice at `--nmat 2`) and is independent of
+   panel size — so it is amortized to nothing at flagship scale, but it dominates every
+   small calibration run and will mislead anyone fitting a model without an intercept.
