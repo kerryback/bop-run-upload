@@ -1214,3 +1214,68 @@ estimate was mine and unverified, in the same family as the two above. Whether t
 slow-but-fine or the same unachievable-tolerance failure the KP G solver had
 (`gs_solve_reg.py 161 1e-6`, Gauss-Seidel with damping and policy-freeze) is for the ASU
 session to report — it is question 2 in their brief.
+
+## §20 — GS21 was unrunnable, and I broke it (2026-09-05)
+
+`variants/gs_bx/gs_solve_reg.py` has been a **hard `SyntaxError`** since commit `3e0b6ae`
+— mine. The solstamp rewrite added `gmreg=gmreg` to `np.savez_compressed` at line 266
+when line 246 already passed it; duplicate kwargs are rejected at *parse* time, so the
+module could not be imported at all. That, not scheduling, is why `sol_reg/` never
+existed. The ASU session found it and fixed it (dropping the 266 occurrence — the line I
+added, so the minimal change).
+
+**My verification of this file was structurally incapable of catching it.** The 09:45
+probe that "confirmed `xnum` and `tol` reach the hash" did
+`src.split('print(f"[solstamp] gs_bx')[0]` and `exec`'d only that prefix. Line 266 is far
+below the split point, so the probe compiled a fragment that parses fine. I then wrote in
+the task brief that the file was "unproven code — never executed since the rewrite"
+without checking whether it *could* be executed. `python -c "import py_compile;
+py_compile.compile(f, doraise=True)"` would have caught it in a second. **Any probe that
+executes a slice of a file has not established that the file runs.** The solve_ids that
+probe reported are also obsolete — they hashed the broken source.
+
+**Freeze the fix.** Deleting 246 instead of 266 gives byte-identical `.npz` output but a
+different source digest, hence a different set of five `solve_id`s. The choice is
+arbitrary; churning it later orphans every recorded GS manifest. Dropping 266 stands.
+
+### Tolerance audit — the KP failure's milder cousin, verified
+
+| | KP `kp14_fd_vy.py` | GS `gs_solve_reg.py` |
+|---|---|---|
+| tolerance | **absolute** vs `‖G‖~1e8` — unsatisfiable | **relative** (`qerr/vscale`) — satisfiable |
+| cap | `range(1_000_000)`, falls through and writes | `it == 5600` breaks, falls through and writes |
+| message on cap exit | prints `converged` | prints `converged` |
+| auditable? | no | yes — `cycle-averaged; stopping` prints first |
+
+The fatal half is absent, but the cap still writes an artifact, records a manifest and
+reports success. Two further defects: `for it in range(60000)` at line 148 is **dead**
+(the 5600 break makes 5601 the ceiling — anyone budgeting from 60000 is off 10x), and
+line 211 tests against `tol * 20`, so a CLI `1e-6` actually requests **2e-5**.
+
+### The provenance smell this exposes — §15/§16 gap
+
+`tol` is hashed into the `solve_id` and recorded in the manifest. If GS habitually exits
+on the sweep cap rather than the tolerance test — and `sol_reg`'s residual was decaying at
+0.99924/sweep at sweep 1400, which cannot reach tolerance by 5600 — then **`tol` is
+decorative for this economy: different `tol`, different `solve_id`, identical numerics**,
+and the manifest claims a precision the solve never targeted (compounded 20x by line 211).
+
+The general defect: **solstamp hashes *requested* parameters and records nothing about
+what was *achieved*.** A manifest should carry the achieved residual and the exit path
+(tolerance vs cap) as recorded-but-unhashed fields, so `solfiles.py show` can say whether
+a solve met its own contract. Hashing them would be wrong — they are outcomes, not inputs
+— but omitting them lets a capped solve masquerade as a converged one. This applies to
+every producer, not just GS.
+
+### Concurrency, corrected
+
+My "2-3 at a time" advice was right for the wrong reason. The ASU session measured the
+binding constraint as **memory, not cores**: `smooth()` builds a `(200,161,20,161)`
+temporary ≈ **830 MB per call, 4x per sweep**, with RSS 0.9-2.4 GB per solve. Five
+concurrent solves hit swap and throughput *fell*. README corrected.
+
+Two things went right: `experiments/solfiles/` handled genuine concurrent writers (a
+`bgn_gam` manifest landed mid-GS-solve, no collision, no lost update — "safe by
+construction" is now observed), and GS **fails clean on interrupt**: four SIGTERM'd solves
+left empty outdirs and no manifests, because `solstamp.record()` only runs after a
+successful save. That is better than `build_vy_tables.py` managed (§17).
