@@ -7,7 +7,11 @@ from calculate_moments.py, then computes mean, stdev, xret for each method.
 Output: {panel_id}_results.pkl containing:
   - fama_results: DataFrame (month, method, alpha, stdev, mean, xret)
   - dkkm_results: DataFrame (month, nfeatures, alpha, mat, stdev, mean, xret)
-    one row per random-feature draw (mat); average across mat downstream
+    one row per random-feature draw (mat)
+  - dkkm_avg_results: DataFrame (month, nfeatures, alpha, stdev, mean, xret)
+    the DRAW-AVERAGED portfolio w_bar = mean_mat(w), one row per (month, nfeatures,
+    alpha). This is the DKKM estimator itself; the per-draw rows are its Monte Carlo
+    ingredients. It cannot be reconstructed downstream -- see portfolio_stats below.
   - returns: DataFrame (month, sdf_ret, mkt_rf)
 
 Usage:
@@ -148,6 +152,7 @@ def main():
 
     all_fama_results = []
     all_dkkm_results = []
+    all_dkkm_avg_results = []
     all_returns = []
 
     n_months = 0
@@ -195,6 +200,7 @@ def main():
             })
 
         # DKKM results: one row per (nfeatures, alpha, mat) — draws are not averaged
+        by_key = {}
         for (nfeatures, alpha, mat), weights_on_stocks in w['dkkm'].items():
             stdev = np.sqrt(weights_on_stocks @ stock_cov @ weights_on_stocks)
             mean = weights_on_stocks @ rp
@@ -209,6 +215,32 @@ def main():
                 'mean': mean,
                 'xret': xret,
             })
+            by_key.setdefault((nfeatures, alpha), []).append(weights_on_stocks)
+
+        # The DKKM estimator is the DRAW-AVERAGED portfolio, not the average of the
+        # draws' statistics. `mean` and `xret` are linear in w, so averaging the per-draw
+        # rows recovers them -- but `stdev = sqrt(w' Sigma w)` is convex, and Sigma is
+        # discarded when this function returns. So the draw-averaged risk can only be
+        # computed HERE, and a panel written without it cannot be repaired later without
+        # re-running the simulation (a 10-panel run is ~80 GB of scratch that is not
+        # retained).
+        #
+        # Convexity also fixes the sign of the error this replaces: averaging draws
+        # leaves the mean unchanged and strictly lowers the risk, so the mean of per-draw
+        # Sharpes -- what analyze.py reports today, having never been updated for the
+        # `mat` column added in dc48c98 -- is biased DOWNWARD, and only for DKKM, since
+        # fama_results has no draw dimension.
+        for (nfeatures, alpha), draws in by_key.items():
+            w_bar = np.mean(draws, axis=0)
+            all_dkkm_avg_results.append({
+                'month': month,
+                'nfeatures': nfeatures,
+                'alpha': alpha,
+                'ndraws': len(draws),
+                'stdev': np.sqrt(w_bar @ stock_cov @ w_bar),
+                'mean': w_bar @ rp,
+                'xret': w_bar @ data_xret,
+            })
 
     elapsed = time.time() - t0
     print(f"[OK] Statistics computed for {n_months} months in {fmt(elapsed)} at {now()}")
@@ -218,11 +250,13 @@ def main():
     # =========================================================================
     fama_results = pd.DataFrame(all_fama_results)
     dkkm_results = pd.DataFrame(all_dkkm_results)
+    dkkm_avg_results = pd.DataFrame(all_dkkm_avg_results)
     returns = pd.DataFrame(all_returns)
 
     print(f"\nResults:")
     print(f"  Fama results: {len(fama_results)} observations")
     print(f"  DKKM results: {len(dkkm_results)} observations")
+    print(f"  DKKM draw-averaged: {len(dkkm_avg_results)} observations")
     print(f"  Returns: {len(returns)} months")
 
     # =========================================================================
@@ -231,6 +265,7 @@ def main():
     results = {
         'fama_results': fama_results,
         'dkkm_results': dkkm_results,
+        'dkkm_avg_results': dkkm_avg_results,
         'returns': returns,
         'panel_id': panel_id,
         'model': MODEL,
