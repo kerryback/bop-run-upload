@@ -1159,3 +1159,58 @@ retained — **every panel generated before the fix is permanently missing the n
 regenerating means re-running the whole simulation. Phase 1 is the next thing queued.
 
 Recommendation: fix `evaluate_sdfs.py` in Phase 0, now, ahead of any Phase 1 run.
+
+## §19 — measurement protocol, learned the hard way (2026-09-05)
+
+Three cost figures given to Seth today were wrong, all by extrapolation rather than
+measurement, and a fourth attempt was corrupted by a shared machine. The pattern is worth
+writing down because every phase from here involves sizing cluster jobs.
+
+**What went wrong**
+
+| claim | basis | truth |
+|---|---|---|
+| kp_vy G solve "~45 min per type" | guess | it never converged at all |
+| revised to "~2 h per type" | measured the *spin*, not the work | 0.10 s once solved directly |
+| RFF basis costs "45x" | measured at N=60 on kp_vy | 6.5x at N=100 on bgn_gam |
+
+The RFF multiplier is the instructive one: it is a *ratio* between a simulation cost that
+grows with N and a basis cost that grows faster, so quoting it without its N is
+meaningless. Extrapolating the N=60 ratio to the N=500 flagship would have overstated the
+job by ~7x.
+
+**Neither wall nor CPU time is valid on a contended box.** Sharing the laptop with the
+ASU session, the same job measured:
+
+| T | cpu | wall |
+|---|---|---|
+| 30 | 2872 s | 550 s |
+| 60 | 1802 s | 331 s |
+
+Halving the months took 1.6x *more* CPU and 1.7x *more* wall. Both metrics inverted.
+Wall time fails for the obvious reason; **CPU time fails because threaded BLAS
+spin-waits**, burning user time without doing work, at a rate that varies with load. The
+assumption that user+sys is contention-robust is wrong — it survives time-slicing, not
+spinning.
+
+**Protocol from here**
+
+1. **Pin BLAS threads** (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`,
+   `VECLIB_MAXIMUM_THREADS`) for any run whose cost is being measured, and in every SLURM
+   script — an unpinned job on a shared node wastes its allocation spinning.
+2. **Only compare runs from the same window.** The one trustworthy number today was
+   N=200 vs N=100 back-to-back under identical load: 676/324 = 2.09x, so the oracle is
+   **linear in N**. That rules out the O(N^2) dual-solve scaling, which was the only
+   structural reason the flagship could have been expensive.
+3. **Never quote a ratio without the point it was measured at.**
+4. **Concurrency protocol:** two sessions can share this box for independent *work* —
+   file boundaries have held all day, no collisions — but neither can take a valid
+   *timing* while the other runs. Cost measurements must be serialized or deferred to the
+   cluster. Add this to the TASK briefs.
+
+**Standing observation:** `variants/README.md` says gs_bx solves take "~a minute each".
+The ASU session's first one passed **1 h 01 m** without producing `solution.npz`. That
+estimate was mine and unverified, in the same family as the two above. Whether this is
+slow-but-fine or the same unachievable-tolerance failure the KP G solver had
+(`gs_solve_reg.py 161 1e-6`, Gauss-Seidel with damping and policy-freeze) is for the ASU
+session to report — it is question 2 in their brief.
