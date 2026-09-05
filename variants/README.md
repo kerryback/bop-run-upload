@@ -68,10 +68,18 @@ before the oracle can run.
 | model | producer | artifact | rough cost | size |
 |---|---|---|---|---|
 | `bgn_gam` | `rebuild_jstar_gam.py` | one `Jstar_*.csv` | ~minutes | small |
-| `kp_vy` | `build_vy_tables.py` | `ntypes` G tables + `ntypes x NY` integral tables | **~45 min per type**, so a 3-type economy is multi-hour | ~8 MB |
+| `kp_vy` | `build_vy_tables.py` | `ntypes` G tables + `ntypes x NY` integral tables | **~20 min per G type to reach its residual floor**; the shipped `err < 1e-8` tolerance is unreachable for some types, which turns that into an unbounded spin (see WORKING.md 17h) | ~8 MB |
 | `gs_bx` | `gs_solve_reg.py` | one `solution.npz` **per exposure type** | ~a minute each | ~85 MB each |
 
 Budget the solve stage separately from the oracle stage when planning a run.
+
+The G types are independent, so on the cluster they belong in a SLURM array (one task
+per type) rather than the local serial loop. `build_vy_tables.py` writes a per-type
+checkpoint (`G_<prefix><f>.solveid`, carrying the stage `solve_id` and the table's
+digest) immediately after each type lands, which is what makes such an array safe to
+restart after a walltime kill: a re-run redoes only the types that are missing, stale,
+or corrupt. A single builder per prefix is enforced by a lock — two concurrent builders
+halve each other's cores and can hand the integral stage a half-written G table.
 
 ### The registry
 
