@@ -737,8 +737,25 @@ Tests: `tests/test_solstamp.py` 27/27, `tests/test_kp_quadrature.py` 8/8.
 - [x] Plan written to docs/refactor/PLAN.md
 - [x] Plan presented to Seth + artifact published
 - [x] **8 decisions answered — see §11**
-- [ ] Phase 0 (see §12) — 6 of 8 done; remaining: vyx table rebuild (running), KP delta measurement
+- [x] **Phase 0 complete (2026-09-05)** — vyx tables rebuilt and manifested
+      (`f2be637b9fec1f80` G, `d8d686da014f429a` integrals, 66 artifacts intact); G solver
+      replaced by a direct solve; KP lambda delta measured at the primitive level
+      (E[lambda] 1.7172 -> 1.0000); DKKM draw-averaging fixed in `utils/evaluate_sdfs.py`
+      before any panel exists. Commits dd8c07e, 9e1d47d, e7df1a3.
 - [ ] Phase 1 — seeded oracle array, first cluster run (g0235, then vyx)
+      - [ ] BGN `Jstar_g0235.csv` has no manifest; `rebuild_jstar_gam.py` has never run
+            under solstamp. Blocks g0235.
+      - [ ] `gs_bx` has no solve artifacts at all (`sol_reg/` absent). Blocks bx7.
+      - deferred, not blocking: the integral-stage quadrature asks `epsrel=1e-10` and
+        emits ~985 IntegrationWarnings per job that roundoff prevents reaching it — the
+        same unachievable-tolerance shape as the G solver, costing unknown wasted work.
+        Changing it moves `d8d686da014f429a` and costs an 88 min rebuild, so measure the
+        accuracy/time trade before touching it.
+      - not a problem: `variants/run_estimators.py:167-169` already builds the RFF
+        ensemble by averaging *weights* across draws (`rff_ens`, `mat=-1`) and evaluating
+        that portfolio against Sigma. The Phase 1 path was never affected by the
+        `dkkm_avg_results` bug; `utils/evaluate_sdfs.py` has now been brought in line
+        with it.
 
 ## §17 — the duplicate-builder incident, and the single-builder lock (2026-09-04)
 
