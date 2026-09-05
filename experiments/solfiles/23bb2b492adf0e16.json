@@ -1,0 +1,113 @@
+{
+  "artifacts": [
+    {
+      "bytes": 9333,
+      "path": "variants/bgn_gam/Jstar_g0235.csv",
+      "sha256": "d6c9f350053512ab2a35c076b33ab676625bdf332ab8b5bfd0cf3dc8b62a993c"
+    }
+  ],
+  "committable": true,
+  "env_params": {
+    "JSTAR_TOL": "0.0003"
+  },
+  "extra": {
+    "out": "Jstar_g0235.csv"
+  },
+  "inputs": {},
+  "model": "bgn_gam",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "Cbar": "-3.7",
+    "Chat": "np.float64(0.024723526470339388)",
+    "I": 1,
+    "Preg": {
+      "__array__": [
+        "0.9791666666666666",
+        "0.020833333333333332",
+        "0.041666666666666664",
+        "0.9583333333333334"
+      ],
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "_ov": {
+      "gmult": [
+        "0.2",
+        "3.5"
+      ],
+      "jstar_gam_file": "Jstar_g0235.csv"
+    },
+    "beta_zr": "-0.00014",
+    "burnin": 300,
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "gam_seed": 555,
+    "gamma_grid": {
+      "__array__": [
+        "0.5",
+        "0.6",
+        "0.7",
+        "0.7999999999999999",
+        "0.8999999999999999",
+        "0.9999999999999999",
+        "1.0999999999999999"
+      ],
+      "shape": [
+        7
+      ]
+    },
+    "gmult": {
+      "__array__": [
+        "0.2",
+        "3.5"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "jstar_file": "Jstar.csv",
+    "jstar_gam_file": "Jstar_g0235.csv",
+    "kappa": "0.95",
+    "names": [
+      "smb",
+      "hml",
+      "cma",
+      "rmw",
+      "umd"
+    ],
+    "nchars": 5,
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "pi": "0.99",
+    "prob_calm": "0.6666666666666666",
+    "prob_in_money_targets": [
+      "0.1",
+      "0.05"
+    ],
+    "rbar": "0.006236",
+    "sigma_r": "0.002",
+    "sigma_z": "0.4",
+    "sigmaj_scale_cap": "2.0",
+    "sigmaj_size_elast": "0.0",
+    "sigmaj_width": "0.3"
+  },
+  "solve_id": "23bb2b492adf0e16",
+  "sources": {
+    "variants/bgn_gam/parameters.py": "8c98a86bc23e19e58931845ae539caaadba330184b5e1cbf118fbe3aafbb6a01",
+    "variants/bgn_gam/rebuild_jstar_gam.py": "9ba86a7609aee31b844106b918640f28f60288b1020f4d30fe8998b290e14aa2",
+    "variants/bgn_gam/vasicek.py": "b8762f5b7e06fe8315c81c9486569719db70d2bfd08c68721be3dbff45194bb2"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "Jstar_g0235"
+  ],
+  "total_bytes": 9333
+}
