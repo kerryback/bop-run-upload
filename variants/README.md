@@ -42,7 +42,8 @@ Each `run_*.sh` runs the same three stages:
 1. **Solve / tabulate the model.** `bgn_gam/rebuild_jstar_gam.py` (J*(r) tables per regime, `Jstar_g0235.csv`),
    `kp_vy/build_vy_tables.py vyx` (per-type G functions `G_vyx*.csv` and per-(type, y-node) integrals
    `integ_vyx*_*.npz`; cached while `meta_vyx.json` matches), `gs_bx/gs_solve_reg.py` (one solution per
-   exposure type into `gs_bx/sol_*/solution.npz`, about a minute each). A `validate_*.py` in each directory
+   exposure type into `gs_bx/sol_*/solution.npz`, **hours each** -- ~2 s/sweep against a
+   5600-sweep cap). A `validate_*.py` in each directory
    checks Euler equations and the reduction to the baseline economy.
 2. **Oracle.** `run_oracle.py --model {bgn_gam,kp_vy,gs_bx} --tag TAG --N 500 --T 500 --levels --save_panel`
    simulates a panel, computes the true conditional moments every month, and reports for each feature basis
@@ -69,7 +70,7 @@ before the oracle can run.
 |---|---|---|---|---|
 | `bgn_gam` | `rebuild_jstar_gam.py` | one `Jstar_*.csv` | ~minutes | small |
 | `kp_vy` | `build_vy_tables.py` | `ntypes` G tables + `ntypes x NY` integral tables | **~20 min per G type to reach its residual floor**; the shipped `err < 1e-8` tolerance is unreachable for some types, which turns that into an unbounded spin (see WORKING.md 17h) | ~8 MB |
-| `gs_bx` | `gs_solve_reg.py` | one `solution.npz` **per exposure type** | ~a minute each | ~85 MB each |
+| `gs_bx` | `gs_solve_reg.py` | one `solution.npz` **per exposure type** | **~2 s/sweep against a 5600-sweep cap, so hours each** (measured 2026-09-05; the earlier "~a minute" was a guess and wrong by ~100x) | ~85 MB each, and ~0.9-2.4 GB RSS while solving -- run at most 2-3 concurrently, memory-bound not core-bound |
 
 Budget the solve stage separately from the oracle stage when planning a run.
 
