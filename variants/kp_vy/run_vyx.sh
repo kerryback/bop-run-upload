@@ -6,7 +6,7 @@ mkdir -p results/logs
 PY=${PYTHON:-python3}   # any env with the repo requirements (numpy/pandas/scipy/joblib/statsmodels/sklearn/pyarrow)
 export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
 export KP_VY_PREFIX=vyx
-(cd kp_vy && $PY build_vy_tables.py vyx) > results/logs/log_vyx_tables.txt 2>&1   # cached while meta_vyx.json matches
+(cd kp_vy && $PY build_vy_tables.py vyx) > results/logs/log_vyx_tables.txt 2>&1   # per-stage content-addressed cache; see variants/README.md
 echo "VYX TABLES DONE"
 (cd kp_vy && $PY validate_vy.py) > results/logs/log_vyx_val.txt 2>&1
 echo "VYX VALIDATION DONE"

@@ -1,7 +1,9 @@
 """(2 lambda-regimes x NY y-nodes) G-function solve for kp_gamy: the gamma-regime pair of
 kp14_fd_gam.py generalized to the OU price-of-risk state y (generator Qy from parameters).
 Writes G_func_gamy.csv with columns G_up_y{i}, G_down_y{i} for i = 0..NY-1 (per unit lambda_bar_f).
-At g_lo == g_hi == 1 all y-columns coincide with the baseline G_up/G_down."""
+At g_lo == g_hi == 1 all y-columns coincide with the baseline G_up/G_down.
+
+Solved directly: (F + Q) G = -util is linear. See WORKING.md 17i."""
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -36,8 +38,6 @@ for j in range(NS):
     iy = j // 2
     util[:, j] = lam_rate[j] * C * A_y(eps_pts, 1.0, y_grid[iy], _ft) ** (1 / (1 - alpha))
 
-dt_fd = 0.5
-G = np.ones((n, NS))
 mu_epsF = np.maximum(-theta_eps * (eps_pts - 1), 0)
 mu_epsB = -np.maximum(theta_eps * (eps_pts - 1), 0)
 quad = 0.5 * sigma_eps ** 2 * eps_pts
@@ -61,24 +61,35 @@ def fd_matrix(rho_val):
     return sp.diags(diags, [-2, -1, 0, 1, 2], shape=(n, n))
 
 t0 = time.time()
+# This was an implicit-Euler iteration  Mat @ G_new = G/dt + util  with Mat = I/dt - (F+Q).
+# Its fixed point satisfies  [I/dt - (F+Q)] G = G/dt + util,  i.e.  (F + Q) G = -util,
+# which is linear -- so solve it once rather than creep toward it.
+#
+# The iteration could not be salvaged by loosening its tolerance. It compared an
+# ABSOLUTE Frobenius norm against 1e-8 while ||G|| here is 3e7 to 2e8, i.e. it demanded
+# relative precision of 3e-16 (type 0), 1.4e-16 (type 1) and 5e-17 (type 2) -- at or
+# below float64 eps (2.2e-16). It was unsatisfiable by construction; a 2026-09-04 run
+# sat at its noise floor for 228,000 iterations, and would then have fallen out of the
+# loop and written the table while printing "converged".
 blocks = [[None] * NS for _ in range(NS)]
 for j in range(NS):
-    Aj = sp.eye(n) / dt_fd - (fd_matrix(rho_j[j]) + Qs[j, j] * sp.eye(n))
     for k2 in range(NS):
-        blocks[j][k2] = Aj if k2 == j else ((-Qs[j, k2]) * sp.eye(n) if Qs[j, k2] != 0 else None)
+        if k2 == j:
+            blocks[j][k2] = fd_matrix(rho_j[j]) + Qs[j, j] * sp.eye(n)
+        elif Qs[j, k2] != 0:
+            blocks[j][k2] = Qs[j, k2] * sp.eye(n)
 Mat = sp.bmat(blocks, format="csc")
-lu = spla.splu(Mat)
-print(f"factorized {NS * n}x{NS * n} system in {time.time()-t0:.0f}s", flush=True)
+rhs = (-util).T.reshape(-1)
+G = spla.spsolve(Mat, rhs).reshape(NS, n).T
 
-for it in range(1_000_000):
-    rhs = (G / dt_fd + util).T.reshape(-1)
-    Gn = lu.solve(rhs).reshape(NS, n).T
-    err = np.linalg.norm(Gn - G)
-    G = Gn
-    if it % 20 == 0:
-        print(f"iter {it}: err {err:.3e}  ({time.time()-t0:.0f}s)", flush=True)
-    if err < 1e-8:
-        break
+resid = np.linalg.norm(Mat @ G.T.reshape(-1) - rhs)
+scale = max(float(np.linalg.norm(rhs)), 1.0)
+rel = resid / scale
+if not rel < 1e-6:
+    raise RuntimeError(f"G solve did not converge: relative residual {rel:.3e} "
+                       f"(absolute {resid:.3e}) exceeds 1e-6")
+print(f"solved {NS * n}x{NS * n} system directly in {time.time()-t0:.1f}s; "
+      f"relative residual {rel:.2e}", flush=True)
 
 cols = {"eps": eps_pts}
 for iy in range(NY):
@@ -87,4 +98,4 @@ for iy in range(NY):
 out = pd.DataFrame(cols)
 gout = os.environ.get("KP_VY_GOUT", f"G_vy{_ft}.csv")
 out.to_csv(gout)
-print(f"saved {gout} (converged iter {it}, err {err:.2e}, {time.time()-t0:.0f}s)")
+print(f"saved {gout} (direct solve, relative residual {rel:.2e}, {time.time()-t0:.1f}s)")
