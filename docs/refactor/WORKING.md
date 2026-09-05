@@ -244,16 +244,33 @@ Sizing facts that make this easy: the full uppercase `config.py` snapshot serial
 ## 5. Repo merge
 
 **Recommendation: merge, via `git subtree add --prefix=analyze`.** Tested for real in a
-throwaway clone: grafts all 21 analyze commits, zero path conflicts, `.git` grows 68M→71M
-(+4.4%), `git blame` reaches through to the original 2026-03-25 commits.
+throwaway clone: grafts all 21 analyze commits, zero path conflicts, `.git` grows
+**68.1 → 71.6 MB (+3.5 MB, +5.2%)**, `git blame` reaches through to the original
+2026-03-25 commits.
+
+  Two corrections to earlier numbers here (both remeasured 2026-09-05 at KB resolution
+  from a *pristine* clone):
+  - The cost is **all in `git fetch`**, not the graft: pristine 68.1 MB → after fetch
+    71.5 MB → after `subtree add` 71.6 MB. The subtree add itself costs **16 KB**. Any
+    repro that fetches before its "before" measurement will report ~0% growth and any
+    that uses `du -sh` will round 71.6 to either 71 or 72 — which is where the earlier
+    +4.4% and a proposed +5.9% both came from.
+  - **`git blame` reaches through, but path-limited `git log` does not.**
+    `git log -- analyze/` returns only the graft commit, and
+    `git log --follow -- analyze/analyze.py` returns nothing: the old commits have no
+    `analyze/` prefix. Recovering that would need history rewriting. Blame is the only
+    view that reaches back, which is enough for attribution but should not be oversold.
 
 - **These were one repo to begin with.** `analyze.py` was in bop-run-upload's initial commit
   (fc0cb6f, 2026-01-23), deleted in d6ec6b2 (2026-01-29); bop-analyze-remote was created
   from that split on 2026-03-25. This is re-unification.
 - Only 4 tracked-path collisions (`.gitignore`, `config.py`, `environment.yml`,
   `requirements.txt`), all vanishing under the prefix. The one semantic collision is the
-  module name `config` (42 import sites in run, 11 in analyze). **Fix: rename analyze's to
-  `analyze/paths.py`** — 11 one-line edits. Script-directory resolution masks the problem
+  module name `config`. Measured 2026-09-05: run has **41 files / 46 import lines / 156
+  `config.` attribute uses**; analyze has **11 files / 11 import lines**. (The earlier
+  "42 import sites" matched none of these counts; state which metric is meant.)
+  **Fix: rename analyze's to `analyze/paths.py`** — 11 one-line edits, which is the
+  import-line count and so still correct. Script-directory resolution masks the problem
   today, but `python -m`, pytest, a bare REPL at root, or importing `main.py` (which does
   `sys.path.insert(0, repo_root)`) all silently grab the wrong `config`.
 - **The lean-env concern is measurably false.** Bare interpreter startup: 0.01 s in an
@@ -722,3 +739,406 @@ Tests: `tests/test_solstamp.py` 27/27, `tests/test_kp_quadrature.py` 8/8.
 - [x] **8 decisions answered — see §11**
 - [ ] Phase 0 (see §12) — 6 of 8 done; remaining: vyx table rebuild (running), KP delta measurement
 - [ ] Phase 1 — seeded oracle array, first cluster run (g0235, then vyx)
+
+## §17 — the duplicate-builder incident, and the single-builder lock (2026-09-04)
+
+**What happened.** Resuming after a context compaction I checked pid **27880** for the
+in-flight vyx rebuild, got "not running", and concluded the rebuild had died. 27880 was
+never the driver — the driver is **27878**; 27879/27880 are siblings of the shell
+pipeline. The rebuild had been alive the whole time: G type 0 finished at 14:04 after
+~98 min, and type 1 was 50 min in.
+
+On that false premise I launched a second builder against the same prefix. For ~42
+minutes the two competed for the same 10 cores and were aimed at the same
+`G_vyx0.csv`. The starvation is measurable: the survivor's CPU went **453% → 915%**
+the instant the duplicate was killed. The real hazard is not the waste — it is that a
+concurrent writer can hand the integ stage a **half-written G table**, which is silent
+numerical corruption rather than a crash.
+
+Two further corrections to what §16 and the session log said:
+
+* "~45 min per G type" is wrong. It is **~90–100 min per type**; three types plus
+  integ is a ~5-hour job. A transient read of the first seconds of convergence
+  (err 1.1e7 → 1.7e2 in 7s) was mistaken for near-completion; the solve actually runs
+  ~75,000 iterations to reach its tolerance floor.
+* The dead-looking 0-byte log was the *old* driver's `stdout=DEVNULL` for the G stage,
+  not evidence of a dead process. The rewrite streams it precisely so that a silent
+  multi-hour solve is distinguishable from a hung one.
+
+**The fix — one builder per prefix.** `build_vy_tables.py` now takes an exclusive
+`O_CREAT|O_EXCL` lock (`.build_vy_tables.<prefix>.lock`, gitignored) recording pid and
+start time, released via `atexit`. A second builder refuses with the holder's pid; a
+lock held by a dead pid is taken over, so a killed build never wedges the prefix.
+
+**The lock's own first version was broken, in the same shape as the bug it guards.**
+`os.kill(1, 0)` as a normal user raises `PermissionError`, which is an `OSError`, so
+`except (OSError, ProcessLookupError): return False` declared init *dead*, took the
+lock, and launched a third solve — the exact duplicate it existed to prevent. EPERM
+means the process exists and is not ours to signal. Only `ProcessLookupError` means
+dead. Pinned by `tests/test_build_lock.py` (7 tests, incl. the pid-1 case), which
+drives the real driver through `KP_VY_ADOPT_G` so the test can never start a solve.
+
+**Also added (§17a): per-type G checkpoints.** `G_<prefix><f>.solveid` records the
+stage `solve_id` *and* the table's digest, so a restart skips only types that are both
+parameter-current and byte-intact — existence alone never satisfies it, unlike the bare
+guard removed from `run_gs_bx7.sh`. `KP_VY_ADOPT_G=<types>` stamps tables whose
+provenance the operator asserts. Type 0's table was **not** adopted: its provenance
+rested on mtimes and commit times, and asserted provenance in the flagship KP economy
+is the failure this whole subsystem exists to abolish.
+
+**Standing rule for this repo.** Before starting any long solve, check for a live
+builder by *name* (`ps -eo pid,args | grep build_vy_tables`), never by a remembered pid.
+The lock now enforces this, but the habit is what generalises to BGN and GS.
+
+**Cluster implication for Phase 1.** Local concurrency across G types is not worth
+building: on SLURM the three types are naturally three array tasks, and the per-type
+`solve_id` checkpoint is exactly what makes such an array safe to restart after a
+walltime kill. That belongs in the Phase 1 wrapper.
+
+### §17b — G_vyx0.csv was solved by pre-fix code (2026-09-04, decisive)
+
+The driver 27878 started at **12:25:03**. The mu_H/mu_L swap in `kp14_fd_vy.py` — the
+core of the regime-label fix — was committed in `83f28d3` at **12:49:54**, ~25 minutes
+*after* type 0's subprocess had already launched and read the file:
+
+```
+-    Qs[2*iy, 2*iy+1] += mu_H          +    Qs[2*iy, 2*iy+1] += mu_L
+-    Qs[2*iy+1, 2*iy] += mu_L          +    Qs[2*iy+1, 2*iy] += mu_H
+```
+
+So the `G_vyx0.csv` written at 14:04 is a **pre-fix** table. Refusing to adopt it was
+correct, for a stronger reason than the one given at the time (mtime-based doubt): this
+is positive evidence of staleness, not absence of evidence of currency.
+
+The same reasoning clears the other two. Type 1 launched 14:05 and type 2 at 16:05,
+both after the last change to either G-stage source, and `find -newermt "14:05"` over
+`variants/kp_vy/*.py` returns only `build_vy_tables.py` — the driver, which is in
+neither stage's source list by design. Type 1 (landed 16:05:23) is checkpointed under
+`solve_id c1421d0d0e6126cb`.
+
+**Generalisation.** A long solve reads its sources *once, at subprocess launch*. Editing
+those sources mid-run neither invalidates nor updates the run — it just silently
+decouples the artifact from the tree. `solstamp` catches this only at *record* time, and
+the old driver recorded nothing. Two habits follow: never edit a producer while it is
+solving, and prefer the per-type checkpoint written immediately after each type, which
+binds the artifact to the sources as they were when it landed.
+
+### §17c — detached-run state (2026-09-04 16:10)
+
+Everything now runs at `ppid 1`, immune to the terminal, VSCode, and the Claude session:
+
+| pid | work | started | ETA |
+|---|---|---|---|
+| 41743 | G type 0 re-solve -> `G_vyx0.new.csv` | 16:09 | ~17:40 |
+| 41884 | G type 2 re-solve -> `G_vyx2.new.csv` | 16:14 | ~17:45 |
+| 41925 | `_scratch/finish_vyx.sh` | 16:10 | after both |
+
+The finisher waits on both pids, **validates** each new table (1000x44, no NaN) before
+promoting it over the live name, stamps types 0 and 2, then runs the driver for the G
+manifest, the 63 integ jobs, and the integ manifest. It aborts rather than promote a
+truncated table. Solves write to `*.new.csv` so nothing can read a torn file.
+
+Machine sleep suspends and resumes these cleanly; only wall-clock is lost. Session death
+does not touch them.
+
+### §17d — DEFERRED FIX: kp14_fd_vy.py saves an unconverged G and calls it converged
+
+```python
+for it in range(1_000_000):
+    ...
+    if err < 1e-8:
+        break
+# <-- no check here; falls through on exhaustion
+out.to_csv(gout)
+print(f"saved {gout} (converged iter {it}, err {err:.2e}, ...)")
+```
+
+If the loop exhausts its 1,000,000 iterations without reaching tolerance it writes the
+table anyway and prints **"converged"**. That is the quadrature landmine's exact shape:
+a silently wrong artifact plus a message asserting success. It is not hypothetical here
+— `err` is not monotone near the floor (observed oscillating between 4e-8 and 6e-7
+around iteration 75,000), so a slightly harder parametrization could plausibly sit above
+1e-8 until the cap.
+
+Fix (one guard, after the loop):
+
+```python
+if err >= 1e-8:
+    raise RuntimeError(f"G solve did not converge: err {err:.3e} after {it+1} iters")
+```
+
+**Deliberately NOT applied yet.** Editing `kp14_fd_vy.py` changes the G-stage
+`solve_id`, which would void the type-1 checkpoint already written under
+`c1421d0d0e6126cb` and make the finisher's `KP_VY_ADOPT_G=0,2` stamp a *different* id —
+so the driver would then re-solve type 1 from scratch. Apply it only once all three
+tables and both manifests are recorded, and accept that it moves the G solve_id (a
+producer change *should* invalidate the solve; that is the design working).
+
+**Rule this instances:** a producer is frozen while any solve using it is in flight.
+
+### §17e — measured: E[lambda] delta (2026-09-04)
+
+`_scratch/lambda_delta.py`, probing both trees' `parameters_kp14`:
+
+| quantity | before (f6ba305) | after | change |
+|---|---|---|---|
+| prob_H | 0.6809 | 0.3191 | -0.3617 |
+| prob_L | 0.3191 | 0.6809 | +0.3617 |
+| lambda_H | 2.3500 | 2.3500 | same |
+| lambda_L | 0.3672 | 0.3672 | same |
+| **E[lambda]** | **1.7172** | **1.0000** | **-0.7172** |
+
+mu_H, mu_L, lambda_H, lambda_L are all unchanged; only the stationary regime weights
+move. The fixed economy hits the KP14 normalisation **exactly** (1.0000), which is
+independent confirmation of the convention chosen in `docs/kp14_regime_labels.md` —
+the alternative labelling both misses the normalisation by 72% and requires the
+infeasible lambda_L = -1.881.
+
+Panel arm (`_scratch/panel_delta.py`) runs the same seeds through both trees and
+compares SR_max, E[mu], cross-sectional sd(mu), and the per-basis conditional-oracle
+and constant-theta ceilings. It waits on the rebuilt tables.
+
+### §17f — the oracle's cost is the RFF sweep, not the simulation
+
+Calibrating the panel arm on a 60x60 kp_vy panel (before arm, seed 0):
+
+| basis config | wall | SR_max | E[mu] |
+|---|---|---|---|
+| `--rff 36,360,3600 --nmat 2` (default) | **1763 s** | 0.6451 | 0.0156 |
+| `--rff 36 --nmat 1` | **39 s** | 0.6451 | 0.0156 |
+
+45x cheaper, and the reported moments are **identical** — as they must be: `sr_max_mean`,
+`mean_mu`, `sd_mu` and `mean_idio_sd` all come from the monthly time series, which the
+feature basis never touches. The basis only enters the per-basis ceiling rows
+(`cond_oracle`, `const_z0`).
+
+Consequence for every future delta/diagnostic run: **choose the basis by what is being
+compared.** Moments-only comparisons (this delta, sanity checks, regressions against a
+prior parametrization) should run `--rff 36 --nmat 1`. Only ceiling/room/gap comparisons
+need the full sweep, and those should be budgeted as ~45x the moments run.
+
+This matters at the P/T ratios the gap work uses: the default sweep spends essentially
+all its time building and inverting 3600-column designs twice per month for numbers a
+moments comparison discards.
+
+### §17g — oracle panel cost model (measured, `--rff 36 --nmat 1`)
+
+Four points on the before arm, under contention from the two G solves:
+
+| N | T | wall |
+|---|---|---|
+| 60 | 60 | 39 s |
+| 120 | 60 | 65 s |
+| 240 | 60 | 114 s |
+| 60 | 120 | 74 s |
+
+Linear in both, `r2 = 0.9998` in N at fixed T:
+
+```
+t ~= 4 + T * (0.175 + 0.0069 * N)   seconds
+```
+
+So the flagship `--N 500 --T 500` oracle is ~30 min per seed with a small basis, and the
+`--N 300 --T 360` delta run ~14 min per seed per arm — about 55 min for a two-seed,
+two-arm comparison, less once the G solves release their cores. With the *default*
+`--rff 36,360,3600 --nmat 2` the same delta would be ~40 h.
+
+`sr_max_mean` rises materially with N (0.645 / 0.813 / 0.961 at N = 60 / 120 / 240) —
+it is the max Sharpe ratio attainable from N assets, so **it is not comparable across
+panel sizes.** Any before/after or economy/economy comparison has to hold N fixed, and
+any headline SR must carry its N.
+
+### §17h — the G iteration cannot reach its own tolerance (2026-09-04 19:04)
+
+The two re-solves ran 2h54m and **made no progress after the first 20 minutes**. Both
+hit a residual floor by iteration ~30,000 and random-walked for 228,000 iterations more:
+
+| iter | type 0 err | type 2 err |
+|---|---|---|
+| 30,000 | 1.48e-07 | 5.01e-06 |
+| 90,000 | 6.39e-07 | 5.29e-06 |
+| 150,000 | 1.37e-07 | 4.09e-06 |
+| 210,000 | 4.66e-07 | 5.28e-06 |
+| 240,000 | 9.16e-08 | 4.38e-06 |
+| **best ever seen** | **1.96e-08** | **2.39e-06** |
+
+Tolerance is `err < 1e-8`. Type 0 never got within 2x of it in 258,000 iterations; type 2
+never within 240x. There is no trend — this is a floor, not slow convergence.
+
+**§17d was not hypothetical; it was about to fire.** Left alone, both would have run out
+the 1,000,000-iteration cap (~7 more hours), fallen through the loop, written their
+tables, and printed `converged`. Two of the three flagship KP tables would have been
+silently wrong-but-labelled-right. Killed at 19:04. The finisher's validation guard did
+its job: it aborted rather than install, and the live tables were left untouched with no
+`.new.csv` debris.
+
+**Type 1 is genuinely fine.** It ran 14:05->16:05 = 121 min at ~25 iters/s ~= 181,000
+iterations, well under the 1e6 cap, so it exited on the tolerance test rather than by
+exhaustion. It stays valid and checkpointed under `c1421d0d0e6126cb`. That types 0
+(`type_bv=0.02`) and 2 (`0.14`) floor out while type 1 (`0.07`) converges says the floor
+is parametrization-dependent.
+
+**Diagnosis.** `err = np.linalg.norm(Gn - G)` is an *absolute* Frobenius norm over a
+1000x42 array. Its floor is set by the accuracy of the sparse LU solve on a 42,000x42,000
+system, which scales with `||G||` — so a tolerance that is comfortable for one `type_bv`
+is unreachable for another. A fixed absolute threshold cannot be right across types.
+
+**Proposed fix (not yet applied).**
+1. Make the criterion **relative**: `||Gn - G|| / max(||G||, 1) < tol`.
+2. Add **stall detection**: if the best residual has not improved by, say, 2x over the
+   last 20,000 iterations, stop — and `raise`, reporting the floor reached.
+3. Keep the §17d guard: never write a table after loop exhaustion.
+
+This also rewrites the cost story. The useful work is **~20 minutes per type**, not two
+hours; the rest was spin. Three types should be ~1 hour total, not ~6.
+
+**Consequence for the tolerance choice:** whether a ~1e-7 (type 0) or ~2e-6 (type 2)
+residual is *good enough* is a numerical-accuracy question about the resulting expected
+returns, not a matter of taste. Before picking a new tolerance, measure how much the G
+table — and the premia derived from it — move between iteration 30,000 and 250,000. If
+they are stable to many digits, the floor is harmless and the tolerance was simply set
+below what the linear solve can deliver.
+
+### §17i — the G "solve" was a linear system all along (2026-09-05)
+
+The iteration
+```
+Mat @ G_new = G/dt + util,    Mat = I/dt - (F + Q)
+```
+has fixed point `[I/dt - (F+Q)] G = G/dt + util`, i.e.
+
+```
+(F + Q) G = -util
+```
+
+which is **linear**. One `spsolve` replaces the entire loop:
+
+| | before | after |
+|---|---|---|
+| per G type | ~2 h, then plateau, never converging | **0.10 s** |
+| three types | projected 6+ h | **2 s** |
+| tolerance question | unanswerable | none — a residual check |
+| relative residual | n/a (absolute norm) | 7e-13 to 9e-13 |
+
+**Why the old tolerance was unsatisfiable, not merely strict.** `err` was an *absolute*
+Frobenius norm compared against `1e-8`, but `||G||` is 3.05e7 (type 0), 7.09e7 (type 1),
+1.96e8 (type 2). The test therefore demanded relative precision of **3.3e-16, 1.4e-16 and
+5.1e-17** — at or below float64 eps (2.2e-16). Types 1 and 2 asked for better than the
+machine can represent. No tolerance tuning could have fixed this; the norm had to become
+relative, and once it does, the direct solve is obviously better than iterating to it.
+
+**The plateau was the answer.** Taking one step of the *original* iteration from the
+direct solution moves `1.5e-13` to `2.1e-13` relative — the same order as the observed
+plateau. The iteration had reached machine precision by ~30,000 iterations; the other
+228,000 were noise around the correct point. Type 1's earlier "convergence" was a lucky
+random-walk dip below an unreachable threshold, not a meaningful stopping event.
+
+**Validation.** The direct solution reproduces the two tables that were current to
+`2.9e-13` (type 0) and `2.2e-13` (type 1) relative. Type 2 differs by **6.2% relative,
+39.8% elementwise max** — that table was the stale pre-fix one from git, exactly as
+expected, and is now the only KP number in this economy that actually moves.
+
+### §17b CORRECTION — G_vyx0.csv was not stale after all
+
+§17b argued that `G_vyx0.csv` (written 14:04 on 2026-09-04) was produced by pre-fix code,
+because the driver launched at 12:25:03 and the `mu_H`/`mu_L` swap was committed at
+12:49:54. **That inference was invalid: commit time is not edit time.** The swap was
+already in the working tree when the subprocess read it; the commit merely recorded an
+earlier edit.
+
+The direct-solve probe settles it empirically — the post-fix direct solution matches that
+table to `2.9e-13`, which a regime-label difference could not survive (type 2's genuine
+staleness shows up as 6.2%). The table was current.
+
+What stands from §17b is the general lesson, which is if anything strengthened: a long
+solve reads its sources once at launch, and **file mtimes and commit timestamps are not
+evidence about what code a running process is executing.** The reliable check is
+numerical — recompute and compare — which is now cheap enough to be routine.
+
+## §18 — Phase 0 table rebuild COMPLETE, and the DKKM `mat` bug (2026-09-05)
+
+### The vyx tables are done
+
+```
+solve_id           model     size  git  files  tags
+f2be637b9fec1f80   kp_vy    2.3 MB  yes     3  vyx     <- G stage
+d8d686da014f429a   kp_vy    5.5 MB  yes    63  vyx     <- integral stage
+```
+
+`solfiles.py check` reports all 66 artifacts present and intact; both are small enough to
+commit. Integral stage took 5263 s (~88 min) for 57 jobs after adopting the 6 built before
+the restart. This is the **first content-addressed solve in the registry**, and it closes
+the "rebuild the vyx tables" item that has been open since 2026-09-04.
+
+### ASU session's Job 5 handoff: verified, with corrections
+
+`_scratch/handoff-job5-repo-merge.md` +
+[`docs/refactor/FINDINGS-repo-merge.md`](FINDINGS-repo-merge.md). Its three flagged
+corrections to §5 were each checked rather than accepted; see §5 for what landed. Net:
+the path-limited-log point was **right**, the `config` count was **right on the file
+metric** (41 files, though 46 import lines and 156 attribute uses also exist — the
+original "42" matched none), and the `.git` figure was **right that +4.4% was wrong but
+wrong in the replacement**: it is +3.5 MB / +5.2%, and the graft itself is free.
+
+### The finding that matters: DKKM Sharpe is biased downward, right now
+
+Verified independently in the source:
+
+1. `utils/evaluate_sdfs.py:9` — since `dc48c98`, `dkkm_results` carries **one row per
+   random-feature draw** (`mat`), with the docstring instruction *"average across mat
+   downstream."* `fama_results` (line 8) has **no** `mat`.
+2. `analyze.py` **never references `mat`** — its DKKM docstring (line 205) still lists the
+   pre-`dc48c98` columns.
+3. `analyze.py:215` computes `sharpe = mean / stdev` **per row**, i.e. per (month, draw).
+4. `analyze.py:233` groups by `['alpha','nfeatures','iter']`. `mat` is neither a key nor
+   in `agg_dict`, so pandas silently drops it and the **per-draw Sharpes are averaged**.
+
+So the reported DKKM Sharpe is the mean of per-draw conditional Sharpes, not the Sharpe of
+the draw-averaged portfolio. Since `mean = w'rp` is linear in `w` while
+`stdev = sqrt(w' Σ w)` is convex, averaging draws leaves the mean unchanged and strictly
+lowers the risk. **The error lands only on DKKM** (Fama has no draw dimension), the
+treatment arm of the entire gap question.
+
+**Precision about the direction.** Two facts are theorems: `mean` is exactly linear in
+`w`, and `||w_bar||_Σ <= mean_i ||w_i||_Σ` (triangle inequality for the Σ-norm), which
+together give `Sharpe(w_bar) >= (mean_i mu_i)/(mean_i sigma_i)`. But what analyze.py
+reports is the **mean of ratios**, and Sharpe is scale-invariant in `w`, so each per-draw
+Sharpe is the Sharpe of that draw's *direction*. Mean-of-ratios versus ratio-of-means is
+not ordered in general, so "biased downward" is **not** a theorem — an earlier statement
+of this in conversation overstated it.
+
+It is, however, extremely robust. `_scratch/mat_bias_probe.py` (synthetic: draws are the
+true MVE weights plus i.i.d. noise, 400 trials per noise level, 8 draws, N=60) finds
+`Sharpe(w_bar) >= mean-of-ratios` in **100% of 2000 trials**, with both provable
+inequalities asserted every trial and never violated:
+
+| draw noise | correct | reported | understatement | risk drop |
+|---|---|---|---|---|
+| 0.25 | 0.1533 | 0.1457 | 1.05x | 0.95 |
+| 0.50 | 0.1495 | 0.1260 | 1.19x | 0.84 |
+| 1.00 | 0.1396 | 0.0903 | **1.55x** | 0.65 |
+| 2.00 | 0.1102 | 0.0519 | **2.12x** | 0.47 |
+| 4.00 | 0.0682 | 0.0266 | **2.57x** | 0.39 |
+
+This is illustrative, not a measurement of the real bias: it is synthetic, uses 8 draws
+where `config.NMAT = 5`, and the true RFF draw dispersion is unknown. But the scale of the
+effect — plausibly tens of percent to more than 2x — is large enough that it could decide
+whether DKKM appears to beat FM at all. The real magnitude stays unmeasured; no
+`results.pkl` exists on this laptop.
+
+### Why this must be fixed BEFORE Phase 1, not after
+
+`results.pkl` stores only the three DataFrames plus metadata (`evaluate_sdfs.py:232-244`).
+**`cond_var` / Σ is never saved** — it is read at line 172 and discarded. Therefore:
+
+| quantity | in `w` | recoverable downstream from saved rows? |
+|---|---|---|
+| `mean`, `xret` | linear | **yes** — average across `mat` |
+| `stdev` | convex quadratic | **no** — needs Σ, which is gone |
+
+So this cannot be repaired in `analyze.py`. `utils/evaluate_sdfs.py` has to emit the
+draw-averaged portfolio's own `stdev`. And a 10-panel run is ~80 GB on scratch that is not
+retained — **every panel generated before the fix is permanently missing the number**, and
+regenerating means re-running the whole simulation. Phase 1 is the next thing queued.
+
+Recommendation: fix `evaluate_sdfs.py` in Phase 0, now, ahead of any Phase 1 run.
