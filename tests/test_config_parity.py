@@ -44,10 +44,8 @@ WHITELIST = {
     ("bgn_gam", "burnin"): "same reason as kp_vy: the variant burns in 300 months "
                            "against the main pipeline's BGN_BURNIN of 200; simulation "
                            "only, enters no solve",
-    ("gs_bx", "rho_x"): "OPEN, not deliberate: config says Table 1 is 0.96 quarterly, "
-                        "GS21.m:22 uses 0.95. Needs the paper. Remove this entry once "
-                        "settled -- it is a placeholder, not an exemption.",
-    ("gs_bx", "sigma_x"): "downstream of rho_x; resolves with it",
+    # rho_x and sigma_x are no longer divergent -- the variant now carries config's
+    # 0.96 quarterly. Kept out of the whitelist deliberately so the test CHECKS them.
     ("gs_bx", "xnum"): "grid size is a cost decision, not an economic parameter: the "
                        "variant runs 161 for accuracy, config 20 for speed",
 }
@@ -141,11 +139,21 @@ def test_gs_variant_matches_config_on_the_settled_parameters():
                        "docs/refactor/FINDINGS-config-divergence.md)")
 
 
-def test_rho_x_stays_flagged_until_the_paper_settles_it():
-    """Guards against the placeholder quietly becoming a permanent exemption."""
-    why = WHITELIST.get(("gs_bx", "rho_x"), "")
-    assert "OPEN" in why and "paper" in why, \
-        "rho_x's whitelist entry no longer says it is unresolved"
+def test_rho_x_is_checked_not_exempted():
+    """It was a placeholder while unresolved; it must not linger as an exemption.
+
+    NOTE ON PROVENANCE: 0.96 is config.py's value and the main pipeline's committed
+    solfiles were built with it, while GS21.m:22 uses 0.95. The choice rests on
+    config.py's track record against GS21.m (three transcription errors and two unit
+    errors, all corrected in config) -- NOT on anyone having opened Table 1. Verify
+    against the paper before publishing any GS number."""
+    assert ("gs_bx", "rho_x") not in WHITELIST, "rho_x is exempted rather than checked"
+    C = _cfg()
+    src = open(os.path.join(ROOT, "variants", "gs_bx", "gs_solve_reg.py")).read()
+    ns = _parse_assignments(src, ("rho_x",))
+    assert "rho_x" in ns, "could not parse rho_x out of gs_solve_reg.py"
+    assert _close(ns["rho_x"], C.GS21_RHO_X), \
+        f"rho_x={ns['rho_x']!r} vs config.GS21_RHO_X={C.GS21_RHO_X!r}"
 
 
 if __name__ == "__main__":
