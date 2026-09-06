@@ -7,7 +7,10 @@ mu_x, mu_z, sigma_x, sigma_z = 0.01, 0.005, 0.13, 0.035
 theta_eps, sigma_eps = 0.35, 0.2
 theta_u, sigma_u = 0.5, 1.5
 delta, mu_lambda, sigma_lambda, mu_H, mu_L, lambda_H = 0.1, 2.0, 2.0, 0.075, 0.16, 2.35
-lambda_L = (1 - mu_H/(mu_H + mu_L)*lambda_H)/(1 - mu_H/(mu_H + mu_L))
+# lambda_L is NOT set here: it is derived from the E[lambda]=1 normalisation below,
+# after KP_PARAM_OVERRIDES is applied. An identical assignment used to sit on this
+# line, which was dead (nothing reads lambda_L before the recomputation) and was the
+# only reason lambda_L looked like a free parameter.
 r, gamma_x, gamma_z = 0.05, 0.69, -0.35 ## NOTE: r is different from KP14
 alpha = 0.85
 
@@ -29,6 +32,10 @@ bv_comp = 0.0                             # y=0 value compensation knob (omega a
 bx_seed = 777
 g_file, integ_file = 'G_func.csv', 'integ_results.npz'
 
+# Names defined before the override, so a misspelled key can be told from a real one:
+# globals().update() CREATES whatever key it is given, so an unknown name would
+# otherwise pass every later check while affecting nothing.
+_pre_override_names = set(globals())
 globals().update(json.loads(os.environ.get('KP_PARAM_OVERRIDES', '{}')))
 lambda_L = (1 - mu_H/(mu_H + mu_L)*lambda_H)/(1 - mu_H/(mu_H + mu_L))
 # 2026-09-04: mu_H/mu_L are ENTRY rates (named for the state they lead TO),
@@ -38,6 +45,44 @@ lambda_L = (1 - mu_H/(mu_H + mu_L)*lambda_H)/(1 - mu_H/(mu_H + mu_L))
 # See ../../docs/kp14_regime_labels.md.
 prob_H = mu_H/(mu_H + mu_L)
 exit_H, exit_L = mu_L, mu_H   # rates of LEAVING the high / low state
+
+
+# --- overrides must actually take effect -------------------------------------------
+# globals().update() above is silent: overriding a name that is RE-DERIVED below is
+# accepted and discarded. `KP_PARAM_OVERRIDES={"lambda_L": 9.0}` used to run clean and
+# leave lambda_L at 0.367. For a spec layer that hashes the requested overrides into a
+# spec id, that means a spec could record a value the economy never used. Raise instead.
+#
+# `type_share` is renormalised to sum 1, so it is compared proportionally; everything
+# else must match after list -> array coercion.
+_NORMALISED = {'type_share'}
+
+
+def _override_took(name, requested, current):
+    a, b = _np.asarray(requested, float).ravel(), _np.asarray(current, float).ravel()
+    if a.shape != b.shape:
+        return False
+    if name in _NORMALISED:
+        s = a.sum()
+        if s == 0:
+            return False
+        a = a / s
+    return bool(_np.allclose(a, b, rtol=1e-12, atol=0.0))
+
+
+_discarded = []
+for _k, _v in json.loads(os.environ.get('KP_PARAM_OVERRIDES', '{}')).items():
+    if _k not in _pre_override_names:
+        _discarded.append(f"{_k}: no such parameter (misspelled? it would affect nothing)")
+    elif not _override_took(_k, _v, globals()[_k]):
+        _discarded.append(f"{_k}: requested {_v!r}, module has {globals()[_k]!r}")
+if _discarded:
+    raise ValueError(
+        "KP_PARAM_OVERRIDES entries that had NO EFFECT. Either the name is derived "
+        "below (so it is not a free parameter) or it does not exist. Silently ignoring "
+        "them would let a spec record a value this economy never used:\n  "
+        + "\n  ".join(_discarded))
+
 
 type_share = _np.array(type_share, float); type_share /= type_share.sum()
 type_bv = _np.array(type_bv, float)

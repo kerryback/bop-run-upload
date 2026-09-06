@@ -132,12 +132,43 @@ def cmd_diff(args):
     return 0
 
 
+def _superseding(m, all_manifests):
+    """A newer solve of the same model+tag whose artifacts occupy these same paths.
+
+    Overwritten artifacts are not corruption when a later solve of the same economy
+    produced them -- that is the registry doing its job. Seth's requirement is that OLD
+    experiments stay identifiable, so superseded manifests are KEPT, not pruned; they
+    just must not be reported as damage.
+    """
+    paths = {a["path"] for a in m.get("artifacts", [])}
+    if not paths:
+        return None
+    for o in all_manifests:
+        if o["solve_id"] == m["solve_id"]:
+            continue
+        if (o.get("model"), sorted(o.get("tags", []))) != (m.get("model"), sorted(m.get("tags", []))):
+            continue
+        if paths <= {a["path"] for a in o.get("artifacts", [])} and not solstamp.artifact_problems(o):
+            return o["solve_id"]
+    return None
+
+
 def cmd_check(args):
     bad = 0
-    for m in solstamp.iter_manifests():
+    every = list(solstamp.iter_manifests())
+    for m in every:
         if args.model and m.get("model") != args.model:
             continue
         problems = solstamp.artifact_problems(m)
+        if problems:
+            newer = _superseding(m, every)
+            if newer:
+                tag = ", ".join(m.get("tags", [])) or "-"
+                if not args.quiet:
+                    print(f"[superseded] {m['solve_id']}  {m.get('model')}  {tag}  "
+                          f"-> its artifacts now belong to {newer}; manifest kept as the "
+                          f"record of what produced earlier results")
+                continue
         tag = ", ".join(m.get("tags", [])) or "-"
         if problems:
             bad += 1

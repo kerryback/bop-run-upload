@@ -19,14 +19,33 @@ outdir = os.path.join(HERE, outdir)
 os.makedirs(outdir, exist_ok=True)
 
 # ---- parameters (GS21.m / paper) ----
-g = 1.14; delta = 0.02 / 3
-rho_x = 0.95 ** (1 / 3); sigma_x = 0.012 * np.sqrt((1 - 0.95 ** (2 / 3)) / (1 - 0.95 ** 2))
+# 2026-09-06: delta, tau and sigma_m reconciled to config.py, which 6c65bf4 had
+# already corrected in the main tree while this file kept GS21.m's values.
+#   delta 0.02/3 -> 0.02 : delta is subtracted from output IN OUTPUT UNITS at the
+#       pi_R line below, and output is not rescaled monthly, so dividing by 3 was a
+#       units error (config.py:311-312).
+#   tau   0.2/3  -> 0.2  : a tax RATE multiplying the whole flow; rates do not
+#       rescale with period length (config.py:328).
+#   sigma_m 2.5  -> 5    : GS21.m:53 reads `sigma_m = 5; % 2.5`, so 2.5 was the
+#       COMMENTED-OUT alternative -- the same transcription error already caught for
+#       GS21_R (config.py:369). config.py:375 and the GS21 solfile stamp both say 5.
+#   rho_x 0.95 -> 0.96 (and sigma_x, which is derived from it) : GS21.m:22 uses
+#       0.95 quarterly; Gomes-Schmid (2021) Table 1 is 0.96, confirmed by Seth
+#       2026-09-06. config.py:313 and the committed GS21 solfile stamp both already
+#       used 0.96, so the .m is the outlier. sigma_x keeps the same conversion
+#       formula, sigma_q*sqrt((1-rho_q**(2/3))/(1-rho_q**2)), with rho_q = 0.96.
+# This file now agrees with config.py on every shared economic parameter. The one
+# remaining deliberate difference is the x-grid size: xnum is passed as 161 here
+# (run_gs_bx7*.sh) versus GS21_XNUM = 20 in config.py -- a cost/accuracy choice, not
+# a calibration disagreement. See docs/refactor/FINDINGS-config-divergence.md.
+g = 1.14; delta = 0.02
+rho_x = 0.96 ** (1 / 3); sigma_x = 0.012 * np.sqrt((1 - 0.96 ** (2 / 3)) / (1 - 0.96 ** 2))
 rho_z = 0.9 ** (1 / 3); sigma_z = 0.16 * np.sqrt((1 - 0.9 ** (2 / 3)) / (1 - 0.9 ** 2))
 r = 0.1 / 12; gamma_x = 0.5; x_bar = 0.0
-tau = 0.2 / 3; phi = 0.4; kappa_b = 0.004; xi = 0.03 / 3
+tau = 0.2; phi = 0.4; kappa_b = 0.004; xi = 0.03 / 3
 bnum, znum = 20, 200
 imin, imax = 0.0, 2000.0
-sigma_m = 2.5
+sigma_m = 5
 # regime block
 gmreg = [1.0, 1.0]
 p01, p10 = 0.25 / 12, 0.50 / 12
