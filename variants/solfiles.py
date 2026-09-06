@@ -75,6 +75,20 @@ def cmd_show(args):
         print("\nenvironment / CLI parameters (hashed):")
         for k, v in sorted(m["env_params"].items()):
             print(f"  {k} = {v}")
+    ach = m.get("achieved")
+    if ach:
+        print("\nachieved (recorded, NOT hashed -- what the solve actually did):")
+        exit_path = ach.get("exit")
+        for k, v in sorted(ach.items()):
+            flag = ""
+            if k == "exit" and v not in ("tolerance", "direct_solve"):
+                flag = "   <-- did NOT exit on its tolerance test"
+            print(f"  {k} = {v}{flag}")
+        req, got = ach.get("threshold_enforced"), ach.get("qerr_rel")
+        if req and got:
+            print(f"  -> overshoot {got/req:.2f}x the enforced threshold")
+    else:
+        print("\nachieved: not recorded (solve predates solstamp's `achieved` field)")
     if m.get("extra"):
         print("\nlabels (not hashed):")
         for k, v in sorted(m["extra"].items()):
@@ -132,9 +146,19 @@ def cmd_check(args):
                 print(f"    - {p}")
             if len(problems) > 4:
                 print(f"    ... and {len(problems) - 4} more")
-        elif not args.quiet:
-            print(f"[ok] {m['solve_id']}  {m.get('model')}  {tag}  "
-                  f"{len(m.get('artifacts', []))} file(s), {_size(m.get('total_bytes', 0))}")
+        else:
+            ach = m.get("achieved") or {}
+            ex = ach.get("exit")
+            if ex and ex not in ("tolerance", "direct_solve"):
+                print(f"[ok, but CAPPED] {m['solve_id']}  {m.get('model')}  {tag}  "
+                      f"exit={ex}"
+                      + (f", sweeps={ach['sweeps']}" if "sweeps" in ach else "")
+                      + (f", achieved {ach['qerr_rel']:.2e} vs threshold "
+                         f"{ach['threshold_enforced']:.2e}"
+                         if ach.get("qerr_rel") and ach.get("threshold_enforced") else ""))
+            elif not args.quiet:
+                print(f"[ok] {m['solve_id']}  {m.get('model')}  {tag}  "
+                      f"{len(m.get('artifacts', []))} file(s), {_size(m.get('total_bytes', 0))}")
     if bad:
         print(f"\n{bad} solve(s) cannot be reused as recorded. "
               f"Re-run the producer; it will re-solve and re-record.")

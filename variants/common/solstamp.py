@@ -279,11 +279,23 @@ def artifact_problems(manifest, base_dir=None):
     return problems
 
 
-def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None):
+def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None,
+           achieved=None):
     """Write (or update) the manifest for this solve.
 
     artifacts: list of paths just produced. Recorded relative to the repo root
                when they live inside it, absolute otherwise (off-repo stores).
+    achieved:  what the solve actually DID -- exit path, iterations, residual.
+               Recorded, never hashed. A solve_id must depend only on inputs, or
+               two runs of the same code on the same parameters would land in
+               different registry slots; but a manifest that records only what was
+               *requested* cannot distinguish a converged solve from one that hit
+               its iteration cap. GS21's sol_reg exposed this on 2026-09-05: the
+               manifest recorded tol=1e-6, the code enforced tol*20 = 2e-5, the
+               solve exited by cycle-averaging at the 5600-sweep cap having reached
+               3.4e-5, and printed "converged". It was 1.7x over -- fine in that
+               instance, which is what makes it dangerous, since the identical path
+               writes the identical manifest at 1000x over.
     """
     base_dir = base_dir or REPO_DIR
     os.makedirs(REGISTRY_DIR, exist_ok=True)
@@ -311,6 +323,8 @@ def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None):
                          'sha256(params + source digests); identical id means the '
                          'artifacts are reusable. Do not hand-edit.'),
     })
+    if achieved is not None:
+        manifest['achieved'] = achieved      # recorded, deliberately NOT hashed
     with open(manifest_path(snap.solve_id), 'w') as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
         f.write('\n')
