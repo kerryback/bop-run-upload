@@ -85,3 +85,76 @@ Three sessions' worth of reasoning converged on 0.96 for `rho_x` from track reco
 consistency, and code inspection. All of it was wrong, and one `grep` of Table I settled it
 in under a minute. `GS21.m` and `config.py` are both *derived artifacts*; the paper is the
 source. Every GS21 parameter should now be cited to Table I, not to either tree.
+
+---
+
+# Postscript: KP14 and BGN checked against their papers too (2026-09-06)
+
+Seth supplied Kogan-Papanikolaou (JF 2014) and Berk-Green-Naik (JF 1999). Having found
+`config.py` wrong on three GS21 parameters, the obvious question was whether the other two
+models escaped. **They did.**
+
+## KP14 — Table II: 17 of 18 match exactly
+
+`mu_x`, `sigma_x`, `mu_z`, `sigma_z`, `theta_eps`, `sigma_eps`, `theta_u`, `sigma_u`,
+`delta`, `mu_lambda`, `sigma_lambda`, `mu_H`, `mu_L`, `lambda_H`, `gamma_x`, `gamma_z`,
+`alpha` — all exact.
+
+The single difference is **`r`: paper 0.025, repo 0.05.** It is a deliberate departure,
+flagged at `variants/kp_vy/parameters_kp14.py:14` ("NOTE: r is different from KP14") but
+**not** in `config.py` until now. Documented there as well.
+
+## The lambda regime-label fix is confirmed by the paper
+
+The 2026-09-04 fix (WORKING.md, `docs/kp14_regime_labels.md`) was derived from three
+in-code sites plus a feasibility argument, with no access to the paper. **The paper
+confirms it three separate ways.**
+
+1. **Equation (7), p.681** is literally the formula in `parameters_kp14.py`:
+   `1 = lambda_L + [mu_H/(mu_H + mu_L)] * (lambda_H - lambda_L)`
+   The weight on `(lambda_H - lambda_L)` is `mu_H/(mu_H+mu_L)` — i.e. **P(high) = 0.3191**,
+   which is exactly what the fix asserts and the opposite of what the repo had.
+
+2. **Equation (6), p.680**, with the text: *"mu_H dt and mu_L dt denote the instantaneous
+   probability of ENTERING each state."* Entering rates, so exit-from-high = `mu_L` and
+   exit-from-low = `mu_H`, giving a stationary `P(high) = mu_H/(mu_H+mu_L) = 0.3191`. That
+   is the `KP14_EXIT_H = KP14_MU_L` swap, independently confirmed.
+
+3. **The paper's own sanity sentence, p.689:** *"the firm grows at about twice the average
+   rate in its high growth phase and at about a third of the average rate in the low growth
+   phase."* Under the fix `lambda_L = 0.3672` — about a third. Under the old convention
+   `lambda_L = -1.8800`, a **negative arrival rate**, which no descriptive sentence could
+   have meant.
+
+So the economy has been running at `E[lambda] = 1.7172` against the paper's explicit
+normalisation of 1.0, and the fix restores it to exactly 1.0000.
+
+## BGN — Table I: 11 of 11 match
+
+`pi = 0.99`, `rbar = 0.006236` (Table I's rounding of `0.07483/12`), `kappa = 0.95`,
+`sigma_r = 0.002`, `beta_zr = -0.00014`, `sigma_z = 0.4`, `Cbar = -3.7`, `I = 1`.
+
+Two are computed rather than stored, and both are right:
+
+- **`sigma = 0.3|Cbar|`.** `panel_functions_bgn.py:59` draws `sigmaj` uniform on
+  `[|beta|/sigma_z, |beta|/sigma_z + 0.3|Cbar|]`, matching p.1574 exactly. Commit
+  `6c65bf4` fixed a **10x error** here (an extra `0.1` factor made the range 0.111 instead
+  of 1.11).
+- **The two acceptance probabilities.** `vasicek.py:73` *solves* for `beta_star` and
+  `scale` such that `Pr(accept | r=0) = 0.10` and `Pr(accept | r=rbar) = 0.05` — Table I's
+  bottom panel — rather than hardcoding them. The translated-exponential density matches
+  equation (48).
+
+The `bgn_gam` variant agrees with `config.py` on all eight stored values.
+
+## Scoreboard
+
+| model | vs paper | notes |
+|---|---|---|
+| **KP14** | 17/18 | `r` = 0.05 vs 0.025, deliberate, now documented in both places |
+| **BGN** | 11/11 | clean; `6c65bf4` had already fixed a 10x `sigmaj` error |
+| **GS21** | 12/16 | `rho_x`, `delta`, `sigma_x`, `kappa_e` wrong — all corrected 2026-09-06 |
+
+GS21 was the outlier, and the reason is visible: KP14 and BGN were transcribed from the
+papers, while GS21 came through `GS21.m`, an intermediate artifact that was itself wrong in
+several places. **Provenance through a derived artifact is where the errors entered.**

@@ -255,7 +255,10 @@ KP14_MU_H = 0.075
 KP14_MU_L = 0.16
 KP14_LAMBDA_H = 2.35
 KP14_LAMBDA_L = (1 - KP14_MU_H/(KP14_MU_H + KP14_MU_L)*KP14_LAMBDA_H)/(1 - KP14_MU_H/(KP14_MU_H + KP14_MU_L))
-KP14_R = 0.05
+# 2026-09-06: Kogan-Papanikolaou (2014) Table II sets r = 0.025. This repo uses 0.05,
+# a DELIBERATE departure flagged in variants/kp_vy/parameters_kp14.py:14 but not, until
+# now, here. Every other Table II parameter matches the paper exactly (17 of 18).
+KP14_R = 0.05          # paper: 0.025 -- see note above
 # 2026-09-01: gamma_x, sigma_eps and sigma_u restored to Kogan-Papanikolaou (2014)
 # Table 2 (0.69, 0.20, 1.50), matching the Dropbox code. The 0.1 factors on
 # sigma_eps/sigma_u and the doubled gamma_x (1.38) were repo-only departures.
@@ -308,18 +311,26 @@ GS21_PSI = 2
 GS21_GAMMA = 10
 GS21_G = 1.14
 GS21_ALPHA = 0.2
-GS21_DELTA = 0.02       # enters only as maintenance relative to per-period output, which is not
-                        # rescaled monthly, so it keeps the paper's 2% share (2026-09-01)
-GS21_RHO_X = 0.96**(1/3)      # GS21 Table 1: rho_x = 0.96 quarterly
-# 2026-09-01: Gomes-Schmid (2021) Table 1 is quarterly (sigma_x = 0.012,
-# rho_x = 0.96, sigma_z = 0.16, rho_z = 0.90). Monthly persistence is the cube
+# 2026-09-06: corrected against Gomes-Schmid (2021) Table I itself. delta is a
+# PERIODIC cost: "maintenance of the existing capital stock entails periodic costs
+# delta*k_jt, akin to depreciation" (p.287), set to "2% per quarter, consistent with
+# standard estimates of capital depreciation rates" (p.792). A monthly model therefore
+# needs 0.02/3. The previous justification here -- that it scales output and is not
+# rescaled monthly -- was wrong on both counts: it scales CAPITAL, and it is periodic.
+GS21_DELTA = 0.02/3
+# 2026-09-06: Table I says rho_x = 0.95, and the body text repeats it verbatim
+# ("rho_x = 0.95 and sigma_x = 0.012"). The comment previously here claimed Table 1
+# said 0.96; that was false. GS21.m:22 had it right all along.
+GS21_RHO_X = 0.95**(1/3)
+# 2026-09-01: Gomes-Schmid (2021) Table I is quarterly (sigma_x = 0.012,
+# rho_x = 0.95, sigma_z = 0.16, rho_z = 0.90). Monthly persistence is the cube
 # root; the monthly innovation sd that reproduces the quarterly one under
 # rho_m = rho_q**(1/3) is  sigma_q * sqrt((1 - rho_q**(2/3)) / (1 - rho_q**2)).
 # (The 3/2 exponent in the Dropbox parameters_gs21.py is a typo, and the
 # earlier 0.1 factor on sigma_z was a repo-only departure.) Any change here
 # MUST be followed by `python utils_gs21/regen_solfiles.py`; the stamp guard
 # refuses to run on stale solution files.
-GS21_SIGMA_X = 0.012*np.sqrt((1 - 0.96**(2/3))/(1 - 0.96**2))
+GS21_SIGMA_X = 0.012*np.sqrt((1 - 0.95**(2/3))/(1 - 0.95**2))   # 2026-09-06: base 0.95, per Table I
 GS21_XBAR = 0
 GS21_RHO_Z = 0.90**(1/3)
 GS21_SIGMA_Z = 0.16*np.sqrt((1 - 0.9**(2/3))/(1 - 0.9**2))
@@ -327,7 +338,12 @@ GS21_ZBAR = 0
 GS21_CHI = 1
 GS21_TAU = 0.2      # a rate, not a flow: unchanged by the quarterly -> monthly conversion
 GS21_PHI = 0.4
-GS21_KAPPA_E = 0
+# 2026-09-06: Table I's benchmark is 0.025, chosen "to match the empirical frequency of
+# equity issuances" (p.822). This was 0, matching GS21.m:33's `kappa_e = 0; %0.025` --
+# but there the COMMENTED-OUT value is the paper's, the reverse of the sigma_m and r
+# cases. The paper's kappa_e = 0 appears only as an expositional limit case for deriving
+# the investment cutoff (p.407), not as a calibration. Seth's call: use the benchmark.
+GS21_KAPPA_E = 0.025
 GS21_KAPPA_B = 0.004
 GS21_ZETA = 0.03/3
 GS21_IMIN = 0
