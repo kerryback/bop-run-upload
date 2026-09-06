@@ -148,6 +148,96 @@ bx7 on it without settling §4 first.
 6. **Record `burnin` as a deliberate divergence** (400/300 vs 200) or reconcile it — right now
    it is indistinguishable from drift.
 
+## 9. Reconciliation applied (2026-09-06)
+
+Per the primary session's request. `variants/gs_bx/gs_solve_reg.py` only; nothing committed.
+
+| param | was | now | basis |
+|---|---|---|---|
+| `delta` | 0.02/3 | **0.02** | units error; `delta` is subtracted in output units at `pi_R` |
+| `tau` | 0.2/3 | **0.2** | a rate, not a flow |
+| `sigma_m` | 2.5 | **5** | `GS21.m:53` is `sigma_m = 5; % 2.5` -- 2.5 was the comment |
+| `rho_x` | 0.95**(1/3) | **0.96**(1/3)** | Gomes-Schmid (2021) Table 1 = 0.96, confirmed by Seth 2026-09-06 |
+| `sigma_x` | (0.95 form) | **(0.96 form)** | derived from `rho_x`; same conversion formula |
+
+A comment block above the parameters records the basis for each change. `py_compile` passes.
+
+**`variants/gs_bx/gs_solve_reg.py` now agrees with `config.py` bit-for-bit on all 18 shared
+economic parameters** (verified by numeric comparison, exact equality, not tolerance). The
+only remaining difference is `xnum` 161 vs `GS21_XNUM` 20 — a cost/accuracy choice made on the
+command line, not a calibration disagreement.
+
+`rho_x` settled the open question in PLAN §10 #2: **`GS21.m:22` is the outlier.** config.py and
+the committed solfile stamp were already on 0.96. Together with `sigma_m` (§4) that is two
+places where the archival `.m` is wrong and the main tree had already corrected it — so
+`GS21.m` should be treated as a historical reference, not an authority, and config.py is the
+source of truth for GS21.
+
+**All five solve_ids moved, as they must** -- the producer's source digest is part of the id:
+
+| outdir | old (superseded economy) | **FINAL** |
+|---|---|---|
+| `sol_reg`  | `a8ef7a2522eda19d` | **`77eab49f46bfaa95`** |
+| `sol_b25c` | `3a152ef104016746` | **`9ec0489872230a8f`** |
+| `sol_b40c` | `3787a726fb79f5ef` | **`af7c81605f1febb6`** |
+| `sol_b55c` | `b4c74ad9fe6ba9a9` | **`c43c99f70ade9661`** |
+| `sol_b70c` | `2890e0d6ea375f4f` | **`f68103d6d90be37d`** |
+
+Five distinct. Verified the reconciled values are the ones hashed:
+`delta=0.02 tau=0.2 sigma_m=5 rho_x=0.986484829732188`. These are the ids the array script
+will produce; none has a manifest yet, so all five tasks will solve rather than cache-hit.
+
+### 9.1 A decision this forces: the orphaned `sol_reg` artifact
+
+`variants/gs_bx/sol_reg/solution.npz` (78.6 MB) belongs to `a8ef7a2522eda19d`, the superseded
+economy. Right now `solfiles.py check --model gs_bx` reports it **ok**. The moment task 0 of
+the array runs, it overwrites that file, and the old manifest becomes permanently
+`[STALE/MISSING]` -- `check` will report a broken entry forever, for an artifact that was
+legitimately superseded rather than lost.
+
+That is a gap in the registry design, not a mistake by anyone: **there is no state for
+"correctly retired".** Options, for whoever owns it: delete the old manifest (loses the record
+of what bx7's published numbers were solved under -- probably wrong), add a `superseded_by`
+field, or let `gc` mark it. I did not choose; flagging it. Note REPORT §19's bx7 numbers were
+produced under the old economy, so that manifest is the only thing tying them to parameters.
+
+### 9.2 SLURM array script -- written, not run
+
+`variants/gs_bx/run_gs_bx7_slurm.sh`, `--array=0-4`, one exposure type per task.
+`bash -n` passes; index->outdir/override mapping dry-run verified for all five; every override
+string parses as JSON; the script refuses to run outside an array.
+
+Resource requests, each from measurement rather than guesswork:
+
+- **`-t 0-08:00`** -- `sol_reg` measured 3 h 23 m 36 s at ~4.7 cores riding the 5600-sweep cap.
+  The cap *bounds* the work (`if it == 5600: break` is unconditional), so no solve can exceed
+  ~5601 sweeps whatever the convergence does. At the 4 cores requested, expect 4-4.5 h; 8 h is
+  ~1.8x margin.
+- **`--mem=8G`** -- measured RSS 0.9-2.4 GB. Driver is `smooth()`'s
+  `(200,161,20,161)` temporary ~= 830 MB, 4x per sweep.
+- **`--cpus-per-task=4`** -- GS is memory-bandwidth bound; five concurrent solves on 10 cores
+  *reduced* throughput. Four is past the knee.
+
+Threads are pinned to `SLURM_CPUS_PER_TASK` (OMP/OpenBLAS/MKL/VECLIB/NUMEXPR) so co-scheduled
+tasks cannot oversubscribe a node. Carries `run_bop_job.sh`'s
+`export PATH="$CONDA_PREFIX/bin:$PATH"` fix, without which every task dies in ~1 s. Each task
+writes its own outdir -- `gs_solve_reg.py` takes no lock, so two tasks must never share one.
+`GS_SOLVE_FORCE` is deliberately unset, so re-submitting after a partial failure re-solves only
+the missing types.
+
+**Not submitted.** Solves only -- the oracle and estimator stages that `run_gs_bx7.sh`
+continues into write shared `variants/results/` and are out of scope.
+
+### 9.3 `rho_x` — settled
+
+**0.96.** Confirmed by Seth 2026-09-06 against Gomes-Schmid (2021) Table 1. No paper fetch was
+needed in the end. `GS21.m:22`'s 0.95 is an error, matching the `sigma_m` pattern in §4.
+PLAN §10 open decision #2 is closed, which unblocks naming a `gs21-base` spec.
+
+Nothing now blocks submitting `run_gs_bx7_slurm.sh`.
+
+---
+
 ## 8. What I did not do
 
 No files changed. Did not run `regen_solfiles.py` (rewrites 18 tracked files). Did not touch

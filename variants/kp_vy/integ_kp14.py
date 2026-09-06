@@ -62,13 +62,26 @@ def expected_f_eps(x0):
 
     # epsabs carries the (eps-1)*f(eps) integrals, whose true value passes through
     # 0 near eps=1 where no relative tolerance is attainable; epsrel carries the rest.
-    result = [quad(lambda ep: integrand(fun, ep), lo, hi, epsabs = 1e-8, epsrel = 1e-10, limit = 500)[0] for fun in funcs]
+    #
+    # epsrel was 1e-10, which QUADPACK could not reach: it subdivided to limit=500
+    # and returned 985 roundoff warnings per job saying its own error estimate was
+    # unreliable. Measured 2026-09-06 on one (type, y-node) job:
+    #     epsrel   wall   warnings   worst rel. diff vs 1e-10
+    #     1e-10    110s        985   --
+    #     1e-8      89s        863   8.3e-08
+    #     1e-6      12s          0   3.8e-07
+    # 1e-6 is 9.2x faster and moves the tables by 4e-7, which is four orders of
+    # magnitude below the panel's own sampling noise (~2e-3 at N=500, T=500). It
+    # also stops QUADPACK straining, so the returned error estimates mean something
+    # again. quad stops at max(epsabs, epsrel*|I|), so the zero-crossing integrands
+    # are still bounded by epsabs = 1e-8 exactly as before.
+    result = [quad(lambda ep: integrand(fun, ep), lo, hi, epsabs = 1e-8, epsrel = 1e-6, limit = 500)[0] for fun in funcs]
 
     # The density must integrate to 1 at every grid point. RAISE rather than print:
     # a silent zero is what caused the original damage, and these values are
     # unusable if the mass is lost.
     mass = quad(lambda ep: ncx2.pdf(ep / c, d, lam) / c, lo, hi,
-                epsabs = 1e-12, epsrel = 1e-10, limit = 500)[0]
+                epsabs = 1e-12, epsrel = 1e-6, limit = 500)[0]
     if not abs(mass - 1) < 1e-8:
         raise RuntimeError(
             f'CIR transition density integrates to {mass!r}, not 1, at eps={x0!r} '

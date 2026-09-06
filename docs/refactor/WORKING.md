@@ -1456,3 +1456,70 @@ hashes itself (numerics live in `vasicek.py`; its only knob `JSTAR_TOL` is in `e
 matching `build_vy_tables.py`. `gs_solve_reg.py` cannot be fixed this way — numerics and
 plumbing share one file, so any edit moves all five ids, at 3 h 24 m each to rebuild. That
 is the real argument for settling GS's source before the cluster run, not parameters.
+
+## §24 — the batched kp_vy source change (2026-09-06)
+
+Three edits to hashed sources, paid for with **one** rebuild.
+
+### 1. `epsrel` 1e-10 -> 1e-6 in the integral stage
+
+§21 called the 985 roundoff warnings per job "the same unachievable-tolerance shape as
+the G solver". **That was wrong**, and the refutation was a comment three lines above the
+call — mine, from the quadrature transplant: `epsabs` deliberately carries the
+`(eps-1)*f(eps)` integrals, whose true value crosses zero where no relative tolerance is
+attainable. The warnings were the expected consequence of a documented choice, not a
+landmine. Pattern-matching, not analysis.
+
+Measured anyway, and loosening is still right — for a different reason:
+
+| epsrel | wall | warnings | worst rel. diff vs 1e-10 |
+|---|---|---|---|
+| 1e-10 | 110 s | 985 | — |
+| 1e-8 | 89 s | 863 | 8.3e-08 |
+| **1e-6** | **12 s** | **0** | **3.8e-07** |
+
+4e-7 is four orders of magnitude below the panel's own sampling noise (~2e-3 at N=500,
+T=500), and at 1e-6 QUADPACK stops straining, so its error estimates mean something again.
+`quad` stops at `max(epsabs, epsrel*|I|)`, so the zero-crossing integrands are still
+bounded by `epsabs = 1e-8` exactly as before. **Integral stage: 5263 s -> 774 s (6.8x)**,
+which is the dominant recurring cost of every new KP parametrization.
+
+### 2. The dead `lambda_L` pre-assignment, removed
+
+Per §23 / REVIEW-override-shadowing.md.
+
+### 3. An override readback that raises
+
+`globals().update()` was silent about overrides it discards. Now every requested key must
+verify against the module's final value, with `type_share` compared proportionally
+(it is renormalised to sum 1).
+
+**A case the first version missed, found by testing it:** a *misspelled* key passed
+silently, because `globals().update()` **creates** whatever key it is given — so
+`gamma_vv` existed with the requested value by the time the check ran and compared equal.
+Fixed by snapshotting the name set *before* the override. Four cases now behave: real vyx
+overrides load; `lambda_L` raises; `gamma_vv` raises as a probable typo; `sigma_eps`
+passes.
+
+### What the rebuild showed about the registry itself
+
+New ids `b0260fa9ca745db8` (G) and `8e4b5e820ad371da` (integrals). The **G artifacts are
+byte-identical to the superseded `f2be637b9fec1f80`** — the only G-side change was
+deleting a dead line, so the solve_id moved while the numbers did not. That is correct
+behaviour (source is part of identity) and a clean illustration of why id churn is not
+the same thing as a numerical change.
+
+**Superseded manifests are now kept and labelled, not pruned.** `solfiles.py check`
+reported the old integral manifest as `[STALE/MISSING] ... content changed since it was
+recorded`, which reads as damage when it is actually the registry working. It now
+distinguishes them:
+
+```
+[superseded] d8d686da014f429a  kp_vy  vyx  -> its artifacts now belong to 8e4b5e820ad371da;
+             manifest kept as the record of what produced earlier results
+```
+
+This directly serves the stated requirement that old experiments stay identifiable after
+their artifacts are gone. It also means **deleting the orphaned BGN manifest earlier was
+the wrong call** — the right move was to label it. Nothing had used it, so no record was
+lost, but the policy is now retention.
