@@ -18,31 +18,34 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 outdir = os.path.join(HERE, outdir)
 os.makedirs(outdir, exist_ok=True)
 
-# ---- parameters (GS21.m / paper) ----
-# 2026-09-06: delta, tau and sigma_m reconciled to config.py, which 6c65bf4 had
-# already corrected in the main tree while this file kept GS21.m's values.
-#   delta 0.02/3 -> 0.02 : delta is subtracted from output IN OUTPUT UNITS at the
-#       pi_R line below, and output is not rescaled monthly, so dividing by 3 was a
-#       units error (config.py:311-312).
-#   tau   0.2/3  -> 0.2  : a tax RATE multiplying the whole flow; rates do not
-#       rescale with period length (config.py:328).
-#   sigma_m 2.5  -> 5    : GS21.m:53 reads `sigma_m = 5; % 2.5`, so 2.5 was the
-#       COMMENTED-OUT alternative -- the same transcription error already caught for
-#       GS21_R (config.py:369). config.py:375 and the GS21 solfile stamp both say 5.
-#   rho_x 0.95 -> 0.96 (and sigma_x, which is derived from it) : GS21.m:22 uses
-#       0.95 quarterly; Gomes-Schmid (2021) Table 1 is 0.96, confirmed by Seth
-#       2026-09-06. config.py:313 and the committed GS21 solfile stamp both already
-#       used 0.96, so the .m is the outlier. sigma_x keeps the same conversion
-#       formula, sigma_q*sqrt((1-rho_q**(2/3))/(1-rho_q**2)), with rho_q = 0.96.
-# This file now agrees with config.py on every shared economic parameter. The one
-# remaining deliberate difference is the x-grid size: xnum is passed as 161 here
-# (run_gs_bx7*.sh) versus GS21_XNUM = 20 in config.py -- a cost/accuracy choice, not
-# a calibration disagreement. See docs/refactor/FINDINGS-config-divergence.md.
-g = 1.14; delta = 0.02
-rho_x = 0.96 ** (1 / 3); sigma_x = 0.012 * np.sqrt((1 - 0.96 ** (2 / 3)) / (1 - 0.96 ** 2))
+# ---- parameters (Gomes & Schmid 2021, Table I) ----
+# 2026-09-06 (second pass): re-synced to config.py AFTER the paper itself was read.
+# The paper calibrates QUARTERLY; this model runs MONTHLY, so per-period flows convert
+# and dimensionless quantities do not.  Neither code tree was authoritative -- config.py
+# was wrong on three parameters and GS21.m on two, overlapping on none.  Cite Table I,
+# not either tree.  Evidence: docs/refactor/FINDINGS-gs21-table1.md.
+#   delta   0.02 -> 0.02/3   : Table I 0.02 is a PERIODIC maintenance cost delta*k
+#       "akin to depreciation" at 2% per quarter (p.287, p.792), so a monthly model
+#       divides by 3.  The first pass here went the other way on the theory that delta
+#       scales output; it scales CAPITAL, and it is explicitly per-period.
+#   rho_x   0.96 -> 0.95     : Table I and the body text both say 0.95.  config.py:313's
+#       old comment claiming "Table 1: rho_x = 0.96" was simply false; GS21.m:22 was
+#       right.  sigma_x keeps the conversion sigma_q*sqrt((1-rho_q**(2/3))/(1-rho_q**2))
+#       but rebases it on rho_q = 0.95.
+#   kappa_e 0 (absent) -> 0.025 : the benchmark equity-issuance cost, charged only on a
+#       negative current cash flow.  Both trees carried 0, because GS21.m:33 reads
+#       `kappa_e = 0; %0.025` and here the COMMENTED-OUT value is the paper's -- the
+#       reverse of the sigma_m and r cases.  Seth's call: run the benchmark.
+#   tau 0.2 and sigma_m 5 are unchanged from the first pass; Table I confirms both
+#       (tau is a RATE on a profit flow, so it does not rescale with period length).
+# The one remaining deliberate difference from config.py is the x-grid size: xnum is
+# passed as 161 here (run_gs_bx7*.sh) versus GS21_XNUM = 20 in config.py -- a
+# cost/accuracy choice, not a calibration disagreement.
+g = 1.14; delta = 0.02 / 3
+rho_x = 0.95 ** (1 / 3); sigma_x = 0.012 * np.sqrt((1 - 0.95 ** (2 / 3)) / (1 - 0.95 ** 2))
 rho_z = 0.9 ** (1 / 3); sigma_z = 0.16 * np.sqrt((1 - 0.9 ** (2 / 3)) / (1 - 0.9 ** 2))
 r = 0.1 / 12; gamma_x = 0.5; x_bar = 0.0
-tau = 0.2; phi = 0.4; kappa_b = 0.004; xi = 0.03 / 3
+tau = 0.2; phi = 0.4; kappa_e = 0.025; kappa_b = 0.004; xi = 0.03 / 3
 bnum, znum = 20, 200
 imin, imax = 0.0, 2000.0
 sigma_m = 5
@@ -149,6 +152,25 @@ def smooth(P):
 pi_R = (1 - tau) * (np.exp(gs_bx * xgrid[None, :, None] + zgrid[:, None, None] + gs_ashift) - delta) - (1 - tau) * bgrid[None, None, :]
 recov = phi * (1 - delta + np.exp(gs_bx * xgrid[None, :, None] + zgrid[:, None, None] + gs_ashift))
 
+
+def issue(cf):
+    """Equity-issuance cost: charge kappa_e on a NEGATIVE current cash flow only.
+
+    Mirrors gs21_solve.py:309-311 and GS21.m:253-260, `(1 + (prof <= 0)*kappa_e)*prof`.
+    `cf + kappa_e*min(cf, 0)` is the same function -- (1+kappa_e)*cf below zero, cf above,
+    continuous at zero -- and avoids materialising the boolean mask, which matters because
+    the array this is applied to below is (znum, xnum, bnum, bnum).
+
+    Charged on the CURRENT cash flow only: not on the continuation value, and not on the
+    realised investment cost, which both trees subtract outside this factor.
+    """
+    return cf if kappa_e == 0 else cf + kappa_e * np.minimum(cf, 0.0)
+
+
+# Constant across sweeps: the no-refinancing branch carries no debt term, so its cash
+# flow is pi_R alone -- gs21_solve.py:311's `down_R`.
+pi_R_e = issue(pi_R)
+
 from numpy import searchsorted
 def _b_interp_weights(btarget):
     jj = np.clip(searchsorted(bgrid, btarget) - 1, 0, bnum - 2)
@@ -166,8 +188,8 @@ t0 = time.time()
 # per-regime state
 S = [dict(P_up=np.zeros((znum, xnum, bnum)), P_down=np.zeros((znum, xnum, bnum)),
           Q0=np.zeros((znum, xnum, bnum)), prob_up=np.zeros((znum, xnum, bnum)),
-          prob_dn=np.zeros((znum, xnum, bnum)), b0idx=np.zeros((znum, xnum), dtype=int),
-          bIidx=np.zeros((znum, xnum), dtype=int), icut_up=np.zeros((znum, xnum, bnum)),
+          prob_dn=np.zeros((znum, xnum, bnum)), b0idx=np.zeros((znum, xnum, bnum), dtype=int),
+          bIidx=np.zeros((znum, xnum, bnum), dtype=int), icut_up=np.zeros((znum, xnum, bnum)),
           icut_dn=np.zeros((znum, xnum, bnum))) for _ in (0, 1)]
 prob_delta = [1.0, 1.0]
 acc = None
