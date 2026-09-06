@@ -19,8 +19,14 @@ from parameters import *          # noqa: F401,F403  (jstar_gam_file, gmult, ...
 import vasicek
 from common import solstamp
 
-SOURCES = [os.path.join(HERE, f) for f in
-           ("vasicek.py", "parameters.py", "rebuild_jstar_gam.py")]
+# This driver is deliberately NOT in its own source list, matching
+# build_vy_tables.py. The numerics live in vasicek.build_jstar_gam_table and the
+# only knob the driver contributes is JSTAR_TOL, which is hashed via env_params.
+# Including it meant that editing a *log message* moved the solve_id and orphaned
+# the manifest -- which is exactly what happened on 2026-09-05 when the
+# false-provenance fix landed. kp_vy survived the same edit because its driver was
+# already excluded; bgn_gam did not.
+SOURCES = [os.path.join(HERE, f) for f in ("vasicek.py", "parameters.py")]
 
 TOL = float(os.environ.get("JSTAR_TOL", "3e-4"))
 # JSTAR_TOL changes the table, so it belongs in env_params (hashed), not extra.

@@ -1389,3 +1389,70 @@ manifest exists and `record()` writes only on success.
 laptop and `gs_bx` stays unrunnable until then (`gs_sim_bx.py` loads all five). The
 README's "~a minute each" — mine — was wrong by **~180x**. That is a live input to PLAN
 §0.0's demote-bx7 recommendation, which already ranks bx7 22nd of 24 on realized gap.
+
+## §23 — hash scope vs source freezing: two different axes (2026-09-06)
+
+Seth's point: if spec B changes a parameter that cannot affect a solve, B should reuse A's
+solfiles instead of re-solving. **The waste is real and larger than expected — but copying
+A's files to B is the wrong remedy.**
+
+### The waste, measured
+
+The G solve is 0.10 s, so the true dependency set can be *measured* rather than guessed:
+perturb one parameter, re-solve, compare bytes (`_scratch/hash_scope_probe.py`).
+
+| | count |
+|---|---|
+| hashed into every `kp_vy` solve_id | 61 |
+| tested scalars that **change** the G solve | 20 |
+| tested scalars with **no effect** | **26** |
+| non-scalar, untested | 15 |
+
+Among the irrelevant: `bx_seed`, `gam_seed`, `burnin`, `dt`, `sigma_u`, `theta_u`,
+`mu_lambda`, `sigma_lambda`, `rho`. **Changing a simulation seed currently forces a
+re-solve of a deterministic PDE.**
+
+### Why copying is the wrong fix
+
+Copying A's artifacts to B is *asserted* provenance — a human deciding two parametrizations
+share a solve. That is precisely the failure this registry exists to end, and the same move
+that produced every incident this week: the parameter-blind `[ -f sol_reg/solution.npz ]`
+guard, the hand-written 5-key KP stamp that missed seven parameters, `Jstar_g0235.csv`
+identified only by its filename.
+
+The correct fix makes the copy **unnecessary**: if B genuinely cannot affect the solve, B
+should compute **the same solve_id**, and the existing cache-hit path fires automatically —
+verified by digest, not asserted. Copying is only needed because the hash is too broad. So
+narrow the hash; do not work around it.
+
+### Two classes in the "no effect" list, needing different arguments
+
+1. **Genuinely unread** by the producer (`bx_seed`, `burnin`, `dt`, `theta_u`, …). Safe to
+   drop from this stage's hash.
+2. **Derived and recomputed after the override site.** `lambda_L` is assigned at
+   `parameters_kp14.py:10`, the override lands at :32, and :33 **recomputes it** from the
+   E[lambda]=1 normalisation. So `lambda_L=9.0` is silently discarded — which is why the
+   probe scored it "no effect" even though it plainly enters `util`. Dropping it is safe
+   **only because** its determinants (`mu_H`, `mu_L`, `lambda_H`) are all in the "affects"
+   list. Same for `prob_H`, `exit_H/L`, `C`, `rho_ty`, `A_*`.
+
+   That is a **transitive** condition and must be verified, not assumed: `rho_ty` depends
+   on `gm_grid`, which is non-scalar and untested. Under-inclusion silently reuses a stale
+   solve; over-inclusion only wastes compute. The asymmetry says: drop only what is proven.
+
+### New hazard for the spec layer (Phase 2)
+
+**`KP_PARAM_OVERRIDES` silently ignores derived parameters.** A spec setting
+`"lambda_L": 0.5` is accepted, hashed into the spec id, and then discarded by line 33. The
+spec would claim a value the economy never used, and nothing would say so. Any spec layer
+needs a post-import readback: assert every requested override equals the module's final
+value, and fail loudly otherwise.
+
+### Freezing, restated
+
+"Freezing" is about producer **source**, not parameters, and matters only because a source
+edit moves every id under it. Reduced where possible: `rebuild_jstar_gam.py` no longer
+hashes itself (numerics live in `vasicek.py`; its only knob `JSTAR_TOL` is in `env_params`),
+matching `build_vy_tables.py`. `gs_solve_reg.py` cannot be fixed this way — numerics and
+plumbing share one file, so any edit moves all five ids, at 3 h 24 m each to rebuild. That
+is the real argument for settling GS's source before the cluster run, not parameters.
