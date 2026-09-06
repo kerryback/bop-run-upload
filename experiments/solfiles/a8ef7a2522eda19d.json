@@ -1,0 +1,82 @@
+{
+  "achieved": {
+    "exit": "cycle_capped",
+    "perr_rel": 3.696888314185773e-05,
+    "qerr_rel": 3.398484773130419e-05,
+    "source": "BACKFILLED 2026-09-05 from the solve log and solution.npz. This solve predates solstamp's `achieved` field; re-solving to record it natively would cost 3 h 23 m. qerr/perr are the log's final values divided by vscale = max(1, max|P_up|) read back from the npz.",
+    "sweeps": 5600,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 180.963,
+    "wall_seconds": 12216
+  },
+  "artifacts": [
+    {
+      "bytes": 82431388,
+      "path": "variants/gs_bx/sol_reg/solution.npz",
+      "sha256": "b595a3db760b36e70fecb3fe444cb8000fd0312503a651dcdea68bfcc891f77d"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "extra": {
+    "outdir": "sol_reg"
+  },
+  "inputs": {},
+  "model": "gs_bx",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "bnum": 20,
+    "delta": "0.006666666666666667",
+    "g": "1.14",
+    "gamma_x": "0.5",
+    "gmreg": {
+      "__array__": [
+        "0.6",
+        "3.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "gs_ashift": "0.0",
+    "gs_bx": "1.0",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "phi": "0.4",
+    "psw": {
+      "__array__": [
+        "0.020833333333333332",
+        "0.041666666666666664"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_z": "0.9654893846056297",
+    "sigma_m": "2.5",
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.06666666666666667",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "znum": 200
+  },
+  "solve_id": "a8ef7a2522eda19d",
+  "sources": {
+    "variants/gs_bx/gs_solve_reg.py": "9f40a99463d1597a5e495e69ba5807c32f3cc5703b503d2d0873dd826ceca259"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_reg"
+  ],
+  "total_bytes": 82431388
+}

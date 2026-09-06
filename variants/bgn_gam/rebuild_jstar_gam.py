@@ -47,6 +47,11 @@ elif os.path.exists(OUT):
               f"{prior['solve_id']}; this run wants {snap.solve_id}. Differences:")
         for k, a, b in solstamp.diff_params(prior["params"], snap.params)[:10]:
             print(f"    {k}: {a!r} -> {b!r}")
+    elif prior:
+        # Same bug as gs_solve_reg.py had: reached under BGN_JSTAR_FORCE=1, where the
+        # manifest exists and matches, so "unrecorded" is false.
+        print(f"[solstamp] {jstar_gam_file} is recorded and matches solve_id "
+              f"{snap.solve_id}; rebuilding because BGN_JSTAR_FORCE is set")
     else:
         print(f"[solstamp] {jstar_gam_file} exists but its provenance is unrecorded; rebuilding")
 
@@ -56,6 +61,8 @@ grid, J = vasicek.build_jstar_gam_table(jstar_gam_file, tol=TOL)
 print(f"done {len(grid)} pts in {time.time()-t0:.0f}s; "
       f"J0 range {J[0].min():.3f}..{J[0].max():.3f}  J1 range {J[1].min():.3f}..{J[1].max():.3f}")
 
-man = solstamp.record(snap, [OUT], tag=os.path.splitext(jstar_gam_file)[0])
+man = solstamp.record(snap, [OUT], tag=os.path.splitext(jstar_gam_file)[0],
+                      achieved={"exit": "tolerance", "grid_points": int(len(grid)),
+                                "tol_requested": float(TOL)})
 print(f"[solstamp] recorded solve_id {snap.solve_id} "
       f"({man['total_bytes']:,} B, committable={man['committable']})")

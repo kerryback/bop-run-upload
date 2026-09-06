@@ -77,6 +77,13 @@ elif os.path.exists(_solution):
               f"{_prior['solve_id']}; this run wants {_snap.solve_id}. Differences:")
         for _k, _a, _b in solstamp.diff_params(_prior["params"], _snap.params)[:10]:
             print(f"    {_k}: {_a!r} -> {_b!r}")
+    elif _prior:
+        # Reached under GS_SOLVE_FORCE=1: the first branch is falsified by the env
+        # var, not by a missing manifest, so control lands here with a manifest that
+        # MATCHES. Claiming it is unrecorded is a false provenance statement from the
+        # provenance system itself.
+        print(f"[solstamp] {os.path.basename(outdir)}/solution.npz is recorded and "
+              f"matches solve_id {_snap.solve_id}; re-solving because GS_SOLVE_FORCE is set")
     else:
         print(f"[solstamp] {os.path.basename(outdir)}/solution.npz exists but its "
               f"provenance is unrecorded; re-solving")
@@ -263,12 +270,23 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     # parameter that distinguishes one bx7 solve from another, so a
                     # solution could not identify its own exposure type. These do.
                     solve_id=_snap.solve_id,
-                    gs_bx=gs_bx, gs_ashift=gs_ashift, gmreg=gmreg,
+                    gs_bx=gs_bx, gs_ashift=gs_ashift,   # gmreg already saved above
                     p01=p01, p10=p10, xnum=xnum, bnum=bnum, znum=znum, tol=tol,
                     params_json=json.dumps(_snap.params, sort_keys=True, default=str))
 print("saved", _solution)
 
-_man = solstamp.record(_snap, [_solution], tag=os.path.basename(outdir))
+_man = solstamp.record(
+    _snap, [_solution], tag=os.path.basename(outdir),
+    # Recorded, not hashed. `tol` alone cannot say whether this solve met its own
+    # contract: the loop enforces tol*20, and the 5600-sweep cap exits through the
+    # same print("converged") as the tolerance test.
+    achieved={"exit": "cycle_capped" if it >= 5600 else "tolerance",
+              "sweeps": int(it),
+              "qerr_rel": float(qerr / vscale),
+              "perr_rel": float(perr / vscale),
+              "vscale": float(vscale),
+              "threshold_enforced": float(tol * 20),
+              "tol_requested": float(tol)})
 print(f"[solstamp] recorded solve_id {_snap.solve_id} "
       f"({_man['total_bytes']:,} B, committable={_man['committable']})")
 if not _man["committable"]:

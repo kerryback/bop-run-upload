@@ -1328,3 +1328,64 @@ unverified at N=500; treat 2.5 h as a floor and request walltime accordingly.
 4. The 159 s fixed cost is basis setup (P=3600, twice at `--nmat 2`) and is independent of
    panel size — so it is amortized to nothing at flagship scale, but it dominates every
    small calibration run and will mislead anyone fitting a model without an intercept.
+
+## §22 — manifests now record what a solve achieved (2026-09-05)
+
+`sol_reg` landed: **3 h 23 m 36 s, 5600 sweeps, exited by cycle-averaging at the cap.**
+`qerr` *rose* between sweeps 5200 and 5400, so the iterate oscillates rather than stalls —
+the period-2 orbit the cycle-average machinery exists to absorb, and the same behaviour
+GS21.m showed (see [[gs21-solfile-simulation-mismatch]]). The averaging is the right
+remedy; the defect is only that averaging and convergence print the same word.
+
+The gap §20 predicted, now with numbers (arithmetic re-checked: 6.15e-3/180.963 = 3.398e-5):
+
+| | |
+|---|---|
+| `tol` recorded in the manifest | 1e-06 |
+| threshold the loop actually enforces (`tol*20`) | 2e-05 |
+| achieved relative residual | **3.398e-05** |
+| overshoot | **1.70x** |
+
+Under 2x over, so the artifact is probably fine — **which is what makes it dangerous.**
+The identical code path prints the identical `converged` and writes the identical manifest
+at 1000x over.
+
+### The fix, and why it is asymmetric
+
+`solstamp.record(achieved=...)` writes an `achieved` block that is **recorded but never
+hashed**. Hashing an outcome would be wrong: two runs of the same code on the same
+parameters would land in different registry slots. But a manifest that records only what
+was *requested* cannot tell a converged solve from a capped one. So: inputs decide
+identity, outcomes decide trust, and they are stored separately.
+
+Wired into all three producers — GS (`exit`, `sweeps`, `qerr_rel`, `perr_rel`, `vscale`,
+`threshold_enforced`, `tol_requested`), BGN (`exit`, `grid_points`, `tol_requested`), and
+KP's G stage (`exit: direct_solve`, per-type relative residuals parsed from the solver's
+own output). `solfiles.py show` prints the block and flags a non-tolerance exit;
+`solfiles.py check` now reports `[ok, but CAPPED]` rather than a bare `[ok]`.
+
+`a8ef7a2522eda19d`'s block is **backfilled** and says so in its own `source` field —
+re-solving to record it natively costs 3 h 23 m. Everything else records natively.
+
+### Second bug, also mine, also in two producers
+
+Under `GS_SOLVE_FORCE=1` / `BGN_JSTAR_FORCE=1` the cache branch is falsified by the env
+var rather than by a missing manifest, so control reached an `else` written for the
+*unrecorded* case and announced "provenance is unrecorded" about a solve that was recorded
+and matching — **a false provenance claim from the provenance system.** Both producers had
+it; `build_vy_tables.py` did not, because its `_report_prior` only prints on a genuine
+mismatch. Fixed with an explicit `elif prior:` branch in both.
+
+### Registry: the point of the exercise
+
+`a8ef7a2522eda19d` is the first **`committable: NO`** entry — 78.6 MB that can never go in
+git, with the manifest outliving it. All five brief checks passed, plus a corruption case
+the ASU session added. Still unexercised: `solfiles.py diff` for `gs_bx`, since only one
+manifest exists and `record()` writes only on success.
+
+### Costs, corrected again
+
+`gs_bx` solves are **~3 h 24 m each**, so a full five-type bx7 economy is **~17 h** on this
+laptop and `gs_bx` stays unrunnable until then (`gs_sim_bx.py` loads all five). The
+README's "~a minute each" — mine — was wrong by **~180x**. That is a live input to PLAN
+§0.0's demote-bx7 recommendation, which already ranks bx7 22nd of 24 on realized gap.

@@ -32,7 +32,7 @@ produced it, so it was not safely reusable -- the checkpoint is what makes it so
     KP_VY_ADOPT_G=0,2 checkpoint these G types as-is, without re-solving them
     KP_VY_ADOPT_I=1   checkpoint integral tables newer than the current G tables
 """
-import os, sys, json, atexit, subprocess, time
+import os, sys, json, re, atexit, subprocess, time
 from joblib import Parallel, delayed
 
 prefix = sys.argv[1] if len(sys.argv) > 1 else "vy"
@@ -192,6 +192,7 @@ else:
             print(f"  - {p}")
     else:
         _report_prior(g_snap, G_ARTIFACTS, "G")
+    g_resid = {}
     for f in range(ntypes):
         if _type_done(f):
             print(f"[stage G] type {f} checkpointed for this solve_id -- skipping",
@@ -206,12 +207,23 @@ else:
             env=env, cwd=HERE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         for line in proc.stdout:
             print(f"  [G type {f}] {line.rstrip()}", flush=True)
+            m = re.search(r"relative residual ([0-9.eE+-]+)", line)
+            if m:
+                g_resid[f] = float(m.group(1))
         if proc.wait() != 0:
             sys.exit(f"G solve failed for type {f}")
         _mark_type(f)
         print(f"[stage G] type {f} solved and checkpointed ({time.time()-t0:.0f}s)",
               flush=True)
-    gm = solstamp.record(g_snap, G_ARTIFACTS, tag=prefix)
+    # Recorded, not hashed: the direct solve has no iteration cap to hide behind,
+    # but the manifest should still say what it achieved rather than only what was
+    # asked for. See solstamp.record(achieved=...).
+    gm = solstamp.record(g_snap, G_ARTIFACTS, tag=prefix,
+                         achieved={"exit": "direct_solve",
+                                   "max_rel_residual": (max(g_resid.values())
+                                                        if g_resid else None),
+                                   "per_type_rel_residual": {str(k): v
+                                                             for k, v in sorted(g_resid.items())}})
     print(f"[solstamp] recorded G {g_snap.solve_id} ({gm['total_bytes']:,} B)")
 
 # -------------------------------------------------------- stage: integ -------
