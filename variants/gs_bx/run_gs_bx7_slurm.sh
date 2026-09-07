@@ -9,6 +9,11 @@
 #
 # Five gs_bx exposure-type solves, one per array task. WRITTEN, NOT YET RUN.
 #
+# Calibration: Gomes & Schmid (2021) Table I, as corrected on 2026-09-06 -- delta =
+# 0.02/3, rho_x = 0.95^(1/3), kappa_e = 0.025. The five solve_ids this array will
+# produce are listed in docs/refactor/FINDINGS-gs21-kappa-e.md; anything computed
+# under the earlier 0.96 / 0.02 / no-kappa_e parameters is a different economy.
+#
 # Submit from the REPO ROOT (not this directory), after `mkdir -p outslurm`:
 #     mkdir -p outslurm && sbatch variants/gs_bx/run_gs_bx7_slurm.sh
 # SBATCH -o is resolved before the script body runs, so outslurm/ must already exist.
@@ -25,10 +30,24 @@
 #                   here expect ~4-4.5 h; 8 h is ~1.8x margin. Do not budget from
 #                   `range(60000)` in the source -- that bound is dead code.
 #
-#   --mem=8G        measured RSS 0.9-2.4 GB per solve. The driver is smooth(), which
-#                   builds Pn = P[...,None] + mn, a (znum,xnum,bnum,161) =
-#                   (200,161,20,161) array ~= 830 MB, 4x per sweep. 8 G leaves room
-#                   for two live temporaries plus the per-regime state.
+#                   2026-09-06: kappa_e = 0.025 makes the b'-choice depend on current
+#                   debt, so the re-optimisation sweeps now build a (z,x,b,b') array.
+#                   Re-measured on the full grid, same box, same 4 threads:
+#                       policy sweep (1 in 25)   1.86 s -> 2.13 s   (+14.5%)
+#                       frozen sweep (24 in 25)  1.82 s -> 1.91 s   (+5.0%)
+#                       steady-state mean                            +5.4%
+#                   Projected 3 h 24 m -> ~3 h 35 m. The envelope stands unchanged.
+#
+#   --mem=8G        peak RSS re-measured with /usr/bin/time -l on the full grid
+#                   (xnum=161, znum=200, bnum=20): 2.61 GiB before the kappa_e change,
+#                   2.74 GiB after (+135 MB, the (200,161,20,20) = 103 MB b-by-b'
+#                   array plus one temporary). The earlier "0.9-2.4 GB" figure in
+#                   FINDINGS-gs21.md was sampled with ps mid-run, not a peak; 2.74 GiB
+#                   is the number to size against. 8 G is 2.9x that.
+#
+#                   The dominant term is still smooth(), which builds
+#                   Pn = P[...,None] + mn, a (znum,xnum,bnum,161) array ~= 830 MB,
+#                   4x per sweep.
 #
 #   --cpus-per-task=4  GS is MEMORY-bandwidth bound, not core bound: running five
 #                   solves concurrently on a 10-core laptop drove load to 16-24 and

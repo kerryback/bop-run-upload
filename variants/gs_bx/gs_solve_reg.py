@@ -221,15 +221,29 @@ for it in range(60000):
         EP0 = (xi * ((1 - p) * discount(pre[s]["Pu"], s) + p * discount(pre[o]["Pu"], s))
                + (1 - xi) * ((1 - p) * discount(pre[s]["Pd"], s) + p * discount(pre[o]["Pd"], s)))
         EPI = g * EP0
-        obj0 = (1 - kappa_b) * v["Q0"] + EP0
-        objI = (1 - kappa_b) * QI + EPI
+        # 2026-09-06: with kappa_e > 0 the issuance cost multiplies the WHOLE current
+        # cash flow -- coupon, buyback and new issue together -- so the b'-choice can no
+        # longer be factored out of the level term (pi_R[b] - Q0[b]).  The maximand is
+        # obj0[b, b'] = issue(pi_R[b] - Q0[b] + (1-kappa_b)*Q0[b']) + EP0[b'], which is
+        # genuinely 4-d, and the optimal b' now depends on current b.  That is the shape
+        # gs21_solve.py:309 and GS21.m:253 have always had (their argmax runs over a
+        # (state x b') matrix where state already includes b); the old 3-d form here was
+        # an optimisation that only holds at kappa_e = 0.  b0idx/bIidx therefore widen
+        # from (z, x) to (z, x, b), and so do the saved b_refin_* tables.
         if it % 25 == 0 or it < 50:
-            b0new = obj0.argmax(axis=2); bInew = objI.argmax(axis=2)
+            obj0 = issue((pi_R - v["Q0"])[..., None] + (1 - kappa_b) * v["Q0"][..., None, :])
+            obj0 += EP0[..., None, :]
+            b0new = obj0.argmax(axis=3)
+            P0_up = np.take_along_axis(obj0, b0new[..., None], 3)[..., 0]
+            del obj0
+            objI = issue((pi_R - QI_no)[..., None] + (1 - kappa_b) * QI[..., None, :])
+            objI += EPI[..., None, :]
+            bInew = objI.argmax(axis=3)
+            PI_up = np.take_along_axis(objI, bInew[..., None], 3)[..., 0]
+            del objI
             v["b0idx"], v["bIidx"] = b0new, bInew
-            P0_up = pi_R - v["Q0"] + np.take_along_axis(obj0, b0new[..., None], 2)
-            PI_up = pi_R - QI_no + np.take_along_axis(objI, bInew[..., None], 2)
-            P0_dn = pi_R + EP0
-            PI_dn = pi_R + at_bg(EPI)
+            P0_dn = pi_R_e + EP0
+            PI_dn = pi_R_e + at_bg(EPI)
             v["icut_up"] = np.clip(PI_up - P0_up, imin, imax)
             v["icut_dn"] = np.clip(PI_dn - P0_dn, imin, imax)
             pu_new = (v["icut_up"] - imin) / (imax - imin)
@@ -237,10 +251,16 @@ for it in range(60000):
             prob_delta[s] = max(np.abs(pu_new - v["prob_up"]).max(), np.abs(pd_new - v["prob_dn"]).max())
             v["prob_up"], v["prob_dn"] = pu_new, pd_new
         else:
-            P0_up = pi_R - v["Q0"] + np.take_along_axis(obj0, v["b0idx"][..., None], 2)
-            PI_up = pi_R - QI_no + np.take_along_axis(objI, v["bIidx"][..., None], 2)
-            P0_dn = pi_R + EP0
-            PI_dn = pi_R + at_bg(EPI)
+            # Policy frozen: gather Q0/EP0 at the stored b' directly, so the 4-d array is
+            # built only on the 1-in-25 sweeps that actually re-optimise.
+            P0_up = (issue(pi_R - v["Q0"]
+                           + (1 - kappa_b) * np.take_along_axis(v["Q0"], v["b0idx"], 2))
+                     + np.take_along_axis(EP0, v["b0idx"], 2))
+            PI_up = (issue(pi_R - QI_no
+                           + (1 - kappa_b) * np.take_along_axis(QI, v["bIidx"], 2))
+                     + np.take_along_axis(EPI, v["bIidx"], 2))
+            P0_dn = pi_R_e + EP0
+            PI_dn = pi_R_e + at_bg(EPI)
         P_up_new = v["prob_up"] * (PI_up - 0.5 * (v["icut_up"] + imin)) + (1 - v["prob_up"]) * P0_up
         P_dn_new = v["prob_dn"] * (PI_dn - 0.5 * (v["icut_dn"] + imin)) + (1 - v["prob_dn"]) * P0_dn
         perr = max(perr, np.abs(P_up_new - v["P_up"]).max(), np.abs(P_dn_new - v["P_down"]).max())
@@ -276,11 +296,17 @@ for it in range(60000):
             EP0 = (xi * ((1 - p) * discount(pre[s]["Pu"], s) + p * discount(pre[o]["Pu"], s))
                    + (1 - xi) * ((1 - p) * discount(pre[s]["Pd"], s) + p * discount(pre[o]["Pd"], s)))
             EPI = g * EP0
-            obj0 = (1 - kappa_b) * v["Q0"] + EP0; objI = (1 - kappa_b) * QI + EPI
-            v["b0idx"] = obj0.argmax(axis=2); v["bIidx"] = objI.argmax(axis=2)
-            v["_P0_up"] = pi_R - v["Q0"] + np.take_along_axis(obj0, v["b0idx"][..., None], 2)
-            v["_PI_up"] = pi_R - QI_no + np.take_along_axis(objI, v["bIidx"][..., None], 2)
-            v["_P0_dn"] = pi_R + EP0; v["_PI_dn"] = pi_R + at_bg(EPI)
+            obj0 = issue((pi_R - v["Q0"])[..., None] + (1 - kappa_b) * v["Q0"][..., None, :])
+            obj0 += EP0[..., None, :]
+            v["b0idx"] = obj0.argmax(axis=3)
+            v["_P0_up"] = np.take_along_axis(obj0, v["b0idx"][..., None], 3)[..., 0]
+            del obj0
+            objI = issue((pi_R - QI_no)[..., None] + (1 - kappa_b) * QI[..., None, :])
+            objI += EPI[..., None, :]
+            v["bIidx"] = objI.argmax(axis=3)
+            v["_PI_up"] = np.take_along_axis(objI, v["bIidx"][..., None], 3)[..., 0]
+            del objI
+            v["_P0_dn"] = pi_R_e + EP0; v["_PI_dn"] = pi_R_e + at_bg(EPI)
             v["icut_up"] = np.clip(v["_PI_up"] - v["_P0_up"], imin, imax)
             v["icut_dn"] = np.clip(v["_PI_dn"] - v["_P0_dn"], imin, imax)
         print(f"cycle-averaged; stopping", flush=True)
@@ -312,6 +338,10 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     # solution could not identify its own exposure type. These do.
                     solve_id=_snap.solve_id,
                     gs_bx=gs_bx, gs_ashift=gs_ashift,   # gmreg already saved above
+                    # kappa_e is NOT appended to `params` above: gs_sim_bx.py unpacks
+                    # that array positionally as a 15-tuple, so growing it silently
+                    # mis-assigns every field after the insertion point.
+                    kappa_e=kappa_e,
                     p01=p01, p10=p10, xnum=xnum, bnum=bnum, znum=znum, tol=tol,
                     params_json=json.dumps(_snap.params, sort_keys=True, default=str))
 print("saved", _solution)
