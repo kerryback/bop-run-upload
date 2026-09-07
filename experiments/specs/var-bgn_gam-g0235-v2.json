@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-g0235-v2",
+  "title": "BGN with a 2-state regime multiplying the prices of risk, pushed near the closed-form frontier",
+  "question": "Does an extreme regime-gamma economy open enough room for a nonlinear SDF method to beat FMR/FFC?",
+  "notes": "Current runnable spec for the g0235 economy. gmult max 3.5 sits just under the closed-form frontier 1/(2*scale) = 3.6548 asserted at variants/bgn_gam/sdf_compute.py:46.\n\nOn v1's published figures: because this economy is unchanged and its J* table is byte-identical, the ABSOLUTE figures (room +0.0233, gap_RFF-lin +0.0297, t 29.1) still describe this economy. The RANK (4 of 24) does NOT carry over -- it is a statement about the other 23 specs, and kp_vy and gs_bx both changed economies on 2026-09-04 and 2026-09-06. Quote the levels, not the ranking, until the grid is regenerated.",
+  "lineage": {
+    "parent_spec": "var-bgn_gam-g0235-v1",
+    "supersedes": "var-bgn_gam-g0235-v1",
+    "changes": [
+      "ECONOMY UNCHANGED. BGN was checked against Berk-Green-Naik (1999) on 2026-09-07 and matched 11 of 11 parameters; the J* table rebuilt BYTE-IDENTICAL under the new solve_id. v2 exists only to record expected_solves and the seed policy.",
+      "solve_id b80c6e516c132e13 -> be222462dd017b2c: the id moved when solstamp's canonicaliser was made portable, not because anything about the economy did."
+    ]
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 300
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "gmult": [
+      0.2,
+      3.5
+    ],
+    "jstar_gam_file": "Jstar_g0235.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "gmult": [
+            0.2,
+            3.5
+          ],
+          "jstar_gam_file": "Jstar_g0235.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/bgn_gam/run_g0235.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "0259e294bfb786ff47516fd658f41f484be7ce0ad1aacc27d10bf795f261b02a",
+  "expected_solves": {
+    "jstar": "be222462dd017b2c"
+  }
+}

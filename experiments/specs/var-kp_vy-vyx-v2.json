@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyx-v2",
+  "title": "KP14 with a priced OU volatility factor and three firm types with exponential exposure",
+  "question": "Does premium-side extremity in the priced-vol channel create both room and capture?",
+  "notes": "Current runnable spec for the vyx economy. Parameters are unchanged from v1 and still match variants/kp_vy/run_vyx.sh; what changed is the ECONOMY those parameters produce, via the lambda regime-label fix. v1's published figures (room +0.3496, gap_RFF-lin +0.1009, t 21.6, rank 1 of 24) therefore describe a different economy and must NOT be quoted for this one. No figures are published here yet: the first clean run has not been made. Premia approx 4.6/12/22 pct per year under v1's labels; not re-derived under the corrected ones.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyx-v1",
+    "supersedes": "var-kp_vy-vyx-v1",
+    "changes": [
+      "kp_regime_labels legacy_swapped -> corrected: mu_H/mu_L are ENTRY rates, so P(high) = mu_H/(mu_H+mu_L) = 0.3191. v1 ran at E[lambda] = 1.7172 instead of the intended 1.0. This is a DIFFERENT ECONOMY, which is why v1 is superseded rather than corrected in place.",
+      "kp_cir_quadrature epsrel 1e-10 -> 1e-6: 1e-10 was unattainable for QUADPACK, which subdivided to the limit and warned; tables move ~4e-7.",
+      "G stage now a direct sparse solve instead of a 1e6-iteration implicit Euler (0.10 s/type vs ~2 h, relative residual ~8e-13).",
+      "records expected_solves, so a run can verify by content that it built the economy this spec describes."
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 1.8,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyx"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            0.02,
+            0.07,
+            0.14
+          ],
+          "gamma_v": 1.8,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyx"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/kp_vy/run_vyx.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "16bc4c05915323ab198647c69dd711a84e18c1c35dd04060833399888e62913e",
+  "expected_solves": {
+    "G": "f7be27e39d2b530f",
+    "integ": "84e195172f091cd2"
+  }
+}

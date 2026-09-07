@@ -3,11 +3,12 @@
   "spec_id": "var-bgn_gam-g0235-v1",
   "title": "BGN with a 2-state regime multiplying the prices of risk, pushed near the closed-form frontier",
   "question": "Does an extreme regime-gamma economy open enough room for a nonlinear SDF method to beat FMR/FFC?",
-  "notes": "Transcribed verbatim from variants/bgn_gam/run_g0235.sh on 2026-09-04. gmult max 3.5 sits just under the closed-form frontier 1/(2*scale)=3.6548 asserted at variants/bgn_gam/sdf_compute.py:46. Published: room +0.0233, gap_RFF-lin +0.0297, t 29.1 (rank 4 of 24 on gap).",
+  "notes": "Transcribed verbatim from variants/bgn_gam/run_g0235.sh on 2026-09-04. gmult max 3.5 sits just under the closed-form frontier 1/(2*scale)=3.6548 asserted at variants/bgn_gam/sdf_compute.py:46. Published: room +0.0233, gap_RFF-lin +0.0297, t 29.1 (rank 4 of 24 on gap). SUPERSEDED BY var-bgn_gam-g0235-v2 (2026-09-07), which records the same economy with its expected_solves and the current seed policy. The economy itself did not change; see that spec's lineage.",
   "lineage": {
     "parent_spec": null,
     "changes": [],
-    "supersedes": null
+    "supersedes": null,
+    "superseded_by": "var-bgn_gam-g0235-v2"
   },
   "engine": "oracle",
   "model": "bgn_gam",

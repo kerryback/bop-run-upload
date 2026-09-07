@@ -212,3 +212,49 @@ def _main(argv):
 
 if __name__ == "__main__":
     sys.exit(_main(sys.argv[1:]))
+
+
+# -------------------------------------------------------- spec -> run link ----
+
+SPECS_DIR = os.path.join(solstamp.REPO_DIR, "experiments", "specs")
+
+
+def load_spec(spec_id):
+    import json as _json
+    path = os.path.join(SPECS_DIR, spec_id + ".json")
+    if not os.path.exists(path):
+        raise SystemExit(f"no spec {spec_id} in {SPECS_DIR}")
+    with open(path) as f:
+        return _json.load(f)
+
+
+def verify_against_spec(spec_id, solves):
+    """Do the solves this run consumed match the ones its spec declares?
+
+    Completes the chain the registry only half-closed. `solstamp` says which
+    parameters produced an artifact; `consumed_solves` says which artifact a run
+    read; this says whether that is the economy the spec claims to describe.
+
+    Returns (ok, lines). A spec with no `expected_solves` (every v1) cannot be
+    checked and says so rather than passing silently -- a spec that pins nothing
+    must not read as a spec that pins something and agrees.
+    """
+    spec = load_spec(spec_id)
+    want = spec.get("expected_solves")
+    if not want:
+        return None, [f"[spec] {spec_id} declares no expected_solves -- nothing to "
+                      f"verify against (v1 specs predate the field)"]
+    got = {s["stage"]: s["solve_id"] for s in solves}
+    lines, ok = [], True
+    for stage in sorted(set(want) | set(got)):
+        w, g = want.get(stage), got.get(stage)
+        if w == g and w is not None:
+            lines.append(f"[spec] {stage:8s} {g}  matches {spec_id}")
+        else:
+            ok = False
+            lines.append(f"[spec] {stage:8s} MISMATCH: spec {spec_id} expects "
+                         f"{w or '<not declared>'}, run consumed {g or '<nothing>'}")
+    if spec.get("lineage", {}).get("superseded_by"):
+        lines.append(f"[spec] NOTE {spec_id} is superseded by "
+                     f"{spec['lineage']['superseded_by']}")
+    return ok, lines

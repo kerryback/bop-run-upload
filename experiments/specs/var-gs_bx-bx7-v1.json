@@ -3,11 +3,12 @@
   "spec_id": "var-gs_bx-bx7-v1",
   "title": "GS21 2-regime with five exposure types, each a separate solve",
   "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
-  "notes": "Transcribed verbatim from variants/gs_bx/run_gs_bx7.sh on 2026-09-04. THIS SCRIPT WAS THE ONLY COMMITTED RECORD OF THIS EXPERIMENT: the oracle JSON at variants/results/gs_bx_oracle_bx7.json records overrides={} because run_oracle.py reads GS_SIM_OVERRIDES while the real spec lives in five GS_PARAM_OVERRIDES solve invocations plus three GS_BX_* env vars, and the five solution.npz embed a 15-element params array that excludes gs_bx and gs_ashift. Published: room +0.0182, gap_RFF-lin +0.0013, t 10.4 -- RANK 22 OF 24 ON GAP. Demoted out of the first production run. OPEN: gs_solve_reg.py:80-81 includes gs_ashift in the payoff tables while gs_sim_bx.py:212 omits it from op_cash_flow, which feeds the exported roe characteristic, for four of the five types. Resolve before scaling. Parameters here are the as-run hybrid, NOT config.py; per decision 2026-09-04, config.py is the base calibration and this spec is preserved for reproducibility only.",
+  "notes": "Transcribed verbatim from variants/gs_bx/run_gs_bx7.sh on 2026-09-04. THIS SCRIPT WAS THE ONLY COMMITTED RECORD OF THIS EXPERIMENT: the oracle JSON at variants/results/gs_bx_oracle_bx7.json records overrides={} because run_oracle.py reads GS_SIM_OVERRIDES while the real spec lives in five GS_PARAM_OVERRIDES solve invocations plus three GS_BX_* env vars, and the five solution.npz embed a 15-element params array that excludes gs_bx and gs_ashift. Published: room +0.0182, gap_RFF-lin +0.0013, t 10.4 -- RANK 22 OF 24 ON GAP. Demoted out of the first production run. OPEN: gs_solve_reg.py:80-81 includes gs_ashift in the payoff tables while gs_sim_bx.py:212 omits it from op_cash_flow, which feeds the exported roe characteristic, for four of the five types. Resolve before scaling. Parameters here are the as-run hybrid, NOT config.py; per decision 2026-09-04, config.py is the base calibration and this spec is preserved for reproducibility only. SUPERSEDED BY var-gs_bx-bx7-v2 (2026-09-07): the GS21 base calibration was corrected on 2026-09-06 (delta, rho_x, sigma_x, kappa_e), so the economy this spec ran is not the current one. Preserved as the record behind the published figures above. The gs_ashift inconsistency flagged as OPEN here is still open.",
   "lineage": {
     "parent_spec": null,
     "changes": [],
-    "supersedes": null
+    "supersedes": null,
+    "superseded_by": "var-gs_bx-bx7-v2"
   },
   "engine": "oracle",
   "model": "gs_bx",

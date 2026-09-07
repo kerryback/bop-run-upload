@@ -3,11 +3,12 @@
   "spec_id": "var-kp_vy-vyx-v1",
   "title": "KP14 with a priced OU volatility factor and three firm types with exponential exposure",
   "question": "Does premium-side extremity in the priced-vol channel create both room and capture?",
-  "notes": "Transcribed verbatim from variants/kp_vy/run_vyx.sh on 2026-09-04. Premia approx 4.6/12/22 pct per year. Feasibility pre-checked: all A-coefficients finite, rho_ty > 0. Published: room +0.3496, gap_RFF-lin +0.1009, t 21.6 -- RANK 1 OF 24 ON GAP by a factor of 2.5. BLOCKED: variants/kp_vy/parameters_kp14.py:10,33-34 carries the same lambda-regime inconsistency fixed in config.py on 2026-09-04 (see docs/kp14_regime_labels.md). Must be fixed before this spec is run.",
+  "notes": "Transcribed verbatim from variants/kp_vy/run_vyx.sh on 2026-09-04. Premia approx 4.6/12/22 pct per year. Feasibility pre-checked: all A-coefficients finite, rho_ty > 0. Published: room +0.3496, gap_RFF-lin +0.1009, t 21.6 -- RANK 1 OF 24 ON GAP by a factor of 2.5. SUPERSEDED BY var-kp_vy-vyx-v2 (2026-09-07). This spec was blocked on the lambda-regime inconsistency at variants/kp_vy/parameters_kp14.py:10,33-34 (see docs/kp14_regime_labels.md); that is now fixed, but fixing it produced a different economy rather than making this spec runnable. The lambda fix landed 2026-09-04 and CHANGES THE ECONOMY (E[lambda] 1.7172 -> 1.0), so this spec is preserved as the record of what produced the published figures above and is not re-runnable as the current economy. Its published figures, including the rank, are not citable for the corrected economy.",
   "lineage": {
     "parent_spec": null,
     "changes": [],
-    "supersedes": null
+    "supersedes": null,
+    "superseded_by": "var-kp_vy-vyx-v2"
   },
   "engine": "oracle",
   "model": "kp_vy",

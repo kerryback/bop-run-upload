@@ -1752,3 +1752,121 @@ New `tests/test_sources_parse.py` compiles all 123 tracked Python files and
 `bash -n`s all 8 shell scripts. That is the second SyntaxError to sit undetected
 in this tree (`gs_solve_reg.py` was the first), and in both cases the rest of the
 suite was blind because nothing imported the file. Negative control run.
+
+---
+
+## §28. Measuring the aggregate-seed claim, and closing spec → run → solve (2026-09-07)
+
+### I overstated the aggregate contribution
+
+In §27 I argued that holding the aggregate state path fixed across seeds would
+leave the aggregate contribution "invisible" and every t-stat "overstated", and
+told Seth it was "likely the dominant" source of variation. **Measured, it is
+neither invisible nor dominant.**
+
+kp_vy `vyx`, N = 100, T = 100 (86 evaluated months), 6 seeds, run twice —
+aggregate path varying with the seed, then held common:
+
+| statistic | mean | sd (varying) | sd (common) | ratio |
+|---|---|---|---|---|
+| SR_max | 0.6780 | 0.0378 | 0.0325 | 1.16× |
+| lin_rank ceiling | 0.4991 | 0.0232 | 0.0221 | 1.05× |
+| nonlinear ceiling | 0.6037 | 0.0322 | 0.0318 | 1.01× |
+| **room** | **0.1046** | **0.0173** | **0.0139** | **1.24×** |
+
+On the headline statistic the naive 6-seed t on `room` is 14.8 with the
+aggregate path varying and 17.1 with it fixed — an overstatement of **1.15×**,
+not the order-of-magnitude my phrasing implied.
+
+Reproduce with:
+
+```
+for s in 0 1 2 3 4 5; do for c in "" --common_aggregate; do
+  python run_oracle.py --model kp_vy --N 100 --T 100 --seed $s \
+      --tag vd --levels --rff 36,360 --nmat 2 $c
+done; done
+```
+
+Two things the run does confirm:
+
+- **Seed 0 is identical in both columns** (room 0.0926 either way), which is the
+  designed property: the offset is `base + 0`, so seed 0 reproduces every
+  pre-2026-09-07 result exactly.
+- With 6 seeds the sd of an sd is itself ~30%, so 1.24× is not precisely
+  estimated; the honest range is roughly 1.0–1.6×.
+
+**Reasoning, not measurement:** the aggregate share should be *larger* at
+flagship size. Firm-level noise in a cross-sectional average falls like 1/(N·T);
+the aggregate path's contribution falls like 1/T only. Going from N = 100 to
+N = 500 cuts the firm term ~5× and leaves the aggregate term alone, so 1.24×
+reads as a floor for the flagship rather than a typical value. Worth re-measuring
+on the first real array rather than trusting the extrapolation — the last cost
+extrapolation from small N was 4× wrong.
+
+The fix stands regardless: it costs nothing, seed 0 is unchanged, common random
+numbers across specs are preserved, and `--common_aggregate` now makes the
+decomposition an explicit option rather than an accident.
+
+### spec → run → solve is now closed
+
+`solstamp` said which parameters produced an artifact; §27's `runstamp` said
+which artifact a run read. The missing link was whether that is the economy the
+**spec** claims. `run_oracle.py --spec <spec_id>` now verifies consumed
+solve_ids against the spec's new `expected_solves` and **aborts before recording
+anything** on a mismatch. All three paths exercised:
+
+```
+[spec] G        f7be27e39d2b530f  matches var-kp_vy-vyx-v2
+[spec] jstar    MISMATCH: spec var-bgn_gam-g0235-v2 expects be222462dd017b2c, run consumed <nothing>
+[spec] var-kp_vy-vyx-v1 declares no expected_solves -- nothing to verify against
+```
+
+A spec that pins nothing says so rather than passing silently.
+
+### v2 specs, and what is still citable
+
+Same discipline as `solfiles retire`: v1 is annotated, never edited (`notes` and
+`lineage` are outside `spec_hash`, so v1 identities are untouched).
+
+| spec | economy | v1's published figures |
+|---|---|---|
+| `var-kp_vy-vyx-v2` | **changed** — λ regime labels, E[λ] 1.7172 → 1.0; quadrature epsrel | void |
+| `var-gs_bx-bx7-v2` | **changed** — delta, rho_x, sigma_x, κe 0 → 0.025 | void |
+| `var-bgn_gam-g0235-v2` | **unchanged** — 11/11 vs the paper, J* rebuilt byte-identical | **levels stand, rank does not** |
+
+That last row is the distinction worth keeping: g0235's room +0.0233 and gap
++0.0297 still describe this economy, but "rank 4 of 24" is a claim about the
+other 23 specs, and two of them changed economies. Quote the levels, not the
+ranking, until the grid is regenerated.
+
+`var-gs_bx-bx7-v2` carries `solves_pending: true` and **precommits** to the five
+ids ASU's array must produce. A solve_id is a hash of inputs, so it is knowable
+before solving; pinning it is what turns the cluster run into a test of
+cross-machine agreement. The test distinguishes a declared precommitment from an
+id that is simply wrong or retired.
+
+### gs_bx cannot be run as a panel yet
+
+`var-gs_bx-bx7-v1` flagged this in September and it is still open, and worse than
+the note said. `gs_solve_reg.py:152` applies `gs_ashift` to the payoff tables.
+`gs_sim_bx.py` omits it in **two** places — line 151's `prod`, the simulated cash
+flow itself, and line 229's `opcf`, which becomes `op_cash_flow` and then the
+exported `roe` characteristic. There is **no per-firm ashift array in the
+simulator at all**, and no `GS_BX_ASHIFTS` env var beside `GS_BX_BETAS`.
+
+For four of the five types the solve assumes productivity exp(`gs_ashift`) times
+what the simulation generates:
+
+| type | gs_bx | gs_ashift | solve/sim ratio |
+|---|---|---|---|
+| 0 | 1.0 | 0.000 | 1.000 |
+| 1 | 2.5 | 0.225 | 1.252 |
+| 2 | 4.0 | 0.450 | 1.568 |
+| 3 | 5.5 | 0.675 | 1.964 |
+| 4 | 7.0 | 0.900 | 2.460 |
+
+The five solves ASU is running are internally correct — the discrepancy is on
+the simulation side. But any panel built on them prices four of five types
+against value functions solved for a different productivity level. **Not fixed
+here**: deciding what `gs_ashift` means in the simulation changes the economy and
+the env contract, and that is Seth's call, not a silent patch.
