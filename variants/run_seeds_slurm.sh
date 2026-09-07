@@ -84,6 +84,18 @@
 #
 #                   Laptop wall does not transfer: Sol ran the same code at 114% CPU
 #                   against 470% here, so scale by ~4x. ~35 min here is ~2.3 h there.
+#
+#                   THE ORACLE IS THE SMALLER HALF. Every task runs run_estimators.py
+#                   after the oracle, under this same walltime, and that stage had
+#                   NEVER been run to completion until 2026-09-07 -- no *_run.json
+#                   existed anywhere in the repo. The first end-to-end run (kp_vy,
+#                   N=60/T=80/window=36, 29 eval months) took 741 s against the
+#                   oracle's 216 s: 3.4x LONGER. Its cost scales with eval_months
+#                   (= T - window - burn) x N x P, and the flagship has 138 eval months
+#                   against 29. Do NOT size this array from the oracle alone. The
+#                   estimator ladder in _scratch/est_ladder.sh measures the two slopes
+#                   separately; until it lands the total task cost is unknown, which is
+#                   a second reason -t 2-00:00 stays where it is.
 #                   RE-MEASURE from the first completed task before widening the array.
 #
 #   --mem=64G       RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,
