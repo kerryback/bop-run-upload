@@ -2,6 +2,22 @@
 
 **From:** Personal (sethjpruitt@gmail.com)
 **Written:** 2026-09-07 ~14:00 MST
+> **STATUS 2026-09-07 ~14:30 — this handoff could not be delivered, so Personal took
+> over the parts that do not disturb the running jobs.**
+>
+> - §2 (pull Sol) **NOT DONE, deliberately.** No benefit while the jobs run, and it is
+>   the one action that could disturb them. Sol stays at `227f5e9`. Still lossless
+>   whenever someone does it.
+> - §3 (verification) **IN PROGRESS, read-only.** `_scratch/watch_gs_bx.sh` polls
+>   `squeue` and reads `experiments/solfiles/`; it writes nothing to Sol. Two of five
+>   have landed and **both match**: `sol_b55c 645262a8e72d944c`, `sol_b70c
+>   0818d7153d5708cc`. Result lands in `_scratch/GS-BX-VERIFY.md`.
+> - §5 (`--mem`) **DONE and superseded — read §5 with care, its verdict was wrong.**
+>   The N=500 point landed after this was written and reversed it: the flagship projects
+>   to 23754 MiB, *under* the 24576 MiB cap, not over it. `--mem` was still raised to
+>   64G in `3c48014` for better reasons. See WORKING.md §33.
+> - §6 (pyarrow env, `method` keys, stray files) **untouched, still ASU's or Seth's.**
+
 **Sol state when written:** all five tasks RUNNING, 3:52–4:15 elapsed against a 1-day
 limit. Sol HEAD `227f5e9`; origin/main is `9497089` (four ahead).
 
