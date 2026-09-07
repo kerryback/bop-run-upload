@@ -121,6 +121,44 @@ def test_slurm_scripts_never_derive_their_path_from_BASH_SOURCE():
     print(f"    ({checked} SLURM scripts checked)")
 
 
+def test_pandas_io_backends_are_declared():
+    """pandas I/O backends are never imported, so no import scan can find them.
+
+    2026-09-07: `pyarrow` was required by variants/run_oracle.py (to_parquet) and
+    run_estimators.py (read_parquet) and declared in NEITHER environment.yml nor
+    requirements.txt. It worked on this laptop only because the ambient anaconda env
+    happened to carry it; on Sol's `bop` it was simply absent, which blocked the whole
+    Phase 1 run side. An AST scan of imports finds nothing -- pandas resolves the engine
+    at call time -- so the rule has to be written against the CALL, not the import.
+    """
+    want = {"to_parquet": ("pyarrow", "fastparquet"),
+            "read_parquet": ("pyarrow", "fastparquet"),
+            "to_excel": ("openpyxl", "xlsxwriter"),
+            "read_excel": ("openpyxl", "xlrd")}
+    declared = ""
+    for fn in ("environment.yml", "requirements.txt"):
+        declared += open(os.path.join(ROOT, fn)).read().lower()
+
+    missing = []
+    for rel in _tracked(".py"):
+        if rel.startswith("tests/"):
+            continue
+        try:
+            src = open(os.path.join(ROOT, rel)).read()
+        except OSError:
+            continue
+        live = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("#"))
+        for call, backends in want.items():
+            if call + "(" not in live:
+                continue
+            if not any(b in declared for b in backends):
+                missing.append(f"{rel} calls {call}() but none of "
+                               f"{'/'.join(backends)} is declared in environment.yml "
+                               f"or requirements.txt")
+    assert not missing, ("undeclared pandas I/O backends:\n  " + "\n  ".join(missing))
+    print("    (pandas I/O backends declared)")
+
+
 def test_the_two_known_regressions_stay_fixed():
     """Named, so a future edit that reintroduces either is unambiguous."""
     dk = os.path.join(ROOT, "variants", "common", "dkkm_functions.py")

@@ -3,7 +3,11 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.12
+  # 2026-09-07: was python=3.12, which matched NOTHING in use. Verified stacks are
+  # python 3.11.14 / numpy 2.4.2 (laptop) and python 3.14.3 / numpy 2.4.3 (Sol's `bop`).
+  # A pin that describes no real environment is worse than an honest range; solve_ids are
+  # portable across both by construction (variants/common/solstamp.py HASH_SIG_DIGITS).
+  - python>=3.11,<3.15
   - pip
   # Core numerical computing (conda-forge binaries ship MKL/OpenBLAS — beat PyPI wheels)
   - numpy>=1.26
@@ -15,6 +19,11 @@ dependencies:
   - scikit-learn>=1.3
   # Parallel processing
   - joblib>=1.3
+  # pandas I/O BACKENDS. These are never imported, so no import scan finds them -- they
+  # are resolved at runtime inside pandas. Missing pyarrow is why run_oracle.py
+  # --save_panel could not run on Sol on 2026-09-07 despite the env looking complete.
+  - pyarrow>=14          # variants/run_oracle.py to_parquet, run_estimators.py read_parquet
+  - openpyxl>=3.1        # variants/make_excel.py
   # AWS S3 result storage (utils/upload_to_aws.py) + webhook notify (main.py)
   - boto3>=1.34
   - requests>=2.31
