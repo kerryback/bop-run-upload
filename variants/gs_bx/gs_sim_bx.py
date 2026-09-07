@@ -36,6 +36,24 @@ b_refin_0_ts = [d["b_refin_0"] for d in _sols]; b_refin_I_ts = [d["b_refin_I"] f
 # unpacked positionally just above, so it cannot grow. Pre-2026-09-06 solutions have no
 # such key and were solved at kappa_e = 0, which is what they get here.
 kappa_e = float(_s["kappa_e"]) if "kappa_e" in _s.files else 0.0
+
+# gs_ashift is applied by the SOLVER (gs_solve_reg.py:152-153, production loads as
+# exp(gs_bx*x + z + gs_ashift)) and is NOT implemented anywhere in this simulator: both
+# `prod` in create_arrays and `opcf` in create_panel compute exp(bxf*x + z), and there is
+# no per-firm ashift array. For gs_ashift = 0 the two agree exactly, which is why this is
+# a guard rather than a fix. For gs_ashift != 0 they do not: the value functions would be
+# solved for a firm exp(gs_ashift) times as productive as the one simulated -- up to
+# 2.46x on the 2026-09-04 ladder gs_ashift = 0.15*(gs_bx-1). That produced a silently
+# mispriced panel for four of five types, flagged OPEN in var-gs_bx-bx7-v1 since
+# 2026-09-04. Fail loudly instead of reproducing it.
+_ashifts = [float(d["gs_ashift"]) for d in _sols if "gs_ashift" in d.files]
+if any(a != 0.0 for a in _ashifts):
+    raise NotImplementedError(
+        "gs_sim_bx.py does not implement gs_ashift, but these solutions were solved "
+        f"with it: {dict(zip(_dirs, _ashifts))}. The simulated cash flow would be "
+        "exp(-gs_ashift) times what the value functions assume. Either re-solve at "
+        "gs_ashift = 0 (per the 2026-09-07 decision) or add a per-firm ashift array to "
+        "`prod` and `opcf` here and give it an env contract beside GS_BX_BETAS.")
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
 burnin = 300
 alpha_e = 0.2
