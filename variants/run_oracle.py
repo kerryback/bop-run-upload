@@ -24,6 +24,16 @@ ap.add_argument("--nmat", type=int, default=2, help="independent RFF draws")
 ap.add_argument("--no_rf", action="store_true", help="BGN: do not feed the interest rate to the feature bases")
 ap.add_argument("--save_panel", action="store_true")
 ap.add_argument("--levels", action="store_true", help="add fixed-stats level features (and rffL bases)")
+ap.add_argument("--spec", type=str, default=None,
+                help="spec_id this run implements (experiments/specs/<id>.json). The run "
+                     "VERIFIES its consumed solve_ids against the spec's expected_solves "
+                     "and aborts on a mismatch, so a summary can never claim a spec it did "
+                     "not actually build.")
+ap.add_argument("--common_aggregate", action="store_true",
+                help="hold the AGGREGATE state path fixed across seeds (do not offset gam_seed/reg_seed). "
+                     "Cross-seed spread then isolates firm-level sampling noise, with the aggregate "
+                     "contribution removed. This was the unintended behaviour of every seed before "
+                     "2026-09-07; it is a legitimate variance decomposition, and a wrong default.")
 args = ap.parse_args()
 
 os.chdir(os.path.join(HERE, args.model))
@@ -67,13 +77,16 @@ import runstamp
 # between two specs at one seed still differs only in the parameters. Seed 0 reproduces
 # the historical single-run behaviour exactly.
 _agg = {}
+_offset = 0 if args.common_aggregate else args.seed
 for _name in ("gam_seed", "bx_seed", "reg_seed"):
     if hasattr(mod, _name):
         _base = getattr(mod, _name)
-        setattr(mod, _name, int(_base) + args.seed)
-        _agg[_name] = {"base": int(_base), "used": int(_base) + args.seed}
+        setattr(mod, _name, int(_base) + _offset)
+        _agg[_name] = {"base": int(_base), "used": int(_base) + _offset}
+_agg["common_aggregate"] = bool(args.common_aggregate)
 print(f"[seed {args.seed}] aggregate-state generators: "
-      + (", ".join(f"{k} {v['base']}->{v['used']}" for k, v in _agg.items()) or "none")
+      + (", ".join(f"{k} {v['base']}->{v['used']}" for k, v in _agg.items() if k != "common_aggregate") or "none")
+      + (" (HELD COMMON across seeds: --common_aggregate)" if args.common_aggregate else "")
       + f"; global stream seeded {args.seed}", flush=True)
 
 t0 = time.time()
@@ -87,6 +100,14 @@ print(f"[{args.model}/{args.tag}] panel built in {time.time()-t0:.0f}s", flush=T
 # CONTENT, so a stale or foreign table is reported as what it actually is.
 solves = runstamp.consumed_solves(args.model, mod=sys.modules[mod.__name__])
 print(runstamp.describe(solves), flush=True)
+if args.spec:
+    _ok, _lines = runstamp.verify_against_spec(args.spec, solves)
+    print("\n".join(_lines), flush=True)
+    if _ok is False:
+        raise SystemExit(
+            f"ABORT: this run did not build the economy {args.spec} describes. Either "
+            f"point --spec at the spec these solves belong to, or re-solve. Recording "
+            f"the summary anyway would put a false spec_id on a real result.")
 
 panel["size"] = np.log(panel.mve)
 panel = panel[panel.month >= 2]
@@ -152,7 +173,7 @@ def agg_rff(res):
 agg = agg_rff(res)
 
 summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "overrides": os.environ.get(ov_env, "{}"),
-           "solves": solves, "aggregate_seeds": _agg,
+           "solves": solves, "aggregate_seeds": _agg, "spec_id": args.spec,
            "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
            "mean_mu": float(ts.mean_mu.mean()), "sd_mu": float(ts.sd_mu.mean()), "mean_idio_sd": float(ts.mean_idio_sd.mean()),
            "bases": {}}

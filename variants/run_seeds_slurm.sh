@@ -83,13 +83,13 @@ set -euo pipefail
 
 case "$SEED_SPEC" in
   vyx)
-    MODEL=kp_vy; TAG=vyx
+    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v2
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
     ;;
   g0235)
-    MODEL=bgn_gam; TAG=g0235
+    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v2
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
@@ -155,8 +155,11 @@ if python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "$TAG"
 fi
 
 S=$(date +%s)
+# --spec makes the run VERIFY, before it records anything, that the tables it read are
+# the ones the spec declares. Without it a summary could carry a spec_id for an economy
+# it did not build -- which is the failure the whole registry exists to prevent.
 python -W ignore run_oracle.py --model "$MODEL" --N "$N" --T "$T" --seed "$SEED" \
-       --tag "$TAG" --levels --save_panel 2>&1 | tee -a "$LOG"
+       --tag "$TAG" --spec "$SPEC" --levels --save_panel 2>&1 | tee -a "$LOG"
 MID=$(date +%s)
 echo "=== oracle done in $((MID-S))s ===" | tee -a "$LOG"
 

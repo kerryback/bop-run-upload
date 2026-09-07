@@ -240,6 +240,69 @@ def test_all_three_flagship_specs_exist():
         assert os.path.exists(os.path.join(SPECS, sid + ".json")), sid
 
 
+def test_expected_solves_are_live_manifests():
+    """A spec that pins a solve_id must pin one that still exists and is reachable.
+
+    expected_solves is what closes spec -> run -> solve: run_oracle.py --spec aborts
+    when the tables it read are not the ones the spec names. That guard is only as good
+    as the ids, and every id in this repo moved once already (2026-09-07, the
+    canonicaliser fix), so a spec pinning a retired id would abort every correct run.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "variants"))
+    from common import solstamp
+
+    live, retired = {}, {}
+    for m in solstamp.iter_manifests():
+        (retired if m.get("retired") else live)[m["solve_id"]] = m
+
+    problems, pending = [], []
+    pinned = 0
+    for fn in sorted(os.listdir(SPECS)):
+        if not fn.endswith(".json"):
+            continue
+        spec = load_spec(fn[:-5])
+        for stage, sid in (spec.get("expected_solves") or {}).items():
+            pinned += 1
+            if sid in live:
+                continue
+            if sid in retired:
+                problems.append(f"{spec['spec_id']}.{stage} pins RETIRED {sid}: "
+                                f"{retired[sid]['retired'].get('reason', '')[:80]}")
+            elif spec.get("solves_pending"):
+                # A spec may legitimately PRECOMMIT to an id before the solve runs --
+                # the id is a hash of inputs, so it is knowable in advance, and pinning
+                # it is what lets the cluster's output be checked against the laptop's
+                # prediction. That is only honest when declared, so it requires the flag:
+                # otherwise a typo'd id in a solved economy would pass forever.
+                pending.append(f"{spec['spec_id']}.{stage} -> {sid} (declared pending)")
+            else:
+                problems.append(f"{spec['spec_id']}.{stage} pins {sid}, which is in no "
+                                f"manifest and the spec does not declare solves_pending")
+    assert pinned >= 8, f"only {pinned} pinned solve_ids across all specs -- expected 8"
+    assert not problems, "specs pinning unusable solve_ids:\n  " + "\n  ".join(problems)
+    if pending:
+        print("    (" + str(len(pending)) + " precommitted, not yet solved)")
+
+
+def test_every_current_spec_pins_its_solves():
+    """Every spec that is NOT superseded must pin expected_solves.
+
+    v1 specs predate the field and are superseded, so they are exempt; anything that is
+    still the current description of a runnable economy is not.
+    """
+    missing = []
+    for fn in sorted(os.listdir(SPECS)):
+        if not fn.endswith(".json"):
+            continue
+        spec = load_spec(fn[:-5])
+        if spec.get("lineage", {}).get("superseded_by"):
+            continue
+        if not spec.get("expected_solves"):
+            missing.append(spec["spec_id"])
+    assert not missing, ("current specs with no expected_solves, so `run_oracle.py "
+                         "--spec` cannot verify them: " + ", ".join(missing))
+
+
 if __name__ == "__main__":
     import traceback
 

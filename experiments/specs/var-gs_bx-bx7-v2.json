@@ -1,20 +1,25 @@
 {
   "schema_version": 1,
-  "spec_id": "var-gs_bx-bx7-v1",
+  "spec_id": "var-gs_bx-bx7-v2",
   "title": "GS21 2-regime with five exposure types, each a separate solve",
   "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
-  "notes": "Transcribed verbatim from variants/gs_bx/run_gs_bx7.sh on 2026-09-04. THIS SCRIPT WAS THE ONLY COMMITTED RECORD OF THIS EXPERIMENT: the oracle JSON at variants/results/gs_bx_oracle_bx7.json records overrides={} because run_oracle.py reads GS_SIM_OVERRIDES while the real spec lives in five GS_PARAM_OVERRIDES solve invocations plus three GS_BX_* env vars, and the five solution.npz embed a 15-element params array that excludes gs_bx and gs_ashift. Published: room +0.0182, gap_RFF-lin +0.0013, t 10.4 -- RANK 22 OF 24 ON GAP. Demoted out of the first production run. OPEN: gs_solve_reg.py:80-81 includes gs_ashift in the payoff tables while gs_sim_bx.py:212 omits it from op_cash_flow, which feeds the exported roe characteristic, for four of the five types. Resolve before scaling. Parameters here are the as-run hybrid, NOT config.py; per decision 2026-09-04, config.py is the base calibration and this spec is preserved for reproducibility only. SUPERSEDED BY var-gs_bx-bx7-v2 (2026-09-07): the GS21 base calibration was corrected on 2026-09-06 (delta, rho_x, sigma_x, kappa_e), so the economy this spec ran is not the current one. Preserved as the record behind the published figures above. The gs_ashift inconsistency flagged as OPEN here is still open.",
+  "notes": "PRECOMMITMENT: the five expected_solves below were computed from the current parameters and code WITHOUT solving (the id is a hash of inputs, so it is knowable in advance). They are what the five-task array in run_gs_bx7_slurm.sh must produce. If it produces anything else, the cluster and the laptop disagree on a solve_id and that must be chased before any number from this economy is usable. Clear solves_pending once they are recorded.\n\nCurrent runnable spec for the bx7 economy. The overrides are unchanged from v1; the economy changed through config.py, which the spec's params cannot express -- which is exactly why expected_solves is recorded, since a solve_id pins the whole parameter namespace. v1's published figures (room +0.0182, gap_RFF-lin +0.0013, t 10.4, rank 22 of 24) came from the uncorrected calibration and must not be quoted for this economy; in particular the demotion of bx7 out of the first production run rests on them.\n\nOPEN, BLOCKING A PANEL RUN: gs_solve_reg.py applies gs_ashift to the payoff tables (line 152) but gs_sim_bx.py omits it in BOTH the simulated cash flow (line 151, `prod`) and the exported op_cash_flow that feeds `roe` (line 229). There is no per-firm ashift array in the simulator at all. For four of the five types the solve assumes productivity exp(gs_ashift) x the simulation's: 1.252, 1.568, 1.964, 2.460. The solves are internally correct; any panel built from them is not. Resolve before running the oracle on this spec.",
   "lineage": {
-    "parent_spec": null,
-    "changes": [],
-    "supersedes": null,
-    "superseded_by": "var-gs_bx-bx7-v2"
+    "parent_spec": "var-gs_bx-bx7-v1",
+    "supersedes": "var-gs_bx-bx7-v1",
+    "changes": [
+      "GS21 base calibration corrected against the paper's Table I on 2026-09-06: delta 0.02 -> 0.02/3, rho_x 0.96 -> 0.95**(1/3), sigma_x rebased on 0.95, kappa_e 0 -> 0.025. v1 ran the uncorrected calibration at an implicit kappa_e = 0.",
+      "kappa_e is now actually APPLIED: utils_gs21/panel_functions_gs21.py imported it and never used it.",
+      "records expected_solves for all five exposure types."
+    ]
   },
   "engine": "oracle",
   "model": "gs_bx",
   "method": {
     "gs21_discretization": "tauchen_exact",
-    "zero_book_in_sdf_solve": true
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "kappa_e": 0.025
   },
   "panel": {
     "N": 500,
@@ -23,7 +28,7 @@
   },
   "seeds": {
     "base": 0,
-    "policy": "run_oracle_default",
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
     "type_seed": 910
   },
   "params": {
@@ -189,5 +194,13 @@
     "transcribed": "2026-09-04",
     "verified_by": "tests/test_specs_match_shell.py"
   },
-  "spec_hash": "62940685af77a3da0796a268735887b77c1c8eee5187909b1905be36dc604bf5"
+  "spec_hash": "0d70fad4b37c47dda6e3f06aad0d8a78aba3409e3f8307ca315e9893a0a6af21",
+  "expected_solves": {
+    "sol_reg": "63fa7ebbc2db49ea",
+    "sol_b25c": "13d265e388106790",
+    "sol_b40c": "2b2327a64c9c3583",
+    "sol_b55c": "6918c06791c0332c",
+    "sol_b70c": "a0973863681df5b8"
+  },
+  "solves_pending": true
 }
