@@ -74,11 +74,17 @@ def factors(panel, W, n_jobs, start, end, model, chars, rf_cols=None):
 
 '''
 # DKKM portfolio based on past 360 months of factor returns f
-# NOTE (2026-09-04): everything from the ''' above to the ''' below is a
-# block-commented earlier version of mve_data, superseded by the live one after
-# ridge_regr. It is inert. Left in place, but note it still carries hardcoded
-# 360s in the ridge augmentation and penalties below where the live version now
-# uses WINDOW -- so do not resurrect it without converting those too.
+# NOTE (2026-09-04): this block-comment fence encloses an earlier version of
+# mve_data, superseded by the live one after ridge_regr. It is inert. Left in
+# place, but it still carries hardcoded 360s in the ridge augmentation and
+# penalties below where the live version now uses WINDOW -- so do not resurrect
+# it without converting those too.
+#
+# 2026-09-07: this note originally quoted the fence characters literally, which
+# CLOSED the fence three lines after it opened and made the whole module a
+# SyntaxError from 6cd949e onward. run_estimators.py imports this module, so it
+# could not start at all for three days; the estimator CSVs in variants/results
+# all predate that commit. Do not write the fence characters inside the fence.
 def mve_data(f, month, alpha, mkt_rf = None):
 
     X = f.loc[month-WINDOW:month-1].dropna().to_numpy() 

@@ -13,6 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "common"))
 import dkkm_functions as dkkm
 import fama_functions as fama
+import runstamp
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx"], required=True)
@@ -21,7 +22,8 @@ ap.add_argument("--window", type=int, default=120)
 ap.add_argument("--rff", type=str, default="36,360,3600")
 ap.add_argument("--nmat", type=int, default=2)
 ap.add_argument("--kappas", type=str, default="0.001,0.01,0.05,0.1,1")
-ap.add_argument("--seed", type=int, default=0)
+ap.add_argument("--seed", type=int, default=0,
+                help="replication seed; must match the run_oracle.py --seed whose panel this reads")
 ap.add_argument("--n_jobs", type=int, default=6)
 ap.add_argument("--include_mkt", action="store_true", help="append the unpenalised EW market to the RFF factor sets (as in the paper)")
 ap.add_argument("--levels", action="store_true", help="add rff_lev / linlev methods using fixed-stats level features")
@@ -33,8 +35,31 @@ rng = np.random.default_rng(args.seed + 7)
 chars = ["size", "bm", "agr", "roe", "mom"]
 gamma_grid = np.arange(0.5, 1.1, 0.1)
 out = os.path.join(HERE, "results")
-panel = pd.read_parquet(os.path.join(out, f"{args.model}_panel_{args.tag}.parquet"))
-mom = np.load(os.path.join(out, f"{args.model}_moments_{args.tag}.npz"))
+_st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
+_panel_path = _st("panel") + ".parquet"
+if not os.path.exists(_panel_path):
+    legacy = os.path.join(out, f"{args.model}_panel_{args.tag}.parquet")
+    raise SystemExit(
+        f"no panel at {_panel_path}.\n"
+        f"Run:  python run_oracle.py --model {args.model} --tag {args.tag} "
+        f"--seed {args.seed} --save_panel\n"
+        + (f"An UNSEEDED panel exists at {legacy}. It is NOT adopted as seed "
+           f"{args.seed}: everything written before 2026-09-07 came from the "
+           f"pre-correction parameters (WORKING.md \u00a725) and silently treating it "
+           f"as a replication would mix two economies. Re-run the oracle, or rename "
+           f"the file deliberately if you know what it is.\n"
+           if os.path.exists(legacy) else ""))
+panel = pd.read_parquet(_panel_path)
+mom = np.load(_st("moments") + ".npz")
+
+# The oracle summary records which solve built this panel; carry that forward so the
+# estimator output is traceable to the same economy without re-deriving it.
+_oracle_summary = _st("oracle") + ".json"
+_solves = None
+if os.path.exists(_oracle_summary):
+    _solves = json.load(open(_oracle_summary)).get("solves")
+    if _solves:
+        print(runstamp.describe(_solves), flush=True)
 months_m, MU, SIG, KEEP = mom["months"], mom["mu"], mom["Sigma"], mom["keep"]
 midx = {int(m): i for i, m in enumerate(months_m)}
 panel = panel.set_index(["month", "firmid"]).sort_index()
@@ -74,8 +99,13 @@ mkt_rets = panel.groupby("month").xret.mean() if args.include_mkt else None
 lev_stats = None
 if args.levels:
     first = panel.loc[start:start + args.window - 1]
-    med = first[chars].median().to_numpy()
-    iqr = (first[chars].quantile(0.75) - first[chars].quantile(0.25)).to_numpy(); iqr[iqr == 0] = 1.0
+    med = first[chars].median().to_numpy(copy=True)
+    # copy=True is required, not defensive: pandas can hand back a read-only view here,
+    # and the next line mutates it ("assignment destination is read-only"). The --levels
+    # path is used by every shipped run script, so this raised on every levels run once
+    # pandas started returning a view.
+    iqr = (first[chars].quantile(0.75) - first[chars].quantile(0.25)).to_numpy(copy=True)
+    iqr[iqr == 0] = 1.0
     lev_stats = (med, iqr)
     def lev_X(data):
         Xr = dkkm.rank_standardize(data[chars]).to_numpy()
@@ -201,8 +231,9 @@ for k, month in enumerate(eval_months):
         print(f"  month {month} ({k+1}/{len(eval_months)}) {time.time()-t0:.0f}s", flush=True)
 
 tagw = f"_wins{args.winsor}" if args.winsor > 0 else ""
+_base = _st("estimators") + f"_w{args.window}{tagw}"
 res = pd.DataFrame(rows)
-res.to_csv(os.path.join(out, f"{args.model}_estimators_{args.tag}_w{args.window}{tagw}.csv"), index=False)
+res.to_csv(_base + ".csv", index=False)
 summ = res.groupby(["method", "P", "kappa"]).agg(sharpe=("sharpe", "mean"), hjd=("hjd", lambda x: np.sqrt(x.mean())),
                                                    real_sr=("xret", lambda x: x.mean() / x.std())).reset_index()
 fm_sr = res[res.method == "fm"].groupby("month").sharpe.mean()
@@ -215,5 +246,11 @@ summ["t_vs_fm"] = tstats
 pd.set_option("display.width", 200)
 print(f"\n=== {args.model}/{args.tag}: window={args.window}, eval months={len(eval_months)}, N={N}")
 print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
-summ.to_csv(os.path.join(out, f"{args.model}_estimators_{args.tag}_w{args.window}{tagw}_summary.csv"), index=False)
+summ.to_csv(_base + "_summary.csv", index=False)
+json.dump({"model": args.model, "tag": args.tag, "seed": args.seed,
+           "window": args.window, "winsor": args.winsor, "kappas": kappas,
+           "eval_months": len(eval_months), "N": N,
+           "solves": _solves,
+           "panel": os.path.basename(_panel_path)},
+          open(_base + "_run.json", "w"), indent=1)
 print(f"done in {time.time()-t0:.0f}s")
