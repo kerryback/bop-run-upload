@@ -99,6 +99,11 @@ def cmd_show(args):
             print(f"  -> overshoot {got/req:.2f}x the enforced threshold")
     else:
         print("\nachieved: not recorded (solve predates solstamp's `achieved` field)")
+    envr = m.get("environment")
+    if envr:
+        print("\nenvironment (recorded, NOT hashed -- where it ran):")
+        for k in sorted(envr):
+            print(f"  {k} = {envr[k]}")
     if m.get("extra"):
         print("\nlabels (not hashed):")
         for k, v in sorted(m["extra"].items()):

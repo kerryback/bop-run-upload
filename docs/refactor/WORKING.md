@@ -1991,3 +1991,57 @@ namespace, verified at run time the way `expected_solves` now is — is the work
 this tier needs, and the discipline it needs more: add a switch only when both
 branches will actually be run and compared, and retire it once the comparison
 settles.
+
+---
+
+## §31. Recording the environment the id deliberately ignores (2026-09-07)
+
+§26 made the solve_id independent of the library stack on purpose, so Sol and
+this laptop can agree on an id. That trade left a gap nobody had closed: **nothing
+recorded which stack produced the bytes.** Two runs that legitimately share an id
+still differ in the last digits of every table — that is precisely what
+quantisation permits — and an investigator holding a 78 MB `solution.npz` had no
+way to tell which machine made it.
+
+`solstamp.record()` now captures python/platform/machine/hostname, the numpy,
+scipy and pandas versions, and the SLURM job and thread variables when present.
+It sits next to `achieved`, on the **unhashed** side of the same line: the id says
+what was asked for, these say what happened and where. Hashing it would put every
+machine's run of one spec in a different registry slot, which is exactly what §26
+was spent removing. Verified: `kp_vy` G stays `f7be27e39d2b530f`.
+
+Measured stacks, which is the point:
+
+| | laptop | Sol |
+|---|---|---|
+| python | 3.11.14 | 3.14.3 |
+| numpy | 2.4.2 | 2.4.3 |
+| pandas | 3.0.0 | 3.0.1 |
+| scipy | 1.17.0 | 1.17.1 |
+
+Both are pandas 3.x, which is why the copy-on-write read-only-array crash in
+`run_estimators.py` reproduces on either.
+
+**The five GS solves running now will NOT carry this block** — they imported
+`solstamp` before the change. Their environment has to be captured separately or
+it is lost when the jobs exit.
+
+### The Sol array, independently verified
+
+All five running tasks report the `var-gs_bx-bx7-v3` precommitted ids, checked
+from the logs rather than taken on report:
+
+```
+gs_bx7.0.log  63fa7ebbc2db49ea      gs_bx7.3.log  645262a8e72d944c
+gs_bx7.1.log  649bb384300faadf      gs_bx7.4.log  0818d7153d5708cc
+gs_bx7.2.log  a3bb50b66287307c
+```
+
+That is the cross-machine agreement test passing end to end: python 3.14.3 +
+numpy 2.4.3 on Sol reproducing ids computed under 3.11.14 + numpy 2.4.2 here,
+a wider gap than §26's own test covered.
+
+Both jobs carry `TimeLimit=1-00:00:00`, so the 9.4 h projection has ~2.5 h of
+margin. Task 0 runs as `62740640_0` (submitted 09:45) and tasks 1–4 as
+`62740930_1..4` (10:08) — task 0 was correctly kept on the unchanged `sol_reg`
+id rather than resolved.
