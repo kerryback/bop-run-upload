@@ -2,7 +2,7 @@
 #SBATCH -J bop_seeds
 #SBATCH --array=0-9
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=24G
+#SBATCH --mem=64G
 #SBATCH -t 2-00:00
 #SBATCH -p public
 #SBATCH -o outslurm/seeds.%A.%a.log
@@ -62,20 +62,52 @@
 #                   partition with a 7-day limit costs approximately nothing. Ask for
 #                   2 days and tighten from the first task's measured Elapsed.
 #
-#                   The underlying cost model, for reference: ~T*N^2, NOT ~T*N. Fitted
-#                   at N <= 200 it projected 32 min for --N 500 --T 500; the validation
-#                   run came in at 2321 s against a predicted 579 s -- 4x high. At the
-#                   flagship size budget ~2.5 h for the oracle and treat that as a
-#                   FLOOR, because T-linearity has only been verified at N = 100, so
-#                   the T = 500 extrapolation is not measured. The estimator stage
-#                   adds roughly its own hour at window 360. 12 h is ~2.5x that.
+#                   COST MODEL, MEASURED 2026-09-07 on this laptop, kp_vy, with the
+#                   flags this script actually uses (--rff 36,360,3600 --levels,
+#                   default --nmat). Six points: N = 100/200/300/500 at T = 200, and
+#                   N = 100/200 at T = 500.
+#
+#                       wall   ~  30 + 0.58*T + 0.0070*N*T  seconds
+#                       maxRSS ~  2421 + 0.0853*N*T         MiB
+#
+#                   Wall is LINEAR in N, not quadratic: the affine fit at T = 200
+#                   predicted N = 500 at 822 s against 824 s measured (0.24%), and the
+#                   bilinear form predicted N = 200 / T = 500 at 1038 s against 1036 s
+#                   (0.2%). Flagship N = 500 / T = 500 projects to ~35 min HERE.
+#
+#                   THE ~T*N^2 CLAIM IS NOT REFUTED FOR bgn_gam. The measurement behind
+#                   it (WORKING.md:1284) was bgn_gam at --nmat 2, per-month cost
+#                   0.70/1.53/18.02 s at N = 100/200/500 -- a 12x jump over the last
+#                   2.5x of N. This script runs BOTH economies via SEED_SPEC, and only
+#                   kp_vy has been re-measured. Treat g0235 as unmeasured and assume
+#                   the quadratic until a ladder exists for it.
+#
+#                   Laptop wall does not transfer: Sol ran the same code at 114% CPU
+#                   against 470% here, so scale by ~4x. ~35 min here is ~2.3 h there.
 #                   RE-MEASURE from the first completed task before widening the array.
 #
-#   --mem=24G       The oracle saves Sigma for every evaluated month as float32:
-#                   500*500*4 B = 1 MB per month, ~500 months = ~0.5 GB for that array
-#                   alone, plus the panel and the RFF feature blocks. Deliberately
-#                   generous: an OOM at hour 3 costs the whole task. Tighten from the
-#                   first task's MaxRSS.
+#   --mem=64G       RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,
+#                   which is a structural result rather than a fit: N = 500/T = 200 and
+#                   N = 200/T = 500 have the same N*T and measured 11209 and 10969 MiB
+#                   -- 2.1% apart with the large dimension swapped. Flagship N*T =
+#                   250000 therefore projects to
+#
+#                       2421 + 0.0853*250000 = 23753 MiB = 23.2 GiB
+#
+#                   against a 24G cap of 24576 MiB. The margin is +822 MiB (3.3%),
+#                   and the fit's own max residual is 644 MiB -- so the headroom is
+#                   1.3x the model's own error. 24G is not refuted; it is unresolved,
+#                   which for an unrescuable job is the same decision.
+#
+#                   The projection is also a FLOOR for what this script does. It was
+#                   measured WITHOUT --save_panel (which this script passes, and which
+#                   holds an N*T-row panel), and the estimator stage that follows in
+#                   the same task was not measured at all.
+#
+#                   The asymmetry decides the size, as with -t: the oracle has no
+#                   mid-run checkpoint, so an OOM at hour 3 writes nothing and the seed
+#                   is simply lost, while over-requesting on an empty queue costs
+#                   approximately nothing. Tighten from the first task's real MaxRSS.
 #
 #   --cpus-per-task=8   The inner work is BLAS (N x N solves and products) plus the
 #                   estimator stage's joblib fan-out. Threads are pinned below so
