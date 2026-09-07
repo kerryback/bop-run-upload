@@ -3,7 +3,7 @@
 #SBATCH --array=0-9
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=24G
-#SBATCH -t 0-12:00
+#SBATCH -t 2-00:00
 #SBATCH -p public
 #SBATCH -o outslurm/seeds.%A.%a.log
 #
@@ -48,8 +48,22 @@
 # ---------------------------------------------------------------------------
 # Why these resource requests.
 #
-#   -t 0-12:00      The measured oracle cost is ~T*N^2, NOT ~T*N. A cost model fitted
-#                   at N <= 200 projected 32 min for --N 500 --T 500; the validation
+#   -t 2-00:00      Was 0-12:00, sized from LAPTOP measurements. Raised 2026-09-07 on
+#                   evidence from the gs_bx array: the same code that ran at ~470% CPU
+#                   on this laptop ran at 114% on a Sol compute node -- roughly 4x less
+#                   parallel work per second, on hardware the envelope assumed was
+#                   comparable. A laptop-derived walltime is not a Sol walltime.
+#
+#                   The asymmetry is what settles the size. `scontrol update TimeLimit`
+#                   is REFUSED on Sol ("Modifications to existing jobs are not
+#                   permitted"), so a walltime kill cannot be rescued: the oracle has no
+#                   mid-run checkpoint, so the task writes no panel and records nothing,
+#                   and the seed is simply lost. Over-requesting on an empty queue in a
+#                   partition with a 7-day limit costs approximately nothing. Ask for
+#                   2 days and tighten from the first task's measured Elapsed.
+#
+#                   The underlying cost model, for reference: ~T*N^2, NOT ~T*N. Fitted
+#                   at N <= 200 it projected 32 min for --N 500 --T 500; the validation
 #                   run came in at 2321 s against a predicted 579 s -- 4x high. At the
 #                   flagship size budget ~2.5 h for the oracle and treat that as a
 #                   FLOOR, because T-linearity has only been verified at N = 100, so
