@@ -1870,3 +1870,42 @@ the simulation side. But any panel built on them prices four of five types
 against value functions solved for a different productivity level. **Not fixed
 here**: deciding what `gs_ashift` means in the simulation changes the economy and
 the env contract, and that is Seth's call, not a silent patch.
+
+---
+
+## §29. The spool-directory bug was in my file too (2026-09-07)
+
+The ASU session's first `gs_bx` submission (job 62740438) lost all five tasks in
+2–7 s at ~35 MB MaxRSS — a shell failure, not a python one:
+
+```
+mkdir: cannot create directory '../results': Permission denied
+```
+
+`sbatch` stages a **copy** of the batch script into the compute node's spool
+directory, so `${BASH_SOURCE[0]}` is `/var/spool/slurmd/job.../slurm_script`.
+Deriving the repo root from it lands in the spool dir.
+
+**`variants/run_seeds_slurm.sh:128` carried the identical idiom** and would have
+lost a ten-task array the same way, on both economies. Fixed with the same form:
+
+```bash
+REPO="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+```
+
+plus a guard that exits 2 with a usable message. All three invocation modes
+tested: staged copy with `SLURM_SUBMIT_DIR` (the sbatch case), direct execution
+by relative and absolute path (the fallback), and submission from the wrong
+directory (fails loudly).
+
+The generalisable rule is narrower than "always set the cwd", and an over-broad
+first version of the guard got it wrong by flagging `run_bop_job.sh`. **SLURM
+already starts a job in the directory `sbatch` was invoked from**, so a script
+that never `cd`s is correct by doing nothing — which is exactly what
+`run_bop_job.sh` does. The unsafe thing is the *construct*: deriving a path from
+`BASH_SOURCE`. `tests/test_sources_parse.py` now pins that — any `#SBATCH`
+script mentioning `BASH_SOURCE` must prefer `SLURM_SUBMIT_DIR` and fail loudly.
+Negative control run.
+
+Neither edit moves a solve_id: `gs_solve_reg.py` hashes only itself, and
+`run_seeds_slurm.sh` is not a solve source.

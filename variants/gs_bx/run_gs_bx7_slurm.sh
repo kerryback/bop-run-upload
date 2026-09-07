@@ -98,7 +98,23 @@ i=${SLURM_ARRAY_TASK_ID:?must be run as a SLURM array job}
 OUTDIR=${OUTDIRS[$i]}
 OV=${OVERRIDES[$i]}
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# sbatch stages a COPY of this script into the compute node's spool directory, so
+# ${BASH_SOURCE[0]} is /var/spool/slurmd/job.../slurm_script -- NOT a path inside the
+# repo. Deriving HERE from it lands in the spool dir, where the next line fails with
+#     mkdir: cannot create directory '../results': Permission denied
+# and every array task dies in ~2 s. Hit on Sol 2026-09-07, job 62740438, all five
+# tasks, ~35 MB MaxRSS each -- i.e. before python ever started. The env activation was
+# fine; this is a different failure from the PATH trap above and looks nothing like it.
+# Under sbatch the job's working directory already IS the submit directory, and
+# SLURM_SUBMIT_DIR names it. The BASH_SOURCE form is kept as the fallback for running
+# this script directly outside SLURM, where it is correct.
+REPO="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+HERE="$REPO/variants/gs_bx"
+if [ ! -f "$HERE/gs_solve_reg.py" ]; then
+  echo "ERROR: no gs_solve_reg.py under $HERE" >&2
+  echo "       submit from the REPO ROOT: sbatch variants/gs_bx/run_gs_bx7_slurm.sh" >&2
+  exit 2
+fi
 cd "$HERE"
 mkdir -p ../results/logs
 
