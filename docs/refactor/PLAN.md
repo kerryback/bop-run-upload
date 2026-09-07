@@ -5,6 +5,50 @@
 
 ## 0.0 The evidence on which economy to run next
 
+> ### STALENESS AUDIT, 2026-09-07 — 23 of the 24 rows below are no longer reproducible.
+>
+> The table is `variants/results/grid_summary.csv`, produced before the calibration
+> corrections. Auditing it row by row:
+>
+> - **21 rows have no code.** `bba735f` kept three engineered economies and dropped the
+>   rest. Ranks 2 and 3 (GS gamma(x)) are among them, as §0.0 itself notes.
+> - **vyx (rank 1) changed.** The lambda regime-label fix took E[lambda] from 1.7172 to
+>   1.0 (§WORKING.md 32). `var-kp_vy-vyx-v1` records that its published figures "are not
+>   citable for the corrected economy".
+> - **bx7 (rank 22) changed twice** — the GS21 Table I calibration on 2026-09-06 and
+>   `gs_ashift -> 0` on 2026-09-07.
+> - **g0235 (rank 4) is the one survivor.** BGN was checked 11/11 against Berk-Green-Naik
+>   (1999) and its J* table rebuilt byte-identical, so `room +0.0233, gap +0.0297` still
+>   describes the current economy at N=500/T=500.
+>
+> **What survives of the three conclusions:**
+>
+> 1. **The correlation claim is arithmetically correct and permanently unverifiable.**
+>    Both figures reproduce exactly from the CSV: `corr(room, gap) = +0.675` over 24
+>    rows, `-0.234` over the 22 that remain after dropping the KP priced-vol pair. But
+>    the two rows carrying the entire positive association are `vy` and `vyx`, both from
+>    the pre-fix economy, and 21 of the other 22 cannot be re-run. The *direction*
+>    survives independently — post-correction vyx room is 0.2281 against g0235's 0.0091
+>    at matched N=200/T=200, still ~25x — so "room does not predict gap outside the KP
+>    channel" remains the right prior. It is no longer an established result.
+>
+> 2. **Conclusion 2 is now a hypothesis, and it is the most valuable thing here.** That
+>    GS gamma(x) attained gap +0.038 at t=17.9 with *zero* room — RFF hitting its ceiling
+>    while linear-in-ranks underperformed its own — points at a second lever
+>    (estimation efficiency, not complexity) that the current framing does not pursue.
+>    Both economies are deleted, so this rests on nothing runnable and would need
+>    reconstruction to become evidence again.
+>
+> 3. **bx7's demotion rests on a row from a doubly-changed economy.** Already recorded in
+>    `var-gs_bx-bx7-v3.json`: "bx7's demotion out of the first production run rests on
+>    nothing that survives -- it is an open question again, not a settled one."
+>
+> **Also: the table's rows are comparable only because they share a size.** `room` is
+> strongly size-dependent — 2.8x on the *unchanged* g0235 economy between N=200/T=200
+> (0.0083) and N=500/T=500 (0.0233). No reduced-size run can be ranked against this
+> table, so regenerating it means regenerating it at flagship size or not at all.
+
+
 `variants/results/grid_summary.csv`, all 24 economies, ranked by realized gap
 (`gap_RFF-lin`, the thing we are trying to make large):
 
