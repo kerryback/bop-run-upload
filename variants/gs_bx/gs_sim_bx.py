@@ -32,6 +32,10 @@ icut_up_ts = [d["icut_up"] for d in _sols]; icut_dn_ts = [d["icut_dn"] for d in 
 b_refin_0_ts = [d["b_refin_0"] for d in _sols]; b_refin_I_ts = [d["b_refin_I"] for d in _sols]
 (g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
  kappa_b, xi, imin, imax, sigma_m) = _s["params"]
+# 2026-09-06: kappa_e is stored as its own key, not inside `params` -- that array is
+# unpacked positionally just above, so it cannot grow. Pre-2026-09-06 solutions have no
+# such key and were solved at kappa_e = 0, which is what they get here.
+kappa_e = float(_s["kappa_e"]) if "kappa_e" in _s.files else 0.0
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
 burnin = 300
 alpha_e = 0.2
@@ -127,11 +131,12 @@ def create_arrays(N, T, seed_offset=0):
         icu = _by_type(icut_up_ts, s, zi, xt, b[t], ftype); icd = _by_type(icut_dn_ts, s, zi, xt, b[t], ftype)
         cut = np.where(eta[t], icu, icd)
         invest[t] = icost[t] <= cut
-        bI_star = np.empty(N); b0_star = np.empty(N)
-        for f in range(ntypes):
-            cols = ftype == f
-            bI_star[cols] = b_refin_I_ts[f][s][zi[cols], xt]
-            b0_star[cols] = b_refin_0_ts[f][s][zi[cols], xt]
+        # 2026-09-06: with kappa_e > 0 the refinancing target depends on CURRENT debt, so
+        # b_refin_* are (z, x, b) tables and this is an interpolation, not a 2-index
+        # lookup. Linear in b, matching sdf_compute_gs21.py:104-105, which keeps
+        # method='linear' for exactly these two step-valued tables.
+        bI_star = _by_type(b_refin_I_ts, s, zi, xt, b[t], ftype)
+        b0_star = _by_type(b_refin_0_ts, s, zi, xt, b[t], ftype)
         bp = np.where(eta[t], np.where(invest[t], bI_star, b0_star),
                       np.where(invest[t], b[t] / g, b[t]))
         bprime[t] = bp
@@ -144,7 +149,14 @@ def create_arrays(N, T, seed_offset=0):
                                   (1 - kappa_b) * _by_type(QI_ts, s, zi, xt, bp, ftype) - _by_type(QI_no_ts, s, zi, xt, b[t], ftype),
                                   (1 - kappa_b) * _by_type(Q0_ts, s, zi, xt, bp, ftype) - _by_type(Q0_ts, s, zi, xt, b[t], ftype)),
                          0.0)
-        div[t] = prod + dflow - invest[t] * icost[t]
+        # The solver charges kappa_e on the current cash flow BEFORE the investment cost
+        # (gs_solve_reg.py's issue()); mirror that here so div is consistent with the P
+        # tables the returns come from. utils_gs21/panel_functions_gs21.py imports
+        # kappa_e and then omits it from prof_*, which at kappa_e = 0.025 makes the main
+        # tree's Ecashflow/P_ex inconsistent with its own solver -- see
+        # docs/refactor/FINDINGS-gs21-kappa-e.md.
+        cf = prod + dflow
+        div[t] = cf + kappa_e * np.minimum(cf, 0.0) - invest[t] * icost[t]
         if t == T:
             break
         ix[t + 1] = rng.choice(xnum, p=pr_x[xt])

@@ -25,6 +25,8 @@ Run: python tests/test_config_parity.py
 import os
 import sys
 
+import numpy as _np
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
@@ -77,7 +79,11 @@ def _parse_assignments(src, names):
             if name not in names:
                 continue
             try:
-                out[name] = eval(expr.strip(), {"__builtins__": {}}, {})
+                # numpy must be in scope: sigma_x is `0.012*np.sqrt(...)`, and with
+                # __builtins__ stripped and no np the eval raised NameError, so the
+                # name silently vanished from the comparison. sigma_x is precisely
+                # the parameter that moves whenever rho_x does.
+                out[name] = eval(expr.strip(), {"__builtins__": {}, "np": _np}, {})
             except Exception:
                 pass
     return out
@@ -117,12 +123,16 @@ def test_gs_variant_matches_config_on_the_settled_parameters():
     whitelisted as an explicit placeholder rather than silently skipped."""
     C = _cfg()
     src = open(os.path.join(ROOT, "variants", "gs_bx", "gs_solve_reg.py")).read()
-    ns = _parse_assignments(src, ("delta", "tau", "sigma_m"))
-    checks = [("delta", "GS21_DELTA"), ("tau", "GS21_TAU"), ("sigma_m", "GS21_SIGMA_M")]
+    ns = _parse_assignments(src, ("delta", "tau", "sigma_m", "sigma_x", "kappa_e"))
+    checks = [("delta", "GS21_DELTA"), ("tau", "GS21_TAU"), ("sigma_m", "GS21_SIGMA_M"),
+              ("sigma_x", "GS21_SIGMA_X"), ("kappa_e", "GS21_KAPPA_E")]
 
-    # A parse that finds nothing must FAIL, not pass vacuously. The first version of this
-    # test only matched names at the start of a line, so it silently checked nothing --
-    # `g = 1.14; delta = 0.02` puts delta after a semicolon.
+    # A parse that finds nothing must FAIL, not pass vacuously. Two separate versions of
+    # this test have now checked less than they claimed: the first matched only
+    # line-initial assignments (`g = 1.14; delta = 0.02` hides delta after a semicolon),
+    # the second could not eval `np.sqrt` and dropped sigma_x. So the guard is now
+    # "every name I asked for parsed", derived from `checks`, rather than a hand-kept
+    # list that the next added parameter will fall off.
     missing = [v for v, _ in checks if v not in ns]
     assert not missing, (f"could not parse {missing} out of gs_solve_reg.py; the test "
                          f"would otherwise pass without checking anything")

@@ -109,12 +109,27 @@ def create_arrays(N, T):
         
     ##### compute returns after computing cash flows ######
     xfull = x.reshape(-1, 1)*np.ones_like(z)
+    # 2026-09-07: kappa_e was imported here and never applied. GS21 charges the
+    # equity-issuance cost only when the cash flow is negative -- the firm has to
+    # raise the shortfall -- and gs21_solve.py:309-311 applies exactly this factor
+    # while solving the value functions:
+    #     down_R = (1 + (pi_Rmat  <= 0) * kappa_e) * pi_Rmat
+    #     P0_up_R = (1 + (prof0_up <= 0) * kappa_e) * prof0_up
+    #     PI_up_R = (1 + (profI_up <= 0) * kappa_e) * profI_up
+    # Omitting it here made the panel's cash flows inconsistent with the prices
+    # those same value functions produced: P_ex = P - Ecashflow inherited the gap.
+    # Harmless while GS21_KAPPA_E was 0 (the factor is exactly 1), load-bearing
+    # since it was set to the paper's benchmark 0.025 on 2026-09-06. 24.3% of the
+    # solution grid has pi_R <= 0, so this is a quarter of states, not a tail.
+    def _net_of_issuance(cf):
+        return (1 + (cf <= 0) * kappa_e) * cf
+
     # compute cashflows contingent on eta and investment decision
-    prof_I_down = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)                      # invest and eta = 0
-    prof_0_down = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)                             # no invest and eta = 0
-    prof_I_up = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +                       # invest and eta = 1
+    prof_I_down = _net_of_issuance(((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)       # invest and eta = 0
+    prof_0_down = _net_of_issuance(((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b)              # no invest and eta = 0
+    prof_I_up = _net_of_issuance(((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +        # invest and eta = 1
                  (1 - kappa_b)*Q_I((z, xfull, b_refin_I((z, xfull, b)))) - Q_I((z, xfull, b/g)))
-    prof_0_up = (((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +                              # no invest and eta = 1
+    prof_0_up = _net_of_issuance(((1 - tau)*(np.exp(xfull + z) - delta)) - (1 - tau)*b +               # no invest and eta = 1
                     (1 - kappa_b)*Q_0((z, xfull, b_refin_0((z, xfull, b)))) - Q_0((z, xfull, b)))
     
     
