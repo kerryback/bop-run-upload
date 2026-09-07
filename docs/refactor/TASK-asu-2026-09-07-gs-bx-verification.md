@@ -124,11 +124,39 @@ anything to Sol.**
 | 200 | 200 | 413 s | 5268 MiB |
 | 300 | 200 | 552 s | 7559 MiB |
 | 100 | 500 | 678 s | 6323 MiB |
-| 200 | 500 | *running* | |
-| 500 | 200 | *queued* | |
+| 200 | 500 | 1036 s | 10969 MiB |
+| 500 | 200 | *running* | |
 
 Wall is affine in N at fixed T (`145 + 1.351*N`, fitting the middle point to 0.5%) and
-T-linear at N=100 (2.41x for a 2.5x T).
+T-linear at N=100 (2.41x for a 2.5x T). The bilinear model predicted the N=200/T=500
+point at 1038 s against 1036 s measured.
+
+### `--mem=24G` IS NOT ENOUGH. Raise it before you submit the seed array.
+
+The two T=500 points give the flagship directly, with **no cross-dimension
+extrapolation** — that was the point of measuring T=500 rather than scaling T=200 up:
+
+    T=500:  wall = 320 + 3.578*N s      maxRSS = 1677 + 46.46*N MiB
+    N=500:  wall = 2110 s (35 min)      maxRSS = 24907 MiB = 24.32 GiB
+
+`--mem=24G` is 24576 MiB. The projection **exceeds it by 331 MiB (1.3%)**.
+
+A 1.3% overrun is a dead heat, and a dead heat loses here, for two reasons:
+
+1. **It is a lower bound.** It assumes memory stays linear in N up to 500, which is
+   exactly the assumption the wall-clock data warns against above N=300.
+2. **The T-scaling is already superlinear.** The memory N-slope went 13.94 -> 46.46
+   MiB/N for a 2.5x T — a factor of **3.33**, not 2.5. Whatever drives that is not
+   captured by either fit.
+
+And the asymmetry in `run_seeds_slurm.sh:74` applies with full force: an OOM at hour 3
+writes nothing, the oracle has no mid-run checkpoint, and the seed is simply lost.
+Over-requesting on an empty queue costs approximately nothing.
+
+**Recommendation: `--mem=64G`.** Tighten later from an actual `MaxRSS`, not from this.
+
+Walltime is fine as it stands: 35 min projected against `-t 2-00:00`. Deliberately
+over-provisioned, and that was the right call — leave it until a real `Elapsed` exists.
 
 **This does not refute the `~T*N^2` comment in `run_seeds_slurm.sh:65`, and I said
 otherwise earlier today — that was wrong.** The measurement behind N^2
