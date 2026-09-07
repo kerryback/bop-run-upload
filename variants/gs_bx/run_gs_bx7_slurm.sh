@@ -3,7 +3,7 @@
 #SBATCH --array=0-4
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
-#SBATCH -t 0-08:00
+#SBATCH -t 1-00:00:00
 #SBATCH -p public
 #SBATCH -o outslurm/gs_bx7.%a.log
 #
@@ -36,7 +36,25 @@
 #                       policy sweep (1 in 25)   1.86 s -> 2.13 s   (+14.5%)
 #                       frozen sweep (24 in 25)  1.82 s -> 1.91 s   (+5.0%)
 #                       steady-state mean                            +5.4%
-#                   Projected 3 h 24 m -> ~3 h 35 m. The envelope stands unchanged.
+#                   Projected 3 h 24 m -> ~3 h 35 m ON THE LAPTOP.
+#
+#                   2026-09-07, raised 8 h -> 24 h from measurement ON SOL. Every
+#                   number above is an Apple-silicon laptop number and does not
+#                   transfer. Sol node sc043 is an AMD EPYC 7713 at 2.88 GHz, and
+#                   `ps` on the running job showed python at **114% CPU**, not the
+#                   ~470% the laptop production run reported -- the solve is
+#                   dominated by single-threaded elementwise numpy (smooth() and the
+#                   broadcasts), so the 4 allocated cores buy little. Job 62740472
+#                   had not printed sweep 200 after 625 s, i.e. > 3.13 s/sweep, and
+#                   5600 sweeps in 8 h needs <= 5.13 s/sweep. Too close.
+#
+#                   The failure mode is total: a walltime kill happens before
+#                   np.savez_compressed, so an over-run loses every sweep and writes
+#                   no manifest. And it cannot be repaired in flight --
+#                   `scontrol update jobid=... TimeLimit=...` is refused on Sol with
+#                   "Modifications to existing jobs are not permitted". The partition
+#                   allows 7 days, so a 24 h request costs nothing but reserves
+#                   headroom to ~15 s/sweep. Raise the request, never the risk.
 #
 #   --mem=8G        peak RSS re-measured with /usr/bin/time -l on the full grid
 #                   (xnum=161, znum=200, bnum=20): 2.61 GiB before the kappa_e change,
