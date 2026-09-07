@@ -240,6 +240,23 @@ def verify_against_spec(spec_id, solves):
     must not read as a spec that pins something and agrees.
     """
     spec = load_spec(spec_id)
+
+    # Supersession is checked BEFORE expected_solves. It used to sit after the early
+    # return below, which made it unreachable for every v1 -- exactly the specs most
+    # likely to be superseded, since v1s predate expected_solves entirely. Same
+    # ordering bug as retired-before-superseded in solfiles.cmd_check.
+    #
+    # And it REFUSES rather than notes. A superseded spec describes an economy this
+    # code no longer builds: var-kp_vy-vyx-v1 declares kp_regime_labels
+    # "legacy_swapped", but that fix was made by editing parameters_kp14.py in place
+    # rather than behind a `method` switch, so running v1's spec today silently builds
+    # v2's economy. Nothing in `method` is executable (no python file reads any of the
+    # seven keys), so the spec cannot restore the economy it names.
+    sup = spec.get("lineage", {}).get("superseded_by")
+    if sup:
+        return False, [f"[spec] {spec_id} is SUPERSEDED by {sup}, and describes an "
+                       f"economy this code no longer builds. Use {sup}."]
+
     want = spec.get("expected_solves")
     if not want:
         return None, [f"[spec] {spec_id} declares no expected_solves -- nothing to "
@@ -254,7 +271,4 @@ def verify_against_spec(spec_id, solves):
             ok = False
             lines.append(f"[spec] {stage:8s} MISMATCH: spec {spec_id} expects "
                          f"{w or '<not declared>'}, run consumed {g or '<nothing>'}")
-    if spec.get("lineage", {}).get("superseded_by"):
-        lines.append(f"[spec] NOTE {spec_id} is superseded by "
-                     f"{spec['lineage']['superseded_by']}")
     return ok, lines

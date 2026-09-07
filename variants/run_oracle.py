@@ -103,11 +103,16 @@ print(runstamp.describe(solves), flush=True)
 if args.spec:
     _ok, _lines = runstamp.verify_against_spec(args.spec, solves)
     print("\n".join(_lines), flush=True)
-    if _ok is False:
+    # `is not True`, NOT `is False`: verify_against_spec returns None for a spec it
+    # cannot check at all, and `None is False` is False -- so the old guard let an
+    # UNVERIFIABLE spec through and stamped the summary with a spec_id the run had
+    # not earned. Anything short of an explicit pass must abort.
+    if _ok is not True:
         raise SystemExit(
-            f"ABORT: this run did not build the economy {args.spec} describes. Either "
-            f"point --spec at the spec these solves belong to, or re-solve. Recording "
-            f"the summary anyway would put a false spec_id on a real result.")
+            f"ABORT: --spec {args.spec} cannot stamp this run -- it was either not "
+            f"verified or not verifiable (see the [spec] lines above). Either point "
+            f"--spec at the spec these solves belong to, or re-solve. Recording the "
+            f"summary anyway would put a false spec_id on a real result.")
 
 panel["size"] = np.log(panel.mve)
 panel = panel[panel.month >= 2]
