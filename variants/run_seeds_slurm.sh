@@ -125,8 +125,25 @@ export NUMEXPR_NUM_THREADS=$NT
 
 SEED=${SLURM_ARRAY_TASK_ID:?must be run as a SLURM array job}
 SS=$(printf %03d "$SEED")
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$HERE"
+
+# sbatch STAGES A COPY of this script into the compute node's spool directory, so
+# ${BASH_SOURCE[0]} is /var/spool/slurmd/job.../slurm_script -- not a path in the repo.
+# Deriving the repo from it lands in the spool dir, and `mkdir -p results/logs` there
+# fails with a permission error before python ever starts. The ASU session hit exactly
+# this on job 62740438: five tasks dead in 2-7 s at ~35 MB MaxRSS, which is the
+# signature of a shell failure rather than a python one. This file carried the same
+# idiom, and would have lost a ten-task array the same way.
+#
+# SLURM_SUBMIT_DIR is the directory sbatch was invoked from -- the repo root, per the
+# header above. The BASH_SOURCE form stays as the fallback for running this script
+# directly outside SLURM.
+REPO="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [ ! -f "$REPO/variants/run_seeds_slurm.sh" ]; then
+  echo "ABORT: \$REPO resolved to '$REPO', which is not the bop-run-upload root." >&2
+  echo "Submit from the repo root:  cd <repo> && sbatch --export=ALL,SEED_SPEC=... variants/run_seeds_slurm.sh" >&2
+  exit 2
+fi
+cd "$REPO/variants"
 mkdir -p results/logs
 LOG="results/logs/log_${TAG}_s${SS}.txt"
 

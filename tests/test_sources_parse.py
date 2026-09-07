@@ -83,6 +83,44 @@ def test_every_tracked_shell_script_parses():
     print(f"    ({len(files)} shell scripts parse)")
 
 
+def test_slurm_scripts_never_derive_their_path_from_BASH_SOURCE():
+    """sbatch stages a COPY of the script, so ${BASH_SOURCE[0]} is not a repo path.
+
+    2026-09-07, job 62740438: all five gs_bx tasks dead in 2-7 seconds at ~35 MB
+    MaxRSS -- the signature of a shell failure, not a python one. The script derived
+    its repo root from ${BASH_SOURCE[0]}, which under sbatch is
+    /var/spool/slurmd/job.../slurm_script, cd'd there, and `mkdir -p ../results/logs`
+    failed with a permission error. The ASU session found it; run_seeds_slurm.sh
+    carried the identical idiom and would have lost a ten-task array the same way.
+
+    The rule is about the CONSTRUCT, not about cd'ing: SLURM already starts a job in
+    the directory sbatch was invoked from, so a script that never cd's is correct by
+    doing nothing -- run_bop_job.sh is the example, and an earlier version of this
+    test wrongly flagged it. What is unsafe is deriving a path from BASH_SOURCE. Any
+    #SBATCH script that does so must prefer SLURM_SUBMIT_DIR and keep BASH_SOURCE
+    only as the non-SLURM fallback.
+    """
+    at_risk, checked = [], 0
+    for rel in _tracked(".sh"):
+        src = open(os.path.join(ROOT, rel)).read()
+        if "#SBATCH" not in src:
+            continue
+        checked += 1
+        live = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("#"))
+        if "BASH_SOURCE" not in live:
+            continue                      # never derives a path: safe by construction
+        if "${SLURM_SUBMIT_DIR:-" not in live:
+            at_risk.append(f"{rel}: derives a path from BASH_SOURCE without preferring "
+                           f"SLURM_SUBMIT_DIR -- will land in the spool directory")
+        elif "exit 2" not in live:
+            at_risk.append(f"{rel}: prefers SLURM_SUBMIT_DIR but does not fail loudly "
+                           f"when it resolves outside the repo")
+    assert checked >= 2, f"only {checked} #SBATCH scripts found -- the listing is wrong"
+    assert not at_risk, ("SLURM scripts that will die in the spool directory:\n  "
+                         + "\n  ".join(at_risk))
+    print(f"    ({checked} SLURM scripts checked)")
+
+
 def test_the_two_known_regressions_stay_fixed():
     """Named, so a future edit that reintroduces either is unambiguous."""
     dk = os.path.join(ROOT, "variants", "common", "dkkm_functions.py")
