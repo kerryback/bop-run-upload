@@ -1656,3 +1656,99 @@ array supersedes anyway.
 be cited by solve_id, and Sol must be at this commit or later before it records
 anything, or it writes ids under the old canonicaliser that this laptop cannot
 reach.
+
+---
+
+## §27. Phase 1: seeded arrays, and the run→solve link (2026-09-07)
+
+### The seed array had to fix a defect before it could mean anything
+
+`run_oracle.py --seed` steers the global numpy stream — `norm.rvs`, `expon.rvs`,
+`np.random.*` — which is every **firm-level** shock. It did not steer the
+**aggregate** state path. Each economy draws that from its own generator seeded
+by a module constant:
+
+| economy | generator | drives |
+|---|---|---|
+| bgn_gam | `gam_seed = 555` | `sreg`, the price-of-risk regime chain |
+| kp_vy | `gam_seed = 555` | `yreg`, the OU path of the priced factor |
+| gs_bx | `reg_seed = 909` | `sreg`, and firm types via `rng_bx` |
+
+So a ten-seed array would have run ten replications sharing **one** 700-month
+aggregate path. Cross-seed spread would then measure firm-level noise only, with
+the aggregate contribution — the channel the whole project is about — invisible,
+and any t-stat built from it overstated.
+
+`run_oracle.py` now offsets those generators by the seed. Two properties are
+kept deliberately:
+
+- **Seed 0 reproduces the historical single-run behaviour exactly** (555 + 0).
+- **Common random numbers survive across specs**: seed *s* draws aggregate path
+  base + *s* in every economy, so a paired comparison between two specs at one
+  seed still differs only in the parameters. That is what makes the 24-spec grid
+  comparison valid while still giving honest replication spread.
+
+`gs_sim_bx.py` seeded its two aggregate streams from `reg_seed` and the literal
+`909 + 1`. Tying the second to `reg_seed + 1` would have made seed *s*'s
+firm-type stream bit-identical to seed *s+1*'s regime stream — overlapping
+streams across replications, which is precisely what a seed array used for
+standard errors must not have. Both are now spawned from one `SeedSequence`.
+
+### The run→solve link (Job 4's missing half)
+
+New `variants/common/runstamp.py`. After the panel is built it hashes the
+artifacts the run **actually read** and asks the registry which manifest
+describes those exact bytes — by content, not by trust, so a run that picked up
+a stale or foreign table records what it really read (or `null`, which is itself
+the finding). The ids land in the oracle summary and are carried into the
+estimator's new `..._run.json`. Verified end to end:
+
+```
+[runstamp] G        <- solve_id f7be27e39d2b530f  (3/3 files, 2,386,269 B)
+[runstamp] integ    <- solve_id 84e195172f091cd2  (63/63 files, 5,721,660 B)
+```
+
+Result filenames now carry the seed unconditionally (`..._vyx_s003.parquet`),
+including seed 0 — suffixing only non-zero seeds would leave `..._vyx.parquet`
+ambiguous between "seed 0" and "written before seeds existed", and everything in
+the second category came from the pre-correction parameters (§25). The estimator
+refuses to adopt an unseeded panel and says why.
+
+### `variants/run_seeds_slurm.sh`
+
+One script for both economies, selected by `SEED_SPEC`, submitted twice. Not one
+script per economy: a copied 140-line SLURM script is how `gs_solve_reg.py`
+acquired the duplicate keyword argument that made it a hard SyntaxError for two
+days. The duplicated override strings are pinned to the specs by
+`test_specs_match_shell.py`, and a second test asserts the array never invokes a
+solver.
+
+The array **consumes** a solve and never produces one — kp's builder would
+serialise ten tasks behind one lock, bgn's takes no lock at all and ten tasks
+would race on one CSV. Each task verifies a live solve exists *before* spending
+compute, and checkpoints per seed on the consumed `solve_id`, so re-running after
+a partial failure redoes only what is not current and re-solving the economy
+invalidates every seed at once.
+
+Walltime 12 h is ~2.5× a 2.5 h oracle + 1 h estimator expectation, and **the
+2.5 h is a floor, not an estimate**: cost is `~T·N²`, and T-linearity is verified
+only at N = 100, so the T = 500 extrapolation is unmeasured. Re-measure from the
+first completed task before widening the array.
+
+### Two live bugs found on the way, neither mine to expect
+
+**`variants/common/dkkm_functions.py` was a hard SyntaxError.** A note *inside*
+a triple-quoted block-comment quoted the fence characters literally, closing the
+fence three lines after it opened. Broken since `6cd949e` (2026-09-04).
+`run_estimators.py` imports it, so **the entire estimator side could not start
+for three days** and nothing reported it. Every estimator CSV in
+`variants/results/` predates that commit.
+
+**`run_estimators.py:103` raised on the `--levels` path** — `.to_numpy()` handed
+back a read-only view and the next line mutated it. `--levels` is used by every
+shipped run script.
+
+New `tests/test_sources_parse.py` compiles all 123 tracked Python files and
+`bash -n`s all 8 shell scripts. That is the second SyntaxError to sit undetected
+in this tree (`gs_solve_reg.py` was the first), and in both cases the rest of the
+suite was blind because nothing imported the file. Negative control run.

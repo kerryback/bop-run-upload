@@ -183,6 +183,52 @@ def test_every_spec_hash_is_reproducible():
         assert h == spec["spec_hash"], f"{fn}: hash drifted"
 
 
+def test_seed_array_overrides_match_the_specs():
+    """variants/run_seeds_slurm.sh restates each economy's overrides; they must agree.
+
+    The seed array is one script for every economy rather than one per economy, so it
+    carries a `case` block with the override string for each. That is a second copy of
+    the parameters, and a second copy is exactly what drifted between run_gs_bx7.sh and
+    var-gs_bx-bx7-v1 -- the reason this file exists. Pinned here so the array cannot
+    quietly replicate a different economy from the one the spec describes.
+    """
+    txt = read_script("variants/run_seeds_slurm.sh")
+    for spec_id, var in (("var-bgn_gam-g0235-v1", "BGN_PARAM_OVERRIDES"),
+                         ("var-kp_vy-vyx-v1", "KP_PARAM_OVERRIDES")):
+        spec = load_spec(spec_id)
+        found = shell_json_assignments(txt, var)
+        assert len(found) == 1, (
+            f"expected exactly 1 {var} in run_seeds_slurm.sh, found {len(found)}")
+        assert found[0] == spec["params"], (
+            f"run_seeds_slurm.sh {var} = {found[0]} but {spec_id} says {spec['params']}")
+
+
+def test_seed_array_does_not_solve():
+    """The array must consume a recorded solve, never produce one.
+
+    kp_vy's builder takes a single-builder lock (ten tasks would serialise on a
+    multi-hour stage); bgn_gam's takes none (ten tasks would race on one CSV). Both
+    failure modes are silent in SLURM logs, so the discipline is pinned rather than
+    documented.
+    """
+    txt = read_script("variants/run_seeds_slurm.sh")
+    body = [l for l in txt.splitlines() if not l.lstrip().startswith("#")]
+    # The producers ARE named on live lines, inside the SOLVE_HINT strings the abort
+    # path prints. What must not appear is an INVOCATION: a command line that runs one.
+    for producer in ("build_vy_tables.py", "rebuild_jstar_gam.py", "gs_solve_reg.py"):
+        bad = [l for l in body
+               if producer in l and re.search(r"(^|[;&|]|\bthen\b)\s*(python|\$PY)\b", l)
+               and "SOLVE_HINT" not in l]
+        assert not bad, (
+            f"run_seeds_slurm.sh invokes {producer}: {bad} -- the seed array must "
+            f"consume a recorded solve, never produce one")
+    live = "\n".join(body)
+    assert "runstamp.py current" in live, (
+        "the array no longer verifies that a live solve exists before spending compute")
+    assert "runstamp.py is-current" in live, (
+        "the array no longer checkpoints per seed on the consumed solve_id")
+
+
 def test_spec_id_matches_filename():
     for fn in sorted(os.listdir(SPECS)):
         if fn.endswith(".json"):

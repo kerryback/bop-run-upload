@@ -48,6 +48,33 @@ else:  # gs_bx
     from gs_sim_bx import burnin, chars, gamma_grid
     ov_env = "GS_SIM_OVERRIDES"
 from oracle import rank_standardize, draw_W, build_feature_sets, evaluate_bases, max_sr, level_standardize
+import runstamp
+
+# ---- the AGGREGATE state path must move with the seed --------------------------------------------
+# np.random.seed(args.seed) above steers every draw that goes through the global stream
+# (norm.rvs, expon.rvs, np.random.*) -- the firm-level shocks. It does NOT steer the
+# aggregate price-of-risk path, which each economy draws from its own generator seeded by
+# a module constant: bgn_gam's `sreg` regime chain and kp_vy's `yreg` OU path from
+# gam_seed = 555, gs_bx's from reg_seed = 909.
+#
+# Left alone, every replication in a seed array would see the SAME 700-month aggregate
+# path. The cross-seed spread would then measure firm-level noise only, with the
+# aggregate contribution -- the channel this whole project is about -- invisible, and
+# any t-stat built from it overstated.
+#
+# Offsetting by the seed fixes that while KEEPING common random numbers ACROSS SPECS:
+# seed s draws aggregate path (base + s) in every economy, so a paired comparison
+# between two specs at one seed still differs only in the parameters. Seed 0 reproduces
+# the historical single-run behaviour exactly.
+_agg = {}
+for _name in ("gam_seed", "bx_seed", "reg_seed"):
+    if hasattr(mod, _name):
+        _base = getattr(mod, _name)
+        setattr(mod, _name, int(_base) + args.seed)
+        _agg[_name] = {"base": int(_base), "used": int(_base) + args.seed}
+print(f"[seed {args.seed}] aggregate-state generators: "
+      + (", ".join(f"{k} {v['base']}->{v['used']}" for k, v in _agg.items()) or "none")
+      + f"; global stream seeded {args.seed}", flush=True)
 
 t0 = time.time()
 N, T = args.N, args.T
@@ -55,6 +82,11 @@ arr_tuple = mod.create_arrays(N, T + burnin)
 panel = mod.create_panel(N, T + burnin, arr_tuple)
 sdf_loop = sdf.sdf_compute(N, T + burnin, arr_tuple)
 print(f"[{args.model}/{args.tag}] panel built in {time.time()-t0:.0f}s", flush=True)
+
+# Which recorded solve produced the tables this panel was built from. Identified by
+# CONTENT, so a stale or foreign table is reported as what it actually is.
+solves = runstamp.consumed_solves(args.model, mod=sys.modules[mod.__name__])
+print(runstamp.describe(solves), flush=True)
 
 panel["size"] = np.log(panel.mve)
 panel = panel[panel.month >= 2]
@@ -120,6 +152,7 @@ def agg_rff(res):
 agg = agg_rff(res)
 
 summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "overrides": os.environ.get(ov_env, "{}"),
+           "solves": solves, "aggregate_seeds": _agg,
            "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
            "mean_mu": float(ts.mean_mu.mean()), "sd_mu": float(ts.sd_mu.mean()), "mean_idio_sd": float(ts.mean_idio_sd.mean()),
            "bases": {}}
@@ -134,11 +167,13 @@ for name, r in agg.items():
     print(f"{name:>12} {r['P']:>5} | {r['cond_oracle_mean']:11.4f} | {sr[0]:15.4f} | {sr[j]:8.4f} ({zs[j]:7.0e}) | {r['unc_sr'][j]:.4f}")
 
 out = os.path.join(HERE, "results")
-ts.to_csv(os.path.join(out, f"{args.model}_oracle_{args.tag}_ts.csv"), index=False)
-json.dump(summary, open(os.path.join(out, f"{args.model}_oracle_{args.tag}.json"), "w"), indent=1)
+os.makedirs(out, exist_ok=True)
+_st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
+ts.to_csv(_st("oracle") + "_ts.csv", index=False)
+json.dump(summary, open(_st("oracle") + ".json", "w"), indent=1)
 if args.save_panel:
-    panel.reset_index().to_parquet(os.path.join(out, f"{args.model}_panel_{args.tag}.parquet"))
-    np.savez_compressed(os.path.join(out, f"{args.model}_moments_{args.tag}.npz"),
+    panel.reset_index().to_parquet(_st("panel") + ".parquet")
+    np.savez_compressed(_st("moments") + ".npz",
                         months=np.array([m["month"] for m in months_data]),
                         mu=np.array([np.pad(m["mu"], (0, N - len(m["mu"]))) for m in months_data]).astype(np.float32),
                         Sigma=np.array([np.pad(m["Sigma"], ((0, N - len(m["mu"])), (0, N - len(m["mu"])))) for m in months_data]).astype(np.float32),

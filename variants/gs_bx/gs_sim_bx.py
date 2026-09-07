@@ -99,8 +99,13 @@ def _by_type(tabs_ts, s, zi, xt, b, ftype):
 
 def create_arrays(N, T, seed_offset=0):
     rng = np.random.default_rng(np.random.randint(0, 2 ** 31))
-    rng_reg = np.random.default_rng(reg_seed)
-    rng_bx = np.random.default_rng(909 + 1)
+    # Both aggregate-side streams are SPAWNED from one SeedSequence rather than seeded
+    # from reg_seed and reg_seed+1. run_oracle.py offsets reg_seed by the replication
+    # seed, and with the +1 form the firm-type stream at seed s would be bit-identical
+    # to the regime stream at seed s+1 -- overlapping streams across replications, which
+    # is exactly what a seed array must not have when it is used for standard errors.
+    _ss = np.random.SeedSequence(reg_seed)
+    rng_reg, rng_bx = (np.random.default_rng(c) for c in _ss.spawn(2))
     ftype = rng_bx.choice(ntypes, size=N, p=np.array(_share) / np.sum(_share))
     bxf = np.array(_bx_list)[ftype]
     statx = np.linalg.matrix_power(pr_x.T, 500) @ np.full(xnum, 1 / xnum)
