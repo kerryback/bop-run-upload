@@ -2118,3 +2118,90 @@ well identified in the seed dimension at all.
   indicative only.
 - These are oracle ceilings, not estimator performance. The realised gap
   (`room × capture`) still needs the estimator side, which needs panels.
+
+## §33. The cost model, measured — and a spec that could stamp a run it did not earn (2026-09-07)
+
+Two things came out of the gap while the gs_bx array ran on Sol.
+
+### The scaling ladder, and a claim of mine that did not survive it
+
+`run_seeds_slurm.sh` had never been run. Its `--mem=24G` rested on one `ps` snapshot
+and its walltime on a `~T*N^2` cost model. I measured six points on `kp_vy` with the
+flags the script actually uses (`--rff 36,360,3600 --levels`, default `--nmat`):
+
+| N | T | wall | max RSS |
+|---|---|---|---|
+| 100 | 200 | 281 s | 4772 MiB |
+| 200 | 200 | 413 s | 5268 MiB |
+| 300 | 200 | 552 s | 7559 MiB |
+| 500 | 200 | 824 s | 11209 MiB |
+| 100 | 500 | 678 s | 6323 MiB |
+| 200 | 500 | 1036 s | 10969 MiB |
+
+    wall   ~ 30 + 0.58*T + 0.0070*N*T  s
+    maxRSS ~ 2421 + 0.0853*N*T         MiB
+
+Wall is **linear in N**, not quadratic: the affine fit at T=200 predicted N=500 at
+822 s against 824 s (0.24%), and the bilinear form predicted N=200/T=500 at 1038 s
+against 1036 s (0.2%).
+
+**Memory tracks the PRODUCT N·T, and that is structural rather than fitted.**
+N=500/T=200 and N=200/T=500 share N·T = 100000 and measured **11209 vs 10969 MiB —
+2.1% apart with the large dimension swapped.** That is why the flagship extrapolation
+is trustworthy: it is 2.5× a measured point, not a curve run off its end.
+
+**A wrong claim of mine, named.** On the first three points I wrote that the ladder
+refuted the `~T*N^2` comment, and later that the memory N-slope grew 3.33× for a 2.5× T
+so `--mem=24G` would be *exceeded* by 1.3%. Both were artifacts of fitting T=200 memory
+over N=100..300 only, where the N=100→200 increment (+496 MiB) is anomalously small and
+drags the slope from ~19.8 down to 13.94 MiB/N. With N=500 included the T-ratio is
+2.35×, slightly *sub*-linear, and the flagship projects to 23754 MiB — **under** the
+24576 MiB cap, not over.
+
+`--mem` was still raised to 64G, for reasons the corrected model supports better than
+the wrong one did: the +822 MiB margin is only 1.3× the fit's own 644 MiB max residual,
+the projection excludes `--save_panel` (which the script passes) and the estimator stage
+entirely, and the oracle has no mid-run checkpoint, so an OOM writes nothing.
+
+**The `~T*N^2` claim is not refuted for `bgn_gam`.** It came from bgn_gam at `--nmat 2`
+(§ WORKING.md:1284), per-month 0.70/1.53/18.02 s at N=100/200/500 — a 12× jump over the
+last 2.5× of N. `run_seeds_slurm.sh` runs both economies via `SEED_SPEC` and only
+`kp_vy` was re-measured. g0235 remains unmeasured; assume the quadratic there.
+
+### A spec could stamp a run it did not earn
+
+`run_oracle.py --spec X` writes X into the summary. Two paths let it write a spec_id the
+run had no right to claim, and they compounded:
+
+1. `verify_against_spec` returns `None` for a spec declaring no `expected_solves`, and
+   the caller guarded with `if _ok is False`. **`None is False` is False**, so an
+   *unverifiable* spec passed exactly as though it had been verified.
+2. The superseded check sat *after* the no-`expected_solves` early return, making it
+   unreachable for every v1 — precisely the specs most likely to be superseded, since
+   v1s predate the field. Same ordering bug as retired-before-superseded in
+   `solfiles.cmd_check` (§26).
+
+Concretely: `--spec var-kp_vy-vyx-v1` builds the **v2** economy today, because the
+lambda regime-label fix was made by editing `parameters_kp14.py` in place rather than
+behind a `method` switch. It would have stamped a v2 result `var-kp_vy-vyx-v1`.
+
+Fixed in `9497089`: supersession is checked first and **refuses**, naming the successor;
+the guard is now `is not True`. Five tests in `tests/test_spec_refusal.py`.
+
+**The `method` block is inert.** Seven keys are declared across the specs
+(`kp_interpolation`, `kp_cir_quadrature`, `kp_regime_labels`, `zero_book_in_sdf_solve`,
+`gs21_calibration`, `gs21_discretization`, `gs_ashift_ladder`) and **zero** are read by
+any python file. `method` is also not hashed into `solve_id`, so two specs differing
+only in `method` produce identical ids and identical results while claiming to be
+different experiments — and `expected_solves` would pass for both. This commit stops the
+silent mislabelling; making the switches executable is a separate decision (§30) and is
+not started.
+
+### Cross-machine reproducibility, confirmed on a live solve
+
+Two of the five gs_bx solves landed while this was written, and **both match the ids
+precommitted in `var-gs_bx-bx7-v3.json`**: `sol_b55c 645262a8e72d944c` and
+`sol_b70c 0818d7153d5708cc`. Sol (py 3.14.3 / numpy 2.4.3) reproduced ids computed here
+(py 3.11.14 / numpy 2.4.2) *before the solve ran*. §26's 8-significant-digit
+quantization holds for the gs_bx solver, not only the kp_vy tables. The remaining three
+are watched by `_scratch/watch_gs_bx.sh`, which is read-only on Sol.
