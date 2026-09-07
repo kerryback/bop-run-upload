@@ -1909,3 +1909,85 @@ Negative control run.
 
 Neither edit moves a solve_id: `gs_solve_reg.py` hashes only itself, and
 `run_seeds_slurm.sh` is not a solve source.
+
+---
+
+## §30. gs_ashift set to 0, and what that says about mechanism variants (2026-09-07)
+
+**Decision (Seth, 2026-09-07): `gs_ashift = 0` for every exposure type.**
+
+The five bx7 types were meant to differ in *exposure*. Measured against GS21's
+corrected x process (ρ = 0.98305, unconditional sd 0.03843), the level
+compensation dominated the exposure it accompanied:
+
+| type | gs_bx | gs_ashift | 1-sd exposure swing | level shift | ratio |
+|---|---|---|---|---|---|
+| 0 | 1.0 | 0.000 | ±3.9% | 0% | — |
+| 1 | 2.5 | 0.225 | ±10.1% | +25.2% | 2.3× |
+| 2 | 4.0 | 0.450 | ±16.6% | +56.8% | 2.9× |
+| 3 | 5.5 | 0.675 | ±23.5% | +96.4% | 3.2× |
+| 4 | 7.0 | 0.900 | ±30.9% | +146.0% | 3.3× |
+
+The ladder was a rule, not an accident — `gs_ashift = 0.15 × (gs_bx − 1)` holds
+exactly for all five — but at 3.3× the exposure swing the cross-section was
+mostly a size sort wearing a beta label.
+
+**Setting it to 0 also resolves the solve/simulate inconsistency open since
+2026-09-04, with no code change.** `gs_solve_reg.py` computes
+`exp(b·x + z + gs_ashift)`; `gs_sim_bx.py` computes `exp(b·x + z)`. At
+`gs_ashift = 0` those are identical. The trap is now guarded rather than left
+latent: solutions record their own `gs_ashift`, so `gs_sim_bx.py` raises
+`NotImplementedError` if handed a nonzero one.
+
+`sol_reg`'s solve_id is **unchanged** — type 0 always ran at 0. Only four types
+re-solve.
+
+| outdir | v2 (ashift ladder) | v3 (ashift 0) |
+|---|---|---|
+| sol_reg | `63fa7ebbc2db49ea` | `63fa7ebbc2db49ea` — unchanged |
+| sol_b25c | `13d265e388106790` | `649bb384300faadf` |
+| sol_b40c | `2b2327a64c9c3583` | `a3bb50b66287307c` |
+| sol_b55c | `6918c06791c0332c` | `645262a8e72d944c` |
+| sol_b70c | `a0973863681df5b8` | `0818d7153d5708cc` |
+
+`var-gs_bx-bx7-v3` precommits to these. v2 is annotated, never edited: it is the
+record of a precommitment superseded before it ever ran, and the array running on
+Sol at the moment of the decision was solving it.
+
+**bx7's demotion is now an open question again.** Its rank-22-of-24 came from a
+different calibration *and* a different structure. Nothing about it survives.
+
+### The general rule this settled
+
+Three tiers, in the order to try them:
+
+1. **Inconsistency → fix, never switch.** Two files disagreeing about one model
+   is not a design choice. A switch here preserves a bug as an option. The λ
+   regime labels were this; so was `gs_ashift` across solve and sim.
+2. **Constant → parameter.** Expose the number; current behaviour is one value.
+   `gs_ashift` dissolved into this — no fork, no new machinery, and the existing
+   override → `solve_id` → spec chain handled it end to end.
+3. **Genuine alternative implementation → enumerated `method` switch.** Only for
+   things with no numeric interpolation: linear vs cubic interpolation, tauchen
+   vs exact quadrature, zero-book firms in or out of the SDF solve.
+
+**Most "small mechanism tweaks" are tier 2.** The test to apply first: is current
+behaviour one value of a number nobody exposed?
+
+Forks are for a divergent research direction not intended to merge — not for a
+term in an equation. Concrete cost: four cross-cutting fixes landed on
+2026-09-07 alone (canonicaliser, `dkkm` SyntaxError, read-only array, SLURM
+spool). Under N forks each is an N-way backport, and a fork that misses one
+produces wrong numbers under a legitimate-looking solve_id. Grids cannot span
+branches, and one registry cannot compare ids across them.
+
+**Live gap in tier 3:** `experiments/specs/*.json` already carries a `method`
+block with exactly these switches — `kp_interpolation`, `kp_cir_quadrature`,
+`zero_book_in_sdf_solve`, `gs21_discretization`, `kp_regime_labels`. All five are
+referenced in **zero** Python files. They are documentation; nothing verifies
+them. That is the same failure as `kappa_e` imported and never applied. Making
+`method` executable — enumerated values, read from env, landing in the hashed
+namespace, verified at run time the way `expected_solves` now is — is the work
+this tier needs, and the discipline it needs more: add a switch only when both
+branches will actually be run and compared, and retire it once the comparison
+settles.
