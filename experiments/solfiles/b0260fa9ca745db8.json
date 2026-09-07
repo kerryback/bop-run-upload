@@ -264,6 +264,11 @@
     },
     "y_max": "3.5"
   },
+  "retired": {
+    "on": "2026-09-07",
+    "reason": "solve_id was not reproducible: solstamp hashed a set via repr (PYTHONHASHSEED-dependent) and derived floats bit-exactly (numpy-version-dependent). Same artifacts, same parameters, now addressed as f7be27e39d2b530f.",
+    "superseded_by": "f7be27e39d2b530f"
+  },
   "solve_id": "b0260fa9ca745db8",
   "sources": {
     "variants/kp_vy/kp14_fd_vy.py": "019be2f3d154d44e780deb364a74d7fbeefa752ee677ecb10663370c0f464ecb",

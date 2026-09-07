@@ -246,6 +246,11 @@
     },
     "y_max": "3.5"
   },
+  "retired": {
+    "on": "2026-09-07",
+    "reason": "predates the 2026-09-07 canonicaliser fix; recorded under an id no current run can recompute. Kept as the record of what produced earlier vyx results.",
+    "superseded_by": null
+  },
   "solve_id": "f2be637b9fec1f80",
   "sources": {
     "variants/kp_vy/kp14_fd_vy.py": "019be2f3d154d44e780deb364a74d7fbeefa752ee677ecb10663370c0f464ecb",

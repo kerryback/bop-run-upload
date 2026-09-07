@@ -13,6 +13,7 @@ purged from scratch.
     python variants/solfiles.py diff <id_a> <id_b>   # what changed between two solves
     python variants/solfiles.py check                # are the artifacts still on disk and intact
     python variants/solfiles.py gc --dry-run         # what could be deleted and reclaimed
+    python variants/solfiles.py retire <id> --reason "..."   # mark an id that can never recur
 """
 import argparse
 import os
@@ -48,6 +49,8 @@ def cmd_list(args):
     for m in sorted(rows, key=lambda m: (m.get("model") or "", m["solve_id"])):
         total += m.get("total_bytes", 0)
         label = ", ".join(m.get("tags", []) + m.get("spec_ids", [])) or "-"
+        if m.get("retired"):
+            label = "[RETIRED] " + label
         print(f"{m['solve_id']:18s} {(m.get('model') or '?'):10s} "
               f"{_size(m.get('total_bytes', 0)):>10s} "
               f"{'yes' if m.get('committable') else 'NO':4s} "
@@ -63,6 +66,13 @@ def cmd_show(args):
         print(f"no manifest for {args.solve_id}")
         return 1
     print(f"solve_id   {m['solve_id']}")
+    if m.get("retired"):
+        r = m["retired"]
+        print(f"RETIRED    this id can never be recomputed: {r.get('reason')}")
+        if r.get("superseded_by"):
+            print(f"           live record for the same artifacts: {r['superseded_by']}")
+        if r.get("on"):
+            print(f"           retired on {r['on']}")
     print(f"model      {m.get('model')}")
     print(f"tags       {', '.join(m.get('tags', [])) or '-'}")
     print(f"spec_ids   {', '.join(m.get('spec_ids', [])) or '-'}")
@@ -159,17 +169,25 @@ def cmd_check(args):
     for m in every:
         if args.model and m.get("model") != args.model:
             continue
+        tag = ", ".join(m.get("tags", [])) or "-"
+        # Retirement is checked FIRST and is the stronger statement: a superseded
+        # manifest is still a valid address (re-run the producer and you get that id
+        # back), a retired one is not reachable at all. Reporting a retired manifest
+        # as merely superseded would understate that.
+        if m.get("retired"):
+            if not args.quiet:
+                print(f"[retired] {m['solve_id']}  {m.get('model')}  {tag}  "
+                      f"-> {m['retired'].get('reason')}")
+            continue
         problems = solstamp.artifact_problems(m)
         if problems:
             newer = _superseding(m, every)
             if newer:
-                tag = ", ".join(m.get("tags", [])) or "-"
                 if not args.quiet:
                     print(f"[superseded] {m['solve_id']}  {m.get('model')}  {tag}  "
                           f"-> its artifacts now belong to {newer}; manifest kept as the "
                           f"record of what produced earlier results")
                 continue
-        tag = ", ".join(m.get("tags", [])) or "-"
         if problems:
             bad += 1
             print(f"[STALE/MISSING] {m['solve_id']}  {m.get('model')}  {tag}")
@@ -225,6 +243,39 @@ def cmd_gc(args):
     return 0
 
 
+def cmd_retire(args):
+    """Mark a manifest whose solve_id can never be recomputed.
+
+    Distinct from superseded. A superseded manifest is still a valid address: re-run
+    the producer on those parameters and you get that id back. A RETIRED one cannot be
+    reached by any future run -- the id was produced by a canonicaliser that has since
+    been fixed, so the same parameters and the same code now hash somewhere else. The
+    manifest still records what produced earlier results, which is why it is annotated
+    rather than deleted (Seth's requirement: old experiments stay identifiable).
+
+    The first use was the 2026-09-07 hash-ordering fix; see
+    tests/test_solve_id_reproducible.py.
+    """
+    import json
+    m = solstamp.lookup(args.solve_id)
+    if m is None:
+        print(f"no manifest {args.solve_id}")
+        return 1
+    if m.get("retired") and not args.force:
+        print(f"{args.solve_id} is already retired: {m['retired']['reason']}")
+        return 0
+    m["retired"] = {"reason": args.reason, "on": args.on,
+                    "superseded_by": args.superseded_by}
+    with open(solstamp.manifest_path(args.solve_id), "w") as f:
+        json.dump(m, f, indent=2, sort_keys=True)
+        f.write("\n")
+    print(f"retired {args.solve_id} ({m.get('model')}, "
+          f"{', '.join(m.get('tags', [])) or '-'}): {args.reason}")
+    if args.superseded_by:
+        print(f"  live record for this economy: {args.superseded_by}")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -253,6 +304,15 @@ def main():
     p.add_argument("--include-small", action="store_true",
                    help="also list solves small enough to keep in git")
     p.set_defaults(fn=cmd_gc)
+
+    p = sub.add_parser("retire", help="mark a solve_id that can never be recomputed")
+    p.add_argument("solve_id")
+    p.add_argument("--reason", required=True)
+    p.add_argument("--on", default=None, help="date the id became unreachable")
+    p.add_argument("--superseded-by", default=None,
+                   help="the live solve_id for the same artifacts")
+    p.add_argument("--force", action="store_true", help="overwrite an existing retirement")
+    p.set_defaults(fn=cmd_retire)
 
     args = ap.parse_args()
     sys.exit(args.fn(args))

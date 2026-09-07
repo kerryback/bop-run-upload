@@ -52,13 +52,34 @@ def test_scalar_change_moves_the_id():
         assert a.solve_id != b.solve_id
 
 
-def test_float_precision_is_not_collapsed():
-    """0.1 and 0.1+1e-16 are different economies; repr() round-trips, str() would not."""
+def test_float_precision_holds_above_the_hash_quantum():
+    """Floats are hashed to HASH_SIG_DIGITS, so sensitivity has a stated floor.
+
+    Until 2026-09-07 this asserted that 0.1 and 0.1+1e-16 are different solves.
+    That bit-exactness was not free: derived parameters are computed by LAPACK
+    and libm at import, they drift ~1e-14 between library versions, and the
+    solve_id moved with them -- so the laptop and Sol could never agree on an id
+    and a `conda update` orphaned every manifest. See solstamp.HASH_SIG_DIGITS.
+
+    The contract is now explicit in both directions: differences above roughly
+    1e-8 relative move the id; differences below it deliberately do not.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         src = _sources(tmp)
-        a = solstamp.snapshot(_NS(x=0.1), [src])
-        b = solstamp.snapshot(_NS(x=0.1 + 1e-16), [src])
-        assert a.solve_id != b.solve_id
+        base = solstamp.snapshot(_NS(x=0.1), [src])
+
+        moved = solstamp.snapshot(_NS(x=0.1 * (1 + 1e-6)), [src])
+        assert base.solve_id != moved.solve_id, (
+            "a 1e-6 relative parameter change must still move the solve_id")
+
+        drift = solstamp.snapshot(_NS(x=0.1 + 1e-16), [src])
+        assert base.solve_id == drift.solve_id, (
+            "sub-ULP library drift must NOT move the solve_id (that is the "
+            "whole point of quantising the hash input)")
+
+        assert base.params["x"] == repr(0.1), (
+            "the manifest must still RECORD the exact value; only the hash is "
+            "quantised")
 
 
 def test_list_change_moves_the_id():
@@ -97,10 +118,17 @@ def test_large_array_change_moves_the_id():
         src = _sources(tmp)
         x = np.linspace(0, 1, 200)
         y = x.copy()
-        y[137] += 1e-12
+        y[137] *= 1 + 1e-6                     # one element, above the hash quantum
         a = solstamp.snapshot(_NS(grid=x), [src])
         b = solstamp.snapshot(_NS(grid=y), [src])
-        assert a.solve_id != b.solve_id
+        assert a.solve_id != b.solve_id, "a real change in one array element was missed"
+
+        z = x.copy()
+        z[137] = np.nextafter(z[137], 1.0)     # one ULP: library drift, not a new economy
+        c = solstamp.snapshot(_NS(grid=z), [src])
+        assert a.solve_id == c.solve_id, (
+            "one ULP in one element still moves the id -- the array path is not "
+            "quantised (see solstamp.HASH_SIG_DIGITS)")
 
 
 def test_large_arrays_do_not_bloat_the_manifest():
