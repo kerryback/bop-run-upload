@@ -1523,3 +1523,63 @@ This directly serves the stated requirement that old experiments stay identifiab
 their artifacts are gone. It also means **deleting the orphaned BGN manifest earlier was
 the wrong call** — the right move was to label it. Nothing had used it, so no record was
 lost, but the policy is now retention.
+
+## §25 — Phase 1 plan for the primary session (2026-09-07)
+
+Phase 0 is closed. All three economies are verified against their papers, `kp_vy` and
+`bgn_gam` are manifested, `gs_bx` has five computed-but-unmanifested `solve_id`s awaiting
+the cluster. This is the primary session's queue; the ASU session has
+`TASK-cluster-deploy-gs-solves.md`.
+
+### The gate everything sits behind
+
+**22 commits are unpushed, and `origin` is `kerryback/bop-run-upload`.** Sol's checkout is
+~30 commits behind and has none of this week's work. Seth decides whether that gap closes
+by rsync (keeps parameter corrections out of a co-author's repo for now) or by pushing to
+Kerry's `main`. **Do not push without his say-so.** Nothing below can run on the cluster
+until this is settled.
+
+### 1. Seeded oracle + estimator SLURM arrays for g0235 and vyx
+
+Both are ready now — `b80c6e516c132e13` (BGN J*), `b0260fa9ca745db8` / `8e4b5e820ad371da`
+(KP G / integrals). What the wrapper must carry, all of it measured rather than guessed:
+
+- **Seeds are array indices.** `run_oracle.py --seed` already exists and is respected.
+- **Per-seed checkpoint keyed on the consumed `solve_id`s**, same contract as the G stage,
+  so a walltime kill re-runs only the missing seeds.
+- **Pin BLAS threads.** `OMP/MKL/OPENBLAS/VECLIB_NUM_THREADS` to the allocated core count.
+  This is not hygiene: it is the difference between unmeasurable and reproducible-to-3%
+  (§19), and an unpinned job on a shared node spends its allocation spinning.
+- **Walltime from the measured cost model** (§21): cost is `~T * N^2`, per-month 0.70 /
+  1.53 / 18.02 s at N = 100 / 200 / 500. The flagship `--N 500 --T 500` is **~2.5 h per
+  seed**, extrapolating only in T at the measured N=500 rate. Treat it as a floor:
+  T-linearity is verified at N=100, not at N=500.
+- **N is the expensive knob, not T.** Halving N buys ~4x; halving T buys 2x. But
+  `sr_max_mean` is N-dependent (§17g), so N must be held fixed across anything compared.
+
+### 2. Wire results to the solves that produced them
+
+This is Job 4 and it is the point of the whole registry. Each run's output must record the
+`solve_id`s it consumed, so a summary can be traced to its economy after the ~80 GB of
+panel data is purged from scratch. `solstamp` already has `spec_ids` on the manifest side;
+the missing half is the run side.
+
+### 3. The flagship selection evidence is stale — flag before it is used again
+
+PLAN §0.0's table (bx7 22nd of 24 on realized gap; `corr(room, gap) = +0.675` overall,
+−0.234 excluding two KP priced-vol rows) was computed **before every parameter fix this
+week**. KP ran at `E[lambda] = 1.7172` instead of 1.0, and GS ran with the wrong `delta`,
+`rho_x` and `kappa_e = 0`. `G_vyx2.csv` alone moved 6.2%.
+
+So the ranking that demoted bx7, and the room-vs-gap correlation that motivated the nested
+feature bases, **cannot currently be cited**. Recomputing the grid needs the cluster and
+should follow the first clean flagship runs, not precede them. Do not let §0.0's numbers
+back into a recommendation until they have been regenerated.
+
+### Not blocking, but queued
+
+- `utils_gs21/{sdf_compute,loadings_compute}_gs21.py` import `kappa_e` and never apply it.
+  Harmless — they never use it — but it is the same shape as the `panel_functions_gs21.py`
+  bug that was live for a day (§ commit `ee7344a`).
+- `analyze.py` in the analysis repo still needs to consume `dkkm_avg_results`; tangled with
+  the repo-merge decision and Kerry's sign-off.
