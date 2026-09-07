@@ -2045,3 +2045,76 @@ Both jobs carry `TimeLimit=1-00:00:00`, so the 9.4 h projection has ~2.5 h of
 margin. Task 0 runs as `62740640_0` (submitted 09:45) and tasks 1–4 as
 `62740930_1..4` (10:08) — task 0 was correctly kept on the unchanged `sol_reg`
 id rather than resolved.
+
+---
+
+## §32. First post-correction oracle numbers (2026-09-07)
+
+Six runs, N=200, T=200, `--rff 36,360,3600 --levels`, seeds 0–2, each verified
+against its spec (`--spec`, so the consumed solve_ids were checked before
+anything was recorded). These are the **first numbers for either economy since
+the parameter corrections** — everything in PLAN §0.0 predates them.
+
+### kp_vy / vyx — solves `f7be27e39d2b530f`, `84e195172f091cd2`
+
+| seed | SR_max | lin_rank | nonlinear | **room** | best basis |
+|---|---|---|---|---|---|
+| 0 | 0.8499 | 0.5840 | 0.7751 | 0.1911 | rff3600 |
+| 1 | 0.8764 | 0.5575 | 0.7817 | 0.2241 | rff3600 |
+| 2 | 0.9573 | 0.5877 | 0.8569 | 0.2692 | rff3600 |
+| **mean** | 0.8945 | 0.5764 | 0.8046 | **0.2281** | |
+| sd | 0.0559 | | | 0.0392 | |
+
+### bgn_gam / g0235 — solve `be222462dd017b2c`
+
+| seed | SR_max | lin_rank | nonlinear | **room** | best basis |
+|---|---|---|---|---|---|
+| 0 | 0.1371 | 0.1137 | 0.1220 | 0.0083 | rffL3600 |
+| 1 | 0.1100 | 0.0918 | 0.0968 | 0.0050 | rffL3600 |
+| 2 | 0.1762 | 0.1426 | 0.1566 | 0.0140 | rffL3600 |
+| **mean** | 0.1411 | 0.1161 | 0.1252 | **0.0091** | |
+| sd | 0.0333 | | | 0.0045 | |
+
+### Room is strongly size-dependent, and that is a clean measurement
+
+`g0235`'s **economy is unchanged** — 11/11 against the paper, J* table rebuilt
+byte-identical — so its published figure and this one differ *only* in N and T,
+with the same flags and the same seed 0:
+
+| | N | T | room (seed 0) |
+|---|---|---|---|
+| published, PLAN §0.0 | 500 | 500 | 0.0233 |
+| here | 200 | 200 | 0.0083 |
+
+**2.8× on an economy that did not move.** Room is not size-invariant, so **no
+ranking computed at reduced size can be cited for the flagship** — including any
+temptation to re-rank the 24-spec grid cheaply at N=200. The grid has to be
+regenerated at flagship size or not at all.
+
+That also means the vyx/g0235 comparison below is only valid *at matched size*.
+
+### What this says about the two open questions
+
+**vyx survives the λ fix.** Its room is 0.2281 at N=200 against g0235's 0.0091 —
+**25×**, far outside the cross-seed spread of either. The λ regime-label fix
+(E[λ] 1.7172 → 1.0) did not remove vyx's advantage, so its rank-1 standing is
+not in obvious danger. Its published 0.3496 is not comparable (different economy
+*and* different size) and remains uncitable.
+
+**g0235's room is small relative to its own seed noise.** Mean 0.0091, cross-seed
+sd 0.0045 over three seeds. That is a different quantity from the published
+"t 29.1", which is a time-series statistic over months, so the two must not be
+compared — but it does mean a three-seed array cannot separate g0235 from
+neighbouring specs in a 24-way ranking, and its "rank 4 of 24" was probably never
+well identified in the seed dimension at all.
+
+### Caveats, stated rather than buried
+
+- N=200 with a 3600-feature basis is a regime where the basis can span a large
+  share of a 200-asset weight space within a month; the binding constraint is the
+  constant-θ requirement across months. Whether the N=200 → N=500 factor measured
+  on g0235 transfers to vyx is **not** established.
+- Three seeds. The sd of an sd at n=3 is enormous; treat the spreads as
+  indicative only.
+- These are oracle ceilings, not estimator performance. The realised gap
+  (`room × capture`) still needs the estimator side, which needs panels.
