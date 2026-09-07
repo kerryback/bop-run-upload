@@ -123,6 +123,54 @@ def test_solfiles_surfaces_a_capped_solve():
     assert "did NOT exit on its tolerance test" in src, "show does not flag the exit path"
 
 
+def test_environment_is_recorded_but_never_hashed():
+    """Where a solve ran must be recorded, and must not change what it IS.
+
+    2026-09-07 made the solve_id independent of the library stack on purpose, so that
+    Sol and the laptop agree on an id (HASH_SIG_DIGITS). That trade left a gap: nothing
+    recorded which stack produced the bytes. Two runs sharing an id can still differ in
+    the last digits of every table.
+
+    So the stack goes on the unhashed side, next to `achieved`. Hashing it would put
+    every machine's run of one spec in a different registry slot -- reintroducing
+    exactly what that day was spent removing.
+    """
+    import tempfile as _tf
+
+    with _tf.TemporaryDirectory() as tmp:
+        src = os.path.join(tmp, "p.py")
+        open(src, "w").write("x = 1\n")
+        art = os.path.join(tmp, "a.bin")
+        open(art, "wb").write(b"payload")
+
+        env = solstamp.environment()
+        for key in ("python", "platform", "machine", "hostname"):
+            assert env.get(key), f"environment() records no {key}"
+        assert "numpy" in env, "environment() does not record the numpy version"
+
+        real = solstamp.REGISTRY_DIR
+        solstamp.REGISTRY_DIR = tmp
+        try:
+            snap = solstamp.snapshot({"a": 1}, [src], model="probe_env")
+            before = snap.solve_id
+            man = solstamp.record(snap, [art])
+            assert man.get("environment"), "record() did not capture the environment"
+            assert man["environment"]["python"] == env["python"]
+            after = solstamp.snapshot({"a": 1}, [src], model="probe_env").solve_id
+            assert before == after, "capturing the environment moved the solve_id"
+            assert "environment" not in solstamp._canonical_json(
+                {"params": snap.params, "sources": snap.sources}), \
+                "environment leaked into the hashed payload"
+        finally:
+            solstamp.REGISTRY_DIR = real
+
+
+def test_solfiles_show_surfaces_the_environment():
+    src = open(os.path.join(ROOT, "variants", "solfiles.py")).read()
+    assert "NOT hashed -- where it ran" in src, \
+        "solfiles show does not display the recorded environment"
+
+
 if __name__ == "__main__":
     import traceback
 

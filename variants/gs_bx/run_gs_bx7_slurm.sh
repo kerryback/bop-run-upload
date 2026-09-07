@@ -104,12 +104,20 @@ export NUMEXPR_NUM_THREADS=$NT
 # split unquoted parameters at all, which is why this script is bash, not zsh like
 # run_gs_bx7.sh.)
 OUTDIRS=(sol_reg sol_b25c sol_b40c sol_b55c sol_b70c)
+# 2026-09-07: gs_ashift zeroed (227f5e9, spec var-gs_bx-bx7-v3). The old ladder was
+# gs_ashift = 0.15*(gs_bx-1), i.e. 0.225/0.450/0.675/0.900 -- a +146% level shift at
+# gs_bx = 7 against a one-sd exposure swing of +-31%, so the cross-section was mostly a
+# size sort wearing a beta label. Zeroing it also closes the solve/simulate gap for
+# free: gs_solve_reg.py:152-153 applies gs_ashift, gs_sim_bx.py never did, and the two
+# are identical only at 0. The key is kept EXPLICIT rather than dropped -- the module
+# default is already 0.0 so the solve_id is the same either way (verified), but an
+# explicit zero records that it was chosen, not forgotten.
 OVERRIDES=(
   '{"gmreg":[0.6,3.0]}'
-  '{"gmreg":[0.6,3.0],"gs_bx":2.5,"gs_ashift":0.225}'
-  '{"gmreg":[0.6,3.0],"gs_bx":4.0,"gs_ashift":0.450}'
-  '{"gmreg":[0.6,3.0],"gs_bx":5.5,"gs_ashift":0.675}'
-  '{"gmreg":[0.6,3.0],"gs_bx":7.0,"gs_ashift":0.900}'
+  '{"gmreg":[0.6,3.0],"gs_bx":2.5,"gs_ashift":0.0}'
+  '{"gmreg":[0.6,3.0],"gs_bx":4.0,"gs_ashift":0.0}'
+  '{"gmreg":[0.6,3.0],"gs_bx":5.5,"gs_ashift":0.0}'
+  '{"gmreg":[0.6,3.0],"gs_bx":7.0,"gs_ashift":0.0}'
 )
 
 i=${SLURM_ARRAY_TASK_ID:?must be run as a SLURM array job}

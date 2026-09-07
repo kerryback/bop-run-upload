@@ -377,6 +377,41 @@ def artifact_problems(manifest, base_dir=None):
     return problems
 
 
+def environment():
+    """Where and on what this ran. Recorded, NEVER hashed.
+
+    HASH_SIG_DIGITS deliberately makes a solve_id independent of the library stack, so
+    that Sol and this laptop agree on an id. That is the right trade, but it leaves a
+    gap: nothing then records which stack produced the bytes on disk. Two runs that
+    legitimately share an id can still differ in the last few digits of every table, and
+    an investigator holding a 78 MB solution.npz has no way to tell which machine made
+    it.
+
+    So the stack is recorded here instead, alongside `achieved`, on the unhashed side of
+    the same line: the id says WHAT was asked for, these say what actually happened and
+    where. Hashing this would put every machine's run of one spec in a different registry
+    slot, which is exactly what 2026-09-07 was spent removing.
+    """
+    import platform
+    env = {'python': platform.python_version(),
+           'platform': platform.platform(),
+           'machine': platform.machine(),
+           'hostname': platform.node()}
+    for name in ('numpy', 'scipy', 'pandas'):
+        mod = sys.modules.get(name)
+        if mod is None:
+            try:
+                mod = __import__(name)
+            except ImportError:
+                continue
+        env[name] = getattr(mod, '__version__', 'unknown')
+    for var in ('SLURM_JOB_ID', 'SLURM_ARRAY_JOB_ID', 'SLURM_ARRAY_TASK_ID',
+                'SLURM_CPUS_PER_TASK', 'OMP_NUM_THREADS'):
+        if os.environ.get(var):
+            env[var.lower()] = os.environ[var]
+    return env
+
+
 def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None,
            achieved=None):
     """Write (or update) the manifest for this solve.
@@ -423,6 +458,7 @@ def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None,
     })
     if achieved is not None:
         manifest['achieved'] = achieved      # recorded, deliberately NOT hashed
+    manifest['environment'] = environment()  # likewise: where it ran, not what it is
     with open(manifest_path(snap.solve_id), 'w') as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
         f.write('\n')
