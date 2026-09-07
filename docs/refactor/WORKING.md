@@ -2205,3 +2205,42 @@ precommitted in `var-gs_bx-bx7-v3.json`**: `sol_b55c 645262a8e72d944c` and
 (py 3.11.14 / numpy 2.4.2) *before the solve ran*. §26's 8-significant-digit
 quantization holds for the gs_bx solver, not only the kp_vy tables. The remaining three
 are watched by `_scratch/watch_gs_bx.sh`, which is read-only on Sol.
+
+## §34. The estimator stage had never run, and it is the larger half (2026-09-07)
+
+`run_estimators.py` had **never produced output**. No `*_run.json` existed anywhere in
+`variants/results/`, across the whole history of the repo. It had a hard `SyntaxError`
+for three days (§ fixed in the dkkm docstring), then a read-only-array crash on the
+`--levels` path, and both were fixed without ever running the thing end to end.
+
+This matters because `run_seeds_slurm.sh` runs **oracle then estimators in the same
+task, under one walltime**. A broken second stage means every array task burns its full
+oracle cost and then dies having recorded nothing.
+
+**First end-to-end run, 2026-09-07** — kp_vy, N=60, T=80, window=36, 29 eval months:
+
+| stage | wall |
+|---|---|
+| `run_oracle.py --save_panel` | 216 s |
+| `run_estimators.py` | **741 s** |
+
+Both exit 0. The oracle wrote a 421 KB parquet panel; the estimator wrote
+`kp_vy_estimators_smoke_s000_w36_summary.csv` and the first `_run.json` in the repo's
+history. That `_run.json` carries `G=f7be27e39d2b530f` and `integ=84e195172f091cd2`
+forward from the oracle summary, so the spec → run → solve chain now closes on the
+estimator side too, not just the oracle's.
+
+**The estimator is 3.4x the oracle**, at a size where the oracle is already 216 s. The
+walltime comment budgeted it as "roughly its own hour at window 360" — a guess, and the
+wrong shape: estimator cost scales with `eval_months x N x P`, and the flagship has 138
+eval months (T=500, window=360) against this run's 29.
+
+I am deliberately **not** extrapolating that across both dimensions at once. Two claims
+of mine failed that way earlier today (§33): the "refutation" of `~T*N^2`, and
+`--mem=24G` "exceeds by 1.3%". Both came from fits pushed outside their fitted range.
+`_scratch/est_ladder.sh` measures the two slopes separately — `eval_months` at fixed N
+by re-running on the existing panel, then N at fixed window on one new panel.
+
+Until that lands, **the total per-task cost of the seed array is unknown**, and the
+oracle-only projection in the `-t` block understates it by an unknown factor. That is a
+second, independent reason not to tighten `-t 2-00:00`.
