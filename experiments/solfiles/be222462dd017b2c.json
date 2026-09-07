@@ -103,12 +103,7 @@
     "sigmaj_size_elast": "0.0",
     "sigmaj_width": "0.3"
   },
-  "retired": {
-    "on": "2026-09-07",
-    "reason": "id predates the 2026-09-07 canonicaliser fix and cannot be recomputed. The table was rebuilt from the same parameters and came out BYTE-IDENTICAL, so the artifact record here remains accurate; it is now addressed as be222462dd017b2c.",
-    "superseded_by": "be222462dd017b2c"
-  },
-  "solve_id": "b80c6e516c132e13",
+  "solve_id": "be222462dd017b2c",
   "sources": {
     "variants/bgn_gam/parameters.py": "8c98a86bc23e19e58931845ae539caaadba330184b5e1cbf118fbe3aafbb6a01",
     "variants/bgn_gam/vasicek.py": "b8762f5b7e06fe8315c81c9486569719db70d2bfd08c68721be3dbff45194bb2"

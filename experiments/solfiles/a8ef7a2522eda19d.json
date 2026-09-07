@@ -69,6 +69,11 @@
     "xnum": 161,
     "znum": 200
   },
+  "retired": {
+    "on": "2026-09-07",
+    "reason": "id predates the 2026-09-07 canonicaliser fix and cannot be recomputed. The economy itself is valid and current except for kappa_e, which this solve predates (it ran at the implicit kappa_e = 0); the five-task array in run_gs_bx7_slurm.sh solves the kappa_e = 0.025 benchmark that supersedes it.",
+    "superseded_by": null
+  },
   "solve_id": "a8ef7a2522eda19d",
   "sources": {
     "variants/gs_bx/gs_solve_reg.py": "9f40a99463d1597a5e495e69ba5807c32f3cc5703b503d2d0873dd826ceca259"

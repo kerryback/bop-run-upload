@@ -1583,3 +1583,76 @@ back into a recommendation until they have been regenerated.
   bug that was live for a day (§ commit `ee7344a`).
 - `analyze.py` in the analysis repo still needs to consume `dkkm_avg_results`; tangled with
   the repo-merge decision and Kerry's sign-off.
+
+---
+
+## §26. The solve_id was not reproducible (2026-09-07)
+
+Found while starting Phase 1's seeded arrays, before writing any array code.
+Two independent defects, either one fatal to the registry. Both are fixed;
+`tests/test_solve_id_reproducible.py` (9 tests) pins them, and its negative
+control was run — removing the fix makes exactly the two intended tests fail.
+
+**Defect 1 — hash order.** My own commit `b85629f` (override readback) left two
+`set` objects in `parameters_kp14.py`'s namespace. `solstamp._canon` had no set
+branch, so a set fell through to `{'__repr__': repr(value)}`, and Python
+randomises str hashing per interpreter. Identical parameters, identical code:
+
+| PYTHONHASHSEED | kp_vy G solve_id |
+|---|---|
+| 0 | `fa54addb83e5bff2` |
+| 1 | `a8b4cdc0fb2cab7f` |
+| 2 | `da8081b77e6d5045` |
+| 12345 | `6c7e520d50348425` |
+
+`build_vy_tables.py` would have re-run the multi-hour integ stage on every
+invocation, and the manifests it wrote were unreachable the moment the process
+exited. Fix: sets canonicalise to a sorted form.
+
+**Defect 2 — float drift.** Derived parameters are computed by LAPACK and libm
+at import. Two interpreters *on this laptop*, same parameters, same source:
+
+| | `A_0` | G solve_id |
+|---|---|---|
+| numpy 2.4.2 | 3.851851173257416 | `b5d95b8eb1afc6d1` |
+| numpy 2.4.6 | 3.8518511732574208 | `3500d25aeeb64809` |
+
+10 of 66 parameters differed, all derived, up to **45 ULPs** (`pm_tau` through a
+fractional `**`; `A0_ty..A3_ty` through `np.linalg.solve`). So the laptop and
+Sol could never agree on an id — which breaks the cache *and* Job 4's whole
+premise, since a cluster result could not be matched to a laptop-committed
+manifest.
+
+Fix: the hash sees parameters quantised to `HASH_SIG_DIGITS = 8`; the manifest
+still records exact values. **A first attempt cleared 10 mantissa bits (~2e-13
+quantum) and did not work** — against 45 ULPs over ~200 array elements a
+straddle is near-certain, not the ~0.2% I estimated. The quantum has to sit
+several orders above the drift, not just above it. Both interpreters now agree:
+G `f7be27e39d2b530f`, integ `84e195172f091cd2`.
+
+The cost is stated in the tests: differences above ~1e-8 relative move the id,
+below it deliberately do not. `test_solstamp.py`'s "0.1 vs 0.1+1e-16 are
+different economies" assertion was rewritten rather than deleted, because that
+precision is what was traded away.
+
+**Registry.** Every id moved once — unavoidable. Six manifests are now
+`retired` via a new `variants/solfiles.py retire`, which annotates rather than
+deletes (old experiments stay identifiable) and is reported ahead of
+`superseded`, being the stronger statement: a superseded id is still reachable,
+a retired one is not.
+
+| live | model | note |
+|---|---|---|
+| `be222462dd017b2c` | bgn_gam | rebuilt; **byte-identical** to the retired table, which independently confirms the rebuild is deterministic |
+| `f7be27e39d2b530f` | kp_vy G | adopted; `achieved` carried forward from `b0260fa9ca745db8` |
+| `84e195172f091cd2` | kp_vy integ | adopted |
+
+`a8ef7a2522eda19d` (gs_bx `sol_reg`) is retired unrebuilt. I predicted it
+carried the pre-correction calibration; **that was wrong** — its `delta` and
+`rho_x` are the corrected values. It is the κe = 0 economy, which the five-task
+array supersedes anyway.
+
+**What this means for the deployment gate.** Nothing that ran before today can
+be cited by solve_id, and Sol must be at this commit or later before it records
+anything, or it writes ids under the old canonicaliser that this laptop cannot
+reach.

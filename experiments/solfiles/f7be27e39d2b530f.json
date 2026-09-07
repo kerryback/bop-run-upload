@@ -32,7 +32,7 @@
   },
   "inputs": {},
   "model": "kp_vy",
-  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "note": "Re-recorded from b0260fa9ca745db8 on 2026-09-07: the artifact bytes are unchanged, only the solve_id moved when solstamp's canonicaliser was made portable (hash-order and float-drift fixes). The achieved block describes the original solve run, which produced these bytes.",
   "params": {
     "A0_ty": {
       "__array_sha256__": "dfa7ef3ec4038f2f19c3a9a1295b08e592e2dc6083c4d0b7e07def792dca67bf",
@@ -81,14 +81,62 @@
       ]
     },
     "_NORMALISED": {
-      "__repr__": "{'type_share'}"
+      "__set__": [
+        "\"type_share\""
+      ]
     },
     "_ar_y": "np.float64(0.9712545752136729)",
     "_discarded": [],
     "_i0": 10,
     "_k": "bv_comp",
     "_pre_override_names": {
-      "__repr__": "{'__builtins__', 'kappa_y', '__loader__', 'dt', 'bv_comp', 'gamma_z', 'mu_lambda', 'theta_u', 'sigma_lambda', 'sigma_eps', '__package__', '_np', 'NY', 'alpha', 'mu_x', 'r', 'g_hi', 'g_lo', 'bx_seed', '__doc__', 'mu_z', 'sigma_u', 'type_share', 'type_bv', 'os', '__spec__', 'burnin', 'theta_eps', 'g_file', 'gamma_x', 'sigma_z', 'lambda_H', 'g_steep', 'gam_seed', 'sigma_x', 'y_max', 'mu_L', '__name__', '__cached__', 'gamma_v', 'mu_H', 'json', 'integ_file', '__file__', 'delta'}"
+      "__set__": [
+        "\"NY\"",
+        "\"__builtins__\"",
+        "\"__cached__\"",
+        "\"__doc__\"",
+        "\"__file__\"",
+        "\"__loader__\"",
+        "\"__name__\"",
+        "\"__package__\"",
+        "\"__spec__\"",
+        "\"_np\"",
+        "\"alpha\"",
+        "\"burnin\"",
+        "\"bv_comp\"",
+        "\"bx_seed\"",
+        "\"delta\"",
+        "\"dt\"",
+        "\"g_file\"",
+        "\"g_hi\"",
+        "\"g_lo\"",
+        "\"g_steep\"",
+        "\"gam_seed\"",
+        "\"gamma_v\"",
+        "\"gamma_x\"",
+        "\"gamma_z\"",
+        "\"integ_file\"",
+        "\"json\"",
+        "\"kappa_y\"",
+        "\"lambda_H\"",
+        "\"mu_H\"",
+        "\"mu_L\"",
+        "\"mu_lambda\"",
+        "\"mu_x\"",
+        "\"mu_z\"",
+        "\"os\"",
+        "\"r\"",
+        "\"sigma_eps\"",
+        "\"sigma_lambda\"",
+        "\"sigma_u\"",
+        "\"sigma_x\"",
+        "\"sigma_z\"",
+        "\"theta_eps\"",
+        "\"theta_u\"",
+        "\"type_bv\"",
+        "\"type_share\"",
+        "\"y_max\""
+      ]
     },
     "_sd_c": "np.float64(0.23804316861970193)",
     "_v": "1.2",
@@ -264,12 +312,7 @@
     },
     "y_max": "3.5"
   },
-  "retired": {
-    "on": "2026-09-07",
-    "reason": "solve_id was not reproducible: solstamp hashed a set via repr (PYTHONHASHSEED-dependent) and derived floats bit-exactly (numpy-version-dependent). Same artifacts, same parameters, now addressed as f7be27e39d2b530f.",
-    "superseded_by": "f7be27e39d2b530f"
-  },
-  "solve_id": "b0260fa9ca745db8",
+  "solve_id": "f7be27e39d2b530f",
   "sources": {
     "variants/kp_vy/kp14_fd_vy.py": "019be2f3d154d44e780deb364a74d7fbeefa752ee677ecb10663370c0f464ecb",
     "variants/kp_vy/parameters_kp14.py": "1015195d13df40bdd6cb5dc0ff3e39190a7d4afea1cdbc0781040a3557aa70a0"

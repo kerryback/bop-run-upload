@@ -95,31 +95,121 @@ def short(d, n=12):
     return 'missing' if d is None else d[:n]
 
 
-def _canon(value):
-    """Canonical, exactly-round-tripping representation of a parameter value.
+HASH_SIG_DIGITS = 8
+"""Significant digits a float keeps when it enters the HASH (never the record).
 
-    Floats go through repr(), which round-trips in Python 3, so 0.1 and
-    0.1000000000000001 do not collide. Large arrays are replaced by a hash of
-    their bytes so the manifest stays small while remaining sensitive.
+WHY A SOLVE_ID MUST NOT BE BIT-EXACT IN FLOATS
+----------------------------------------------
+A parameter namespace holds DERIVED values as well as declared ones, and the
+derived ones are computed by LAPACK and libm at import time. Those drift in the
+last bits between library versions. Measured 2026-09-07 on kp_vy -- identical
+parameters, identical source, two interpreters on ONE laptop:
+
+    numpy 2.4.2   A_0 = 3.851851173257416    G solve_id = b5d95b8eb1afc6d1
+    numpy 2.4.6   A_0 = 3.8518511732574208   G solve_id = 3500d25aeeb64809
+
+10 of 66 parameters differed, every one of them derived, at up to 45 ULPs
+(pm_tau, through a fractional `**`; A0_ty..A3_ty through np.linalg.solve).
+
+Bit-exactness therefore buys no precision. What it buys is a solve_id that
+moves on a routine `conda update` and never agrees between the laptop and Sol,
+so a content-addressed cache never hits across machines and every committed
+manifest is unreachable from the cluster -- which also breaks tracing a cluster
+RESULT back to the solve that produced it.
+
+Quantising to 8 significant digits before hashing survives that. It is coarse
+on purpose: the drift to absorb is ~1e-14 relative, so the quantum must sit
+several orders above it or values straddling a boundary still split. At 1e-8
+the straddle probability is ~1e-6 per element, ~2e-4 across a whole namespace,
+and the failure mode is one spurious re-solve -- never a wrong reuse. An
+earlier attempt here cleared 10 mantissa bits (~2e-13 quantum); against 45 ULPs
+of drift over ~200 array elements that splits essentially every time, which is
+what the measurement above showed.
+
+Two parameters closer than 1e-8 relative now share an id. No calibration in
+this project distinguishes anything at that scale, and the numerics could not
+resolve it if one did.
+
+Quantisation applies ONLY to the hashed copy. `manifest['params']` still
+records exact values, so `solfiles show` and `diff_params` report what the
+solve actually used.
+"""
+
+
+def _round_sig(x, digits=HASH_SIG_DIGITS):
+    """x kept to `digits` significant digits, via an EXACT base-2 split.
+
+    frexp/ldexp are bit manipulation, so the mantissa is identical on every
+    platform for identical input bits; only the final rounding coarsens. Doing
+    it in base 10 instead would need 10**k, whose last bit is not guaranteed
+    equal across library versions -- the very thing being defended against.
+    """
+    import math
+    if x == 0.0 or not math.isfinite(x):
+        return x
+    m, e = math.frexp(x)                  # x = m * 2**e, 0.5 <= |m| < 1
+    return math.ldexp(round(m, digits), e)
+
+
+def _round_sig_array(a, digits=HASH_SIG_DIGITS):
+    """Vectorised _round_sig. Non-float dtypes pass through untouched."""
+    np = sys.modules['numpy']
+    a = np.ascontiguousarray(a)
+    if a.dtype.kind != 'f':
+        return a
+    m, e = np.frexp(a)
+    out = np.ldexp(np.round(m, digits), e)
+    bad = ~np.isfinite(a)
+    if bad.any():
+        out[bad] = a[bad]
+    return np.ascontiguousarray(out)
+
+
+def _canon(value, quantize=False):
+    """Canonical representation of a parameter value.
+
+    With quantize=False this is the RECORD: floats go through repr(), which
+    round-trips in Python 3, and arrays are hashed from their exact bytes. With
+    quantize=True this is the HASH INPUT: floats and float arrays are first cut
+    to HASH_SIG_DIGITS so library ULP drift cannot move a solve_id. Everything
+    else is identical between the two, so the record and the identity never
+    disagree about anything that matters.
+
+    Every branch must be REPRODUCIBLE ACROSS PROCESSES, not merely
+    deterministic within one. Python randomises str hashing per interpreter
+    (PYTHONHASHSEED), so `repr()` of an unordered container varies run to run --
+    and a solve_id that varies run to run addresses nothing: the manifest can
+    never be hit again and the expensive solve repeats forever. That is what
+    happened to kp_vy between b85629f and this fix: the override-readback
+    machinery left a 45-element `set` of parameter names in the module
+    namespace, and the G-stage id came out different on every invocation
+    (fa54addb / a8b4cdc0 / da8081b7 / 6c7e5205 from four hash seeds, identical
+    parameters). Sort sets; keep `repr()` only for scalars whose repr cannot
+    depend on hash order.
     """
     if value is None or isinstance(value, (bool, int, str)):
         return value
     if isinstance(value, float):
-        return repr(value)
+        return repr(_round_sig(value) if quantize else value)
     if isinstance(value, (list, tuple)):
-        return [_canon(v) for v in value]
+        return [_canon(v, quantize) for v in value]
+    if isinstance(value, (set, frozenset)):
+        # sorted on the canonical form, so ordering never depends on str hashing
+        return {'__set__': sorted(_canonical_json(_canon(v, quantize)) for v in value)}
     if isinstance(value, dict):
-        return {str(k): _canon(v) for k, v in sorted(value.items(), key=lambda kv: str(kv[0]))}
+        return {str(k): _canon(v, quantize)
+                for k, v in sorted(value.items(), key=lambda kv: str(kv[0]))}
     # numpy, without importing it unless it is already loaded
     np = sys.modules.get('numpy')
     if np is not None:
         if isinstance(value, np.generic):
-            return _canon(value.item())
+            return _canon(value.item(), quantize)
         if isinstance(value, np.ndarray):
             if value.size <= 32:
-                return {'__array__': [_canon(v) for v in value.ravel().tolist()],
+                return {'__array__': [_canon(v, quantize) for v in value.ravel().tolist()],
                         'shape': list(value.shape)}
-            h = hashlib.sha256(np.ascontiguousarray(value).tobytes()).hexdigest()
+            h = hashlib.sha256((_round_sig_array(value) if quantize
+                                else np.ascontiguousarray(value)).tobytes()).hexdigest()
             return {'__array_sha256__': h, 'shape': list(value.shape),
                     'dtype': str(value.dtype)}
     return {'__repr__': repr(value)}
@@ -133,7 +223,7 @@ _SKIP_NAMES = {
 }
 
 
-def param_namespace(module_or_dict, skip=()):
+def param_namespace(module_or_dict, skip=(), quantize=False):
     """Every parameter-like name in a producer's namespace, canonicalised.
 
     Deliberately indiscriminate: functions, modules and classes are dropped, and
@@ -153,7 +243,7 @@ def param_namespace(module_or_dict, skip=()):
         if callable(value):
             continue
         try:
-            out[name] = _canon(value)
+            out[name] = _canon(value, quantize)
         except Exception:
             out[name] = {'__unhashable__': type(value).__name__}
     return out
@@ -169,7 +259,7 @@ class Snapshot(object):
     """The identity of one solve: its parameters, its code, and the hash of both."""
 
     def __init__(self, params, sources, model=None, extra=None, env_params=None,
-                 inputs=None, stage=None):
+                 inputs=None, stage=None, params_for_hash=None):
         self.params = params
         self.sources = sources            # {relpath: sha256}
         self.model = model
@@ -177,7 +267,13 @@ class Snapshot(object):
         self.extra = extra or {}          # descriptive ONLY -- never hashed
         self.env_params = env_params or {}  # settings from outside the module -- hashed
         self.inputs = inputs or {}        # upstream artifacts consumed -- hashed
-        payload = _canonical_json({'params': params, 'sources': sources,
+        # The hash sees the QUANTISED parameters (see HASH_SIG_DIGITS); the manifest
+        # records the exact ones. Callers that build a Snapshot directly and pass no
+        # quantised copy fall back to the exact values, which is bit-exact but not
+        # portable across library versions -- snapshot() always supplies both.
+        payload = _canonical_json({'params': (params if params_for_hash is None
+                                              else params_for_hash),
+                                   'sources': sources,
                                    'env_params': self.env_params,
                                    'inputs': self.inputs, 'stage': stage})
         self.solve_id = hashlib.sha256(payload.encode()).hexdigest()[:16]
@@ -235,8 +331,10 @@ def snapshot(params_module, sources, model=None, skip=(), extra=None, env_params
         rel = os.path.relpath(ap, REPO_DIR)
         src[rel] = file_digest(ap)
     return Snapshot(param_namespace(params_module, skip=skip), src,
+                    params_for_hash=param_namespace(params_module, skip=skip, quantize=True),
                     model=model, extra=extra, inputs=inputs, stage=stage,
-                    env_params={k: _canon(v) for k, v in sorted((env_params or {}).items())})
+                    env_params={k: _canon(v, True)
+                                for k, v in sorted((env_params or {}).items())})
 
 
 # --------------------------------------------------------------- registry ----
