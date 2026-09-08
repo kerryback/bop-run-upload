@@ -361,8 +361,42 @@ def artifacts_ok(manifest, base_dir=None):
     return not artifact_problems(manifest, base_dir=base_dir)
 
 
+def embedded_solve_id(path):
+    """The solve_id the solver wrote INSIDE the artifact, or None.
+
+    Only .npz artifacts carry one (gs_solve_*.py and build_vy_tables.py save
+    `solve_id=` alongside the tables). Returns None for CSVs and anything unreadable --
+    absence is not evidence of a problem, it just means this check cannot help.
+    """
+    if not path.endswith('.npz'):
+        return None
+    try:
+        import numpy as _np
+        with _np.load(path, allow_pickle=False) as z:
+            if 'solve_id' in z.files:
+                return str(z['solve_id'].item() if z['solve_id'].shape == () else
+                           z['solve_id'])
+    except Exception:
+        return None
+    return None
+
+
 def artifact_problems(manifest, base_dir=None):
-    """Human-readable reasons this manifest's artifacts cannot be reused."""
+    """Human-readable reasons this manifest's artifacts cannot be reused.
+
+    A DIGEST MISMATCH IS NOT AUTOMATICALLY CORRUPTION. HASH_SIG_DIGITS deliberately
+    makes solve_id independent of the library stack, so two machines that legitimately
+    agree on an id can still differ in the last few digits of every table -- see
+    environment()'s docstring, which says exactly that. Comparing byte-exact sha256 and
+    calling any difference "content changed" therefore accuses a correct independent
+    reproduction of corruption, which is precisely what a co-author without cluster
+    access would hit when regenerating instead of downloading (2026-09-08).
+
+    So three states, not two:
+      digest matches                         -> byte-identical to the recorded run
+      digest differs, embedded id matches    -> independent reproduction, USABLE
+      digest differs, embedded id absent/bad -> a real problem
+    """
     problems = []
     for art in manifest.get('artifacts', []):
         path = art['path']
@@ -372,9 +406,19 @@ def artifact_problems(manifest, base_dir=None):
                             f"sha256 {short(art['sha256'])})")
             continue
         d = file_digest(ap)
-        if d != art['sha256']:
+        if d == art['sha256']:
+            continue
+        emb = embedded_solve_id(ap)
+        if emb and emb == manifest.get('solve_id'):
+            continue                      # reproduced elsewhere; same economy, other bytes
+        if emb:
+            problems.append(f"{path}: WRONG SOLVE -- embedded solve_id {short(emb)} but "
+                            f"this manifest is {short(manifest.get('solve_id', ''))}")
+        else:
             problems.append(f"{path}: content changed since it was recorded "
-                            f"(manifest {short(art['sha256'])}, file {short(d)})")
+                            f"(manifest {short(art['sha256'])}, file {short(d)}) and it "
+                            f"carries no embedded solve_id to tell an independent "
+                            f"reproduction from corruption")
     return problems
 
 
