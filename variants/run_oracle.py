@@ -198,7 +198,14 @@ for name, r in agg.items():
     summary["bases"][name] = rec
     print(f"{name:>12} {r['P']:>5} | {r['cond_oracle_mean']:11.4f} | {sr[0]:15.4f} | {sr[j]:8.4f} ({zs[j]:7.0e}) | {r['unc_sr'][j]:.4f}")
 
-out = os.path.join(HERE, "results")
+# BOP_RESULTS_DIR relocates output without touching code. Default unchanged.
+# Measured 2026-09-08: /data/sjpruitt is 1.0 TB with 989 GB free (4% used), and a full
+# 10-seed x 2-economy flagship campaign adds ~5.5 GB -- 0.6% of free space. So there is
+# no case for symlinking intermediates to scratch today, and scratch is PURGED, which
+# would cost 2.3 h to regenerate a panel you wanted to re-run estimators against at a
+# different window (a thing already done three times on 2026-09-07). This exists so
+# that if /data ever does get tight, moving output is a flag rather than a refactor.
+out = os.environ.get("BOP_RESULTS_DIR") or os.path.join(HERE, "results")
 os.makedirs(out, exist_ok=True)
 _st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
 # Provenance sidecar + a `prov` column, so a result says what code made it.
