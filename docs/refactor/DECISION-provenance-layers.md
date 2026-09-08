@@ -95,6 +95,36 @@ counting, not by remembering:
 grep -ho '"spec_check": "[a-z ]*"' variants/results/*.prov.json | sort | uniq -c
 ```
 
+#### `verified` only counts if the spec predated the solve
+
+ASU's correction, 2026-09-08, and it is the sharper half of the trigger. A wall of
+`verified` is evidence only if the spec was written **before** the solve. If the id was
+read off an existing manifest and pasted in, `verified` can only confirm that the id you
+copied is the id that is there — vacuous, and it would be counted as proof the machinery
+works. Same failure shape as `test_registry_ids_are_still_reachable`, which passed
+vacuously because its filter excluded exactly what it was looking for.
+
+**Measured, and it is not hypothetical.** Three pinned ids are retrofitted, and they are
+the two economies actually in use:
+
+| spec | stages | spec pinned | manifest tracked | |
+|---|---|---|---|---|
+| `var-kp_vy-vyx-v2` | G, integ | 09:27:14 | **08:38:19** | retrofitted |
+| `var-bgn_gam-g0235-v2` | jstar | 09:27:14 | **08:38:19** | retrofitted |
+| `var-gs_bx-bx7-v3` | all five | 10:03:22 | 18:09:05 | genuine |
+| `var-gs_bx-g28-v1` | sol_g28 | 18:16:41 | not yet solved | genuine |
+
+Neither retrofitted spec *claims* precommitment, so nothing is dishonest — but the
+distinction must be mechanical, not remembered. `tests/test_precommitment_is_real.py`
+classifies every pinned id from git dates and fails if a spec that claims precommitment
+in words is not one in fact.
+
+**So read the tally only over genuinely-precommitted specs**, and treat `not requested`
+and `unverifiable` as the *interesting* rows rather than the boring ones: they say the
+layer is being routed around in practice.
+
+    python tests/test_precommitment_is_real.py     # prints the classification
+
 **Revisit when there are ~20 real experiment runs**, and decide on what that prints:
 
 - **any `refused` that turned out to be a genuine mismatch** → precommitment earned its
