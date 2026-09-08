@@ -63,6 +63,7 @@ USAGE
 import hashlib
 import json
 import os
+import time
 import sys
 import types
 
@@ -459,6 +460,14 @@ def record(snap, artifacts, tag=None, spec_id=None, base_dir=None, note=None,
     if achieved is not None:
         manifest['achieved'] = achieved      # recorded, deliberately NOT hashed
     manifest['environment'] = environment()  # likewise: where it ran, not what it is
+    # WHEN it was recorded. Unhashed, like environment and achieved. Added 2026-09-08
+    # because establishing whether a spec's expected_solves was a real precommitment or
+    # a retrofit needs the recording time, and deriving it from git is not sound: after
+    # experiments/solfiles -> experiments/registry, `git log` without --follow loses the
+    # history, and WITH --follow git's similarity-based rename detection walks onto a
+    # DIFFERENT manifest, since they are all small JSONs sharing one schema. Measured:
+    # it dated 63fa7ebbc2db49ea to a commit two days before that solve existed.
+    manifest['recorded_at'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
     with open(manifest_path(snap.solve_id), 'w') as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
         f.write('\n')

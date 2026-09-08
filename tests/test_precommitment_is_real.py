@@ -47,15 +47,26 @@ def spec_pinned_at(spec_file, solve_id):
 
 
 def manifest_tracked_at(solve_id):
-    """--follow, because the registry directory gets renamed.
+    """When this manifest was first recorded.
 
-    Without it, `experiments/solfiles` -> `experiments/registry` (2026-09-08) hid every
-    manifest's original add, and all three known retrofits silently reclassified as
-    PRECOMMITTED -- precisely the vacuous-evidence failure this module exists to
-    prevent. test_the_known_retrofits_stay_labelled caught it on the rename's first run.
+    Prefers the manifest's own `recorded_at` (solstamp writes it since 2026-09-08).
+    Falls back to a PICKAXE over both spellings of the registry path for the manifests
+    written before that.
+
+    NOT `git log --follow`: after experiments/solfiles -> experiments/registry, plain
+    log loses the history, and --follow's similarity-based rename detection walks onto a
+    different manifest -- they are all small JSONs with one schema. It dated
+    63fa7ebbc2db49ea to 2026-09-05, two days before that solve existed, which would have
+    reclassified all five genuine bx7 precommitments as retrofits.
     """
-    out = _git(["log", "--follow", "--diff-filter=A", "--format=%aI", "--",
-                os.path.join("experiments", "registry", solve_id + ".json")])
+    path = os.path.join(SOLF, solve_id + ".json")
+    if os.path.exists(path):
+        rec = json.load(open(path)).get("recorded_at")
+        if rec:
+            return rec
+    out = _git(["log", "-S", solve_id, "--format=%aI", "--",
+                os.path.join("experiments", "registry"),
+                os.path.join("experiments", "solfiles")])
     return out.splitlines()[-1] if out else None
 
 
