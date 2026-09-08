@@ -77,5 +77,22 @@
   "tags": [
     "sol_b55c"
   ],
-  "total_bytes": 102372818
+  "total_bytes": 102372818,
+  "environment": {
+    "python": "3.14.3",
+    "numpy": "2.4.3",
+    "scipy": "1.17.1",
+    "pandas": "3.0.1",
+    "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "machine": "x86_64",
+    "cpu": "AMD EPYC 7713 64-Core Processor",
+    "blas": "libopenblas 0.3.30 pthreads (libblas/libcblas/liblapack 3.11.0 *_openblas)",
+    "numpy_build_flags": "-march=nocona -mtune=haswell (compile-time only; numpy dispatches SIMD at runtime and reports found=X86_V3, i.e. AVX2+FMA)",
+    "omp_num_threads": "4",
+    "slurm_cpus_per_task": "4",
+    "recorded_by": "Captured post-hoc from the compute nodes on 2026-09-07 while the solves were still running. These five predate a1cf71e, so record() wrote no environment block; once they exited the information would have been unrecoverable. Fields match solstamp.environment()'s schema plus cpu/blas/numpy_build_flags.",
+    "hostname": "sc017",
+    "slurm_array_job_id": "62740930",
+    "slurm_array_task_id": "3"
+  }
 }
