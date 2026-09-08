@@ -13,7 +13,7 @@ it belongs. But there is a gate in front of it that nobody has hit yet.
 
 So Sol is roughly **30 commits behind** and has none of: the corrected `config.py`
 (delta/rho_x/sigma_x/kappa_e), the regenerated `utils_gs21` solfiles, the rebuilt `kp_vy`
-tables, `experiments/solfiles/` manifests, `solstamp`, or your `gs_bx` work.
+tables, `experiments/registry/` manifests, `solstamp`, or your `gs_bx` work.
 
 **Seth decides how to close that gap — ask before moving.** Two routes:
 

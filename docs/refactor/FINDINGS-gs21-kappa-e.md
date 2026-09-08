@@ -208,4 +208,4 @@ moves, which is the drift this test exists to catch. `tests/**` is out of my bou
 
 Probes and comparison artifacts are in `_scratch/kappa_e_check/` (gitignored); the probe
 manifests went to `_scratch/kappa_e_check/solfiles_probe/` via `BOP_SOLFILES`, so nothing
-touched `experiments/solfiles/`.
+touched `experiments/registry/`.

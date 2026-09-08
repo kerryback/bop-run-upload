@@ -660,7 +660,7 @@ Both are now pinned by tests (`test_env_params_are_hashed`,
 
 ### The registry — durable record of old experiments' solfiles
 
-`experiments/solfiles/<solve_id>.json`, committed. A few KB each; hundreds of
+`experiments/registry/<solve_id>.json`, committed. A few KB each; hundreds of
 experiments cost a few MB. Records parameters, source digests, and every artifact
 with size and sha256. **The manifest outlives the artifact** — after scratch is
 purged you can still say which parameters produced a number, and re-running the
@@ -1274,7 +1274,7 @@ binding constraint as **memory, not cores**: `smooth()` builds a `(200,161,20,16
 temporary ≈ **830 MB per call, 4x per sweep**, with RSS 0.9-2.4 GB per solve. Five
 concurrent solves hit swap and throughput *fell*. README corrected.
 
-Two things went right: `experiments/solfiles/` handled genuine concurrent writers (a
+Two things went right: `experiments/registry/` handled genuine concurrent writers (a
 `bgn_gam` manifest landed mid-GS-solve, no collision, no lost update — "safe by
 construction" is now observed), and GS **fails clean on interrupt**: four SIGTERM'd solves
 left empty outdirs and no manifests, because `solstamp.record()` only runs after a

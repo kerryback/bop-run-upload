@@ -91,7 +91,7 @@ parameters and same code means the same id, which means the artifacts are reusab
 — so re-running a producer on an unchanged spec exits immediately instead of
 re-solving.
 
-Every solve writes a manifest to `experiments/solfiles/<solve_id>.json`, committed
+Every solve writes a manifest to `experiments/registry/<solve_id>.json`, committed
 to git. A manifest is a few KB, so hundreds of experiments cost a few MB, and it
 records the parameters, the source digests, and every artifact with its size and
 sha256. **The manifest outlives the artifact**: after scratch is purged you can

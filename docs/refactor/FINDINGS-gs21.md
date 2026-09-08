@@ -127,7 +127,7 @@ laptop (§6.6).
 ### 3.3 Incidental: the shared registry survived concurrent writers
 
 While `sol_reg` ran, the primary session's `23bb2b492adf0e16 bgn_gam Jstar_g0235` landed in
-the same `experiments/solfiles/`. Two sessions, two models, no collision or lost update. The
+the same `experiments/registry/`. Two sessions, two models, no collision or lost update. The
 brief argued this was "safe by construction"; it is now observed.
 
 ---
@@ -269,5 +269,5 @@ None applied. Items 1–4 change `solve_id`s or recorded output.
   were driven individually, which also gives per-solve timing the shell script would not.
 - **Files touched:** `variants/gs_bx/gs_solve_reg.py` (one line, §1),
   `variants/gs_bx/sol_reg/solution.npz` (new, untracked, 78.6 MB),
-  `experiments/solfiles/a8ef7a2522eda19d.json` (new manifest, should be committed),
+  `experiments/registry/a8ef7a2522eda19d.json` (new manifest, should be committed),
   `variants/results/logs/log_gs_*`, and this file. Nothing committed.
