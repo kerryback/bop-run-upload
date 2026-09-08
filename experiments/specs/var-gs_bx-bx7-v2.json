@@ -195,7 +195,7 @@
     "transcribed": "2026-09-04",
     "verified_by": "tests/test_specs_match_shell.py"
   },
-  "spec_hash": "0d70fad4b37c47dda6e3f06aad0d8a78aba3409e3f8307ca315e9893a0a6af21",
+  "spec_hash": "652ef6322bdf34678273526f1d432e8d5e240d0084da3ac0bbe491ddc533b6e2",
   "expected_solves": {
     "sol_reg": "63fa7ebbc2db49ea",
     "sol_b25c": "13d265e388106790",

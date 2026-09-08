@@ -171,7 +171,12 @@ def test_every_spec_hash_is_reproducible():
     """spec_hash must be recomputable from the spec's own hashed view."""
     import hashlib
 
-    excluded = {"title", "question", "notes", "lineage", "provenance", "spec_hash"}
+    # solves_pending is STATUS, not definition: it says whether the precommitted
+    # solves have been recorded yet, and clearing it once they land must not change
+    # the spec's identity. It was inside the hashed view until 2026-09-07, so
+    # verifying var-gs_bx-bx7-v3's five solves on Sol would have "drifted" its hash.
+    excluded = {"title", "question", "notes", "lineage", "provenance", "spec_hash",
+                "solves_pending"}
     for fn in sorted(os.listdir(SPECS)):
         if not fn.endswith(".json"):
             continue

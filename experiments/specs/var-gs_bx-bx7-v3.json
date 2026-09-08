@@ -3,7 +3,7 @@
   "spec_id": "var-gs_bx-bx7-v3",
   "title": "GS21 2-regime with five exposure types, each a separate solve",
   "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
-  "notes": "PRECOMMITMENT: the five expected_solves were computed from the current parameters and code WITHOUT solving. sol_reg is carried over unchanged from v2; the other four are new.\n\nCurrent runnable spec for the bx7 economy. The five types differ ONLY in gs_bx (1.0/2.5/4.0/5.5/7.0), which is what 'exposure heterogeneity' was meant to mean. v1's published figures (room +0.0182, gap +0.0013, t 10.4, rank 22 of 24) came from a different calibration AND a different structure, so bx7's demotion out of the first production run rests on nothing that survives -- it is an open question again, not a settled one.\n\nClear solves_pending once the five are recorded.",
+  "notes": "PRECOMMITMENT: the five expected_solves were computed from the current parameters and code WITHOUT solving. sol_reg is carried over unchanged from v2; the other four are new.\n\nCurrent runnable spec for the bx7 economy. The five types differ ONLY in gs_bx (1.0/2.5/4.0/5.5/7.0), which is what 'exposure heterogeneity' was meant to mean. v1's published figures (room +0.0182, gap +0.0013, t 10.4, rank 22 of 24) came from a different calibration AND a different structure, so bx7's demotion out of the first production run rests on nothing that survives -- it is an open question again, not a settled one.\n\nVERIFIED 2026-09-07 17:12: all five solve_ids reproduced on Sol exactly as precommitted, computed there under python 3.14.3 / numpy 2.4.3 against the laptop's 3.11.14 / 2.4.2. Content-addressing holds across machines. solves_pending cleared.",
   "lineage": {
     "parent_spec": "var-gs_bx-bx7-v2",
     "supersedes": "var-gs_bx-bx7-v2",
@@ -195,13 +195,12 @@
     "transcribed": "2026-09-04",
     "verified_by": "tests/test_specs_match_shell.py"
   },
-  "spec_hash": "783c17bf59dc51296872a0954e688076b77de70a359033cee2281de170739c8d",
+  "spec_hash": "d134d8e267d89c6ff7de723e78b86618a542877e0d0846c04bf99cecc30c94a8",
   "expected_solves": {
     "sol_reg": "63fa7ebbc2db49ea",
     "sol_b25c": "649bb384300faadf",
     "sol_b40c": "a3bb50b66287307c",
     "sol_b55c": "645262a8e72d944c",
     "sol_b70c": "0818d7153d5708cc"
-  },
-  "solves_pending": true
+  }
 }
