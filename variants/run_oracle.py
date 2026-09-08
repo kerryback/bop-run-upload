@@ -59,6 +59,7 @@ else:  # gs_bx
     ov_env = "GS_SIM_OVERRIDES"
 from oracle import rank_standardize, draw_W, build_feature_sets, evaluate_bases, max_sr, level_standardize
 import runstamp
+import provenance
 
 # ---- the AGGREGATE state path must move with the seed --------------------------------------------
 # np.random.seed(args.seed) above steers every draw that goes through the global stream
@@ -100,8 +101,13 @@ print(f"[{args.model}/{args.tag}] panel built in {time.time()-t0:.0f}s", flush=T
 # CONTENT, so a stale or foreign table is reported as what it actually is.
 solves = runstamp.consumed_solves(args.model, mod=sys.modules[mod.__name__])
 print(runstamp.describe(solves), flush=True)
+# Recorded into the sidecar so the "is the precommitment layer earning its keep?"
+# question in docs/refactor/DECISION-provenance-layers.md is answered by COUNTING
+# rather than by recollection: grep the sidecars for spec_check.
+_spec_check = "not requested"
 if args.spec:
     _ok, _lines = runstamp.verify_against_spec(args.spec, solves)
+    _spec_check = {True: "verified", False: "refused"}.get(_ok, "unverifiable")
     print("\n".join(_lines), flush=True)
     # `is not True`, NOT `is False`: verify_against_spec returns None for a spec it
     # cannot check at all, and `None is False` is False -- so the old guard let an
@@ -195,8 +201,18 @@ for name, r in agg.items():
 out = os.path.join(HERE, "results")
 os.makedirs(out, exist_ok=True)
 _st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
+# Provenance sidecar + a `prov` column, so a result says what code made it.
+# The summary already carried `overrides` and `solves`; what was missing everywhere
+# was the CODE VERSION, and the CSVs carried no link to anything at all.
+_prov, _tag = provenance.write_sidecar(_st("oracle") + ".json", inputs=solves,
+                                       extra={"spec_id": args.spec, "engine": "oracle",
+                                              "spec_check": _spec_check})
+summary["prov"] = _tag
+ts["prov"] = _tag              # redundant per row ON PURPOSE: a row copied out of the
+                               # CSV into a notebook must not lose its pointer back
 ts.to_csv(_st("oracle") + "_ts.csv", index=False)
 json.dump(summary, open(_st("oracle") + ".json", "w"), indent=1)
+print(f"[prov] {_tag}  -> {os.path.basename(_st('oracle'))}.json.prov.json", flush=True)
 if args.save_panel:
     panel.reset_index().to_parquet(_st("panel") + ".parquet")
     np.savez_compressed(_st("moments") + ".npz",
