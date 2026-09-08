@@ -2,7 +2,7 @@
 #SBATCH -J bop_seeds
 #SBATCH --array=0-9
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH -t 2-00:00
 #SBATCH -p public
 #SBATCH -o outslurm/seeds.%A.%a.log
@@ -110,7 +110,32 @@
 #                   -t 2-00:00. The N-independence is measured only to N=180.
 #                   RE-MEASURE from the first completed task before widening the array.
 #
-#   --mem=64G       RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,
+#   --mem=128G      24G -> 64G (2026-09-07) -> 128G (2026-09-08), each on measurement.
+#
+#                   THE FIRST REAL FLAGSHIP TASK settled it. kp_vy/vyx seed 0 at
+#                   N=500/T=500/w=360 on Sol: MaxRSS 30654 MiB against my oracle-only
+#                   projection of 23754 -- 29% HIGH. The projection was honest about
+#                   being a floor (measured without --save_panel, and the estimator
+#                   stage not measured at all), and the floor held as a floor.
+#
+#                   g0235 IS THE BINDING CASE, and it is ~2x kp_vy. Measured ladder at
+#                   T=200, bgn_gam vs kp_vy: 0.96x RSS at N=100, 1.30x at 200, 1.38x at
+#                   300, 1.96x at 500 -- SUPERLINEAR, which is the ~T*N^2 behaviour this
+#                   file already warned was unmeasured for g0235. Its fit is
+#
+#                       bgn_gam maxRSS ~ -1241 + 0.2218*(N*T) MiB
+#
+#                   giving 52.9 GiB oracle-only at flagship; applying kp_vy's measured
+#                   +29% oracle-to-task factor gives ~68 GiB, i.e. OVER 64G. A g0235
+#                   task submitted at 64G was cancelled while still PENDING on this
+#                   evidence rather than discovered by an OOM at hour 3.
+#
+#                   Set unconditionally rather than per-economy because #SBATCH is
+#                   parsed before the body runs, so SEED_SPEC cannot pick it. The queue
+#                   was empty and over-requesting cost nothing; on a busy cluster,
+#                   submit kp_vy with --mem=48G to schedule sooner.
+#
+#                   (superseded note) RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,
 #                   which is a structural result rather than a fit: N = 500/T = 200 and
 #                   N = 200/T = 500 have the same N*T and measured 11209 and 10969 MiB
 #                   -- 2.1% apart with the large dimension swapped. Flagship N*T =

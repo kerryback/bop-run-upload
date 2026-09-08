@@ -2285,3 +2285,66 @@ matching the laptop test for test.
 could only be run through the per-file `__main__` blocks. The repo ships `tests/` and
 both clusters need to run them; added to `environment.yml` and `requirements.txt`, and
 installed on Phoenix.
+
+## §36. The first post-correction flagship number: vyx survives, and is stronger (2026-09-08)
+
+`run_seeds_slurm.sh` had never been run. The first task — kp_vy/vyx, seed 0,
+N=500/T=500, window 360, on Sol — completed, and it is the **first measurement of the
+realized gap since the lambda regime-label fix**. Every gap figure in the repo before
+this one predates that correction.
+
+| | published (pre-fix) | **now** |
+|---|---|---|
+| room (const-θ, nonlinear − linear) | +0.3496 | **+0.3746** |
+| realized gap (RFF − best linear) | +0.1009 | **+0.1138** |
+| t vs FMR | 21.6 | **32.6** |
+
+**The lambda fix did not cost vyx its standing; it improved it.** Room is *higher* at
+flagship than the published figure, and the estimated gap is larger at a higher t. The
+rank-1 position that §0.0 rested on — and that I flagged as uncitable — is now supported
+by a number from the corrected economy rather than the old one.
+
+Best per method (window 360, 125 eval months, best κ):
+
+| method | P | sharpe | t vs FM |
+|---|---|---|---|
+| `rff_ens` | 360 | **0.7856** | 32.6 |
+| `rff` | 3600 | 0.7841 | 30.8 |
+| `linrank` | 6 | 0.6718 | 5.0 |
+| `fm` | 6 | 0.6628 | — |
+| `ff` | 6 | 0.5932 | −23.0 |
+
+**One nuance, so the ceilings are not misread.** `linrank` at 0.6718 *exceeds* the
+linear-in-ranks ceiling of 0.6508. That is not an error: the ceilings are best
+**constant-θ**, while the estimators re-fit on a rolling 360-month window and adapt. So
+"capture = gap / room" is not a clean ratio here, and I am not quoting one. Caveat: one
+seed; seeds 1–9 are running.
+
+### Two cost predictions of mine, both wrong, in opposite directions
+
+**Wall: projected ~6 h, actual 2 h 58 m** (oracle 4450 s, estimators 6197 s). I scaled
+the laptop by 4x, taking that factor from the gs_bx solve's CPU utilisation (114% on Sol
+against 470% here). It did not transfer: this task had 8 CPUs and used them. The real
+laptop→Sol factor was **2.05x**, not 4x.
+
+**Memory: projected 23754 MiB, actual 30654 MiB — 29% high.** The projection was
+explicitly a floor (measured without `--save_panel`, estimator stage unmeasured) and the
+floor held. But note what this means: **had `--mem` stayed at the original 24G, this task
+would have OOMed at hour 2 and written nothing.** Raising it was right; the model was
+optimistic.
+
+### That mistake nearly repeated on g0235, and the ladder caught it
+
+The local bgn_gam ladder landed the same afternoon. Against kp_vy at T=200, its RSS
+ratio runs 0.96x / 1.30x / 1.38x / **1.96x** at N = 100/200/300/500 — superlinear, the
+`~T*N^2` behaviour this repo had assumed but never measured for g0235.
+
+    bgn_gam maxRSS ~ -1241 + 0.2218*(N*T) MiB   ->  52.9 GiB oracle-only at flagship
+
+Applying kp_vy's measured +29% oracle-to-task factor gives **~68 GiB, over the 64G** the
+g0235 task had just been submitted with. It was cancelled while still PENDING and
+resubmitted at 128G. The array default is now 128G.
+
+Sequence worth noting: the ladder was run because I had written "assume the quadratic for
+g0235" into the script rather than leaving the gap silent. That note is what made the
+measurement happen before the OOM rather than after it.
