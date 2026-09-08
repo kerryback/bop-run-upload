@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(HERE, "common"))
 import dkkm_functions as dkkm
 import fama_functions as fama
 import runstamp
+import provenance
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx"], required=True)
@@ -246,8 +247,16 @@ summ["t_vs_fm"] = tstats
 pd.set_option("display.width", 200)
 print(f"\n=== {args.model}/{args.tag}: window={args.window}, eval months={len(eval_months)}, N={N}")
 print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+_prov, _ptag = provenance.write_sidecar(
+    _base + "_summary.csv", inputs=_solves,
+    extra={"engine": "estimators", "window": args.window,
+           "panel": os.path.basename(_panel_path)})
+summ["prov"] = _ptag           # every row carries it; see provenance.short_tag
+res["prov"] = _ptag
+res.to_csv(_base + ".csv", index=False)          # rewritten so the full results carry it too
 summ.to_csv(_base + "_summary.csv", index=False)
-json.dump({"model": args.model, "tag": args.tag, "seed": args.seed,
+print(f"[prov] {_ptag}  -> {os.path.basename(_base)}_summary.csv.prov.json", flush=True)
+json.dump({"model": args.model, "tag": args.tag, "seed": args.seed, "prov": _ptag,
            "window": args.window, "winsor": args.winsor, "kappas": kappas,
            "eval_months": len(eval_months), "N": N,
            "solves": _solves,
