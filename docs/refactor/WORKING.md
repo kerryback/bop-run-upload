@@ -2244,3 +2244,44 @@ by re-running on the existing panel, then N at fixed window on one new panel.
 Until that lands, **the total per-task cost of the seed array is unknown**, and the
 oracle-only projection in the `-t` block understates it by an unknown factor. That is a
 second, independent reason not to tighten `-t 2-00:00`.
+
+## §35. Phoenix's env, and a third stack agreeing on solve_id (2026-09-08)
+
+**The gamma(x) negative control passed.** `gs_solve_gam.py` at `gs_gamma_slope = 0`
+reproduces `gs_solve_reg.py` element for element: all 31 solved arrays — every value
+function, price function, policy, grid and transition matrix — are byte-identical at
+xnum=31 / tol=1e-4 with gmreg=[0.6,3.0]. Only `params_json` and `solve_id` differ, and
+both must: the namespace legitimately gained `gs_gamma_slope`/`lo`/`hi`, and the source
+file is a different file. (My first comparison script reported "CONTROL FAILS" because
+it lumped those two metadata keys in with the numerics.) The reconstruction is verified.
+
+**Phoenix's `bop` was 8/10 against environment.yml**, missing exactly `pyarrow` and
+`openpyxl` — the same two pandas I/O backends whose absence broke `--save_panel` on Sol
+the day before. Everything else satisfied and python 3.12.13 was already in range, so
+this was an update, not a replace: rebuilding would have moved eight working packages
+for no reason. Nothing was running (empty queue, no processes in the env), so it was
+safe to mutate in place rather than clone.
+
+Now 10/10, and **functionally** verified rather than merely importable — `to_parquet`
+and `read_parquet` round-trip, `to_excel`/`read_excel` round-trip, and a writable
+`to_numpy(copy=True)` under pandas 3.0.3. Import success is not the test that matters
+for a backend pandas resolves at runtime.
+
+**A third stack now agrees on solve_id.** All three independently compute
+`fa9032525bff9489` for `var-gs_bx-g28-v1`, from parameters alone, without solving:
+
+| | python | numpy | pandas |
+|---|---|---|---|
+| laptop | 3.11.14 | 2.4.2 | — |
+| Sol | 3.14.3 | 2.4.3 | — |
+| Phoenix | 3.12.13 | 2.4.6 | 3.0.3 |
+
+With Sol's five bx7 ids reproduced exactly as precommitted (§34), the portability claim
+in §26 is no longer an argument from construction — it is measured on three stacks
+spanning three python minor versions. The full suite passes on Phoenix, 150/150,
+matching the laptop test for test.
+
+**`pytest` was missing from `environment.yml`** and from Phoenix's env, so the suite
+could only be run through the per-file `__main__` blocks. The repo ships `tests/` and
+both clusters need to run them; added to `environment.yml` and `requirements.txt`, and
+installed on Phoenix.
