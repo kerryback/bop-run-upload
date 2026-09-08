@@ -412,6 +412,58 @@ def test_kp_streams_solver_progress():
     )
 
 
+
+# ---- digest mismatch: reproduction vs corruption (2026-09-08) -----------------------
+
+def _fake_manifest(tmp, payload, solve_id="abc123"):
+    """A manifest whose one artifact is an .npz we control."""
+    import numpy as np
+    ap = os.path.join(tmp, "solution.npz")
+    np.savez(ap, **payload)
+    return {"solve_id": solve_id,
+            "artifacts": [{"path": ap, "bytes": os.path.getsize(ap),
+                           "sha256": "0" * 64}]}      # deliberately wrong digest
+
+
+def test_digest_mismatch_with_matching_embedded_id_is_not_a_problem():
+    """An independent reproduction has the same solve_id and different bytes.
+
+    HASH_SIG_DIGITS makes solve_id independent of the library stack on purpose, so
+    machines that agree on an id can differ in the last digits of every table. Calling
+    that "content changed" accuses a correct reproduction of corruption -- what a
+    co-author regenerating without cluster access would hit.
+    """
+    import numpy as np
+    with tempfile.TemporaryDirectory() as tmp:
+        man = _fake_manifest(tmp, {"x": np.arange(4), "solve_id": np.array("abc123")})
+        assert solstamp.artifact_problems(man) == []
+
+
+def test_digest_mismatch_with_a_different_embedded_id_is_the_wrong_solve():
+    import numpy as np
+    with tempfile.TemporaryDirectory() as tmp:
+        man = _fake_manifest(tmp, {"x": np.arange(4), "solve_id": np.array("deadbeef")})
+        probs = solstamp.artifact_problems(man)
+        assert len(probs) == 1 and "WRONG SOLVE" in probs[0], probs
+
+
+def test_digest_mismatch_with_no_embedded_id_stays_a_problem():
+    """Absence of the embedded id means the check cannot help -- so do not clear it."""
+    import numpy as np
+    with tempfile.TemporaryDirectory() as tmp:
+        man = _fake_manifest(tmp, {"x": np.arange(4)})
+        probs = solstamp.artifact_problems(man)
+        assert len(probs) == 1 and "content changed" in probs[0], probs
+
+
+def test_a_missing_artifact_is_still_reported():
+    man = {"solve_id": "abc123",
+           "artifacts": [{"path": "/nonexistent/solution.npz", "bytes": 1,
+                          "sha256": "0" * 64}]}
+    probs = solstamp.artifact_problems(man)
+    assert len(probs) == 1 and "missing" in probs[0], probs
+
+
 if __name__ == "__main__":
     import traceback
 
