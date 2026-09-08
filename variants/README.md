@@ -98,6 +98,34 @@ sha256. **The manifest outlives the artifact**: after scratch is purged you can
 still say exactly which parameters produced a number, and re-running the producer
 reproduces the same `solve_id`.
 
+### Getting the artifacts without a cluster
+
+The manifests are in git; the artifacts they describe are not (all eight live solves
+are 504 MB, of which 495 MB is the five `gs_bx` `solution.npz`). They are published,
+content-addressed by `solve_id`, to the shared project folder:
+
+    ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/
+
+From the repo root:
+
+```bash
+python variants/fetch_solves.py --all                        # what am I missing?
+python variants/fetch_solves.py --all --from "<that folder>" # get it, verified
+python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "<that folder>"
+```
+
+It reads each spec's `expected_solves`, resolves them through the manifests, copies
+only what is missing, and checks the sha256 of everything it copies. **Do not re-solve
+instead** — the five GS21 exposure types are about five hours each on a cluster node.
+
+A digest mismatch is not automatically corruption: a `solve_id` is deliberately
+independent of the library stack, so two machines that legitimately agree on an id can
+still differ in the last digits of every table. `fetch_solves.py` reads the `solve_id`
+the solver embedded inside the file and only complains when *that* disagrees.
+
+Publishing (maintainer only, write-once): `--publish "<that folder>"` instead of
+`--from`.
+
     python variants/solfiles.py list                # every solve ever recorded
     python variants/solfiles.py show <solve_id>     # its full parameter set
     python variants/solfiles.py diff <id_a> <id_b>  # what changed between two
