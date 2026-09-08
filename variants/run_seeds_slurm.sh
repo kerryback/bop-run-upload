@@ -91,11 +91,23 @@
 #                   existed anywhere in the repo. The first end-to-end run (kp_vy,
 #                   N=60/T=80/window=36, 29 eval months) took 741 s against the
 #                   oracle's 216 s: 3.4x LONGER. Its cost scales with eval_months
-#                   (= T - window - burn) x N x P, and the flagship has 138 eval months
-#                   against 29. Do NOT size this array from the oracle alone. The
-#                   estimator ladder in _scratch/est_ladder.sh measures the two slopes
-#                   separately; until it lands the total task cost is unknown, which is
-#                   a second reason -t 2-00:00 stays where it is.
+#                   (= T - window - 15) x P. MEASURED 2026-09-07, four points:
+#
+#                       estimator wall ~ 25.1 s * eval_months, intercept ~0
+#
+#                   at N=60, windows 20/36/50 (45/29/15 eval months -> 1132/741/378 s):
+#                   25.2, 25.6, 25.2 s per eval month, linear through the origin. And it
+#                   is essentially N-INDEPENDENT: N=60 -> 180 at fixed 29 eval months
+#                   went 741 -> 751 s, +1.4% for 3x the cross-section, because the P x P
+#                   ridge solve dominates and P does not depend on N. Peak RSS is ~1.4
+#                   GiB and barely moves with N, so the estimator does NOT drive --mem.
+#
+#                   Flagship (T=500, window=360) is 125 eval months -> ~52 min here,
+#                   ~3.5 h on Sol. With the oracle's ~35 min / ~2.3 h that is ~1.5 h
+#                   here and ~6 h on Sol per task. The estimator is the larger half but
+#                   not dominant: its cost grows only with eval_months (29 -> 125) while
+#                   the oracle's grows with N*T (4800 -> 250000). Comfortable under
+#                   -t 2-00:00. The N-independence is measured only to N=180.
 #                   RE-MEASURE from the first completed task before widening the array.
 #
 #   --mem=64G       RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,

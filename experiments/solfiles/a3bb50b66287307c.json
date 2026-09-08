@@ -1,0 +1,81 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "perr_rel": 1.5225931055491438e-05,
+    "qerr_rel": 1.9257942744073286e-05,
+    "sweeps": 2524,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 158.47812424101465
+  },
+  "artifacts": [
+    {
+      "bytes": 99774345,
+      "path": "variants/gs_bx/sol_b40c/solution.npz",
+      "sha256": "0583d9d1fbc7d7956d7ab8c9b2731715104ec764a61b0a5c2761f200c6a30fed"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "extra": {
+    "outdir": "sol_b40c"
+  },
+  "inputs": {},
+  "model": "gs_bx",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "bnum": 20,
+    "delta": "0.006666666666666667",
+    "g": "1.14",
+    "gamma_x": "0.5",
+    "gmreg": {
+      "__array__": [
+        "0.6",
+        "3.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "gs_ashift": "0.0",
+    "gs_bx": "4.0",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "kappa_e": "0.025",
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "phi": "0.4",
+    "psw": {
+      "__array__": [
+        "0.020833333333333332",
+        "0.041666666666666664"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_z": "0.9654893846056297",
+    "sigma_m": 5,
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.2",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "znum": 200
+  },
+  "solve_id": "a3bb50b66287307c",
+  "sources": {
+    "variants/gs_bx/gs_solve_reg.py": "b6106234c03db64d47178d8e48a22ef146bfd799c096a4157142074d77faf2be"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_b40c"
+  ],
+  "total_bytes": 99774345
+}
