@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-g28-v1",
+  "title": "GS21 with a countercyclical state-dependent price of risk, gamma(x)",
+  "question": "Can a gap open with ZERO nonlinear room -- from estimation efficiency rather than complexity?",
+  "notes": "RECONSTRUCTION of `sol_g28`, whose code was never in this repo. Recovered from variants/REPORT.md:553, not invented: gamma(x) = clip(0.5 - 0.28*x/sd(x), 0.05, 1.0).\n\nWHY THIS ECONOMY. PLAN 0.0 ranks GS gamma(x) 3rd of 24 on realized gap (+0.038, t 17.9) with room ~= 0, and it is the sole evidence for that document's second conclusion: that a gap can come from ESTIMATION EFFICIENCY rather than nonlinearity. REPORT.md 13g found RFF-3600 'needs its heaviest ridge and still trails lin_rank' in POPULATION (lin_ceil 0.3588 vs nl_ceil 0.3584), yet the ESTIMATED linrank landed 0.3198 -- 0.039 below its own ceiling -- while RFF attained 0.3581. Both estimators get ridge at their best kappa (REPORT.md:146, :793), so this is not ridge-vs-OLS. The audit in e1a1b66 left that conclusion resting on deleted code; this spec makes it runnable again.\n\nsd(x) IS THE STATIONARY SD sqrt(sigma_x^2/(1-rho_x^2)) = 0.038431, which is what tauchen spans +/-4 of. It is NOT xgrid.std(), the sd of uniformly spaced grid points, which is 2.32x larger; standardising by that would silently give an economy with 2.32x less gamma variation than REPORT.md specified. At slope 0.28 gamma has mean 0.502 and sd 0.258 under the stationary distribution, saturating 9.1% of the TIME (58% of grid POINTS, which sit in thin tails).\n\nThe calibration is the CORRECTED GS21 Table I one (2026-09-06), which REPORT.md's figures predate. This is therefore the mechanism under the right calibration, not a reproduction of +0.038. Expect the room to stay ~0 -- REPORT.md 13g already re-based it and found gamma(x) adds none; the question is whether the ESTIMATED gap survives.\n\nPRECOMMITMENT: the expected_solves id below was computed WITHOUT solving. Clear solves_pending once it is recorded.",
+  "lineage": {
+    "parent_spec": null,
+    "changes": [
+      "NEW ECONOMY, not derived from bx7. Single exposure type (gs_bx = 1.0, the GS21 baseline) and NO regime (gmreg = [1,1], inert). The only mechanism is gamma(x)."
+    ],
+    "supersedes": null,
+    "superseded_by": null
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "kappa_e": 0.025,
+    "gs_ashift_ladder": "none (single type, gs_bx = 1.0)",
+    "gs_price_of_risk": "gamma_x_linear_clipped"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      1.0,
+      1.0
+    ],
+    "gs_gamma_slope": 0.28
+  },
+  "types": {
+    "share": [
+      1.0
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0
+      ],
+      "gs_ashift": [
+        0.0
+      ]
+    },
+    "soldirs": [
+      "sol_g28"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_g28",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_g28",
+    "GS_BX_BETAS": "1.0",
+    "GS_BX_SHARES": "1.0"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1,
+      3,
+      10
+    ]
+  },
+  "provenance": {
+    "source_script": null,
+    "reconstructed_from": "variants/REPORT.md:553 (sol_g28) and 13g",
+    "reconstructed": "2026-09-07",
+    "verified_by": "tests/test_gs_solver_parity.py"
+  },
+  "expected_solves": {
+    "sol_g28": "fa9032525bff9489"
+  },
+  "solves_pending": true,
+  "spec_hash": "02899f4e81e0a7a698131f2d2ecf2340f72404ee5a382ec4f6796d1c13174233"
+}
