@@ -3,10 +3,18 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  # 2026-09-07: was python=3.12, which matched NOTHING in use. Verified stacks are
-  # python 3.11.14 / numpy 2.4.2 (laptop) and python 3.14.3 / numpy 2.4.3 (Sol's `bop`).
-  # A pin that describes no real environment is worse than an honest range; solve_ids are
-  # portable across both by construction (variants/common/solstamp.py HASH_SIG_DIGITS).
+  # 2026-09-07: was python=3.12, which matched NOTHING in use. THREE verified stacks,
+  # all inside this range and all agreeing on solve_id:
+  #
+  #     laptop   python 3.11.14  numpy 2.4.2
+  #     Sol      python 3.14.3   numpy 2.4.3
+  #     Phoenix  python 3.12.13  numpy 2.4.6   (verified 2026-09-08)
+  #
+  # Not a claim from the range alone: all three independently compute
+  # solve_id=fa9032525bff9489 for var-gs_bx-g28-v1, and Sol reproduced all five bx7
+  # ids exactly as precommitted. A pin describing no real environment is worse than an
+  # honest range; portability is by construction (variants/common/solstamp.py
+  # HASH_SIG_DIGITS quantises the hashed copy to 8 significant digits).
   - python>=3.11,<3.15
   - pip
   # Core numerical computing (conda-forge binaries ship MKL/OpenBLAS — beat PyPI wheels)
@@ -27,3 +35,7 @@ dependencies:
   # AWS S3 result storage (utils/upload_to_aws.py) + webhook notify (main.py)
   - boto3>=1.34
   - requests>=2.31
+  # Test runner. The repo ships tests/ and both clusters need to run them; Phoenix's
+  # `bop` had no pytest on 2026-09-08, so the suite could only be run through the
+  # per-file __main__ blocks. Listed so a fresh env can run `pytest tests/`.
+  - pytest>=8
