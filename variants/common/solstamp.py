@@ -33,7 +33,7 @@ side to err on.
 
 From that snapshot it derives a `solve_id` (content hash). The solve_id is the
 identity of a solve: same parameters + same code == same id == reusable artifacts.
-Each solve gets a manifest in `experiments/solfiles/<solve_id>.json`, committed to
+Each solve gets a manifest in `experiments/registry/<solve_id>.json`, committed to
 git, recording the parameters, the code digests, and every artifact with its size
 and sha256.
 
@@ -71,7 +71,7 @@ SMALL_ARTIFACT_BYTES = 32 * 1024 * 1024   # <= this may be committed to git
 _HERE = os.path.dirname(os.path.abspath(__file__))
 VARIANTS_DIR = os.path.dirname(_HERE)
 REPO_DIR = os.path.dirname(VARIANTS_DIR)
-REGISTRY_DIR = os.path.join(REPO_DIR, 'experiments', 'solfiles')
+REGISTRY_DIR = os.path.join(REPO_DIR, 'experiments', 'registry')
 
 
 class SolveStaleError(RuntimeError):

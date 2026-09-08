@@ -69,7 +69,7 @@ file at `docs/refactor/FINDINGS-gs21.md` (create it).
 **`docs/refactor/WORKING.md`** — the primary session is appending to it live, and two
 appenders will collide. Write to `FINDINGS-gs21.md`; it gets merged in afterwards.
 
-`experiments/solfiles/` is shared but safe: one file per solve_id, and ids never collide
+`experiments/registry/` is shared but safe: one file per solve_id, and ids never collide
 across models.
 
 **Do not commit.** Seth commits himself. Leave the tree dirty.

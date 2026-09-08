@@ -9,7 +9,7 @@
 >   the one action that could disturb them. Sol stays at `227f5e9`. Still lossless
 >   whenever someone does it.
 > - §3 (verification) **IN PROGRESS, read-only.** `_scratch/watch_gs_bx.sh` polls
->   `squeue` and reads `experiments/solfiles/`; it writes nothing to Sol. Two of five
+>   `squeue` and reads `experiments/registry/`; it writes nothing to Sol. Two of five
 >   have landed and **both match**: `sol_b55c 645262a8e72d944c`, `sol_b70c
 >   0818d7153d5708cc`. Result lands in `_scratch/GS-BX-VERIFY.md`.
 > - §5 (`--mem`) **DONE and superseded — read §5 with care, its verdict was wrong.**

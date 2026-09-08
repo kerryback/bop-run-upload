@@ -370,7 +370,7 @@ generalizes without modification:
   did not". Summarization *is* that downstream stage.
 - So: `snapshot(spec_module, sources=['analyze/summary.py'], stage='summary',
   inputs=artifact_digests([...results.pkl]))` → `record(...)` writes
-  `experiments/solfiles/<id>.json` with the summary's own bytes and sha256 alongside the
+  `experiments/registry/<id>.json` with the summary's own bytes and sha256 alongside the
   digests of the results files it consumed. The manifest is a few KB and outlives the 80 GB,
   which is the stated design goal in `solstamp.py`'s docstring.
 - `record()` already accepts **`spec_id=`** and accumulates `spec_ids` across calls. That is

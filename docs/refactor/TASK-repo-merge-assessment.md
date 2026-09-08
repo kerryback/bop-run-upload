@@ -45,7 +45,7 @@ So the deliverable is a **recommendation with evidence**, not a merge.
 - A 10-panel simulation run produces ~80 GB. It lives on cluster scratch and is **not
   permanently retained**. So the durable artifact must be the *summary*, linked to the
   spec that produced it — that linkage is the whole point of the merge.
-- `variants/common/solstamp.py` + `experiments/solfiles/` already do this for **solves**
+- `variants/common/solstamp.py` + `experiments/registry/` already do this for **solves**
   (content-addressed `solve_id`, manifest outlives the artifact). `experiments/specs/`
   holds content-hashed experiment specs. Read those two before proposing anything; the
   answer should extend that design rather than invent a parallel one.

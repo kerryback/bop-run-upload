@@ -2,7 +2,7 @@
 """Browse the solve registry: what has been solved, with what parameters, and is it still here.
 
 Every expensive solve (BGN J* tables, KP G/integral tables, GS solutions) records a
-manifest in experiments/solfiles/<solve_id>.json keyed by a content hash of its
+manifest in experiments/registry/<solve_id>.json keyed by a content hash of its
 parameters and producer source. Manifests are small and committed, so the record of
 "which parameters produced this artifact" survives even after the artifacts are
 purged from scratch.
@@ -41,7 +41,7 @@ def cmd_list(args):
     rows = [m for m in solstamp.iter_manifests()
             if not args.model or m.get("model") == args.model]
     if not rows:
-        print("no solves recorded yet (experiments/solfiles/ is empty)")
+        print("no solves recorded yet (experiments/registry/ is empty)")
         return 0
     print(f"{'solve_id':18s} {'model':10s} {'size':>10s} {'git':4s} {'files':>6s}  tags / specs")
     print("-" * 88)

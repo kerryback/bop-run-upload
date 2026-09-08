@@ -29,7 +29,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(ROOT, "experiments", "specs")
-SOLF = os.path.join(ROOT, "experiments", "solfiles")
+SOLF = os.path.join(ROOT, "experiments", "registry")
 
 CLAIM_MARKERS = ("PRECOMMITMENT", "WITHOUT solving", "computed from the current "
                  "parameters and code WITHOUT solving")
@@ -47,8 +47,15 @@ def spec_pinned_at(spec_file, solve_id):
 
 
 def manifest_tracked_at(solve_id):
-    out = _git(["log", "--diff-filter=A", "--format=%aI", "--",
-                os.path.join("experiments", "solfiles", solve_id + ".json")])
+    """--follow, because the registry directory gets renamed.
+
+    Without it, `experiments/solfiles` -> `experiments/registry` (2026-09-08) hid every
+    manifest's original add, and all three known retrofits silently reclassified as
+    PRECOMMITTED -- precisely the vacuous-evidence failure this module exists to
+    prevent. test_the_known_retrofits_stay_labelled caught it on the rename's first run.
+    """
+    out = _git(["log", "--follow", "--diff-filter=A", "--format=%aI", "--",
+                os.path.join("experiments", "registry", solve_id + ".json")])
     return out.splitlines()[-1] if out else None
 
 
