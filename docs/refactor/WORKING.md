@@ -2348,3 +2348,62 @@ resubmitted at 128G. The array default is now 128G.
 Sequence worth noting: the ladder was run because I had written "assume the quadratic for
 g0235" into the script rather than leaving the gap silent. That note is what made the
 measurement happen before the OOM rather than after it.
+
+## §37. Ten seeds: vyx is UNCHANGED by the lambda fix, and I over-read seed 0 (2026-09-08)
+
+All ten vyx seeds completed at N=500/T=500/w=360. Wall 2.4–3.2 h each, MaxRSS 29.9–30.6
+GiB, every one COMPLETED.
+
+| | published (pre-fix, 1 seed) | **10 seeds now** |
+|---|---|---|
+| room | +0.3496 | **+0.3491**  (sd 0.0365, se 0.0115) |
+| gap (DKKM − best linear) | +0.1009 | **+0.1046**  (sd 0.0155, se 0.0049) |
+| t(DKKM vs FMR), time-series | 21.6 | mean 29.4, sd 12.0, range 17.6–58.2 |
+
+**A correction I owe.** On seed 0 alone I reported room +0.3746 and gap +0.1138 and wrote
+that vyx "survives the lambda fix and is STRONGER". That was over-reading one draw. Seed
+0 sits +0.7 sd on room and +0.6 sd on gap; across ten seeds the means land on the
+published values — room differs by 0.0005 against a standard error of 0.0115, gap by
+0.0037 against 0.0049. **The right conclusion is UNCHANGED, not stronger.**
+
+That is still a substantive result. The lambda regime-label fix moved E[lambda] from
+1.7172 to 1.0 — a genuinely different economy (§WORKING.md 32) — and at flagship size it
+did not detectably move either the room or the realized gap. The published vyx figures
+were not reproducible in principle; they turn out to be reproduced in fact.
+
+### The seed noise is large enough to matter for PLAN §0.0
+
+Cross-seed sd is ~10% of the mean on room, ~15% on gap, and **41% on the t statistic**
+(17.6 to 58.2 across ten draws of the same economy). Every figure in
+`grid_summary.csv` is single-seed.
+
+So the grid's ordering is identified only where economies differ by much more than one
+seed-sd. The top gap is +0.1009 and the runners-up are +0.0406 and +0.0383 — those
+separate cleanly from vyx. But they differ from *each other* by 0.0023, against a gap
+sd of 0.0155: **ranks 2 and 3 are not distinguishable, and neither are most of the
+lower rankings.** §0.0's headline (vyx first, by a wide margin) survives; its ordering
+below the top does not, independently of the staleness audit in e1a1b66.
+
+### g28 solved, and the precommitment caught its first real thing
+
+The gamma(x) solve finished on Phoenix in 5.9 h — converged on the TOLERANCE test
+(qerr_rel 8.58e-6, perr_rel 4.25e-6 against an enforced 2e-5) at sweep 2974, not on the
+cycle cap. Parameters exactly as specified.
+
+But its `solve_id` came out `8b584c38614695ac`, not the precommitted `fa9032525bff9489`.
+Cause: the `experiments/solfiles` -> `experiments/registry` rename (30bef7a) ran sed over
+every file naming the old path, which rewrote **one string inside a print()** in
+`gs_solve_gam.py`. `solve_id` digests the whole source file, so the id moved while the
+numerics did not.
+
+**This is the first time precommitment CAUGHT something** rather than confirming it —
+the exact distinction the Phase 3 trigger in DECISION-provenance-layers.md turns on.
+What it caught is real and was worth catching, even though the economy is fine.
+
+**And it exposes a design hazard that will recur.** `solve_id` cannot tell "the code
+changed" from "the comments changed". That is the mirror of why content-addressing beats
+a repo-wide git sha (207 commits, 6 touched the solver): the file-level digest
+distinguishes solver from repo, but not code from prose. Fixing it — digesting the AST —
+would move every existing solve_id, 504 MB and ~25 h of cluster time, so it is
+deliberately **not** fixed. The operational rule instead: **do not run bulk sed over
+solver sources.** Recorded in var-gs_bx-g28-v2's notes where the next person will hit it.
