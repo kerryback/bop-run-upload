@@ -341,6 +341,30 @@ def test_the_seed_array_can_actually_find_each_economys_solve():
     assert not missing, "\n  ".join([""] + missing)
 
 
+
+def test_every_runstamp_lookup_in_the_seed_array_uses_SOLVE_TAG():
+    """ALL of them, not just the first one found.
+
+    e42a3a7 fixed the precondition's lookup to use SOLVE_TAG and added a test for it.
+    The per-seed checkpoint and the post-run verification made the same lookup with
+    the output TAG and were not touched. g0235 seed 0 then ran both stages to
+    completion (3 h 14 m) and was marked FAILED by the post-run check -- "built from
+    be222462dd017b2c; registry now has nothing" -- because it looked up g0235 while the
+    solve is registered as Jstar_g0235. The checkpoint had the same bug, so a resubmit
+    would have re-run the seed instead of skipping it.
+
+    A fix that reaches one call site and a test that checks one call site are the same
+    mistake. This asserts every runstamp invocation in the script passes the same key.
+    """
+    body = read_script("variants/run_seeds_slurm.sh")
+    calls = re.findall(r"runstamp\.py\s+\S+.*?--tag\s+(\S+)", body)
+    assert len(calls) >= 3, f"expected the precondition, checkpoint and post-run lookups; found {len(calls)}"
+    wrong = [c for c in calls if c != '"${SOLVE_TAG:-$TAG}"']
+    assert not wrong, (
+        "runstamp lookups in run_seeds_slurm.sh not keyed on SOLVE_TAG (bgn_gam's solve "
+        f"is registered as Jstar_g0235, not g0235): {wrong}")
+
+
 if __name__ == "__main__":
     import traceback
 

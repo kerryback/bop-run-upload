@@ -2467,3 +2467,56 @@ A manifest's recorded `params`, fed back through `Snapshot` with re-quantisation
 large array's stored hash is of the raw, not quantised, bytes). The producer probe does
 reproduce it, so the ids are sound; but the manifest alone is not a complete account of
 how its id was computed. Not chased today; recorded so it is not rediscovered.
+
+## §39. g0235 at flagship reproduces its published row to the digit; two of my projections did not (2026-09-09)
+
+`bgn_gam/g0235` seed 0 at N=500/T=500/w=360 on Sol: oracle 5420 s, estimators 6233 s.
+
+| | published (1 seed) | **flagship now, seed 0** |
+|---|---|---|
+| room | +0.0233 | +0.0285 |
+| gap (DKKM − best linear) | **+0.0297** | **+0.0297** |
+| t vs FMR | **29.1** | **29.1** |
+
+**The gap and its t reproduce the published `grid_summary.csv` row at displayed
+precision** — on a different machine, under Python 3.14.3 / numpy 2.4.3, from the
+current code. This economy is the one of the 24 that is unchanged (§0.0 audit), so it is
+the one row that *could* be reproduced, and it is. That validates the whole
+oracle → panel → estimator pipeline against the pre-refactor results, which nothing
+else in the repo had done.
+
+Room differs (+0.0285 vs +0.0233) for a specific reason, not noise: the oracle now runs
+with `--levels`, and the nonlinear ceiling here is set by `rffL3600`, a basis the
+published run did not have. The estimator configuration is identical, which is why the
+gap matches exactly and the room does not.
+
+### The job was marked FAILED, and the science was fine
+
+Both stages completed and wrote every file. The last line of the log, after the END
+marker, was `STALE: built from be222462dd017b2c; registry now has nothing` — the
+**post-run verification** looking up `g0235` when the solve is registered as
+`Jstar_g0235`. §36's fix (e42a3a7) reached the precondition's lookup and nothing else;
+the per-seed checkpoint and the post-run check made the same lookup with the output tag.
+So seed 0 ran for 3 h 14 m and was failed by bookkeeping, and a resubmission would have
+re-run it rather than skipped it.
+
+A fix that reaches one call site and a test that checks one call site are the same
+mistake. All three now key on `SOLVE_TAG`; the test asserts *every* `runstamp` lookup in
+the script does, so a fourth cannot be added with the old key.
+
+### Two projections against actuals
+
+**Oracle wall: 5420 s.** Projected ~8900 s from the ladder's 2.07× bgn/kp_vy ratio at
+N=500/T=200. The ratio at T=500 is **1.22×**. Wrong by 1.6×, safe direction.
+
+**Memory: 15.8 GiB** (sacct, whole task). Projected 53–68 GiB from the bgn_gam laptop
+ladder, which had bgn at **1.96×** kp_vy's RSS at N=500/T=200. On Sol at flagship it is
+**0.52×** — vyx used 30.6. The laptop and Sol measurements disagree in *direction*, and I
+have not established why: macOS max-RSS vs cgroup accounting, `--save_panel`, or
+bgn_gam's memory scaling in T differently from N are all candidates. Both numbers are
+recorded in the SLURM script; `--mem` is back to 64G, 2.1× the larger measured task.
+The 128G request cost nothing on an empty queue, but the claim I wrote to justify it —
+"g0235 IS THE BINDING CASE, ~2× kp_vy" — was wrong and is replaced, not appended to.
+
+The estimator stage, by contrast, landed where the ladder said: 50.7 s per eval-month
+against vyx's 49.6. N-independence holds across economies.
