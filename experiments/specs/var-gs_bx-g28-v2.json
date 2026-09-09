@@ -112,5 +112,6 @@
   "expected_solves": {
     "sol_g28": "8b584c38614695ac"
   },
-  "spec_hash": "6e2d4e3b447dd82e4723fc8b357907227e96ed78ab4c42eab67bb74847efb3c1"
+  "spec_hash": "6e2d4e3b447dd82e4723fc8b357907227e96ed78ab4c42eab67bb74847efb3c1",
+  "precommitted": false
 }

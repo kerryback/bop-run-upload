@@ -103,5 +103,6 @@
   "expected_solves": {
     "G": "f7be27e39d2b530f",
     "integ": "84e195172f091cd2"
-  }
+  },
+  "precommitted": false
 }

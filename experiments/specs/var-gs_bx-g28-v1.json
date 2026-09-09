@@ -113,5 +113,6 @@
     "sol_g28": "fa9032525bff9489"
   },
   "solves_pending": true,
-  "spec_hash": "fe9523578a9089e134ea8ef3d22a538988726853db9eca1c22881bcd106a0cb3"
+  "spec_hash": "fe9523578a9089e134ea8ef3d22a538988726853db9eca1c22881bcd106a0cb3",
+  "precommitted": true
 }

@@ -93,8 +93,14 @@ def classify():
 
 
 def claims_precommitment(spec):
-    notes = (spec.get("notes") or "").upper()
-    return any(m.upper() in notes for m in CLAIM_MARKERS)
+    """The `precommitted` FIELD, not the prose.
+
+    This grepped notes for "PRECOMMITMENT" until 2026-09-08, when var-gs_bx-g28-v2 --
+    whose notes say "ITS expected_solves IS NOT A PRECOMMITMENT AND MUST NOT BE READ AS
+    ONE" -- was flagged as claiming precommitment. A substring cannot tell a claim from
+    a denial, and an integrity check must not depend on reading English.
+    """
+    return bool(spec.get("precommitted"))
 
 
 def test_a_spec_claiming_precommitment_actually_is_one():
