@@ -137,6 +137,37 @@ def test_both_runners_write_a_sidecar_and_a_prov_column():
             f"pointer back to the code")
 
 
+
+def test_dirty_results_are_listed_but_not_inlined():
+    """Outputs are not code. A modified result file must show in `status` -- the tree
+    WAS dirty -- but its contents must not be inlined into the diff. Thirty cluster
+    sidecars each carried ~200 KB of other runs' results on 2026-09-08 before this.
+    """
+    import subprocess
+    res_dir = os.path.join(ROOT, "variants", "results")
+    tracked = subprocess.run(["git", "ls-files", "variants/results"], cwd=ROOT,
+                             capture_output=True, text=True).stdout.split()
+    target = next((f for f in tracked if f.endswith(".csv")), None)
+    if target is None:
+        return                                   # nothing tracked to dirty
+    path = os.path.join(ROOT, target)
+    original = open(path, "rb").read()
+    # Assembled at runtime so the sentinel never appears literally in THIS file: while
+    # this test is itself uncommitted, its source is part of `git diff HEAD`, and a
+    # literal sentinel here made the test fail on its own diff.
+    sentinel = "-".join(["SENTINEL", "ROW", "NOT", "INLINED"])
+    try:
+        with open(path, "ab") as fh:
+            fh.write(("\n" + sentinel + ",1,2,3\n").encode())
+        g = provenance.git_state()
+        assert g["dirty"]
+        assert any(target in line for line in g.get("status", [])), (
+            "the dirty result file must still appear in status")
+        assert sentinel not in g.get("diff", ""), (
+            "a result file's contents were inlined into the sidecar diff")
+    finally:
+        open(path, "wb").write(original)
+
 if __name__ == "__main__":
     import traceback
 

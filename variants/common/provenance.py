@@ -43,6 +43,9 @@ ENV_EXACT = ("CONDA_ENV", "CONDA_DEFAULT_ENV", "VECLIB_MAXIMUM_THREADS",
              "SLURM_JOB_ID", "SLURM_ARRAY_TASK_ID", "SLURM_ARRAY_JOB_ID",
              "SLURM_CPUS_PER_TASK", "SLURMD_NODENAME")
 DIFF_CAP = 200_000
+# Paths whose contents are never inlined into a sidecar's diff: they are outputs, and a
+# diff of outputs cannot help reproduce a run. Their names still appear in `status`.
+OUTPUT_DIRS = ("variants/results",)
 
 
 def _git(args, cwd, default=None):
@@ -75,7 +78,13 @@ def git_state(cwd=None):
     st["dirty"] = bool(porcelain)
     if porcelain:
         st["status"] = porcelain.splitlines()[:200]
-        diff = _git(["diff", "HEAD"], root, default="")
+        # The inline diff exists so a dirty tree's CODE can be reproduced. Outputs are
+        # not code: on 2026-09-08 the cluster tree was dirty only because the array had
+        # overwritten three tracked result files, and every one of thirty sidecars
+        # inlined a ~200 KB diff of OTHER runs' results. `status` still lists them, so
+        # the fact of the dirty tree is recorded; only their contents are left out.
+        diff = _git(["diff", "HEAD", "--"] + [f":(exclude){d}" for d in OUTPUT_DIRS],
+                    root, default="")
         st["diff_truncated"] = len(diff) > DIFF_CAP
         st["diff"] = diff[:DIFF_CAP]
         untracked = [l[3:] for l in porcelain.splitlines() if l.startswith("??")]
