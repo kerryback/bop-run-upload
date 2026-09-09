@@ -1,0 +1,62 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "c678c6dcf943dd5b7f7996b69b966dd209e2ee83",
+  "branch": "main",
+  "root": "/Users/sjpruitt/GitHub/bop-run-upload",
+  "dirty": false
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "bgn_gam",
+  "--N",
+  "100",
+  "--T",
+  "200",
+  "--seed",
+  "0",
+  "--tag",
+  "bscal100",
+  "--spec",
+  "var-bgn_gam-g0235-v2",
+  "--levels",
+  "--rff",
+  "36,360,3600"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants/bgn_gam",
+ "env": {
+  "BGN_PARAM_OVERRIDES": "{\"gmult\":[0.2,3.5],\"jstar_gam_file\":\"Jstar_g0235.csv\"}",
+  "CONDA_DEFAULT_ENV": "anaconda_env_20260224",
+  "MKL_NUM_THREADS": "6",
+  "OMP_NUM_THREADS": "6",
+  "OPENBLAS_NUM_THREADS": "6",
+  "VECLIB_MAXIMUM_THREADS": "6"
+ },
+ "when": "2026-09-08T10:57:03-0700",
+ "environment": {
+  "python": "3.11.14",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "hostname": "fin-4227130.3500.dhcp.asu.edu",
+  "numpy": "2.4.2",
+  "scipy": "1.17.0",
+  "pandas": "3.0.0",
+  "pyarrow": "23.0.1"
+ },
+ "how_to_reproduce": "git checkout c678c6dcf943dd5b7f7996b69b966dd209e2ee83 && cd variants && <env below> python run_oracle.py --model bgn_gam --N 100 --T 200 --seed 0 --tag bscal100 --spec var-bgn_gam-g0235-v2 --levels --rff 36,360,3600",
+ "inputs": [
+  {
+   "stage": "jstar",
+   "solve_id": "be222462dd017b2c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 9333
+  }
+ ],
+ "extra": {
+  "spec_id": "var-bgn_gam-g0235-v2",
+  "engine": "oracle",
+  "spec_check": "verified"
+ }
+}

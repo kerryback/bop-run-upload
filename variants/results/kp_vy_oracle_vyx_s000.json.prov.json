@@ -1,0 +1,86 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "71a4b676d8072b78b5434df1d65f842be81afc59",
+  "branch": "main",
+  "root": "/data/sjpruitt/GitHub/bop-run-upload",
+  "dirty": true,
+  "status": [
+   "?? 0",
+   "?? t3_bgn.sh"
+  ],
+  "diff_truncated": false,
+  "diff": "",
+  "untracked_code": [
+   "t3_bgn.sh"
+  ],
+  "untracked_code_warning": "these files are NOT in the sha and NOT in the diff; `git checkout` will not restore them and this run is not fully reproducible from the sha alone"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "kp_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "0",
+  "--tag",
+  "vyx",
+  "--spec",
+  "var-kp_vy-vyx-v2",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants/kp_vy",
+ "env": {
+  "CONDA_DEFAULT_ENV": "bop",
+  "KP_PARAM_OVERRIDES": "{\"type_share\":[0.34,0.33,0.33],\"type_bv\":[0.02,0.07,0.14],\"gamma_v\":1.8,\"bv_comp\":1.2}",
+  "KP_VY_PREFIX": "vyx",
+  "MKL_NUM_THREADS": "8",
+  "NUMEXPR_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "SEED_SPEC": "vyx",
+  "SLURMD_NODENAME": "sc020",
+  "SLURM_ARRAY_JOB_ID": "62856030",
+  "SLURM_ARRAY_TASK_ID": "0",
+  "SLURM_CPUS_PER_TASK": "8",
+  "SLURM_JOB_ID": "62856030",
+  "VECLIB_MAXIMUM_THREADS": "8"
+ },
+ "when": "2026-09-08T12:04:51-0700",
+ "environment": {
+  "python": "3.14.3",
+  "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "sc020",
+  "numpy": "2.4.3",
+  "scipy": "1.17.1",
+  "pandas": "3.0.1",
+  "pyarrow": "24.0.0"
+ },
+ "how_to_reproduce": "git checkout 71a4b676d8072b78b5434df1d65f842be81afc59 && cd variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 0 --tag vyx --spec var-kp_vy-vyx-v2 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "G",
+   "solve_id": "f7be27e39d2b530f",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2386269
+  },
+  {
+   "stage": "integ",
+   "solve_id": "84e195172f091cd2",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "extra": {
+  "spec_id": "var-kp_vy-vyx-v2",
+  "engine": "oracle",
+  "spec_check": "verified"
+ }
+}
