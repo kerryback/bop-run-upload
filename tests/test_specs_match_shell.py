@@ -308,6 +308,36 @@ def test_every_current_spec_pins_its_solves():
                          "--spec` cannot verify them: " + ", ".join(missing))
 
 
+
+def test_the_seed_array_can_actually_find_each_economys_solve():
+    """Every SEED_SPEC's solve lookup must resolve to a live solve.
+
+    run_seeds_slurm.sh refuses to start until `runstamp.py current --model M --tag T`
+    finds one. That guard is cheap and fails closed, which is right -- but it has to ask
+    the RIGHT question. It looked up the array's output TAG, while bgn_gam's solve is
+    registered under its producer's tag (the J* filename), so g0235 could never start:
+    job 62876077 aborted in 44 s on 2026-09-08 while be222462dd017b2c sat in the
+    registry the whole time. SOLVE_TAG now carries the lookup key separately.
+
+    This test is what makes that discoverable here instead of on a compute node.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "variants"))
+    sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
+    from common import runstamp
+
+    body = read_script("variants/run_seeds_slurm.sh")
+    specs = re.findall(
+        r"^\s{2}(\w+)\)\s*$.*?MODEL=(\w+);\s*TAG=(\w+);.*?SOLVE_TAG=(\S+)",
+        body, re.M | re.S)
+    assert specs, "parsed no SEED_SPEC branches out of run_seeds_slurm.sh"
+    missing = []
+    for seed_spec, model, tag, solve_tag in specs:
+        if not runstamp.live_solves(model, solve_tag.strip()):
+            missing.append(f"SEED_SPEC={seed_spec}: no live solve for model={model} "
+                           f"tag={solve_tag} -- the array would abort at startup")
+    assert not missing, "\n  ".join([""] + missing)
+
+
 if __name__ == "__main__":
     import traceback
 
