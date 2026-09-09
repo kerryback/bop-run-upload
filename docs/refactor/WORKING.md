@@ -2550,13 +2550,19 @@ lucky one. Regenerate with `_scratch/g0235_aggregate.py` → `_scratch/G0235-X10
 | economy | room (sd) | gap (sd) | gap/room |
 |---|---|---|---|
 | kp_vy/vyx | +0.3491 (0.0365) | +0.1046 (0.0155) | 0.30 |
-| bgn_gam/g0235 | +0.0188 (0.0065) | +0.0227 (0.0084) | 1.3 (per-seed 0.44–2.44) |
+| bgn_gam/g0235 | +0.0188 (0.0065) | +0.0227 (0.0084) | 1.21 |
+
+The gap/room column is the ratio of the two means. The MEAN of the ten per-seed ratios is
+a different statistic, 1.31, and the per-seed ratios run 0.44 to 2.44. I first wrote "1.3
+(per-seed 0.44-2.44)" in this column, which silently mixed the two. Ratio of means is the
+one to quote: the per-seed spread is wide enough that the mean of the ratios is dominated
+by the seeds with the smallest room in the denominator.
 
 **The realized gap exceeds the const-θ room in seven of ten g0235 seeds** (and DKKM's
 estimated SR exceeds the oracle's mean SR_max in seed 6: 0.1284 vs 0.1100). `room` is the
 difference between two *constant-θ* ceilings; the estimators use 360-month rolling windows
 and can beat a constant-θ rule when the conditional tangency moves. So `realized gap = room ×
-capture` with capture ≤ 1 is not the right decomposition for bgn_gam — capture is 1.3 here
+capture` with capture ≤ 1 is not the right decomposition for bgn_gam — capture is 1.21 here
 and 0.30 for vyx. For the project goal (economies with large room between DKKM and FMR)
 this matters: **ranking candidate economies by const-θ room would have ranked g0235 at
 roughly 1/19 of vyx, but its realized gap is 1/4.6 of vyx.** Room is a screen, not a ceiling,
