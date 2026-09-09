@@ -1,0 +1,33 @@
+{
+ "model": "kp_vy",
+ "tag": "vyx",
+ "seed": 8,
+ "prov": "kp_vy_estimators_vyx_s008_w360_summary@71a4b67+dirty",
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.1,
+  1.0
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "f7be27e39d2b530f",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2386269
+  },
+  {
+   "stage": "integ",
+   "solve_id": "84e195172f091cd2",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "panel": "kp_vy_panel_vyx_s008.parquet"
+}
