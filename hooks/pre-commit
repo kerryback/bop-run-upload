@@ -1,0 +1,11 @@
+#!/bin/sh
+# Advisory only -- never blocks. Says which cached solves a staged change invalidates
+# and whether the change was functional, BEFORE the commit lands. See
+# variants/solve_impact.py for why this exists and why it is not an AST-based id.
+#
+# Install once per clone:   git config core.hooksPath hooks
+cd "$(git rev-parse --show-toplevel)" || exit 0
+if command -v python >/dev/null 2>&1; then
+  python variants/solve_impact.py 2>/dev/null || true
+fi
+exit 0
