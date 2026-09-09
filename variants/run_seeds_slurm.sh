@@ -178,13 +178,19 @@ set -euo pipefail
 
 case "$SEED_SPEC" in
   vyx)
-    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v2
+    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v2; SOLVE_TAG=vyx
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
     ;;
   g0235)
-    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v2
+    # SOLVE_TAG != TAG here. The array's TAG names OUTPUT files, but bgn_gam's solve is
+    # registered under the tag its PRODUCER used, which is the J* table's filename. The
+    # precondition below looked up the spec tag and so could never pass for g0235: job
+    # 62876077 aborted in 44 s on 2026-09-08 with "no live solve recorded" while
+    # be222462dd017b2c sat in the registry the whole time. Failing closed and cheap is
+    # the right direction for this check, but it was asking the wrong question.
+    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v2; SOLVE_TAG=Jstar_g0235
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
@@ -245,7 +251,7 @@ LOG="results/logs/log_${TAG}_s${SS}.txt"
 echo "=== $MODEL/$TAG seed $SEED on $(hostname) $(date '+%F %T') threads=$NT N=$N T=$T ===" | tee "$LOG"
 
 # ---- the solve must exist and be registered, before any compute is spent -------
-if ! python common/runstamp.py current --model "$MODEL" --tag "$TAG" | tee -a "$LOG"; then
+if ! python common/runstamp.py current --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"; then
   {
     echo "ABORT: no live solve recorded for $MODEL/$TAG."
     echo "Build it ONCE, outside this array, with the overrides exported above:"
