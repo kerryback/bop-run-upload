@@ -98,6 +98,24 @@ sha256. **The manifest outlives the artifact**: after scratch is purged you can
 still say exactly which parameters produced a number, and re-running the producer
 reproduces the same `solve_id`.
 
+### Before you edit a producer
+
+`solve_id` digests a producer's whole source file, so a comment or a `print()` string
+edit to `gs_solve_reg.py` silently invalidates five solves costing ~5 h each. That
+happened on 2026-09-08. The digest is deliberately byte-exact -- an AST digest was
+measured and rejected (0 of 15 historical solver commits were comment-only, and
+`ast.dump` differs across the three Pythons in use) -- so the defence is to know the
+price BEFORE paying it:
+
+```bash
+git config core.hooksPath hooks          # once per clone
+python variants/solve_impact.py          # or run it by hand on staged changes
+```
+
+The hook is advisory and never blocks. It is silent unless a cached solve is at stake,
+and then says which solves, what they cost, and whether the change was functional or
+only comments / docstrings / diagnostics. **Do not run bulk `sed` over solver sources.**
+
 ### Getting the artifacts without a cluster
 
 The manifests are in git; the artifacts they describe are not (all eight live solves

@@ -144,6 +144,31 @@ shipped and was caught: `how_to_reproduce` recorded `getcwd()`, which follows
 `run_oracle.py`'s chdir into `variants/<model>` and produced an instruction that could
 not run.
 
+## Considered and rejected: an AST-based `solve_id` (2026-09-08)
+
+Proposed after a rename's sed rewrote one `print()` string in two producers and moved
+six solve_ids. Measured before deciding:
+
+- **0 of 15** historical solver commits were comment/docstring/format-only. An AST
+  digest would have absorbed none of them. The two absorbed by the aggressive variant
+  (also stripping `print`) are both that one sed.
+- **`ast.dump` is not stable across Python versions**: laptop 3.11 / Phoenix 3.12 /
+  Sol 3.14 produce three different digests of the same file. An AST id would have
+  broken the cross-machine agreement verified 5/5 the day before.
+- The recompute would cost ~31 h of cluster time and republish 504 MB, for a benefit
+  that has never occurred.
+
+**Instead:** `variants/solve_impact.py`, wired as an advisory pre-commit hook
+(`hooks/pre-commit`). Byte-exact id unchanged; the tool says before a commit which
+solves it invalidates and whether the change was functional. The six stale ids were
+repaired by **reverting the one string** in `gs_solve_reg.py` -- restoring its recorded
+digest byte-for-byte -- rather than by re-stamping or re-solving.
+
+**Open:** a manifest's recorded `params` do not reproduce its own `solve_id` when fed
+back through `Snapshot` (0 of 9 live manifests). The producer probe does reproduce it,
+so the id is sound; but the manifest alone is not a complete record of how it was
+computed. Not blocking; noted so it is not rediscovered.
+
 ## Sequencing
 
 Nothing was ripped out. Phases 1–2 are purely additive and break nothing. Phase 3 should

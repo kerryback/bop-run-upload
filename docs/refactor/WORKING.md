@@ -2407,3 +2407,63 @@ distinguishes solver from repo, but not code from prose. Fixing it — digesting
 would move every existing solve_id, 504 MB and ~25 h of cluster time, so it is
 deliberately **not** fixed. The operational rule instead: **do not run bulk sed over
 solver sources.** Recorded in var-gs_bx-g28-v2's notes where the next person will hit it.
+
+## §38. An AST-based solve_id, measured and rejected; the advisory that replaced it (2026-09-08)
+
+After the g28 id moved on a `print()` string (§37), Seth asked for an AST-based digest
+and authorised the recompute. Two measurements said no.
+
+**Zero benefit in this repo's history.** Of the 15 commits that ever changed a solver
+source, **0** were comment/docstring/format-only — every one touched real code. Even the
+aggressive variant that also strips `print`/logging calls absorbs only 2, and both are
+the one sed in `30bef7a`.
+
+**It would break cross-machine portability.** `ast.dump` of the same file:
+
+| | python | digest |
+|---|---|---|
+| laptop | 3.11.14 | `aa8141c3…` |
+| Phoenix | 3.12.13 | `311a7a6f…` |
+| Sol | 3.14.3 | `5247e4ef…` |
+
+Three ids for one solver — undoing the 5/5 agreement verified the day before. Fixable
+only with a hand-maintained canonical serializer that must be revisited on every Python
+release. And it would not even have caught g28: a string in `print()` is in the AST,
+because `jstar_gam_file: "Jstar_g0235.csv"` has to be.
+
+### What was built instead
+
+`variants/solve_impact.py`, wired as `hooks/pre-commit` (advisory, never blocks,
+silent unless a cached solve is at stake). It maps a changed file to every manifest
+listing it in `sources`, reports what those solves cost, and classifies the change —
+functional if the AST differs, non-functional if only comments, docstrings, whitespace
+or diagnostics moved. The AST comparison is done locally on one interpreter, where
+version skew is irrelevant. Verified on three real commits: `30bef7a` non-functional
+(six solves, 589 MB, 16,644 sweeps), `370294a` (kappa_e) functional, `413b3c1` (docs)
+silent. `tests/test_solve_impact.py`, 5 tests.
+
+### What it found on its first real run
+
+`30bef7a` had also touched **`gs_solve_reg.py`** — the same one-string sed — so all five
+bx7 solves were stale against the current source. Nothing had tried to reuse them since,
+so it had not tripped; the next bx7 run would have missed the cache and re-solved 25 h.
+Confirmed by probing the producer: `sol_reg` recorded `63fa7ebbc2db49ea`, current source
+computed `c72f428fa0f6ea6f`.
+
+**Fixed by reverting the one string.** Doing so restores `gs_solve_reg.py`'s digest to
+`b6106234…` byte-for-byte — identical to `30bef7a^` — so all five recorded ids are valid
+again with no manifest surgery, no re-stamp, no republish. The advisory now reports that
+change as *"RESTORES the recorded digest for 5 solve(s)"* rather than as invalidation.
+
+So `gs_solve_reg.py:365` deliberately still says `experiments/solfiles/` in a message.
+**It is load-bearing for 25 h of solves and must not be "fixed"** — the hook will say so
+to anyone who tries. `gs_solve_gam.py` keeps `registry`: its solve was recorded after the
+rename and its id is consistent.
+
+### Open
+
+A manifest's recorded `params`, fed back through `Snapshot` with re-quantisation, do
+**not** reproduce its own `solve_id` — 0 of 9 live manifests (2 impossible because a
+large array's stored hash is of the raw, not quantised, bytes). The producer probe does
+reproduce it, so the ids are sound; but the manifest alone is not a complete account of
+how its id was computed. Not chased today; recorded so it is not rediscovered.

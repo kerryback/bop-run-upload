@@ -362,4 +362,4 @@ print(f"[solstamp] recorded solve_id {_snap.solve_id} "
       f"({_man['total_bytes']:,} B, committable={_man['committable']})")
 if not _man["committable"]:
     print(f"[solstamp] artifact exceeds {solstamp.SMALL_ARTIFACT_BYTES:,} B -- kept out of "
-          f"git; the manifest in experiments/registry/ is the durable record")
+          f"git; the manifest in experiments/solfiles/ is the durable record")
