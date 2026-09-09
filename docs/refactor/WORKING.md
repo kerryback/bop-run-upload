@@ -2581,3 +2581,55 @@ number in §39. Wall 3:03–4:37 (seed 3 the outlier; its oracle stage is not se
 4, 5, 8, 9 (all nine files were on Sol). One `rsync --files-from` afterwards brought all
 nine in one connection. Next watcher: one rsync per seed, not one scp per file. The
 consistency tests (3/3) and the full suite (176) pass over the ten seeds' 70 files.
+
+## §41. Inventory before describing the economies: GS has no valid results, and no tracked thing computes an aggregate (2026-09-09)
+
+Asked what economies we have and what is stored. Four findings, none of which had a home
+before this entry.
+
+**Four economies are defined; two are current.** `run_oracle.py --model` accepts exactly
+`bgn_gam`, `kp_vy`, `gs_bx`.
+
+| economy | solves | oracle | estimators | seeds | spec |
+|---|---|---|---|---|---|
+| kp_vy/vyx | both stages verified | current | current | 10 | v2 |
+| bgn_gam/g0235 | jstar verified | current | current | 10 | v2 |
+| gs_bx/bx7 | 5 local, v3 ids | STALE | STALE | 1, unseeded | none |
+| gs_bx/g28 | verified, published | none | none | 0 | v2 |
+
+`gs_bx` has no valid results at either tag. The bx7 files date from `bba735f`, the original
+import, and carry `spec_id`, `solves` and `prov` all null: they predate the provenance
+system, the kappa_e correction, and the v3 solve ids. `variants/gs_bx/run_gs_bx7.sh` passes
+neither `--spec` nor `--seed`, and `run_seeds_slurm.sh` accepts only `vyx|g0235`, so gs_bx
+was never wired into the seeded, spec-verified protocol at all.
+
+**Both benchmark tables are legacy and nothing regenerates them.** `variants/make_excel.py`
+only reads `grid_summary.csv`; no code writes either file.
+- `results/grid_summary.csv`, 24 economies, is what REPORT.md and README are built on. Three
+  have code here. `bx9` — which README cites as the reason GS stops at bx7 — is prose only.
+  The table is internally mixed: its g0235 row reproduces to the digit (§39), its vyx row is
+  the pre-λ economy that `var-kp_vy-vyx-v2` says must not be quoted. Both stale unseeded
+  files are still in `results/` beside the corrected ones, distinguished only by the missing
+  `_s000` suffix (`kp_vy_oracle_vyx.json` SR_max 1.2607 vs `_s000` 1.1945).
+- `results/oracle_summary.csv`, 57 rows over `bgn, bgn_dis, bgn_types, gs_dis, gs_fixed, kp,
+  kp_dis`. **None of those seven model families is runnable here.** Fully orphaned.
+
+**Nothing tracked computes an aggregate.** Per-seed storage is good: 211 tracked files,
+55 MB, every post-fix file carrying `prov` and `spec_id`. But the ten-seed means and sds for
+both flagships exist only in `_scratch` and in §37/§40 prose, and the producer is
+`_scratch/g0235_aggregate.py`, which is gitignored and hardcodes one economy. The project's
+headline numbers have no reproducible tracked producer. Of the three gaps this is the one to
+close first, because a described-economies document needs that table as its input.
+
+**A confound in the §40 room-vs-gap comparison that I have not ruled out.** The oracle
+averages its const-θ conditional SR over all 485 months; the estimators average over the 125
+months after the 360-month window. Different month samples, so `room` and `gap` are not
+strictly commensurable even before the fixed-vs-rolling θ issue. `evaluate_bases` keeps the
+per-basis SR time series as `cond_sr_ts` but `run_oracle.py` writes only its mean across
+months (`sr_by_z`), so restricting the ceiling to the eval window needs an oracle re-run, not
+a re-read of committed artifacts. **Check this before treating conditioning as the
+established explanation for gap > room.** The cheap version: have the oracle also write
+`cond_sr_ts` mean over the last `T - window - 15` months.
+
+Also stale and worth fixing when the description is written: `variants/README.md` quotes the
+superseded vyx room 0.350, states `realized gap = room x capture`, and predates g28.
