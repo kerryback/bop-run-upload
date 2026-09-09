@@ -1,0 +1,26 @@
+{
+ "model": "bgn_gam",
+ "tag": "g0235",
+ "seed": 6,
+ "prov": "bgn_gam_estimators_g0235_s006_w360_summary@dd0199e+dirty",
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.1,
+  1.0
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "jstar",
+   "solve_id": "be222462dd017b2c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 9333
+  }
+ ],
+ "panel": "bgn_gam_panel_g0235_s006.parquet"
+}

@@ -2520,3 +2520,58 @@ The 128G request cost nothing on an empty queue, but the claim I wrote to justif
 
 The estimator stage, by contrast, landed where the ladder said: 50.7 s per eval-month
 against vyx's 49.6. N-independence holds across economies.
+
+## §40. g0235 ×10: gap +0.0227 (se 0.0027), and the realized gap exceeds the const-θ "room" (2026-09-09)
+
+Sol array `62901300`, seeds 1–9 of `bgn_gam/g0235` at N=500/T=500/w=360, all COMPLETED,
+all nine passed the post-run `is-current` check on `be222462dd017b2c` — the three-lookup
+`SOLVE_TAG` fix from §39 verified in production. With seed 0 (§39) that is ten seeds.
+
+| seed | SR_max | room | DKKM | best lin | gap | t (max rff, `t_vs_fm`) | wall | MaxRSS GiB |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 0.1860 | +0.0285 | 0.1752 | 0.1455 | +0.0297 | 29.2 | 3:14:20 | 15.8 |
+| 1 | 0.1688 | +0.0281 | 0.1577 | 0.1373 | +0.0204 | 21.0 | 3:04:26 | 16.2 |
+| 2 | 0.1410 | +0.0189 | 0.0871 | 0.0644 | +0.0228 | 44.0 | 3:31:19 | 38.9 |
+| 3 | 0.1176 | +0.0163 | 0.0801 | 0.0729 | +0.0072 | 10.6 | 4:37:25 | 32.2 |
+| 4 | 0.1269 | +0.0210 | 0.0458 | 0.0281 | +0.0176 | 106.5 | 3:53:05 | 28.7 |
+| 5 | 0.1114 | +0.0118 | 0.0872 | 0.0584 | +0.0288 | 26.8 | 3:51:22 | 26.6 |
+| 6 | 0.1100 | +0.0136 | 0.1284 | 0.1037 | +0.0248 | 19.0 | 3:16:12 | 15.7 |
+| 7 | 0.1287 | +0.0153 | 0.1217 | 0.0882 | +0.0335 | 17.4 | 3:15:07 | 15.9 |
+| 8 | 0.1744 | +0.0241 | 0.0962 | 0.0666 | +0.0296 | 46.7 | 3:03:11 | 15.8 |
+| 9 | 0.1193 | +0.0104 | 0.1017 | 0.0895 | +0.0122 | 12.6 | 3:52:36 | 15.8 |
+
+**gap: mean +0.0227, sd 0.0084, se 0.0027 (n=10). room: mean +0.0188, sd 0.0065, se 0.0021.**
+SR_max mean 0.1384, sd 0.0280. Published single-seed row: room +0.0233, gap +0.0297 — the
+published gap sits 0.8 sd above the ten-seed mean, i.e. seed 0 is an ordinary draw, not a
+lucky one. Regenerate with `_scratch/g0235_aggregate.py` → `_scratch/G0235-X10.md`.
+
+**Both flagship economies now have error bars, and they don't overlap.**
+
+| economy | room (sd) | gap (sd) | gap/room |
+|---|---|---|---|
+| kp_vy/vyx | +0.3491 (0.0365) | +0.1046 (0.0155) | 0.30 |
+| bgn_gam/g0235 | +0.0188 (0.0065) | +0.0227 (0.0084) | 1.3 (per-seed 0.44–2.44) |
+
+**The realized gap exceeds the const-θ room in seven of ten g0235 seeds** (and DKKM's
+estimated SR exceeds the oracle's mean SR_max in seed 6: 0.1284 vs 0.1100). `room` is the
+difference between two *constant-θ* ceilings; the estimators use 360-month rolling windows
+and can beat a constant-θ rule when the conditional tangency moves. So `realized gap = room ×
+capture` with capture ≤ 1 is not the right decomposition for bgn_gam — capture is 1.3 here
+and 0.30 for vyx. For the project goal (economies with large room between DKKM and FMR)
+this matters: **ranking candidate economies by const-θ room would have ranked g0235 at
+roughly 1/19 of vyx, but its realized gap is 1/4.6 of vyx.** Room is a screen, not a ceiling,
+and the screen under-predicts bgn_gam. Not resolved here: whether a time-varying-θ ceiling
+(e.g. the oracle's conditional max SR net of a rolling linear rule) restores gap ≤ room.
+
+**Memory is bimodal across seeds on identical hardware.** Six seeds at 15.7–16.2 GiB, four
+(2–5) at 26.6–38.9. All ten tasks ran on 128-core zen3 nodes with 515 GB (`scontrol show
+node`); seeds 5 and 6 shared `sc109` and used 26.6 vs 15.7. So it is seed-dependent, not
+node-dependent — and vyx ×10 was uniform at 30.6. Cause not established. `--mem=64G` held with
+1.6× headroom over the worst seed; do not lower it on the strength of the 15.8 GiB seed-0
+number in §39. Wall 3:03–4:37 (seed 3 the outlier; its oracle stage is not separately timed).
+
+**The watcher fetched 54 of 63 files.** `_scratch/watch_g0235_x10.sh` made 63 back-to-back
+`scp` connections with three tries each; nine failed all three tries, scattered across seeds
+4, 5, 8, 9 (all nine files were on Sol). One `rsync --files-from` afterwards brought all
+nine in one connection. Next watcher: one rsync per seed, not one scp per file. The
+consistency tests (3/3) and the full suite (176) pass over the ten seeds' 70 files.
