@@ -203,5 +203,6 @@
     "sol_b55c": "6918c06791c0332c",
     "sol_b70c": "a0973863681df5b8"
   },
-  "solves_pending": true
+  "solves_pending": true,
+  "precommitted": true
 }

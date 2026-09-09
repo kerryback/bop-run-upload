@@ -79,5 +79,6 @@
   "spec_hash": "0259e294bfb786ff47516fd658f41f484be7ce0ad1aacc27d10bf795f261b02a",
   "expected_solves": {
     "jstar": "be222462dd017b2c"
-  }
+  },
+  "precommitted": false
 }

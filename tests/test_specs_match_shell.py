@@ -176,7 +176,10 @@ def test_every_spec_hash_is_reproducible():
     # the spec's identity. It was inside the hashed view until 2026-09-07, so
     # verifying var-gs_bx-bx7-v3's five solves on Sol would have "drifted" its hash.
     excluded = {"title", "question", "notes", "lineage", "provenance", "spec_hash",
-                "solves_pending"}
+                "solves_pending",
+                # `precommitted` records HOW the spec was made, like provenance. It is
+                # not part of the experiment's definition, so it must not move the id.
+                "precommitted"}
     for fn in sorted(os.listdir(SPECS)):
         if not fn.endswith(".json"):
             continue
