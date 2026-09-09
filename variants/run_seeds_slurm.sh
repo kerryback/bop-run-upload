@@ -2,7 +2,7 @@
 #SBATCH -J bop_seeds
 #SBATCH --array=0-9
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH -t 2-00:00
 #SBATCH -p public
 #SBATCH -o outslurm/seeds.%A.%a.log
@@ -110,53 +110,28 @@
 #                   -t 2-00:00. The N-independence is measured only to N=180.
 #                   RE-MEASURE from the first completed task before widening the array.
 #
-#   --mem=128G      24G -> 64G (2026-09-07) -> 128G (2026-09-08), each on measurement.
+#   --mem=64G       BOTH ECONOMIES NOW MEASURED AT FLAGSHIP (N=500/T=500/w=360, sacct
+#                   MaxRSS of the whole task, oracle + estimators, Sol, 2026-09-08):
 #
-#                   THE FIRST REAL FLAGSHIP TASK settled it. kp_vy/vyx seed 0 at
-#                   N=500/T=500/w=360 on Sol: MaxRSS 30654 MiB against my oracle-only
-#                   projection of 23754 -- 29% HIGH. The projection was honest about
-#                   being a floor (measured without --save_panel, and the estimator
-#                   stage not measured at all), and the floor held as a floor.
+#                       kp_vy/vyx     30.6 GiB   (seed 0; seeds 1-9 all 29.9-30.6)
+#                       bgn_gam/g0235 15.8 GiB   (seed 0)
 #
-#                   g0235 IS THE BINDING CASE, and it is ~2x kp_vy. Measured ladder at
-#                   T=200, bgn_gam vs kp_vy: 0.96x RSS at N=100, 1.30x at 200, 1.38x at
-#                   300, 1.96x at 500 -- SUPERLINEAR, which is the ~T*N^2 behaviour this
-#                   file already warned was unmeasured for g0235. Its fit is
+#                   64G is 2.1x the larger. History of this line: 24G -> 64G on the
+#                   kp_vy laptop ladder (the flagship task then used 30.6, so 24G would
+#                   have OOMed) -> 128G on a bgn_gam ladder projecting ~68 GiB -> back to
+#                   64G on the measurement above.
 #
-#                       bgn_gam maxRSS ~ -1241 + 0.2218*(N*T) MiB
+#                   THE 68 GiB PROJECTION WAS WRONG BY 3.5x, and the reason is NOT
+#                   established. The laptop ladder had bgn_gam at 1.96x kp_vy's RSS at
+#                   N=500/T=200; on Sol at T=500 it is 0.52x. The two measurements
+#                   disagree in DIRECTION, so one of macOS max-RSS vs cgroup accounting,
+#                   --save_panel, or something in how bgn_gam's memory scales in T is
+#                   not what the ladder assumed. Both numbers are recorded; do not
+#                   extrapolate bgn_gam memory from the laptop again.
 #
-#                   giving 52.9 GiB oracle-only at flagship; applying kp_vy's measured
-#                   +29% oracle-to-task factor gives ~68 GiB, i.e. OVER 64G. A g0235
-#                   task submitted at 64G was cancelled while still PENDING on this
-#                   evidence rather than discovered by an OOM at hour 3.
-#
-#                   Set unconditionally rather than per-economy because #SBATCH is
-#                   parsed before the body runs, so SEED_SPEC cannot pick it. The queue
-#                   was empty and over-requesting cost nothing; on a busy cluster,
-#                   submit kp_vy with --mem=48G to schedule sooner.
-#
-#                   (superseded note) RAISED FROM 24G 2026-09-07 on measurement. Peak RSS tracks N*T,
-#                   which is a structural result rather than a fit: N = 500/T = 200 and
-#                   N = 200/T = 500 have the same N*T and measured 11209 and 10969 MiB
-#                   -- 2.1% apart with the large dimension swapped. Flagship N*T =
-#                   250000 therefore projects to
-#
-#                       2421 + 0.0853*250000 = 23753 MiB = 23.2 GiB
-#
-#                   against a 24G cap of 24576 MiB. The margin is +822 MiB (3.3%),
-#                   and the fit's own max residual is 644 MiB -- so the headroom is
-#                   1.3x the model's own error. 24G is not refuted; it is unresolved,
-#                   which for an unrescuable job is the same decision.
-#
-#                   The projection is also a FLOOR for what this script does. It was
-#                   measured WITHOUT --save_panel (which this script passes, and which
-#                   holds an N*T-row panel), and the estimator stage that follows in
-#                   the same task was not measured at all.
-#
-#                   The asymmetry decides the size, as with -t: the oracle has no
-#                   mid-run checkpoint, so an OOM at hour 3 writes nothing and the seed
-#                   is simply lost, while over-requesting on an empty queue costs
-#                   approximately nothing. Tighten from the first task's real MaxRSS.
+#                   The asymmetry still decides ties: an OOM writes nothing and the seed
+#                   is lost, over-requesting on an empty queue costs nothing. On a busy
+#                   queue this now schedules where 128G would have waited.
 #
 #   --cpus-per-task=8   The inner work is BLAS (N x N solves and products) plus the
 #                   estimator stage's joblib fan-out. Threads are pinned below so
@@ -184,7 +159,13 @@ case "$SEED_SPEC" in
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
     ;;
   g0235)
-    # SOLVE_TAG != TAG here. The array's TAG names OUTPUT files, but bgn_gam's solve is
+    # SOLVE_TAG != TAG here, and it must reach ALL THREE runstamp lookups below -- the
+    # precondition, the per-seed checkpoint, and the post-run verification. The first
+    # fix (e42a3a7) reached only the precondition: g0235 seed 0 then ran both stages to
+    # completion (3 h 14 m) and was marked FAILED by the post-run check, which looked up
+    # g0235, found nothing, and reported the run STALE. The checkpoint had the same bug,
+    # so a resubmission would have re-run the whole seed instead of skipping it.
+    # The array's TAG names OUTPUT files, but bgn_gam's solve is
     # registered under the tag its PRODUCER used, which is the J* table's filename. The
     # precondition below looked up the spec tag and so could never pass for g0235: job
     # 62876077 aborted in 44 s on 2026-09-08 with "no live solve recorded" while
@@ -267,7 +248,7 @@ fi
 # `[ -f panel.parquet ]` guard cannot express, and which is exactly the hazard the
 # existence check in run_gs_bx7.sh was removed for.
 RUNJSON="results/${MODEL}_estimators_${TAG}_s${SS}_w${WINDOW}_run.json"
-if python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "$TAG" >>"$LOG" 2>&1; then
+if python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" >>"$LOG" 2>&1; then
   echo "seed $SEED already complete and current for the recorded solve -- nothing to do" | tee -a "$LOG"
   exit 0
 fi
@@ -290,4 +271,4 @@ echo "=== seed $SEED END $(date '+%F %T') oracle=$((MID-S))s estimators=$((E-MID
 
 # What this replication was actually built from. `python variants/solfiles.py show <id>`
 # expands any of these ids into the full parameter set that produced it.
-python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "$TAG" | tee -a "$LOG"
+python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"
