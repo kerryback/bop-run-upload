@@ -67,6 +67,53 @@ def test_every_estimator_run_json_names_the_solves_its_oracle_consumed():
     assert not bad, "estimator runs disagreeing with their oracle about solves:\n  " + "\n  ".join(bad)
 
 
+
+def test_every_estimator_summary_is_the_aggregate_of_its_full_csv():
+    """The summary is COMPUTED from the full per-month csv, by run_estimators.py:
+
+        summ = res.groupby(["method","P","kappa"]).agg(
+            sharpe=("sharpe","mean"),
+            hjd=("hjd", lambda x: np.sqrt(x.mean())),
+            real_sr=("xret", lambda x: x.mean()/x.std()))
+
+    So regrouping the full file must reproduce the summary. If it does not, the two
+    files are from different runs -- the same failure as the oracle/_ts.csv mismatch,
+    one level down. The full csv is the evidence behind every t-statistic in the
+    summary (a plain iid t over 125 monthly differences), which is why it is committed.
+    """
+    import numpy as np
+    import pandas as pd
+    bad = []
+    n = 0
+    for full in sorted(glob.glob(os.path.join(RESULTS, "*_estimators_*_w*.csv"))):
+        if full.endswith("_summary.csv"):
+            continue
+        summ_path = full[:-4] + "_summary.csv"
+        if not os.path.exists(summ_path):
+            continue
+        n += 1
+        res = pd.read_csv(full)
+        want = pd.read_csv(summ_path)
+        got = (res.groupby(["method", "P", "kappa"])
+                  .agg(sharpe=("sharpe", "mean"),
+                       hjd=("hjd", lambda x: np.sqrt(x.mean())),
+                       real_sr=("xret", lambda x: x.mean() / x.std()))
+                  .reset_index())
+        m = want.merge(got, on=["method", "P", "kappa"], suffixes=("", "_regrouped"))
+        if len(m) != len(want):
+            bad.append(f"{os.path.basename(full)}: {len(want)} summary rows, "
+                       f"{len(m)} matched in the full csv")
+            continue
+        for col in ("sharpe", "hjd", "real_sr"):
+            if not np.allclose(m[col], m[col + "_regrouped"], rtol=1e-7, atol=1e-10,
+                               equal_nan=True):
+                worst = (m[col] - m[col + "_regrouped"]).abs().max()
+                bad.append(f"{os.path.basename(full)}: {col} differs from its "
+                           f"summary, max |diff| {worst:.3e}")
+    assert n > 0, "found no full/summary estimator pairs to check"
+    assert not bad, ("estimator summaries that are NOT the aggregate of the full csv "
+                     "beside them:\n  " + "\n  ".join(bad))
+
 if __name__ == "__main__":
     import traceback
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
