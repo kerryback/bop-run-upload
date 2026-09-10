@@ -3312,3 +3312,26 @@ in §19/§33/§46. Only `tests/test_oracle_nesting.py` referenced the deleted ta
 docstring, to explain why two grid rows reported a negative room -- repointed, since the
 nesting defect it pins outlives the table that exposed it. `variants/results` now holds 316
 seeded result files and the two generated tables, and nothing else.
+
+## §51. RESULTS.md ordered by proportional gap, with the next parameterizations proposed (2026-09-10)
+
+Seth: order RESULTS.md by percentage gap, and brainstorm new parameterizations per economy with
+the reasoning. Done in `docs/RESULTS.md`: sections now run BGN (g0235, 26.5% of the linear
+Sharpe), KP14 (vyx, 16.3%), GS21 (g28 10.5%, bx7 2.7%); each model section ends with a
+"Proposed next parameterizations" subsection, and "Proposed next, ranked" collects them by
+information per node-hour. Each proposal states what differs from the current economy in model
+terms, why the number is worth having, a falsifiable prediction, and the solve and cluster cost.
+
+Facts checked before proposing: BGN's regime switch probabilities enter the J* solve through
+`Preg` (rebuild is minutes), and its multiplier frontier is 2 x gmult x scale < 1 with `scale`
+the fitted beta-tail from the acceptance-probability targets; GS's simulator exports a
+per-firm-month `default` flag, so the dormant default channel can be probed from one panel;
+KP's type count is free (`ntypes = len(type_share)`); all forty seeded panels and moment files
+are on Sol (15 GB), so a window ladder needs no new solve.
+
+The ranking's top three: the BGN regime-persistence ladder (cheapest lever on the best
+proportional economy and a direct test of the rolling-window mechanism behind §40/§49);
+gamma(x) times exposure types in GS (the design rule that produced vyx, with GS21's own state;
+its negative would retire the bx path); a continuum of exposures in KP (whether vyx's linear
+methods live off three type points). Also flagged: vyx's premia are already 6-28% a year, and
+every dial-up should report the annualised premia beside the gap.
