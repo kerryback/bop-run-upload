@@ -1,10 +1,12 @@
 """`room` is only a headroom measure if the nonlinear basis nests the linear one.
 
 room = nl_ceil - lin_ceil is read as "population Sharpe available to a nonlinear
-method beyond any linear method" (variants/make_excel.py:44). That reading needs
-span(lin_rank) subset of span(nonlinear basis). It did not hold for `bins` or any
-`rff*` basis, which is why two rows of variants/results/grid_summary.csv report a
-NEGATIVE room (GS gamma(x): room = -0.0004 with gap = +0.038).
+method beyond any linear method". That reading needs span(lin_rank) subset of
+span(nonlinear basis). It did not hold for `bins` or any `rff*` basis, which is why
+the pre-refactor grid reported a NEGATIVE room for the two GS gamma(x) economies
+(room = -0.0004 with gap = +0.038). That grid was deleted on 2026-09-10 (WORKING.md
+§50) and is recoverable at 23f9380:variants/results/grid_summary.csv; the
+defect it exposed is what these tests pin, and it outlives the table.
 
 Per decision 6 (2026-09-04, "require nesting"), build_feature_sets now also emits
 `*_n` bases that append the linear columns. These tests pin that.

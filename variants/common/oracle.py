@@ -176,8 +176,10 @@ def build_feature_sets(X_raw, X_rank, rf, Wdict, include_rf=True, X_lev=None, Wd
     #     rff36   1.7e-02  -> does NOT nest
     #     rff360  4.1e-04  -> does NOT nest
     # so `bins` and `rff*` could score BELOW lin_rank and make `room` negative --
-    # which is what the two GS gamma(x) rows in results/grid_summary.csv show
-    # (room = -0.0004 / -0.0005 alongside gap = +0.038 / +0.041).
+    # which is what the two GS gamma(x) economies of the pre-refactor grid showed
+    # (room = -0.0004 / -0.0005 alongside gap = +0.038 / +0.041). That grid was deleted
+    # on 2026-09-10 (WORKING.md §50); the defect outlives it, and its reconstruction
+    # `var-gs_bx-g28-v2` reproduces the zero-room-with-a-gap signature at ten seeds.
     #
     # These `*_n` bases append X_rank so nesting holds by construction and
     # room >= 0. The originals are kept so every published number stays

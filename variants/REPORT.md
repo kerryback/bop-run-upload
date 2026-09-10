@@ -700,7 +700,8 @@ matching the small +0.007 oracle room.
 
 Every cell run with the identical configuration (oracle N=500, T=500, `--levels`; estimators w=360,
 `--levels --include_mkt`; RFF numbers are averages over independent draws, best fixed κ per method;
-machine-readable copy in `results/grid_summary.csv`):
+machine-readable copy was `results/grid_summary.csv`, deleted 2026-09-10 and recoverable at
+23f9380; see docs/RESULTS.md for what is current):
 
 | model | variant | SR_max | linear ceil. | nonlin ceil. | room | FMR | FF | lin | RFF | gap RFF−lin | t vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|
