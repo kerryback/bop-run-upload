@@ -3058,3 +3058,62 @@ from seed 0; ten seeds say 15.7–38.9 and bimodal (§40). gs_bx is marked UNMEA
 themselves. And a finding the same shape as 2b, left for a decision: `bgn_gam/run_g0235.sh` and
 `kp_vy/run_vyx.sh` also run unspec'd and unseeded, and the seed array is the only checked path
 for those economies too.
+
+## §46. First spec-verified GS results: g28 and bx7 seed 0 (2026-09-10)
+
+NEXT.md 3f. One probe seed per economy on Sol at N=500/T=500/w=360, `--mem=128G` so sacct
+would report the truth. Both COMPLETED; every gate passed in production for the first time on
+a GS economy: precondition, `[env]` check against the spec, `[readback]`, the five-solution
+cross-type guard (bx7), and the post-run `is-current` on the union of five ids -- §45's 3a fix
+working as designed. Consistency tests 3/3 on the fetched files.
+
+| | g28 (62934480_0) | bx7 (62934481_0) |
+|---|---|---|
+| MaxRSS | 4.7 GiB | 5.2 GiB |
+| oracle / estimators / total | 4616 / 9574 / 14190 s | 3414 / 10085 / 13499 s |
+| estimators per eval month (125) | 76.6 s | 80.7 s |
+
+**gs_bx is the lightest economy by 3-7x**, five 100 MB solutions and all: vyx used 30.6 GiB,
+g0235 15.7-38.9. The arrays for seeds 1-9 went in with `--mem=24G`, 4.6x the measured peak.
+
+**A projection of mine was wrong.** In §45 I sized the gs estimator stage at ~130 s per
+evaluation month on Sol (63.6 laptop x the 2.05 Sol factor) and ~4.5 h; it ran at 77-81 s and
+2.7 h. The 2.05x factor was measured on the kp_vy ORACLE stage and does not transfer to the
+estimator stage, where Sol is only ~1.2-1.3x the laptop.
+
+### The science, one seed each
+
+| economy | SR_max | room all-month | room eval-window | DKKM | best lin | gap | t |
+|---|---|---|---|---|---|---|---|
+| g28 | 0.2960 | +0.0003 | +0.0003 | 0.2961 | 0.2842 | **+0.0119** | 36.4 |
+| bx7 (v3) | 0.2745 | +0.0063 | +0.0094 | 0.3140 | 0.3037 | **+0.0104** | 11.2 |
+| published GS gamma(x) | | -0.0004 | | | | +0.038 | 17.9 |
+| published bx7 (v1 economy) | 0.2989 | +0.0182 | | 0.2369 | 0.2356 | +0.0013 | 10.4 |
+
+**g28 reproduces the zero-room gap on a runnable, spec-verified economy.** Room is +0.0003
+under both definitions, the gap is +0.0119 at t 36. The decomposition is the one PLAN §0.0
+conjectured from the deleted rows: against the eval-window ceilings, the best linear method
+falls 0.0201 short of its own ceiling (0.3043) while DKKM falls 0.0084 short of its (0.3045).
+The gap is linear-estimator inefficiency, not nonlinear structure. The published +0.038 was a
+different implementation of the same idea (the code is gone; this is a reconstruction from
+REPORT.md:553), so the size is not expected to match; the signature does.
+
+**bx7's demotion does not survive the corrections.** The v1 economy's gap was +0.0013 (rank 22
+of 24). The v3 economy -- Table I calibration, kappa_e = 0.025, gs_ashift = 0 -- has gap
++0.0104 at t 11.2, eight times larger, with room +0.0063 (a third of v1's +0.0182). One seed;
+g0235's per-seed gap sd was 0.0084, so this is a direction, not a number. Ten seeds are running.
+
+**The eval-window ceilings are materially higher than the all-month ones**, in both economies:
+lin_rank 0.2664 -> 0.3185 for bx7, 0.2943 -> 0.3043 for g28. The last 125 months of these
+panels are richer than the full 485. So the §41 confound is real and not small: bx7's
+commensurable room is +0.0094, not +0.0063, and gap/room is 1.1 against the right months vs
+1.65 against the wrong ones. It does not eliminate gap > room (1.1 is still above 1, and DKKM
+0.3140 exceeds the all-month SR_max 0.2745, as g0235 seed 6 did). **The ten vyx and g0235
+oracle JSONs predate `--eval_window` and carry no eval ceilings; §40's gap/room of 1.21 for
+g0235 is against all-month room.** Re-running those twenty oracles (seeded, so the panels are
+identical; ~1-1.5 h each, no estimators needed) would settle whether g0235's 1.21 is also mostly
+month-sample. Not started.
+
+Arrays submitted 2026-09-10 02:2x: g28 seeds 1-9, bx7 seeds 1-9, from the repo root on Sol
+at 4e9a378 with `--mem=24G`. Results, aggregates and the watcher: `_scratch/watch_gs_x10.sh`
+-> `_scratch/GS-X10.md`.

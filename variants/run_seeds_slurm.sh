@@ -124,10 +124,13 @@
 #                       bgn_gam/g0235 15.7-38.9 GiB (ten seeds on identical nodes; BIMODAL,
 #                                     six near 16 and four at 27-39; cause not established,
 #                                     WORKING.md §40 -- so do not size from seed 0 alone)
-#                       gs_bx/*       UNMEASURED. bx7 loads five ~100 MB solutions, carries
-#                                     six characteristics and scores eight kappas; nothing
-#                                     above transfers. Run ONE seed and read sacct before
-#                                     sizing an array (NEXT.md 3f).
+#                       gs_bx/g28     4.7 GiB   (seed 0, 2026-09-10; oracle 4616 s, estimators 9574 s)
+#                       gs_bx/bx7     5.2 GiB   (seed 0, 2026-09-10; oracle 3414 s, estimators 10085 s)
+#                                     gs is the LIGHTEST economy on memory by 3-7x, even with
+#                                     five 100 MB solutions loaded; its estimator stage at
+#                                     eight kappas runs 77-81 s per evaluation month on Sol
+#                                     (WORKING.md §46). The gs arrays were submitted with
+#                                     --mem=24G on the command line, 4.6x the measured peak.
 #
 #                   64G is 2.1x the larger. History of this line: 24G -> 64G on the
 #                   kp_vy laptop ladder (the flagship task then used 30.6, so 24G would
