@@ -23,18 +23,14 @@ Run everything from an environment with the repo requirements plus `pyarrow`
 | `gs_bx/` | GS21 (2-regime, exact-kernel re-solve) with five exposure types beta in {1, 2.5, 4, 5.5, 7} (REPORT §19) | `bx7` | solves: `gs_bx/run_gs_bx7_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=bx7`) |
 | `gs_bx/` | GS21 single type with a linear-in-x, clipped price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1) -- the reconstruction of REPORT §13g's gamma(x) economy, spec `var-gs_bx-g28-v2` | `g28` | solve: `gs_bx/run_g28_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=g28`) |
 
-Population numbers from `results/grid_summary.csv` (N=500, T=500; Sharpe ratios from the true conditional
-moments; `room` = best nonlinear basis minus best linear-in-ranks basis):
-
-| economy | SR_max | linear ceiling | nonlinear ceiling | room | FMR | FF | RFF (best) |
-|---|---|---|---|---|---|---|---|
-| bgn_gam g0235 | 0.186 | 0.135 | 0.158 | 0.023 | 0.067 | 0.090 | 0.175 |
-| kp_vy vyx | 1.261 | 0.743 | 1.092 | 0.350 | 0.741 | 0.647 | 0.848 |
-| gs_bx bx7 | 0.299 | 0.274 | 0.292 | 0.018 | 0.221 | 0.229 | 0.237 |
-
-Realized gap = room x capture (REPORT §19d). BGN g0235 and KP vyx are the extreme versions of the earlier
-`g0520`/`g0330` and `vys` economies; GS stays at bx7 because pushing it further (`bx9`) triples the room but
-the estimators no longer capture it.
+**Results live in [`docs/RESULTS.md`](../docs/RESULTS.md)** -- every economy, what differs from
+its model's baseline in economic terms, and its ten-seed numbers, organised by model and by the
+path that produced it. The numbers come from `results/economy_table.csv`
+(`python aggregate_seeds.py --flagship`), and a test keeps the two in step. The population
+table that used to sit here quoted `results/grid_summary.csv`, a single-seed legacy table
+whose KP and GS rows describe economies the current code no longer builds; it is history, not
+results, and the decomposition "realized gap = room x capture" it was read through does not
+hold (RESULTS.md, cross-cutting findings 1-2).
 
 ## Pipeline
 
