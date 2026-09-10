@@ -54,6 +54,47 @@ if any(a != 0.0 for a in _ashifts):
         "exp(-gs_ashift) times what the value functions assume. Either re-solve at "
         "gs_ashift = 0 (per the 2026-09-07 decision) or add a per-firm ashift array to "
         "`prod` and `opcf` here and give it an env contract beside GS_BX_BETAS.")
+# ---- the type ladder must be the one the solutions were SOLVED at --------------------
+# GS_BX_BETAS is the simulator's only statement of which exposure each type has, and
+# `bxf` below drives every firm's cash flow. Each solution.npz has carried its own
+# `gs_bx` since 2026-09-04, so the two can be compared instead of trusted -- and until
+# now they never were. A reordered GS_BX_SOLDIRS, or a ladder edited in one place and
+# not the other, prices firms off value functions solved for a different beta: the
+# solve ids all resolve, the spec check passes, and the panel is wrong. Same failure
+# family as gs_ashift above, and cheap to refuse.
+_solved_bx = [float(d["gs_bx"]) for d in _sols if "gs_bx" in d.files]
+if len(_solved_bx) == ntypes and _solved_bx != _bx_list:
+    raise ValueError(
+        f"GS_BX_BETAS={_bx_list} does not match the betas these solutions were solved "
+        f"at: {dict(zip(_dirs, _solved_bx))}. The simulated cash flow would use one "
+        f"exposure while the value functions assume another. Fix GS_BX_BETAS, or point "
+        f"GS_BX_SOLDIRS at the solves for the ladder you mean.")
+if len(_share) != ntypes:
+    raise ValueError(f"GS_BX_SHARES has {len(_share)} entries for {ntypes} soldirs "
+                     f"({_dirs}); every type needs a share.")
+
+# ---- every type must share ONE aggregate economy -------------------------------------
+# `_s = _sols[0]` above takes the grids, the transition matrices, the pricing kernel Mx
+# and the 15-element `params` from the FIRST soldir and applies them to all types. That
+# is correct only if the types differ in gs_bx and NOTHING ELSE. If one solve in the
+# ladder was run at a different gmreg, gamma_x or kappa_e -- easy, since they are five
+# separate multi-hour jobs, and sol_reg has already been re-solved once for kappa_e --
+# then types 2..n are priced with type 1's kernel and the discrepancy is invisible in
+# every id, because each solution is individually registered and individually correct.
+for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
+    if _f == 0:
+        continue
+    for _k in ("xgrid", "zgrid", "bgrid", "pr_x", "pr_z", "Mx", "psw", "params",
+               "gmreg", "kappa_e"):
+        if _k not in _s.files or _k not in _sol.files:
+            continue
+        if not np.array_equal(_s[_k], _sol[_k]):
+            raise ValueError(
+                f"solutions disagree on '{_k}': {_dirs[0].strip()} vs {_d.strip()}. "
+                f"gs_sim_bx.py takes the grids and the pricing kernel from the FIRST "
+                f"soldir only, so these types are not the same economy and cannot be "
+                f"simulated together. Re-solve the ladder with one parameter set.")
+
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
 burnin = 300
 alpha_e = 0.2
@@ -177,7 +218,7 @@ def create_arrays(N, T, seed_offset=0):
         # tables the returns come from. utils_gs21/panel_functions_gs21.py imports
         # kappa_e and then omits it from prof_*, which at kappa_e = 0.025 makes the main
         # tree's Ecashflow/P_ex inconsistent with its own solver -- see
-        # docs/refactor/FINDINGS-gs21-kappa-e.md.
+        # docs/refactor/WORKING.md §43.
         cf = prod + dflow
         div[t] = cf + kappa_e * np.minimum(cf, 0.0) - invest[t] * icost[t]
         if t == T:

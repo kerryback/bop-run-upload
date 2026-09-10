@@ -272,3 +272,125 @@ def verify_against_spec(spec_id, solves):
             lines.append(f"[spec] {stage:8s} MISMATCH: spec {spec_id} expects "
                          f"{w or '<not declared>'}, run consumed {g or '<nothing>'}")
     return ok, lines
+
+
+# ------------------------------------------------- spec -> RUN PARAMETERS ----
+
+def _env_expectations(spec, ov_env):
+    """(literal_env, param_env_name) -- what the environment must look like.
+
+    Two representations coexist in the specs and they mean different things:
+
+      * `param_env` names an environment variable that carries `params` as JSON.
+        bgn_gam and kp_vy use it: BGN_PARAM_OVERRIDES / KP_PARAM_OVERRIDES are
+        read by the SIMULATOR, so `params` is a run-side quantity there.
+      * `env` is a flat map of variable -> literal value (KP_VY_PREFIX,
+        GS_BX_SOLDIRS, ...).
+
+    gs_bx has NO `param_env`, and that is not an omission: its `params`
+    ({"gmreg": [0.6, 3.0]}) is GS_PARAM_OVERRIDES, consumed by the SOLVER and
+    already covered by the solve_id. Its simulator takes the structural
+    parameters out of solution.npz instead. Comparing gs_bx's `params` against
+    GS_SIM_OVERRIDES would refuse every correct run.
+    """
+    return dict(spec.get("env") or {}), spec.get("param_env")
+
+
+def _same_json(a, b):
+    """Compare two override blobs by VALUE, not by spelling.
+
+    '{"gmult":[0.2,3.5]}' and '{"gmult": [0.2, 3.5]}' are the same economy;
+    whitespace and key order must not be able to refuse a correct run.
+    """
+    import json as _json
+    try:
+        return _json.loads(a or "{}") == _json.loads(b or "{}")
+    except ValueError:
+        return False
+
+
+def verify_env_against_spec(spec_id, ov_env, env=None):
+    """Do this run's PARAMETERS match the ones its spec declares?
+
+    `verify_against_spec` closes artifact -> spec. This closes parameters -> spec,
+    which was the last open link in params -> solve -> result and the one the whole
+    registry exists to protect.
+
+    The hole it fills, reproduced 2026-09-09: simulate BGN at gmult [0.2, 3.0] while
+    reading the J* table built at [0.2, 3.5], with --spec var-bgn_gam-g0235-v2. The
+    table is genuinely the spec's table, so the solve check PASSES, and the run
+    records spec_check "verified" on a summary describing a different economy. The
+    wrong overrides did reach the sidecar, so the mistake was discoverable after the
+    fact -- but nothing refused it, and a wrong number that has been written down is
+    already the expensive kind.
+
+    Returns (ok, lines) with the same three-valued convention as
+    verify_against_spec: True verified, False refused, None nothing to check.
+    """
+    import json as _json
+    if env is None:
+        env = os.environ
+    spec = load_spec(spec_id)
+    literal, param_env = _env_expectations(spec, ov_env)
+    lines, ok, checked = [], True, 0
+
+    if param_env:
+        want = spec.get("params")
+        got_raw = env.get(param_env)
+        checked += 1
+        if want is None:
+            lines.append(f"[env] {spec_id} names param_env {param_env} but declares no "
+                         f"params -- cannot verify")
+            ok = False
+        elif _same_json(got_raw, _json.dumps(want)):
+            lines.append(f"[env] {param_env:22s} matches {spec_id}")
+        else:
+            ok = False
+            lines.append(f"[env] {param_env:22s} MISMATCH")
+            lines.append(f"[env]   spec {spec_id} declares: {_json.dumps(want, sort_keys=True)}")
+            lines.append(f"[env]   this run has:            {got_raw or '<unset>'}")
+            try:
+                g = _json.loads(got_raw or "{}")
+                for k in sorted(set(g) | set(want)):
+                    if g.get(k) != want.get(k):
+                        lines.append(f"[env]     {k}: spec {want.get(k, '<absent>')!r} "
+                                     f"vs run {g.get(k, '<absent>')!r}")
+            except ValueError:
+                lines.append("[env]     (run value is not valid JSON)")
+
+    for k in sorted(literal):
+        want_s, got_s = str(literal[k]), env.get(k)
+        checked += 1
+        # A declared value that looks like a JSON object is compared as one, so an
+        # unset variable reads as {} rather than as a refusal. Everything else --
+        # GS_BX_SOLDIRS, GS_BX_BETAS, KP_VY_PREFIX -- is an exact string, where
+        # being unset IS the mismatch.
+        hit = _same_json(got_s, want_s) if want_s.lstrip().startswith("{") else got_s == want_s
+        if hit:
+            lines.append(f"[env] {k:22s} matches {spec_id}")
+        else:
+            ok = False
+            lines.append(f"[env] {k:22s} MISMATCH: spec expects {want_s!r}, "
+                         f"run has {got_s if got_s is not None else '<unset>'!r}")
+
+    # The run-side override variable must be ACCOUNTED FOR, not merely absent from
+    # the spec. gs_bx reaches here with param_env None and GS_SIM_OVERRIDES not in
+    # `env`; unset or {} is the correct state for it, because the simulator takes its
+    # structural parameters out of solution.npz. But GS_SIM_OVERRIDES='{"gamma_x":0.9}'
+    # would silently overwrite a value that came from the solution -- undeclared, and
+    # invisible to both checks above. Refuse it rather than let it through as "the
+    # spec said nothing about that".
+    if ov_env and ov_env != param_env and ov_env not in literal:
+        raw = env.get(ov_env)
+        if not _same_json(raw, "{}"):
+            ok = False
+            lines.append(f"[env] {ov_env:22s} REFUSED: set to {raw!r}, but {spec_id} "
+                         f"declares neither param_env nor env[{ov_env}] for it. An "
+                         f"undeclared override changes the economy without changing "
+                         f"the spec. Declare it in the spec or unset it.")
+        checked += 1
+
+    if not checked:
+        return None, [f"[env] {spec_id} declares no params, param_env or env -- "
+                      f"nothing to verify the run parameters against"]
+    return ok, lines
