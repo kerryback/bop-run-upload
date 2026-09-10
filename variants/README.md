@@ -191,7 +191,8 @@ regenerates both), and `results/logs/`.
 |---|---|
 | `common/oracle.py` | feature bases (FMR raw, linear-in-ranks, +-rf interactions, poly2, decile/pair bins, RFF) and the two-pass population evaluation |
 | `common/dkkm_functions.py`, `common/fama_functions.py` | RFF+ridge and Fama-French / Fama-MacBeth estimators with rolling `WINDOW` and conditioning columns `RF_COLS` |
-| `collect_results.py` | rebuilds `results/oracle_summary.csv` from every `*_oracle_*.json` on disk. With only the three winners present it would shrink the file to three rows, so do not run it unless the other oracle JSONs have been regenerated |
 | `unconditional_sr.py` | exact unconditional Sharpe ratio of each estimated portfolio from the true conditional moments |
+| `aggregate_seeds.py` | THE results table: one row per seeded run in `results/seed_table.csv`, one row per (model, tag, N, T, window) with mean/sd/se across seeds in `results/economy_table.csv`; every row carries spec_id, solve ids and prov tags. `--flagship` narrows the printout to N=500/T=500 |
+| `collect_results.py` | LEGACY: the oracle-only, single-run table behind `results/oracle_summary.csv` (57 rows from seven model families that no longer exist here). Running it overwrites that file with the current oracle JSONs, seeded and unseeded alike; use `aggregate_seeds.py` |
 | `make_excel.py` | rebuilds `results/summary_grid.xlsx` (Headlines, Summary grid, Definitions sheets) from `results/grid_summary.csv` (needs openpyxl) |
 | `REPORT.md` | the full narrative, sections 1-19d, including the 21 economies that were removed |
