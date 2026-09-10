@@ -1,0 +1,490 @@
+# Experimental results
+
+An ongoing record of every economy we have run through the oracle-and-estimator pipeline,
+organised by model, with the experiments inside each model grouped into the paths that
+produced them. Updated as new paths are tried. Last updated 2026-09-10 at commit `132cbc8`
+(the ten-seed GS results); the current-results table below is checked against
+`variants/results/economy_table.csv` by `tests/test_results_md_matches_table.py`, so this file
+cannot fall behind the numbers without the suite saying so.
+
+## How to read this
+
+**The quantity we are after is the realized gap**: the Sharpe ratio a random-feature ridge
+estimator (DKKM: `rff`, `rff_ens`, `rff_lev`, `rff_lev_ens`, best P and best kappa) achieves
+minus the best any linear method achieves (`linrank`, `linlev`, Fama-MacBeth `fm`,
+Fama-French `ff`). Every estimator is fit on a 360-month rolling window of simulated data and
+its portfolio is then scored against the economy's TRUE conditional moments, month by month,
+over the 125 evaluation months of a 500-month panel with 500 firms. `t` is the paired t-stat
+of DKKM against Fama-MacBeth across evaluation months.
+
+**Room** is the population quantity we used to screen candidate economies: the best
+constant-coefficient Sharpe ratio a nonlinear feature basis can reach minus the best a linear-
+in-ranks basis can reach, both computed by the oracle from the true moments with one fixed
+coefficient vector for the whole sample. It is reported two ways since 2026-09-09: over all 485
+panel months (`room all`, what every number before that date meant) and over the 125
+evaluation months (`room eval`, the one commensurable with a gap). **Room is not a ceiling on
+the gap and not a reliable screen for it** -- see the cross-cutting findings at the end, and
+`docs/refactor/WORKING.md` §40 and §48.
+
+**Status labels.**
+- **CURRENT** -- ten seeds at N=500, T=500, window 360, run under a spec in `experiments/specs/`
+  that pins the solve ids the run must consume; every result file carries the spec id, the
+  solve ids and a provenance tag naming the commit. Numbers are mean (sd across seeds).
+- **LEGACY, single seed** -- one row of `variants/results/grid_summary.csv`, produced before
+  the 2026-09 refactor by code that is no longer in the repository (21 of its 24 economies)
+  and never replicated. Quoted for the path it documents, never for a ranking: the cross-seed
+  sd of a gap is 10-50% of its mean, so single-seed rows are not distinguishable below the top.
+- **SUPERSEDED** -- an economy the current code no longer builds, kept as the record behind a
+  published number.
+
+**Whether a model's legacy rows describe the same economy as its current code differs by
+model** and is stated in each section: yes for BGN, no for KP14 (the growth-option arrival
+rate was mis-normalised until 2026-09-04) and no for GS21 (three calibration parameters were
+corrected against the paper's Table I on 2026-09-06).
+
+**Provenance of every CURRENT number**: `experiments/specs/<spec>.json` names the parameters
+and `expected_solves`; `experiments/registry/<solve_id>.json` records what each solve was
+built from; `variants/results/<model>_oracle_<tag>_s<seed>.json` and
+`<model>_estimators_<tag>_s<seed>_w360_summary.csv` carry the per-seed numbers and their
+`.prov.json` sidecars name the commit; `variants/aggregate_seeds.py` produces the table.
+
+**Ordering.** Model sections are ordered by their best CURRENT gap, and within a model the
+paths are ordered the same way; paths with no current economy come after those with one,
+ordered by their best legacy gap.
+
+## Current results
+
+All four CURRENT economies, ranked by realized gap. Mean (sd) over ten seeds.
+
+| economy | spec | n | room all | room eval | gap | t | DKKM | best linear | SR_max eval |
+|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | - | +0.1046 (0.0155) | 30.2 | 0.7475 | 0.6428 | 1.1778 |
+| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | +0.0283 (0.0136) | 24.6 | 0.2975 | 0.2692 | 0.3087 |
+| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | - | +0.0227 (0.0084) | 33.4 | 0.1081 | 0.0855 | 0.1461 |
+| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | +0.0078 (0.0049) | 16.0 | 0.2964 | 0.2887 | 0.3121 |
+
+`room eval` is blank where the oracle predates the eval-window flag; re-runs for those two
+economies are in progress (2026-09-10). `SR_max eval` is the oracle's maximum attainable
+conditional Sharpe averaged over the evaluation months, the hard upper bound every estimator
+must respect. Regenerate: `python variants/aggregate_seeds.py --flagship`.
+
+---
+
+## KP14 -- Kogan and Papanikolaou (2014)
+
+### Baseline
+
+A firm is a collection of live projects (assets in place) plus the growth opportunities it
+expects to receive. Projects arrive to firm f at a rate lambda_f that switches between a high
+regime (lambda_H = 2.35) and a low one (lambda_L, set so that the mean arrival rate is exactly 1;
+switching intensities mu_H = 0.075 into the high state and mu_L = 0.16 into the low state).
+A project's output depends on firm-level profitability eps_f (mean-reverting, theta_eps = 0.35,
+sigma_eps = 0.2), project-level u (theta_u = 0.5, sigma_u = 1.5), aggregate productivity z
+(mu_z = 0.005, sigma_z = 0.035) and the investment-specific technology state x (mu_x = 0.01,
+sigma_x = 0.13); alpha = 0.85; depreciation delta = 0.1. The pricing kernel is exogenous with
+CONSTANT prices of risk: gamma_x = 0.69 on the technology shock and gamma_z = -0.35 on
+productivity; r = 0.05 (the paper's 0.025, a deliberate departure). Calibration checked
+against the paper's Table II: 17 of 18 parameters match, r being the exception.
+
+What this implies for the cross-section: expected returns are affine in a single firm
+variable, the share of value that is growth options (PVGO/V). The cross-section is
+one-directional, and no state-dependent price of risk can create curvature in it by scaling
+alone -- the finding behind every inert path below.
+
+**Legacy rows are a different economy.** Until 2026-09-04 the regime probability was read
+with the wrong label, so the mean arrival rate simulated was 1.72 instead of 1. Every KP row
+of `grid_summary.csv`, including the baseline row (room +0.0037, gap +0.0036, t -8.5), was
+produced at that rate. Levels of legacy KP numbers are not citable for the current code;
+the direction of each path's finding is what survives.
+
+### Path 1 -- a priced, mean-reverting aggregate state with heterogeneous firm exposure: vy, then vyx
+
+The best path in the repository, and the only one in KP14 that ever produced a gap.
+
+#### kp_vy/vyx -- CURRENT, gap +0.1046 (sd 0.0155), t 30.2
+
+**What differs from the baseline.** A new aggregate state y is added: a stationary
+Ornstein-Uhlenbeck process with mean-reversion kappa_y = 0.35 and unit stationary standard
+deviation (REPORT.md calls it the priced-volatility factor; in the code it is a generic priced
+state). Its innovations are PRICED, at gamma_v = 1.8. Firms come in three types, in shares
+0.34 / 0.33 / 0.33, whose project cash flows load on the state as exp(beta_f y) with
+beta = 0.02 / 0.07 / 0.14. Because y is priced, each type earns a premium proportional to
+its beta_f; because y mean-reverts, the VALUE of an exp(beta y) cash-flow stream depends on
+where y is, so the map from a firm's type to its observable characteristics is bent by the
+state rather than shifted. A compensation term (bv_comp = 1.2) rescales each type's cash-flow
+level so that at y = 0 firm values do not reveal the type monotonically -- otherwise a linear
+sort on value would recover the exposure ladder for free. Every level in the economy stays
+stationary, so raw characteristics do not trend with the state; that is the design clause
+that distinguishes this path from Path 3, where rolling Fama-MacBeth harvested the room
+through trending levels.
+
+**Why it was tried.** REPORT.md §18-§19's design rule: a harvestable gap needs heterogeneous
+firm-level exposures, a state that bends them nonlinearly, and the bending confined to rank
+and interaction space. vy was the first KP economy to satisfy all three; vyx pushes its two
+free knobs (gamma_v 1.2 to 1.8, top beta 0.12 to 0.14) toward "premium-side extremity",
+REPORT.md's conjecture for where capture rises with room.
+
+**Result.** By far the largest gap in the repository, at four times the next economy, and the
+largest room. DKKM 0.7475 against best linear 0.6428 (linrank). SR_max over the evaluation
+months 1.1778, so DKKM reaches 63% of the attainable maximum. Ten seeds; gap/room 0.30, the
+one economy where capture below one holds cleanly.
+
+**The lambda fix did not change this economy's numbers.** The v1 spec ran at the
+mis-normalised arrival rate and published room +0.3496, gap +0.1009, t 21.6 from one seed;
+the corrected economy at ten seeds gives +0.3491 and +0.1046. WORKING.md §37.
+
+**Provenance.** Spec `var-kp_vy-vyx-v2`; solves `f7be27e39d2b530f` (the G function) and
+`84e195172f091cd2` (the type-by-state integrals); seed array `SEED_SPEC=vyx`.
+
+#### kp_vy/vy -- LEGACY, single seed, gap +0.0289, t 5.2
+
+Same construction with gamma_v = 1.2 and beta = 0.02 / 0.06 / 0.12. Room +0.278, the first
+significant DKKM win in KP14 after five state-dependent-price designs, but capture near 10%
+and limited by T: the best realized fit was at P = 360 features, not 3600. REPORT.md §19a.
+Pre-lambda-fix economy.
+
+### Path 2 -- state-dependent prices of risk on the baseline cross-section: inert, four ways
+
+All LEGACY single-seed rows, all pre-lambda-fix, all with room below +0.004. They are the
+negative results that led to Path 1.
+
+- **regime-g** (`kp_gam`, room +0.0015, gap +0.0067, t 5.1): a two-state Markov regime
+  multiplies BOTH prices of risk by gmult[s] = 0.5 in calm and 2.0 in stress; switching
+  intensities 0.25/yr calm-to-stress and 0.50/yr stress-to-calm; switches unpriced. The first
+  state-dependent-price build. REPORT.md §13c-d proves why it is inert: with premia affine in
+  the firm variable within each regime, the conditional premium is spanned by (1, X, s, X s),
+  which a linear basis with a regime interaction already contains.
+- **gamma(y) common** (`kp_gamy`, room +0.0033, gap +0.0074, t 3.0): the regime replaced by a
+  continuous OU state y with a logistic multiplier 0.5 to 2.5 on both prices of risk. §17b's
+  refinement: a common multiplier gives mu_t = g(y_t) mu-bar, a constant cross-sectional
+  direction, so no common scaling can create room in any model.
+- **gamma(y) rotation** (room +0.0035, gap +0.0022, t 4.7): the multiplier 0.85 to 3.0 on
+  gamma_x only, gamma_z fixed, so the premium direction rotates 3.5x across the state. Inert:
+  KP firms load on the two shocks almost in parallel, and the cross-sectional dispersion of
+  expected returns does not move while its mean doubles. §17d: "KP's cross-section is
+  irreducibly one-directional."
+- **regime uneven** (room +0.0025, gap +0.0185, t 9.6): gmult_x = [0.6, 2.4] with gmult_z
+  fixed at 1. The +0.019 realized is regime timing through the exported regime feature,
+  which a linear basis with the interaction captures; room stays nil. §17f.
+
+### Path 3 -- exposure types crossed with a regime: room without harvest
+
+**kp_bx** -- LEGACY, single seed, room +0.0187, gap +0.0016, t -1.8. Firm types whose cash
+flows load on the technology state as x^{beta_f}, beta in {1.0, 1.8, 3.0}, crossed with the
+Path 2 regime (0.5 / 2.0) and a calm-state value compensation of 1.2. The first genuine room
+in KP14 -- and rolling Fama-MacBeth on raw levels harvested it (FMR 0.181 against DKKM 0.177)
+because x^{beta_f} makes raw characteristics co-move with the state. This is the failure that
+produced the third design clause and the stationary-level construction of Path 1. REPORT.md
+§18.
+
+### Path 4 -- crash risk
+
+**kp crash** (`kpd_al`) -- LEGACY, single seed, room +0.0058, gap -0.0064, t -2.1. Rare
+disasters destroy a fraction of each firm's projects with a type-specific probability, the
+kill intensity is priced, and a type output multiplier compensates values. REPORT.md gives no
+numeric disaster parameters for the KP version. The rank-linear method came out ahead of
+DKKM. §12b: "crash risk per se does not create a DKKM gap."
+
+---
+
+## GS21 -- Gomes and Schmid (2021)
+
+### Baseline
+
+A firm holds capital k and one-period debt b, produces exp(x + z) k^alpha-style output from
+an aggregate productivity state x (AR(1), quarterly persistence 0.95 and innovation sd 0.012,
+converted to a monthly step) and an idiosyncratic state z (quarterly persistence 0.90, sd
+0.16), pays a maintenance cost delta = 0.02 per quarter on capital, taxes at tau = 0.2, and
+chooses investment, borrowing and default each period. Equity issuance costs kappa_e = 0.025
+on a negative cash flow, debt issuance costs kappa_b = 0.004, lenders recover phi = 0.4 in
+default, and default is smoothed by a shock of sd sigma_m = 5 so the kink is differentiable.
+The pricing kernel is exogenous, exp(-r - gamma^2/2 - gamma eps_x) with a CONSTANT price of
+risk gamma_x = 0.5 on the productivity shock and r = 0.10/yr: the paper's general-equilibrium
+Epstein-Zin kernel with its countercyclical price of risk is replaced by this constant-price
+stand-in, which is what Path 1 puts back. Solved by value-function iteration on a 161-point
+x grid to tolerance 1e-6 per solve, roughly 3.5 h each.
+
+What this implies for the cross-section: with a constant price of risk every feature basis
+reaches the same population ceiling. GS21 has essentially no learnable nonlinear
+cross-section, and the gap it produces comes from somewhere else.
+
+**Legacy rows are a different economy.** Until 2026-09-06 the solver ran with rho_x =
+0.96^(1/3) (the paper says 0.95), delta = 0.02 per month (the paper's 0.02 is per quarter),
+and kappa_e = 0 (the paper's benchmark is 0.025). Every GS row of `grid_summary.csv`,
+including the baseline row (room +0.0010, gap +0.0163, t 21.8), was solved under those values.
+Levels are not citable for the current code; the mechanism findings survive.
+
+### Path 1 -- a countercyclical, continuous price of risk gamma(x): g28
+
+#### gs_bx/g28 -- CURRENT, gap +0.0283 (sd 0.0136), t 24.6
+
+**What differs from the baseline.** One firm type and no regime. The price of risk becomes a
+function of the aggregate state: gamma(x) = clip(0.5 - 0.28 x / sd(x), 0.05, 1.0), with sd(x)
+the stationary standard deviation of x. So gamma is the baseline 0.5 when productivity is at
+its mean, falls toward 0.05 in booms and rises toward 1.0 in busts -- the minimal stand-in
+for the paper's general-equilibrium kernel, whose price of risk is countercyclical. The
+solver's kernel is re-derived on the x grid with the state-dependent gamma; the simulator and
+the firm's problem are otherwise the baseline (corrected Table I calibration, kappa_e =
+0.025). This is a RECONSTRUCTION: the original `sol_g28` code was never in the repository and
+the economy was rebuilt from the formula in REPORT.md §13g, verified to reproduce the regime
+solver byte-for-byte at slope zero.
+
+**Why it was tried.** The published grid had this economy at rank 3 of 24 on gap with room of
+essentially zero, the sole evidence that a DKKM advantage can arise from estimation
+efficiency rather than from any nonlinearity in the cross-section. That conclusion rested on
+deleted code. The spec's question: "can a gap open with ZERO nonlinear room?"
+
+**Result.** Yes, and it is the second-largest gap in the repository. Room is +0.0001 all-month
+and +0.0004 over the evaluation months -- the nonlinear and linear population ceilings are
+the same number -- while DKKM beats the best linear method by +0.0283. Decomposed against the
+evaluation-window ceilings: the best linear estimator lands 0.020 below its own ceiling, DKKM
+0.008 below its. The whole advantage is the linear estimators' inefficiency, and the ridge
+random-feature estimator's ability to use the exported state feature. Ranked by room this
+economy is last of four; ranked by gap it is second. The cross-seed sd (0.0136) is half the
+mean, the noisiest gap of the four.
+
+**The seed-0 reading was misleading.** Seed 0 alone gave +0.0119; the ten-seed mean is 2.4
+times that. WORKING.md §48.
+
+**Provenance.** Spec `var-gs_bx-g28-v2`; solve `8b584c38614695ac` (producer
+`gs_solve_gam.py`, one 5.9 h solve on Phoenix); seed array `SEED_SPEC=g28`. The legacy
+single-seed row (room -0.0004, gap +0.0383, t 17.9) was the old calibration and a different
+implementation; only the signature is expected to match, and it does.
+
+#### gamma(x) nonlin -- LEGACY, single seed, gap +0.0406, t 14.1
+
+Same idea with a logistic gamma(x) from 0.10 to 1.20 instead of the clipped line. Room
+-0.0005. REPORT.md §17e: "GS's flat cross-section is immune however nonlinear the
+state-dependence"; the realized gap is conditioning. Old calibration; no code.
+
+### Path 2 -- heterogeneous exposure to the productivity state under a price-of-risk regime: bx7
+
+#### gs_bx/bx7 -- CURRENT, gap +0.0078 (sd 0.0049), t 16.0
+
+**What differs from the baseline.** Two changes. First, five firm types in equal shares whose
+production loads on the aggregate state as exp(beta_f x + z) with beta = 1 / 2.5 / 4 / 5.5 /
+7 -- the baseline is beta = 1 for every firm -- so firms differ in how strongly the aggregate
+state moves their output, and each type is a separate solve of the firm's problem. Second, a
+two-state Markov regime multiplies the price of risk: gamma_s = 0.5 x gmreg[s] with gmreg =
+[0.6, 3.0], i.e. 0.3 in calm and 1.5 in stress; monthly switch probabilities 0.25/12
+calm-to-stress and 0.50/12 stress-to-calm; switches unpriced. No level compensation
+(gs_ashift = 0): earlier versions shifted each type's productivity level by 0.15 (beta - 1)
+to keep values comparable across types, and that shift was up to 3.3 times the exposure
+swing it accompanied, so the cross-section was "mostly a size sort wearing a beta label"; v3
+removes it so the five types differ in exposure and nothing else. Six characteristics
+(leverage added) and an eight-value kappa grid.
+
+**Why it was tried.** The GS analogue of KP's Path 3 and Path 1: give the state something
+heterogeneous to bend. Built up through three rounds (below).
+
+**Result.** A real but small gap, six times the number that demoted this economy to rank 22 of
+24 in the published grid. Room +0.0086 all-month, +0.0066 evaluation-window; gap/room 0.90
+against all-month room and 1.17 against the evaluation window. bx7 is the one CURRENT economy
+where a seed-0 reading of the eval-window direction reversed at ten seeds.
+
+**Provenance.** Spec `var-gs_bx-bx7-v3`; five solves `63fa7ebbc2db49ea` (sol_reg, beta 1),
+`649bb384300faadf`, `a3bb50b66287307c`, `645262a8e72d944c`, `0818d7153d5708cc`; produced by
+`variants/gs_bx/run_gs_bx7_slurm.sh` on Sol; seed array `SEED_SPEC=bx7`.
+
+#### The legacy ladder: rounds 1-2, bx7 v1, bx9 -- all single seed, old calibration
+
+- **exposure-types x regime, round 1** (room +0.0039, gap +0.0040, t 10.8): the first
+  uncompensated build; REPORT.md §19 records the room and no parameters.
+- **exposure-types compensated, round 2** (room +0.0064, gap +0.0022, t 16.8): a level
+  compensation added.
+- **bx7 v1** (room +0.0182, gap +0.0013, t 10.4): the five-type ladder with the 0.15 (beta-1)
+  level shift, under the old calibration. Its published gap was measured against `linlev`,
+  the strongest linear method for it, which is the current definition too. SUPERSEDED twice:
+  by the Table I corrections and by dropping the level shift.
+- **bx9** (room +0.0540, gap -0.0007, t 5.1): beta pushed to 9 and the regime to [0.5, 4.0].
+  Room tripled and the gap over linear vanished: REPORT.md §19d's "capture frontier". The
+  reason the README stopped GS at bx7.
+
+### Path 3 -- regime only, and crash risk
+
+Both LEGACY, single seed, old calibration.
+
+- **regime-g** (room +0.0001, gap +0.0187, t 19.9): the two-state regime alone, gamma 0.3 calm
+  / 1.5 stress, no exposure types. Room exactly zero: the default option, the channel that
+  might have awakened under stress, never fires (zero realized defaults even at gamma 1.5,
+  because firms delever endogenously and the smoothing shock flattens the kink). The realized
+  +0.019 is regime timing. REPORT.md §17g.
+- **crash** (`dis_rebase`, room +0.0065, gap +0.0086, t 5.1): disasters destroy a fraction of
+  capital with the coupon unchanged, so leverage jumps inside both Bellman recursions;
+  per-type re-solves. No room. §13g.
+
+---
+
+## BGN -- Berk, Green and Naik (1999)
+
+### Baseline
+
+A firm is a collection of live projects, each a real option that was exercised when its
+present value crossed a threshold. Projects carry a market-shock loading beta_s drawn from a
+translated exponential distribution (scale 0.137), an idiosyncratic cash-flow volatility, and
+a project-specific cash-flow level around C-bar = -3.7; new projects arrive and are exercised
+optimally against a threshold J*(r) that depends on the short rate. The short rate is Vasicek
+(monthly persistence kappa = 0.95, mean 0.006236, innovation sd sigma_r = 0.002). The pricing
+kernel is exogenous and lognormal with ONE priced shock, the market shock nu, at price
+sigma_z = 0.4, correlated -0.175 with the rate innovation (beta_zr = -0.00014). Expected
+returns are exactly affine in book-to-price and 1/price with rate-dependent coefficients.
+Calibration checked against the paper's Table I: 11 of 11 parameters match, including two the
+code derives rather than stores.
+
+What this implies for the cross-section: the project-beta distribution is the only source of
+firm-level exposure heterogeneity in any of the three models. REPORT.md §17's closing
+sentence: "only BGN's project-beta distributions supply that heterogeneity."
+
+**Legacy rows are the same economy.** The BGN calibration survived every audit unchanged, and
+the current code reproduced the legacy g0235 row to the displayed digit on a different machine
+and Python version (WORKING.md §39). Legacy BGN levels are citable, single-seed caveat only.
+Baseline row: room +0.0365, gap +0.0059, t 14.0.
+
+### Path 1 -- a two-state regime on the price of the market shock: g0520, then g0330, then g0235
+
+#### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), t 33.4
+
+**What differs from the baseline.** A two-state Markov regime s_t (calm, stress) multiplies
+the price of the market shock: sigma_z becomes sigma_z x gmult[s] with gmult = [0.2, 3.5] --
+one fifth of the baseline price in calm months, three and a half times it in stress. Monthly
+switch probabilities 0.25/12 calm-to-stress and 0.50/12 stress-to-calm; switches are
+unpriced (conditional moments are physical expectations, and the regime enters only through
+the regime-indexed value tables). The upper multiplier sits just under the bound 1/(2 x scale)
+= 3.65 that the exponential beta-density tail imposes on the closed-form project values. The
+project-exercise threshold J* is re-solved for the regime economy (the pinned solve). The
+regime and the rate are exported as conditioning features.
+
+The economic content that makes this path different from KP's Path 2: a project's value
+decomposes onto two regime bases, V_s(r, beta) = C-hat [exp(-beta g0) DA_s(r) + exp(-beta g1)
+DB_s(r)], so the two regimes apply two DIFFERENT monotone transforms of the same project
+beta. That produces curvature in the map from beta to the premium WITHIN a regime, which a
+common scaling of the price of risk cannot. This is why regime-gamma creates room in BGN and
+not in KP14.
+
+**Why it was tried.** The KP regime (Path 2 there) was built first and proved inert; the BGN
+version was then built in closed form to test the same mechanism where the cross-section had
+heterogeneity to bend. g0520 worked; g0330 widened it; g0235 pushed to the frontier.
+
+**Result.** The third-largest gap, with the tightest relative error bar of the four (se
+0.0027). DKKM 0.1081 against best linear 0.0855 (linrank; Fama-MacBeth collapses to 0.067 and
+the level-linear method to 0.034, because regime shifts move raw levels). Room +0.0188
+all-month; gap/room 1.20, so the realized gap exceeds the constant-coefficient room in seven
+of ten seeds -- the finding that first showed room is not a ceiling (WORKING.md §40). The
+published single-seed row (room +0.0233, gap +0.0297, t 29.1) is reproduced exactly by seed 0
+and sits 0.8 sd above the ten-seed mean.
+
+**Provenance.** Spec `var-bgn_gam-g0235-v2`; solve `be222462dd017b2c` (the J* table
+`Jstar_g0235.csv`); seed array `SEED_SPEC=g0235`.
+
+#### g0520 and g0330 -- LEGACY, single seed, same economy family
+
+- **regime-g** (`g0520`, gmult = [0.5, 2.0]; room +0.0214, gap +0.0219, t 21.5): the first
+  build. DKKM landed at its unconditional ceiling, 100% of the room harvested; at the time
+  "the strongest estimated gap of the project". REPORT.md §13f/h.
+- **regime-g wide** (`g0330`, gmult = [0.3, 3.0]; room +0.0254, gap +0.0240, t 31.7): only the
+  spread changed. Room grows with the regime gap; the classical raw-level methods break
+  outright (FMR 0.105, FF 0.132) because regime shifts move raw characteristic levels; DKKM
+  beats FMR by 89% relative. §16.
+
+Read as a path: room saturates around +0.021 to +0.025 across the three while the gap keeps
+rising with the spread, from +0.022 to +0.030 (single-seed) -- the widening damages the
+linear methods faster than it adds population room.
+
+### Path 2 -- a continuous state-dependent price of risk in the rate, gamma(r)
+
+**gamma(r) nonlin** (`bgn_gamr`) -- LEGACY, single seed, room +0.0934, gap +0.0060, t -2.7.
+The regime replaced by a logistic multiplier 0.5 to 3.0 on the market-shock price as a
+function of the short rate, the model's own continuous state. Closed forms break; solved on
+an r grid with a rank-7 factorisation of the value function. The largest room of the entire
+project, and rolling Fama-MacBeth harvests it: FMR 0.470 against DKKM 0.464, because raw
+characteristic levels co-move with r and a rolling raw-level regression conditions on the
+rate for free. The conditioning gap is contestable by cheap classical conditioning. REPORT.md
+§17c.
+
+### Path 3 -- crash risk with firm types
+
+**crash** (`bgn_dis`) -- LEGACY, single seed, room +0.0658, gap +0.0053, t 8.9. The kernel is
+multiplied by kappa^D / ((1-p) + p kappa) with D a monthly disaster indicator, p = 3% and kappa
+= 2.5; three permanent firm types whose live projects die in a disaster month with
+probability 0, 0.15 or 0.30; a value compensation omega = 1.3 so that disaster-exposed firms
+look like growth firms rather than being revealed by value. Motivation: book-to-market then
+carries two offsetting premium channels (the beta channel rising, the disaster channel
+falling), a shape no linear rule can sign. The largest BGN room short of gamma(r), only
+three-quarters captured. REPORT.md §9, §14.
+
+### Path 4 -- the earlier exploration (oracle only)
+
+Parameter sweeps, thin versus fat cash-flow tails, size-dependent idiosyncratic volatility,
+firm types with dispersed versus standard projects, and a U-shaped rate-shock correlation
+were run through the oracle only (no estimators) before the grid; their rows survive in
+`variants/results/oracle_summary.csv` under models `bgn`, `bgn_types` and `bgn_dis`, with no
+code. REPORT.md §3-§8. None produced room above +0.008 except the disaster and regime paths
+above.
+
+---
+
+## Cross-cutting findings
+
+1. **Room is not a screen for the gap.** Ranked by constant-coefficient room the four current
+   economies run vyx, g0235, bx7, g28; ranked by realized gap they run vyx, g28, g0235, bx7.
+   g28 has the second-largest gap and no room at all. The published grid's finding that
+   corr(room, gap) turns negative once the two KP priced-vol rows are dropped is
+   unverifiable (the rows are gone) but its direction holds on the current four.
+
+2. **The decomposition realized gap = room x capture with capture at most one is wrong.**
+   gap/room is 0.30 for vyx, 1.20 for g0235, 0.90 (all-month) or 1.17 (evaluation window) for
+   bx7, and undefined for g28. Estimators refit on a rolling window beat a
+   constant-coefficient rule when the conditional tangency moves; the room measures the
+   wrong thing for that. What survives of REPORT.md's taxonomy (§16) is the three sources:
+   estimation efficiency (g28, everywhere at +0.01 to +0.03), conditioning (g28, the
+   regime-only rows), and cross-sectional curvature (g0235, vyx).
+
+3. **Room and gap were averaged over different months until 2026-09-09.** The oracle
+   averaged over all 485 months, the estimators over the last 125, and the last 125 carry a
+   higher attainable Sharpe on every panel (vyx 1.1531 to 1.1778, g28 0.2621 to 0.3087). The
+   symptom was g28's DKKM exceeding the all-month SR_max, which Cauchy-Schwarz forbids within
+   a month; against the evaluation-window SR_max the bound holds on all forty runs. Every
+   number in this file dated before 2026-09-09 uses all-month room; the vyx and g0235
+   oracles are being re-run to supply the evaluation-window version.
+
+4. **Single seeds mislead.** g28's seed 0 gave +0.0119 against a ten-seed +0.0283; bx7's seed 0
+   put its evaluation-window room above its all-month room and ten seeds reversed the order;
+   vyx's seed 0 read "stronger than published" and ten seeds read "unchanged". Cross-seed sd
+   of the gap is 15% of the mean for vyx, 37% for g0235, 48% for g28, 63% for bx7. No ranking
+   below the top of a single-seed table means anything.
+
+5. **The four gaps are three mechanisms.** vyx: a priced state bends heterogeneous exposures
+   with stationary levels (curvature, capture 0.30). g0235: two regimes apply different
+   transforms to the same project beta (curvature, capture above one). g28: a countercyclical
+   price of risk on a flat cross-section (efficiency plus conditioning, no room). bx7:
+   exposure heterogeneity under a regime, small room, small gap. The largest gap by a factor
+   of four comes from the premium-side design, as REPORT.md §19d conjectured.
+
+## Superseded and retired
+
+- `var-kp_vy-vyx-v1`: the vyx parameters under the mis-normalised arrival rate (mean 1.72).
+  Its published row is the vyx line of `grid_summary.csv`. Numbers describe a different
+  economy from v2; do not quote.
+- `var-gs_bx-bx7-v1` and `-v2`: old calibration and the level-shift ladder; v2 was superseded
+  before it ran. The retired manifest `a8ef7a2522eda19d` is the pre-kappa_e `sol_reg`.
+- `var-gs_bx-g28-v1`: identical economy to v2; its precommitted solve id was invalidated by a
+  comment-only edit to the solver source.
+- 21 of the 24 economies in `grid_summary.csv`, and all 57 rows of `oracle_summary.csv`, have
+  no code in this repository. Their numbers are history, not results.
+
+## Adding an experiment
+
+1. Write `experiments/specs/var-<model>-<tag>-v1.json`: title, question, the parameter
+   override, `env`, `estimation`, and `expected_solves` computed WITHOUT solving (the id is a
+   hash of inputs). Say in economic terms what differs from the baseline, here and in the
+   spec's title.
+2. Solve with the model's producer (`rebuild_jstar_gam.py`, `build_vy_tables.py`,
+   `gs_solve_reg.py` / `gs_solve_gam.py`); confirm the registry id matches the spec; publish
+   the artifact with `variants/fetch_solves.py --publish`.
+3. Add a `SEED_SPEC` case to `variants/run_seeds_slurm.sh` with the spec's parameters and
+   kappa grid (`tests/test_specs_match_shell.py` pins it to the spec).
+4. Run ONE seed at N=500, T=500 and read `sacct` before sizing an array. Then seeds 1-9.
+5. `python variants/aggregate_seeds.py --flagship`, commit the result files and the tables,
+   and add the economy here: to the current table, and as a subsection under the path it
+   extends (or a new path), with what differs from the baseline in economic terms first.
+   `tests/test_results_md_matches_table.py` will fail until the table row is added.
