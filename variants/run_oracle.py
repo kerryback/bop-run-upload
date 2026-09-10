@@ -89,6 +89,28 @@ if args.spec:
             f"write a new spec for the economy you actually mean to run -- but do not "
             f"record this one under that spec_id.")
 
+# ---- every override must have TAKEN EFFECT in the module that read it ----------------
+# The env check above proves spec == environment. It cannot prove environment == what the
+# model used: every parameter module applies its overrides with globals().update(), which
+# silently accepts a name that is re-derived afterwards (bgn's prob_calm, Preg) and one
+# that is misspelled (created, read by nothing). parameters_kp14.py guards this in-module;
+# bgn_gam/parameters.py cannot without moving be222462dd017b2c and staling ten committed
+# seeds (WORKING.md §42, the hole left open). So the readback is applied HERE, after
+# import, for every model at once -- variants/common/readback.py, which detects a
+# misspelling against the names the module's source assigns, not against hasattr(),
+# which is useless once update() has created the key.
+import readback
+_pmod = {"bgn_gam": "parameters", "kp_vy": "parameters_kp14", "gs_bx": "gs_sim_bx"}[args.model]
+_rok, _rlines = readback.overrides_took_from_env(sys.modules[_pmod], ov_env)
+print("\n".join(_rlines), flush=True)
+if _rok is False:
+    raise SystemExit(
+        f"ABORT: {ov_env} names something {_pmod} did not use (see the [readback] lines "
+        f"above). The economy that would be simulated is not the one the overrides -- and "
+        f"so the spec and the sidecar -- describe. Fix the override; if the parameter is "
+        f"derived, override the primitives it is derived from.")
+_readback = {True: "verified", False: "refused", None: "not requested"}[_rok]
+
 # ---- the AGGREGATE state path must move with the seed --------------------------------------------
 # np.random.seed(args.seed) above steers every draw that goes through the global stream
 # (norm.rvs, expon.rvs, np.random.*) -- the firm-level shocks. It does NOT steer the
@@ -293,6 +315,7 @@ _prov, _tag = provenance.write_sidecar(_st("oracle") + ".json", inputs=solves,
                                               # precommitment layer, and folding a second
                                               # question into that tally would corrupt it
                                               "env_check": _env_check,
+                                              "readback": _readback,
                                               "eval_window": args.eval_window})
 summary["prov"] = _tag
 ts["prov"] = _tag              # redundant per row ON PURPOSE: a row copied out of the

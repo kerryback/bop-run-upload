@@ -149,6 +149,15 @@ def test_names_bound_inside_functions_are_not_parameters():
     assert "c" not in names and "d" not in names
 
 
+def test_run_oracle_applies_the_readback_and_aborts_on_refusal():
+    """The module is only worth anything if the run script calls it and stops."""
+    src = open(os.path.join(ROOT, "variants", "run_oracle.py")).read()
+    assert "readback.overrides_took_from_env(" in src, "run_oracle.py no longer applies the readback"
+    tail = src[src.index("readback.overrides_took_from_env("):][:1500]
+    assert "is False" in tail and "SystemExit" in tail, "a refused readback must abort"
+    assert '"readback": _readback' in src, "the sidecar must record the readback outcome"
+
+
 def test_from_env_rejects_malformed_json():
     mod = _import_fresh(BGN_PARAMS, "BGN_PARAM_OVERRIDES", {})
     ok, lines = readback.overrides_took_from_env(mod, "X_OVERRIDES", {"X_OVERRIDES": "{nope"})
