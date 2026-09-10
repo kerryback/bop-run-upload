@@ -1,4 +1,4 @@
-# variants — three engineered economies with room for a nonlinear SDF method
+# variants — engineered economies with room for a nonlinear SDF method
 
 These are the experiments behind `REPORT.md` ("why does DKKM barely beat FMR/FFC in the simulated
 economies, and what would change that"). Of the 24 economies in that study, the three flagships that give
@@ -14,13 +14,14 @@ standardization, one evaluation per RFF draw).
 Run everything from an environment with the repo requirements plus `pyarrow`
 (`pip install -r ../requirements.txt pyarrow`). The shell scripts use `$PYTHON` if set, else `python3`.
 
-## The three economies
+## The economies
 
 | dir | economy | tag(s) | run |
 |---|---|---|---|
 | `bgn_gam/` | BGN with a 2-state regime multiplying the prices of risk, pushed to multipliers 0.2/3.5 near the closed-form frontier (REPORT §13, §19d) | `g0235` | `bgn_gam/run_g0235.sh` |
 | `kp_vy/` | KP14 with a priced OU volatility factor y and three firm types with exposure e^{beta y}, gamma_v = 1.8 and beta in {0.02, 0.07, 0.14} (REPORT §19, §19d) | `vyx` | `kp_vy/run_vyx.sh` |
-| `gs_bx/` | GS21 (2-regime, exact-kernel re-solve) with five exposure types beta in {1, 2.5, 4, 5.5, 7} (REPORT §19) | `bx7` | `gs_bx/run_gs_bx7.sh` |
+| `gs_bx/` | GS21 (2-regime, exact-kernel re-solve) with five exposure types beta in {1, 2.5, 4, 5.5, 7} (REPORT §19) | `bx7` | solves: `gs_bx/run_gs_bx7_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=bx7`) |
+| `gs_bx/` | GS21 single type with a linear-in-x, clipped price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1) -- the reconstruction of REPORT §13g's gamma(x) economy, spec `var-gs_bx-g28-v2` | `g28` | solve: `gs_bx/run_g28_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=g28`) |
 
 Population numbers from `results/grid_summary.csv` (N=500, T=500; Sharpe ratios from the true conditional
 moments; `room` = best nonlinear basis minus best linear-in-ranks basis):
@@ -178,7 +179,7 @@ ways, and each had already produced or nearly produced wrong numbers:
 
 Kept in git: all code, the solved tables that are small (`Jstar*.csv`, `G_*.csv`, `integ_*.npz`), the
 oracle JSON/CSV and estimator CSV outputs, and the three summary files. Ignored (see `../.gitignore`):
-`gs_bx/sol_*/` (about 85 MB each, rebuilt by `run_gs_bx7.sh`), `results/*.parquet` panels and
+`gs_bx/sol_*/` (about 85-105 MB each, produced by `run_gs_bx7_slurm.sh` / `run_g28_slurm.sh`, or fetched by `fetch_solves.py`), `results/*.parquet` panels and
 `results/*_moments_*.npz` (the moments files are 390 MB each and were deleted; `run_oracle.py --save_panel`
 regenerates both), and `results/logs/`.
 

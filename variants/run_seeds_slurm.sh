@@ -20,6 +20,7 @@
 #     mkdir -p outslurm
 #     sbatch --export=ALL,SEED_SPEC=vyx   variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=g0235 variants/run_seeds_slurm.sh
+#     sbatch --export=ALL,SEED_SPEC=g28   variants/run_seeds_slurm.sh
 # SBATCH -o is resolved before the script body runs, so outslurm/ must already exist.
 # Size and window can be overridden per submission, e.g.
 #     sbatch --export=ALL,SEED_SPEC=vyx,SEED_N=200,SEED_T=300 variants/run_seeds_slurm.sh
@@ -44,6 +45,7 @@
 # canonicaliser was made portable -- WORKING.md §26):
 #     kp_vy   vyx    G f7be27e39d2b530f   integ 84e195172f091cd2
 #     bgn_gam g0235  jstar be222462dd017b2c
+#     gs_bx   g28    sol_g28 8b584c38614695ac
 #
 # ---------------------------------------------------------------------------
 # Why these resource requests.
@@ -114,7 +116,13 @@
 #                   MaxRSS of the whole task, oracle + estimators, Sol, 2026-09-08):
 #
 #                       kp_vy/vyx     30.6 GiB   (seed 0; seeds 1-9 all 29.9-30.6)
-#                       bgn_gam/g0235 15.8 GiB   (seed 0)
+#                       bgn_gam/g0235 15.7-38.9 GiB (ten seeds on identical nodes; BIMODAL,
+#                                     six near 16 and four at 27-39; cause not established,
+#                                     WORKING.md §40 -- so do not size from seed 0 alone)
+#                       gs_bx/*       UNMEASURED. bx7 loads five ~100 MB solutions, carries
+#                                     six characteristics and scores eight kappas; nothing
+#                                     above transfers. Run ONE seed and read sacct before
+#                                     sizing an array (NEXT.md 3f).
 #
 #                   64G is 2.1x the larger. History of this line: 24G -> 64G on the
 #                   kp_vy laptop ladder (the flagship task then used 30.6, so 24G would
@@ -149,11 +157,12 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g28) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
     MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v2; SOLVE_TAG=vyx
+    KAPPAS=0.001,0.01,0.1,1
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
@@ -172,16 +181,36 @@ case "$SEED_SPEC" in
     # be222462dd017b2c sat in the registry the whole time. Failing closed and cheap is
     # the right direction for this check, but it was asking the wrong question.
     MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v2; SOLVE_TAG=Jstar_g0235
+    KAPPAS=0.001,0.01,0.1,1
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
+  g28)
+    # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of
+    # REPORT §13g's economy, where the published table showed a gap with ZERO nonlinear
+    # room. Its parameters are not an override blob: the solver read GS_PARAM_OVERRIDES
+    # when it built sol_g28, and that is inside the solve_id the spec pins. The simulator
+    # takes its structural parameters out of solution.npz; the three GS_BX_* variables are
+    # its only statement of which types exist, and GS_SIM_OVERRIDES must stay UNSET --
+    # run_oracle.py refuses an undeclared value there (WORKING.md §42).
+    MODEL=gs_bx; TAG=g28; SPEC=var-gs_bx-g28-v2; SOLVE_TAG=sol_g28
+    export GS_BX_SOLDIRS=sol_g28
+    export GS_BX_BETAS=1.0
+    export GS_BX_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
+    # The solve exists and is published content-addressed; 3-6 h to remake, seconds to
+    # fetch. The hint says fetch, never re-solve.
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx or g0235)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235 or g28)" >&2; exit 2 ;;
 esac
 
-# The overrides above are transcribed from variants/{kp_vy/run_vyx.sh,bgn_gam/run_g0235.sh}
-# and are checked against them by tests/test_specs_match_shell.py. It is the parameters,
-# not the seed, that define the economy, so every task in an array exports the same ones.
+# Every case above restates its economy's parameters and kappa grid, and each is checked
+# against the spec its SPEC= names by tests/test_specs_match_shell.py -- a second copy is
+# what drifted between run_gs_bx7.sh and its spec. It is the parameters, not the seed,
+# that define the economy, so every task in an array exports the same ones.
 
 N=${SEED_N:-500}
 T=${SEED_T:-500}
@@ -263,7 +292,7 @@ MID=$(date +%s)
 echo "=== oracle done in $((MID-S))s ===" | tee -a "$LOG"
 
 python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
-       --window "$WINDOW" --levels --include_mkt --kappas 0.001,0.01,0.1,1 \
+       --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
        --n_jobs "$NT" 2>&1 | tee -a "$LOG"
 E=$(date +%s)
 

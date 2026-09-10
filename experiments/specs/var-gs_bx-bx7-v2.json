@@ -191,9 +191,10 @@
     ]
   },
   "provenance": {
-    "source_script": "variants/gs_bx/run_gs_bx7.sh",
+    "source_script": null,
     "transcribed": "2026-09-04",
-    "verified_by": "tests/test_specs_match_shell.py"
+    "verified_by": "tests/test_specs_match_shell.py",
+    "source_script_note": "was variants/gs_bx/run_gs_bx7.sh, deleted 2026-09-09: it restated this superseded ladder and would have re-solved it. The five override strings this spec was transcribed from survive in solve.stages above."
   },
   "spec_hash": "652ef6322bdf34678273526f1d432e8d5e240d0084da3ac0bbe491ddc533b6e2",
   "expected_solves": {
