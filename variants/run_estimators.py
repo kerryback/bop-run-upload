@@ -64,10 +64,31 @@ mom = np.load(_st("moments") + ".npz")
 # estimator output is traceable to the same economy without re-deriving it.
 _oracle_summary = _st("oracle") + ".json"
 _solves = None
+_spec_id = None
+_oracle_eval_window = None
 if os.path.exists(_oracle_summary):
-    _solves = json.load(open(_oracle_summary)).get("solves")
+    _osum = json.load(open(_oracle_summary))
+    _solves = _osum.get("solves")
+    # The spec_id travels with the solves. Without it, `*_summary.csv` -- the file
+    # actually read to adjudicate an economy -- named its solves but not the experiment
+    # they belong to, so the last hop of the chain had to be reconstructed by looking
+    # ids up in the registry by hand.
+    _spec_id = _osum.get("spec_id")
+    _oracle_eval_window = _osum.get("eval_window")
     if _solves:
         print(runstamp.describe(_solves), flush=True)
+    print(f"[spec] this panel was built under spec_id "
+          f"{_spec_id or '<none: the oracle run named no --spec>'}", flush=True)
+    # `room` from the oracle and `gap` from here are only differenceable when they cover
+    # the same months. The oracle computes its window-restricted ceilings at
+    # --eval_window; if that is not this run's --window, say so here rather than letting
+    # the two be subtracted later in a notebook.
+    if _oracle_eval_window is not None and _oracle_eval_window != args.window:
+        print(f"[spec] NOTE: the oracle restricted its ceilings to --eval_window "
+              f"{_oracle_eval_window}, but this run scores at --window {args.window}. "
+              f"The *_eval ceilings in {os.path.basename(_oracle_summary)} do NOT cover "
+              f"this run's evaluation months; re-run the oracle at --eval_window "
+              f"{args.window} before differencing room against gap.", flush=True)
 months_m, MU, SIG, KEEP = mom["months"], mom["mu"], mom["Sigma"], mom["keep"]
 midx = {int(m): i for i, m in enumerate(months_m)}
 panel = panel.set_index(["month", "firmid"]).sort_index()
@@ -257,6 +278,7 @@ print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
 _prov, _ptag = provenance.write_sidecar(
     _base + "_summary.csv", inputs=_solves,
     extra={"engine": "estimators", "window": args.window,
+           "spec_id": _spec_id, "oracle_eval_window": _oracle_eval_window,
            "panel": os.path.basename(_panel_path)})
 summ["prov"] = _ptag           # every row carries it; see provenance.short_tag
 res["prov"] = _ptag
@@ -264,6 +286,7 @@ res.to_csv(_base + ".csv", index=False)          # rewritten so the full results
 summ.to_csv(_base + "_summary.csv", index=False)
 print(f"[prov] {_ptag}  -> {os.path.basename(_base)}_summary.csv.prov.json", flush=True)
 json.dump({"model": args.model, "tag": args.tag, "seed": args.seed, "prov": _ptag,
+           "spec_id": _spec_id, "oracle_eval_window": _oracle_eval_window,
            "window": args.window, "winsor": args.winsor, "kappas": kappas,
            "eval_months": len(eval_months), "N": N,
            "solves": _solves,

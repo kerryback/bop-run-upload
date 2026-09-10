@@ -29,6 +29,11 @@ ap.add_argument("--spec", type=str, default=None,
                      "VERIFIES its consumed solve_ids against the spec's expected_solves "
                      "and aborts on a mismatch, so a summary can never claim a spec it did "
                      "not actually build.")
+ap.add_argument("--eval_window", type=int, default=360,
+                help="ALSO report every population ceiling restricted to the months the "
+                     "estimators are scored on, i.e. month >= first_month + eval_window. "
+                     "Must equal run_estimators.py --window for `room` and `gap` to be "
+                     "commensurable; see the note beside the computation below.")
 ap.add_argument("--common_aggregate", action="store_true",
                 help="hold the AGGREGATE state path fixed across seeds (do not offset gam_seed/reg_seed). "
                      "Cross-seed spread then isolates firm-level sampling noise, with the aggregate "
@@ -60,6 +65,29 @@ else:  # gs_bx
 from oracle import rank_standardize, draw_W, build_feature_sets, evaluate_bases, max_sr, level_standardize
 import runstamp
 import provenance
+
+# ---- the run's PARAMETERS must match the spec, checked BEFORE any compute -----------
+# `verify_against_spec` (further down, after the panel exists, because it identifies
+# the tables by content) closes ARTIFACT -> spec. This closes PARAMETERS -> spec, which
+# was the last open link in params -> solve -> result.
+#
+# It needs nothing but the spec and the environment, so it runs FIRST: refusing in a
+# tenth of a second beats refusing after a 35-minute panel build. And it catches what
+# no other check can see -- the tables on disk can be exactly the ones the spec pins
+# while the simulator runs a DIFFERENT economy on top of them. Reproduced 2026-09-09:
+# BGN simulated at gmult [0.2, 3.0] against the J* table built at [0.2, 3.5] passed the
+# solve check and wrote a summary stamped var-bgn_gam-g0235-v2, spec_check "verified".
+_env_check = "not requested"
+if args.spec:
+    _eok, _elines = runstamp.verify_env_against_spec(args.spec, ov_env)
+    _env_check = {True: "verified", False: "refused"}.get(_eok, "unverifiable")
+    print("\n".join(_elines), flush=True)
+    if _eok is not True:
+        raise SystemExit(
+            f"ABORT: --spec {args.spec} does not describe this run's parameters (see "
+            f"the [env] lines above). Either fix the environment to match the spec, or "
+            f"write a new spec for the economy you actually mean to run -- but do not "
+            f"record this one under that spec_id.")
 
 # ---- the AGGREGATE state path must move with the seed --------------------------------------------
 # np.random.seed(args.seed) above steers every draw that goes through the global stream
@@ -102,7 +130,7 @@ print(f"[{args.model}/{args.tag}] panel built in {time.time()-t0:.0f}s", flush=T
 solves = runstamp.consumed_solves(args.model, mod=sys.modules[mod.__name__])
 print(runstamp.describe(solves), flush=True)
 # Recorded into the sidecar so the "is the precommitment layer earning its keep?"
-# question in docs/refactor/DECISION-provenance-layers.md is answered by COUNTING
+# question in docs/refactor/WORKING.md §44 is answered by COUNTING
 # rather than by recollection: grep the sidecars for spec_check.
 _spec_check = "not requested"
 if args.spec:
@@ -167,6 +195,33 @@ names = list(feature_fn(months_data[0]).keys())
 
 res = evaluate_bases(months_data, feature_fn, names, verbose=True)
 
+# ---- the EVALUATION-WINDOW restriction -------------------------------------------------------------
+# `room` (a ceiling from this file) and `gap` (an estimator shortfall from
+# run_estimators.py) were being averaged over DIFFERENT MONTHS. The oracle averaged its
+# const-theta conditional SR over all 485 months of a flagship panel; the estimators
+# average over the 125 months that survive a 360-month rolling window. So the two were
+# never strictly commensurable, and WORKING.md 40 -- "the realized gap exceeds the
+# const-theta room" -- has that confound sitting underneath it, unruled-out.
+#
+# The mask below reproduces run_estimators.py:80 EXACTLY (`range(start + window, end+1)`
+# over the same month index), which is the only reason the restricted numbers can be
+# differenced against an estimator result. If that line ever changes, this must change
+# with it; tests/test_eval_window_matches_estimators.py fails if they drift.
+#
+# Both versions are reported. The all-month figure is what every number published
+# before 2026-09-09 means, so overwriting it would silently redefine the headline
+# quantity; the restricted one is what should be differenced against a gap.
+_months_arr = np.array([m["month"] for m in months_data])
+_eval_mask = _months_arr >= (_months_arr.min() + args.eval_window)
+_n_eval = int(_eval_mask.sum())
+if _n_eval == 0:
+    print(f"[eval] --eval_window {args.eval_window} leaves 0 of {len(_months_arr)} months "
+          f"(T is too short for that window); window-restricted ceilings not reported", flush=True)
+else:
+    print(f"[eval] window-restricted ceilings use {_n_eval} of {len(_months_arr)} months "
+          f"(month >= {int(_months_arr.min() + args.eval_window)}), matching "
+          f"run_estimators.py --window {args.eval_window}", flush=True)
+
 # ---- report ----------------------------------------------------------------------------------------
 def agg_rff(res):
     """average the RFF draws with the same P"""
@@ -176,27 +231,46 @@ def agg_rff(res):
         out.setdefault(key, []).append(r)
     agg = {}
     for key, lst in out.items():
-        agg[key] = {"P": lst[0]["P"], "zgrid_rel": lst[0]["zgrid_rel"],
-                    "cond_sr_mean": np.mean([r["cond_sr_mean"] for r in lst], 0),
-                    "unc_sr": np.mean([r["unc_sr"] for r in lst], 0),
-                    "cond_oracle_mean": float(np.mean([r["cond_oracle_mean"] for r in lst]))}
+        rec = {"P": lst[0]["P"], "zgrid_rel": lst[0]["zgrid_rel"],
+               "cond_sr_mean": np.mean([r["cond_sr_mean"] for r in lst], 0),
+               "unc_sr": np.mean([r["unc_sr"] for r in lst], 0),
+               "cond_oracle_mean": float(np.mean([r["cond_oracle_mean"] for r in lst]))}
+        if _n_eval:
+            # cond_sr_ts is (months x nz); restrict the ROWS, then average the draws.
+            rec["cond_sr_mean_eval"] = np.mean(
+                [r["cond_sr_ts"][_eval_mask].mean(0) for r in lst], 0)
+            with np.errstate(invalid="ignore"):
+                _co = [np.nanmean(r["cond_oracle_ts"][_eval_mask]) for r in lst]
+            rec["cond_oracle_eval"] = float(np.mean(_co)) if not np.all(np.isnan(_co)) else float("nan")
+        agg[key] = rec
     return agg
 agg = agg_rff(res)
 
 summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "overrides": os.environ.get(ov_env, "{}"),
            "solves": solves, "aggregate_seeds": _agg, "spec_id": args.spec,
+           "eval_window": args.eval_window, "eval_months": _n_eval,
            "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
            "mean_mu": float(ts.mean_mu.mean()), "sd_mu": float(ts.sd_mu.mean()), "mean_idio_sd": float(ts.mean_idio_sd.mean()),
            "bases": {}}
 print(f"\n=== {args.model}/{args.tag}: mean SR_max = {ts.sr_max.mean():.4f}  N={N} months={len(ts)}  "
       f"E[mu]={ts.mean_mu.mean():.4f} sd_cs(mu)={ts.sd_mu.mean():.4f} idio sd={ts.mean_idio_sd.mean():.3f}  overrides={summary['overrides']}")
-print(f"{'basis':>12} {'P':>5} | {'cond.oracle':>11} | {'const-theta z=0':>15} | {'best z (rel)':>18} | unc SR(best)")
+print(f"{'basis':>12} {'P':>5} | {'cond.oracle':>11} | {'const-theta z=0':>15} | {'best z (rel)':>18} | "
+      f"{'unc SR(best)':>12} | {'best z, eval win':>16}")
 for name, r in agg.items():
     zs = r["zgrid_rel"]; sr = r["cond_sr_mean"]; j = int(np.argmax(sr))
     rec = {"P": r["P"], "cond_oracle": r["cond_oracle_mean"], "const_z0": float(sr[0]), "const_best": float(sr[j]),
            "best_zrel": zs[j], "unc_best": float(r["unc_sr"][j]), "sr_by_z": [float(x) for x in sr]}
+    # The window-restricted twin of every ceiling above. Same z-grid, same bases; only
+    # the months differ, which is the whole point -- these are the figures that can be
+    # differenced against a run_estimators.py result at the same --window.
+    if _n_eval:
+        sr_e = r["cond_sr_mean_eval"]; je = int(np.argmax(sr_e))
+        rec.update({"cond_oracle_eval": r["cond_oracle_eval"], "const_z0_eval": float(sr_e[0]),
+                    "const_best_eval": float(sr_e[je]), "best_zrel_eval": zs[je],
+                    "sr_by_z_eval": [float(x) for x in sr_e]})
     summary["bases"][name] = rec
-    print(f"{name:>12} {r['P']:>5} | {r['cond_oracle_mean']:11.4f} | {sr[0]:15.4f} | {sr[j]:8.4f} ({zs[j]:7.0e}) | {r['unc_sr'][j]:.4f}")
+    print(f"{name:>12} {r['P']:>5} | {r['cond_oracle_mean']:11.4f} | {sr[0]:15.4f} | {sr[j]:8.4f} ({zs[j]:7.0e}) | "
+          f"{r['unc_sr'][j]:12.4f} | " + (f"{rec['const_best_eval']:16.4f}" if _n_eval else f"{'-':>16}"))
 
 # BOP_RESULTS_DIR relocates output without touching code. Default unchanged.
 # Measured 2026-09-08: /data/sjpruitt is 1.0 TB with 989 GB free (4% used), and a full
@@ -213,7 +287,13 @@ _st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, a
 # was the CODE VERSION, and the CSVs carried no link to anything at all.
 _prov, _tag = provenance.write_sidecar(_st("oracle") + ".json", inputs=solves,
                                        extra={"spec_id": args.spec, "engine": "oracle",
-                                              "spec_check": _spec_check})
+                                              "spec_check": _spec_check,
+                                              # separate key: WORKING.md §44
+                                              # counts spec_check to decide the fate of the
+                                              # precommitment layer, and folding a second
+                                              # question into that tally would corrupt it
+                                              "env_check": _env_check,
+                                              "eval_window": args.eval_window})
 summary["prov"] = _tag
 ts["prov"] = _tag              # redundant per row ON PURPOSE: a row copied out of the
                                # CSV into a notebook must not lose its pointer back
