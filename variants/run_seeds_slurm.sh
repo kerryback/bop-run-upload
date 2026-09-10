@@ -21,6 +21,7 @@
 #     sbatch --export=ALL,SEED_SPEC=vyx   variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=g0235 variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=g28   variants/run_seeds_slurm.sh
+#     sbatch --export=ALL,SEED_SPEC=bx7   variants/run_seeds_slurm.sh
 # SBATCH -o is resolved before the script body runs, so outslurm/ must already exist.
 # Size and window can be overridden per submission, e.g.
 #     sbatch --export=ALL,SEED_SPEC=vyx,SEED_N=200,SEED_T=300 variants/run_seeds_slurm.sh
@@ -46,6 +47,10 @@
 #     kp_vy   vyx    G f7be27e39d2b530f   integ 84e195172f091cd2
 #     bgn_gam g0235  jstar be222462dd017b2c
 #     gs_bx   g28    sol_g28 8b584c38614695ac
+#     gs_bx   bx7    sol_reg 63fa7ebbc2db49ea  sol_b25c 649bb384300faadf
+#                    sol_b40c a3bb50b66287307c  sol_b55c 645262a8e72d944c
+#                    sol_b70c 0818d7153d5708cc  (five tags -> one economy; SOLVE_TAG
+#                    lists them all and runstamp unions them)
 #
 # ---------------------------------------------------------------------------
 # Why these resource requests.
@@ -157,7 +162,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g28) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g28 | bx7) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -185,6 +190,22 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
+  bx7)
+    # GS21 with five exposure types beta in {1, 2.5, 4, 5.5, 7}, one solve per type. FIVE
+    # solve tags, so SOLVE_TAG lists them all and every runstamp lookup below unions them
+    # (runstamp.live_solves takes a comma list; until 2026-09-09 it took one tag, and the
+    # per-seed checkpoint would have reported STALE forever for this economy). The
+    # simulator reads GS_BX_* for which types exist; the solutions carry their own gs_bx
+    # and gs_sim_bx.py refuses a ladder that disagrees with them. GS_SIM_OVERRIDES stays
+    # UNSET (WORKING.md §42). The kappa grid is the spec's eight values.
+    MODEL=gs_bx; TAG=bx7; SPEC=var-gs_bx-bx7-v3; SOLVE_TAG=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
+    export GS_BX_SOLDIRS=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
+    export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
+    export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
+    unset GS_SIM_OVERRIDES
+    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    ;;
   g28)
     # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of
     # REPORT §13g's economy, where the published table showed a gap with ZERO nonlinear
@@ -204,7 +225,7 @@ case "$SEED_SPEC" in
     SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235 or g28)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g28 or bx7)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
@@ -287,7 +308,7 @@ S=$(date +%s)
 # the ones the spec declares. Without it a summary could carry a spec_id for an economy
 # it did not build -- which is the failure the whole registry exists to prevent.
 python -W ignore run_oracle.py --model "$MODEL" --N "$N" --T "$T" --seed "$SEED" \
-       --tag "$TAG" --spec "$SPEC" --levels --save_panel 2>&1 | tee -a "$LOG"
+       --tag "$TAG" --spec "$SPEC" --eval_window "$WINDOW" --levels --save_panel 2>&1 | tee -a "$LOG"
 MID=$(date +%s)
 echo "=== oracle done in $((MID-S))s ===" | tee -a "$LOG"
 

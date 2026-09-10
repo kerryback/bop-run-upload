@@ -2994,3 +2994,67 @@ A manifest's recorded `params` do not reproduce its own `solve_id` when fed back
 `Snapshot` (0 of 9 live manifests). The producer probe does reproduce it, so the id is
 sound; but the manifest alone is not a complete record of how it was computed. Not
 blocking; noted so it is not rediscovered.
+
+## §45. NEXT.md steps 2 and 3: gs_bx wired into the checked runner (2026-09-09)
+
+Personal session, on Seth's "let's pursue that goal". Decisions taken where NEXT.md asked for
+one, each the cheapest reversible option:
+
+**2a — bx7-v3 corrected in place.** `types.exposure.gs_ashift` said the v2 ladder while
+`method` and all five pinned solves say 0.0. Fixed, `spec_hash` recomputed (the old value is
+recorded in `lineage.changes`), no v4: nothing stamped `var-gs_bx-bx7-v3` exists, so no
+published number changes meaning. `test_gs_bx7_ashift_ladder_is_consistent_across_the_records`
+pins the two records to each other.
+
+**2b — option B, not the recommended C.** NEXT.md's case for keeping `run_gs_bx7.sh` solve-only
+was that it is "the only record of the five GS_PARAM_OVERRIDES strings". It is not:
+`run_gs_bx7_slurm.sh` carries the five strings in its `OVERRIDES` array, matching v3's
+`solve.stages` element for element, and it is the script that actually produced the solves on
+Sol. So the laptop script was a duplicate that re-solved the wrong ladder. Deleted. v3's
+`provenance` now names the SLURM script as `source_script` and the seed array as `runner`;
+v1/v2's `source_script` is null with a note (all hash-excluded fields).
+
+**2c — the shell-vs-spec tests guard CURRENT specs.** `test_specs_match_shell.py` was rewritten
+around a `CURRENT` map; every GS test targets v3 and the SLURM solve script; g28 gets the same
+treatment against `run_g28_slurm.sh`; and one test parses every `case` branch of the seed array
+and checks it against the spec that branch's `SPEC=` names -- model, override JSON, literal env,
+and the kappa grid. A branch that runs a superseded spec fails.
+
+**2d — readback in `run_oracle.py`, not in `parameters.py`.** `variants/common/readback.py`
+compares each requested override against the imported module's live value, and detects a
+misspelling against the names the module's SOURCE assigns (parsed with `ast`; `hasattr` is
+useless once `globals().update()` has created the key). Applied after import for every model;
+outcome recorded in the sidecar as `readback`. Pinned on the real bgn module: a derived name
+(`prob_calm`, `Preg`) and a misspelling (`gmulr`) are refused, the g0235 overrides verify.
+The in-module guard for bgn stays deferred to the next functional change of `parameters.py`.
+
+**3a — `live_solves` takes several tags.** Comma list or list; one tag is unchanged. Verified
+the pre-fix failure (five ids vs one) and pinned it in `test_runstamp_multitag.py`.
+
+**3b–3e.** `SEED_SPEC=g28` and `SEED_SPEC=bx7` cases; `KAPPAS` per case and
+`--kappas "$KAPPAS"` (the gs specs use eight values, the array hardcoded four);
+`--eval_window "$WINDOW"` passed to the oracle; GS `SOLVE_HINT`s say fetch, not re-solve.
+
+**Smoke, g28 at N=25/T=80 with the array's exact environment, both stages.** Oracle: `[env]`
+three variables verified, `[spec] sol_g28 8b584c38614695ac matches`, sidecar stamped;
+`--eval_window 360` correctly reports "0 of 65 months" at that T. Estimators at the spec's
+eight kappas: `_run.json` carries `spec_id var-gs_bx-g28-v2`, the solve id and all eight
+kappas; the summary sidecar carries `spec_id`, `window 40`, `oracle_eval_window 360`, and the
+"do NOT cover this run's evaluation months" warning fired as designed. Every file of the
+chain now names the spec. The economy itself, at toy size: room +0.0014 (lin_rank 0.0735 vs
+rff3600 0.0749) against an estimated rff_ens 0.0774 vs linrank 0.0289 -- the published
+"gap with zero room" signature of the gamma(x) rows, visible even at N=25. Not a result;
+a sign the reconstruction is the right economy.
+
+**Cost note for 3f.** The estimator stage took 1589 s for 25 evaluation months on the
+laptop: 63.6 s per month at eight kappas, 2.53x the 25.1 s/month measured at four. If the
+Sol factor of 2.05x holds, a flagship gs seed's estimator stage is ~125 x 130 s = 4.5 h,
+before an unmeasured oracle. `-t 2-00:00` covers it; memory is the unknown.
+
+**Also corrected while in the file:** the seed array's memory header said g0235 was 15.8 GiB
+from seed 0; ten seeds say 15.7–38.9 and bimodal (§40). gs_bx is marked UNMEASURED.
+
+**Not done.** 3f (one g28 seed at flagship on Sol, then size the arrays) and the arrays
+themselves. And a finding the same shape as 2b, left for a decision: `bgn_gam/run_g0235.sh` and
+`kp_vy/run_vyx.sh` also run unspec'd and unseeded, and the seed array is the only checked path
+for those economies too.

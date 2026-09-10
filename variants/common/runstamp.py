@@ -154,11 +154,32 @@ def describe(solves):
 
 # ------------------------------------------------------------ checkpointing ----
 
+def solve_tags(tag):
+    """'sol_reg,sol_b25c' / ['sol_reg', 'sol_b25c'] / 'vyx' -> a list of tags.
+
+    A multi-solve economy (gs_bx bx7: five exposure types, five solution.npz, five
+    manifests each under its own soldir tag) is ONE economy and must be looked up as one.
+    The seed array passes SOLVE_TAG through unchanged, so the comma list is the contract
+    at the shell boundary.
+    """
+    if isinstance(tag, str):
+        tag = tag.split(",")
+    return [t.strip() for t in tag if t and t.strip()]
+
+
 def live_solves(model, tag):
-    """Non-retired solve_ids recorded for this model+tag, newest-registry order."""
-    return sorted(m["solve_id"] for m in solstamp.iter_manifests()
-                  if m.get("model") == model and not m.get("retired")
-                  and tag in (m.get("tags") or []))
+    """Non-retired solve_ids recorded for this model under ANY of `tag`'s tags, sorted.
+
+    `tag` is a str (comma-separated for several) or a list; one tag reproduces the
+    pre-2026-09-09 behaviour exactly. Until then this took a single tag, so for bx7 --
+    whose run record names FIVE solve_ids -- run_is_current compared five ids against the
+    one id of whichever tag it was handed and reported STALE forever: every resubmission
+    re-ran every finished seed, the opposite of what a checkpoint is for.
+    """
+    want = set(solve_tags(tag))
+    return sorted({m["solve_id"] for m in solstamp.iter_manifests()
+                   if m.get("model") == model and not m.get("retired")
+                   and want & set(m.get("tags") or [])})
 
 
 def run_is_current(run_json, model, tag):
@@ -168,6 +189,9 @@ def run_is_current(run_json, model, tag):
     and it is keyed on the SOLVE, not on file existence: re-solving the economy
     invalidates every seed at once, which is the behaviour a bare `[ -f ... ]` guard
     cannot give (see run_gs_bx7.sh's removed existence check).
+
+    `tag` may name several tags (see live_solves); the run is current when the ids it
+    consumed are exactly the union of the live ids under those tags.
     """
     import json as _json
     if not os.path.exists(run_json):
@@ -193,12 +217,14 @@ def _main(argv):
 
     p = sub.add_parser("current", help="live solve_ids for a model+tag")
     p.add_argument("--model", required=True)
-    p.add_argument("--tag", required=True)
+    p.add_argument("--tag", required=True,
+                   help="solve tag; comma-separated for a multi-solve economy")
 
     p = sub.add_parser("is-current", help="exit 0 if a run record matches those solves")
     p.add_argument("run_json")
     p.add_argument("--model", required=True)
-    p.add_argument("--tag", required=True)
+    p.add_argument("--tag", required=True,
+                   help="solve tag; comma-separated for a multi-solve economy")
 
     a = ap.parse_args(argv)
     if a.cmd == "current":

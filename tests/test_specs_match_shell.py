@@ -262,10 +262,20 @@ def test_every_current_spec_has_a_seed_array_case():
     named = {c["SPEC"] for c in cases.values()}
     missing = [sid for sid in CURRENT.values()
                if sid not in named and not load_spec(sid).get("lineage", {}).get("superseded_by")]
-    # bx7 waits on multi-solve checkpoint support in runstamp (NEXT.md 3a); everything
-    # else that is current must be runnable the checked way.
-    allowed_missing = {"var-gs_bx-bx7-v3"}
+    # Every current spec must be runnable the checked way. (bx7 joined on 2026-09-09
+    # once runstamp could look up a five-solve economy.)
+    allowed_missing = set()
     assert set(missing) <= allowed_missing, f"current specs with no SEED_SPEC case: {missing}"
+
+
+def test_seed_array_passes_its_window_to_the_oracle():
+    """--eval_window must be the estimators' --window, or the oracle's window-restricted
+    ceilings cover different months from the gap they are differenced against."""
+    body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines()
+                     if not l.lstrip().startswith("#"))
+    assert re.search(r'run_oracle\.py.*?--eval_window\s+"\$WINDOW"', body, re.DOTALL), (
+        "run_oracle.py must be given --eval_window \"$WINDOW\"")
+    assert re.search(r'run_estimators\.py.*?--window\s+"\$WINDOW"', body, re.DOTALL)
 
 
 def test_seed_array_does_not_solve():
