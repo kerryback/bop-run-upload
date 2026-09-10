@@ -96,27 +96,185 @@ calibration parameters were corrected against the paper's Table I on 2026-09-06)
 
 ### Ordering
 
-Model sections are ordered by their best current ABSOLUTE gap, and within a model the paths are
-ordered the same way; paths with no current economy come after those with one, ordered by their
-best legacy gap.
+Model sections are ordered by their best current PROPORTIONAL gap (gap as a share of the linear
+Sharpe attained), and within a model the paths are ordered the same way; paths with no current
+economy come after those with one, ordered by their best legacy gap. Each model section ends
+with the parameterizations proposed next for it, and those are collected and ranked in
+"Proposed next, ranked" near the end.
 
 ## Current results
 
-All four CURRENT economies, ranked by realized gap. Mean (sd) over ten seeds.
+All four CURRENT economies, ranked by gap as a share of the linear Sharpe attained. Mean (sd)
+over ten seeds.
 
 | economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 |
 | kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 |
 | gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 |
-| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 |
 | gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 |
 
-Rows are ordered by ABSOLUTE gap. **By proportional gap the order is different**: g0235 first
-at 26.5%, then vyx 16.3%, g28 10.5%, bx7 2.7%. Which ordering matters depends on the question
--- see cross-cutting finding 6.
+Rows are ordered by PROPORTIONAL gap. **By absolute gap the order is different**: vyx first at
++0.1046, then g28 +0.0283, g0235 +0.0227, bx7 +0.0078. Which ordering matters depends on the
+question -- see cross-cutting finding 6.
 
 Regenerate with `python variants/aggregate_seeds.py --flagship`, which also writes the per-seed
 rows to `variants/results/seed_table.csv`.
+
+---
+
+## BGN -- Berk, Green and Naik (1999)
+
+### Baseline
+
+A firm is a collection of live projects, each a real option that was exercised when its
+present value crossed a threshold. Projects carry a market-shock loading beta_s drawn from a
+translated exponential distribution (scale 0.137), an idiosyncratic cash-flow volatility, and
+a project-specific cash-flow level around C-bar = -3.7; new projects arrive and are exercised
+optimally against a threshold J*(r) that depends on the short rate. The short rate is Vasicek
+(monthly persistence kappa = 0.95, mean 0.006236, innovation sd sigma_r = 0.002). The pricing
+kernel is exogenous and lognormal with ONE priced shock, the market shock nu, at price
+sigma_z = 0.4, correlated -0.175 with the rate innovation (beta_zr = -0.00014). Expected
+returns are exactly affine in book-to-price and 1/price with rate-dependent coefficients.
+Calibration checked against the paper's Table I: 11 of 11 parameters match, including two the
+code derives rather than stores.
+
+What this implies for the cross-section: the project-beta distribution is the only source of
+firm-level exposure heterogeneity in any of the three models. REPORT.md §17's closing
+sentence: "only BGN's project-beta distributions supply that heterogeneity."
+
+**Legacy rows are the same economy.** The BGN calibration survived every audit unchanged, and
+the current code reproduced the legacy g0235 row to the displayed digit on a different machine
+and Python version (WORKING.md §39). Legacy BGN levels are citable, single-seed caveat only.
+Baseline row: room +0.0365, gap +0.0059, t 14.0.
+
+### Path 1 -- a two-state regime on the price of the market shock: g0520, then g0330, then g0235
+
+#### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), t 33.4
+
+**What differs from the baseline.** A two-state Markov regime s_t (calm, stress) multiplies
+the price of the market shock: sigma_z becomes sigma_z x gmult[s] with gmult = [0.2, 3.5] --
+one fifth of the baseline price in calm months, three and a half times it in stress. Monthly
+switch probabilities 0.25/12 calm-to-stress and 0.50/12 stress-to-calm; switches are
+unpriced (conditional moments are physical expectations, and the regime enters only through
+the regime-indexed value tables). The upper multiplier sits just under the bound 1/(2 x scale)
+= 3.65 that the exponential beta-density tail imposes on the closed-form project values. The
+project-exercise threshold J* is re-solved for the regime economy (the pinned solve). The
+regime and the rate are exported as conditioning features.
+
+The economic content that makes this path different from KP's Path 2: a project's value
+decomposes onto two regime bases, V_s(r, beta) = C-hat [exp(-beta g0) DA_s(r) + exp(-beta g1)
+DB_s(r)], so the two regimes apply two DIFFERENT monotone transforms of the same project
+beta. That produces curvature in the map from beta to the premium WITHIN a regime, which a
+common scaling of the price of risk cannot. This is why regime-gamma creates room in BGN and
+not in KP14.
+
+**Why it was tried.** The KP regime (Path 2 there) was built first and proved inert; the BGN
+version was then built in closed form to test the same mechanism where the cross-section had
+heterogeneity to bend. g0520 worked; g0330 widened it; g0235 pushed to the frontier.
+
+**Result.** The third-largest gap, with the tightest relative error bar of the four (se
+0.0027). DKKM 0.1081 against best linear 0.0855 (linrank; Fama-MacBeth collapses to 0.067 and
+the level-linear method to 0.034, because regime shifts move raw levels). Room +0.0188
+all-month; gap/room 1.20, so the realized gap exceeds the constant-coefficient room in seven
+of ten seeds -- the finding that first showed room is not a ceiling (WORKING.md §40). The
+published single-seed row (room +0.0233, gap +0.0297, t 29.1) is reproduced exactly by seed 0
+and sits 0.8 sd above the ten-seed mean.
+
+**Provenance.** Spec `var-bgn_gam-g0235-v2`; solve `be222462dd017b2c` (the J* table
+`Jstar_g0235.csv`); seed array `SEED_SPEC=g0235`.
+
+#### g0520 and g0330 -- LEGACY, single seed, same economy family
+
+- **regime-g** (`g0520`, gmult = [0.5, 2.0]; room +0.0214, gap +0.0219, t 21.5): the first
+  build. DKKM landed at its unconditional ceiling, 100% of the room harvested; at the time
+  "the strongest estimated gap of the project". REPORT.md §13f/h.
+- **regime-g wide** (`g0330`, gmult = [0.3, 3.0]; room +0.0254, gap +0.0240, t 31.7): only the
+  spread changed. Room grows with the regime gap; the classical raw-level methods break
+  outright (FMR 0.105, FF 0.132) because regime shifts move raw characteristic levels; DKKM
+  beats FMR by 89% relative. §16.
+
+Read as a path: room saturates around +0.021 to +0.025 across the three while the gap keeps
+rising with the spread, from +0.022 to +0.030 (single-seed) -- the widening damages the
+linear methods faster than it adds population room.
+
+### Path 2 -- a continuous state-dependent price of risk in the rate, gamma(r)
+
+**gamma(r) nonlin** (`bgn_gamr`) -- LEGACY, single seed, room +0.0934, gap +0.0060, t -2.7.
+The regime replaced by a logistic multiplier 0.5 to 3.0 on the market-shock price as a
+function of the short rate, the model's own continuous state. Closed forms break; solved on
+an r grid with a rank-7 factorisation of the value function. The largest room of the entire
+project, and rolling Fama-MacBeth harvests it: FMR 0.470 against DKKM 0.464, because raw
+characteristic levels co-move with r and a rolling raw-level regression conditions on the
+rate for free. The conditioning gap is contestable by cheap classical conditioning. REPORT.md
+§17c.
+
+### Path 3 -- crash risk with firm types
+
+**crash** (`bgn_dis`) -- LEGACY, single seed, room +0.0658, gap +0.0053, t 8.9. The kernel is
+multiplied by kappa^D / ((1-p) + p kappa) with D a monthly disaster indicator, p = 3% and kappa
+= 2.5; three permanent firm types whose live projects die in a disaster month with
+probability 0, 0.15 or 0.30; a value compensation omega = 1.3 so that disaster-exposed firms
+look like growth firms rather than being revealed by value. Motivation: book-to-market then
+carries two offsetting premium channels (the beta channel rising, the disaster channel
+falling), a shape no linear rule can sign. The largest BGN room short of gamma(r), only
+three-quarters captured. REPORT.md §9, §14.
+
+### Path 4 -- the earlier exploration (oracle only)
+
+Parameter sweeps, thin versus fat cash-flow tails, size-dependent idiosyncratic volatility,
+firm types with dispersed versus standard projects, and a U-shaped rate-shock correlation
+were run through the oracle only (no estimators) before the grid. None produced room above
++0.008 except the disaster and regime paths above. REPORT.md §3-§8 is the record; the
+57-row table that held their numbers spanned seven model families with no code in this
+repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
+
+### Proposed next parameterizations -- BGN
+
+Each entry says what would differ from g0235, why the number is worth having, what result would
+mean, and what it costs. The regime block sits inside the J* solve, so every point needs a J*
+rebuild (minutes), then ten seeds at about 3.5 h each on Sol.
+
+- **B1. Regime persistence.** Keep gmult = [0.2, 3.5]; change the switch probabilities. Now
+  0.25/12 calm-to-stress and 0.50/12 back, so a third of months are stress, calm spells average
+  48 months and stress spells 24, and a 360-month estimation window sees roughly five switches.
+  Two new points: fast (both 1/12: one-year spells, thirty switches per window) and slow
+  (0.05/12 and 0.10/12: twenty- and ten-year spells, about one switch per window). **Why.**
+  The finding that the realized gap exceeds the constant-coefficient room rests on the rolling
+  window tracking a tangency that moves between regimes (§40, §49). The ratio of regime spell
+  to window length is the dial on that mechanism, and nothing has turned it. **Prediction.**
+  Room is unchanged (it is a whole-sample constant-coefficient quantity and depends only on the
+  stationary mix). The linear methods' Sharpe falls as switching speeds up, because a window
+  average of the premium is a blend of two regimes; DKKM's holds if the exported regime feature
+  lets it condition; so the proportional gap rises toward the fast end. At the slow end the
+  window is one regime and every method conditions by construction, so the gap shrinks toward
+  the room. If the gap is flat across the ladder the rolling-window explanation is wrong. A
+  fourth point, rare-and-short stress (0.05/12 and 0.45/12: stress a tenth of months, spells of
+  two years), asks whether DKKM can learn the interaction from a window holding only a few
+  stress months, which is what a crash-like calibration would look like.
+
+- **B2. Along the frontier.** The multiplier is capped near 3.65 by the closed-form requirement
+  2 x gmult x scale < 1, where `scale` is the exponential tail of the project-beta distribution
+  and is fitted from the two acceptance-probability targets (0.10, 0.05). The path from g0520 to
+  g0235 walked the gmult axis at fixed scale and found room saturating while the gap rose. The
+  frontier is a curve, not a point: a thinner tail (targets lowered so scale is near 0.10)
+  admits gmult up to 5, a fatter one (scale near 0.20) caps it at 2.5 but gives the two regime
+  transforms a more dispersed beta cross-section to bend. **Why.** Whether the gap is about the
+  size of the multiplier or the dispersion of the exposures it acts on is the open design
+  question for this path, and two points on the frontier settle it. **Prediction.** Not
+  confident either way, which is the point. **Caveat.** The acceptance targets also move the
+  baseline cross-section, so each frontier point wants its gmult = [1, 1] control, oracle only,
+  to separate the two effects.
+
+- **B3. A live interest rate under the regime.** sigma_r = 0.002 makes the short rate nearly
+  constant, so the model's own continuous state does nothing. The legacy gamma(r) economy showed
+  the rate is a powerful state and that rolling raw-level regressions harvest it because levels
+  co-move with r. With the discrete regime doing the pricing and sigma_r raised to 0.004 or
+  0.006 supplying a second, continuous state, the question is whether DKKM's rate-by-regime
+  interactions gain more than the linear methods' level timing. **Prediction.** The linear
+  methods improve, since raw book-to-price levels time the rate; DKKM improves more only if the
+  rate-by-regime interaction is where the premium moves. The proportional gap could go either
+  way. Lower priority than B1 and B2.
 
 ---
 
@@ -234,6 +392,48 @@ disasters destroy a fraction of each firm's projects with a type-specific probab
 kill intensity is priced, and a type output multiplier compensates values. REPORT.md gives no
 numeric disaster parameters for the KP version. The rank-linear method came out ahead of
 DKKM. §12b: "crash risk per se does not create a DKKM gap."
+
+### Proposed next parameterizations -- KP14
+
+vyx already has the largest absolute gap and the largest room, and its linear methods reach
+0.64, so the proportional gap is only 16%. Every proposal below tries to lower what the linear
+methods can do without lowering what DKKM can. Each point needs the G solve (seconds per type)
+and the type-by-state integrals (about 30 min per type), then ten seeds at about 2.8 h.
+
+- **K1. A continuum of exposures.** Replace the three point-mass types with fifteen on a grid
+  over [0, 0.14], shares right-skewed so most firms sit low. **Why.** Three types can be nearly
+  spanned by a linear rule keyed on any characteristic that reveals type, which is exactly what
+  the compensation knob (bv_comp = 1.2) is there to hide. A continuum has no three points to key
+  on: the exposure map is smooth in a latent variable that the characteristics reveal only
+  nonlinearly. **Prediction.** The linear Sharpe falls, room rises with the added dispersion,
+  DKKM holds, so the proportional gap rises. If the linear methods keep 0.64 the type structure
+  was never what they were exploiting. The machinery takes any number of types; the integral
+  stage is the cost, about 7.5 h once for fifteen types.
+
+- **K2. A rare extreme type.** Three types with shares (0.45, 0.45, 0.10) and the top exposure
+  raised from 0.14 to 0.20. **Why.** This targets the rank transform specifically. A 10% type at
+  the top gets ranks 0.9 to 1.0 whatever its exposure, so a linear-in-rank premium is bounded
+  while the true premium is not; a random-feature basis can place a bump on those ranks, a
+  linear rule can only tilt. **Prediction.** Room and proportional gap both rise; the
+  level-linear method may hold better than the rank-linear one, which would itself be
+  informative. **Check first.** The per-type value coefficients need a positive effective
+  discount across the state grid; the table builder refuses if not, and beta = 0.20 sits closer
+  to that bound than anything run so far.
+
+- **K3. Persistence of the priced state.** kappa_y = 0.35 gives y a two-year half-life. The
+  bending comes from the state entering the value of an exp(beta y) stream through the
+  mean-reversion pull, so slower reversion (0.15, half-life 4.6 years) bends more but gives a
+  360-month window fewer independent cycles to learn from; faster (0.70) does the reverse.
+  **Why.** The mechanism has a dial that trades room against capture and it has never been
+  turned. **Prediction.** Room rises as kappa_y falls; capture falls; the gap has an interior
+  optimum, which may or may not be at 0.35.
+
+- **K4. One more premium-side step.** gamma_v from 1.8 to 2.5. The path from vy to vyx raised
+  capture from 0.10 to 0.29 along with room, the basis for the conjecture that premium-side
+  extremity raises both. One more step says whether that continues. **Caveat, and the reason
+  this is last.** The type premia were already near 6, 15 and 28 percent a year under the old
+  labels (not re-derived since the arrival-rate fix); at gamma_v = 2.5 they approach 40 percent.
+  Worth knowing where the mechanism ends; not a calibration anyone would defend.
 
 ---
 
@@ -363,113 +563,55 @@ Both LEGACY, single seed, old calibration.
   capital with the coupon unchanged, so leverage jumps inside both Bellman recursions;
   per-type re-solves. No room. §13g.
 
----
+### Proposed next parameterizations -- GS21
 
-## BGN -- Berk, Green and Naik (1999)
+Two current economies with opposite profiles: g28 has a gap and no room, bx7 has a little of
+each. The natural first move combines them. Every GS point is expensive at the solve stage
+(3.5 to 6 h per type on Sol, one solve per type), so the order matters.
 
-### Baseline
+- **G1. gamma(x) times exposure types.** Five solves with the gamma(x) solver at beta = 1, 2.5,
+  4, 5.5, 7, slope 0.28, no regime. **Why.** In g28 the state prices risk countercyclically but
+  every firm loads on it identically; in bx7 firms load on it heterogeneously but the price of
+  risk only jumps between two values. Combined, type f's premium is proportional to beta_f
+  times gamma(x), a product that is nonlinear in the pair (beta_f, x) because gamma(x) is
+  clipped: the state bends a heterogeneous exposure map, which is the design rule that produced
+  vyx, here with GS21's own state. The cross-type guard in the simulator passes because all
+  five share one kernel. **Prediction.** Room appears (at least bx7's) and g28's conditioning gap
+  persists, so the proportional gap exceeds 10.5%. **The decisive negative.** If the gap does
+  not exceed g28's alone, exposure heterogeneity adds nothing in GS even when the state prices
+  it, and the whole bx path retires. Cost: five solves as an array, then ten seeds at 4 h.
 
-A firm is a collection of live projects, each a real option that was exercised when its
-present value crossed a threshold. Projects carry a market-shock loading beta_s drawn from a
-translated exponential distribution (scale 0.137), an idiosyncratic cash-flow volatility, and
-a project-specific cash-flow level around C-bar = -3.7; new projects arrive and are exercised
-optimally against a threshold J*(r) that depends on the short rate. The short rate is Vasicek
-(monthly persistence kappa = 0.95, mean 0.006236, innovation sd sigma_r = 0.002). The pricing
-kernel is exogenous and lognormal with ONE priced shock, the market shock nu, at price
-sigma_z = 0.4, correlated -0.175 with the rate innovation (beta_zr = -0.00014). Expected
-returns are exactly affine in book-to-price and 1/price with rate-dependent coefficients.
-Calibration checked against the paper's Table I: 11 of 11 parameters match, including two the
-code derives rather than stores.
+- **G2. The types without the regime.** bx7's ladder at gmreg = [1, 1] and slope 0. A control,
+  not a candidate: it says whether bx7's small room comes from the regime-by-exposure
+  interaction or from the exposures alone. **Prediction.** Room near zero and a gap near the
+  estimation-efficiency floor. Five seeds would do. Run only if G1 is ambiguous.
 
-What this implies for the cross-section: the project-beta distribution is the only source of
-firm-level exposure heterogeneity in any of the three models. REPORT.md §17's closing
-sentence: "only BGN's project-beta distributions supply that heterogeneity."
+- **G3. Wake the default channel.** GS21's native nonlinearity is equity as a levered claim
+  near default, and it has never fired: zero realized defaults even at a stressed price of risk
+  of 1.5 (legacy §17g), because firms delever. Levers that push firms toward the boundary:
+  higher idiosyncratic volatility (sigma_z from 0.16 to 0.25 at the quarterly scale) or a larger
+  tax advantage of debt (tau from 0.2 to 0.3) so optimal leverage rises. **Probe first.** The
+  simulator exports a per-firm-month default flag in the panel, so one oracle-only run at
+  N=200, T=200 (about 20 min) reports the realized default rate before any estimator time is
+  spent; proceed only if defaults reach half a percent a year. **Prediction if it fires.** The
+  leverage characteristic, already exported, acquires a convex premium map near the boundary
+  that a rank-linear rule cannot follow, and GS shows room from a source of its own for the
+  first time.
 
-**Legacy rows are the same economy.** The BGN calibration survived every audit unchanged, and
-the current code reproduced the legacy g0235 row to the displayed digit on a different machine
-and Python version (WORKING.md §39). Legacy BGN levels are citable, single-seed caveat only.
-Baseline row: room +0.0365, gap +0.0059, t 14.0.
+- **G4. A wider gamma(x).** Slope 0.5 with the clip widened to [0.02, 2.0]. **Why.** g28's DKKM
+  already reaches 96% of the attainable Sharpe and its linear methods 87%, so g28's gap is
+  capped by the linear shortfall unless the attainable Sharpe itself grows; larger price-of-risk
+  swings raise it and enlarge the common-premium variation the linear methods fail to time.
+  **Prediction.** The absolute gap grows; the proportional gap may not, because the linear
+  Sharpe grows too. **Risk.** Convergence at gamma = 2: g28 met tolerance at sweep 2974 of a
+  5600 cap, and the manifest records which exit a solve took.
 
-### Path 1 -- a two-state regime on the price of the market shock: g0520, then g0330, then g0235
-
-#### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), t 33.4
-
-**What differs from the baseline.** A two-state Markov regime s_t (calm, stress) multiplies
-the price of the market shock: sigma_z becomes sigma_z x gmult[s] with gmult = [0.2, 3.5] --
-one fifth of the baseline price in calm months, three and a half times it in stress. Monthly
-switch probabilities 0.25/12 calm-to-stress and 0.50/12 stress-to-calm; switches are
-unpriced (conditional moments are physical expectations, and the regime enters only through
-the regime-indexed value tables). The upper multiplier sits just under the bound 1/(2 x scale)
-= 3.65 that the exponential beta-density tail imposes on the closed-form project values. The
-project-exercise threshold J* is re-solved for the regime economy (the pinned solve). The
-regime and the rate are exported as conditioning features.
-
-The economic content that makes this path different from KP's Path 2: a project's value
-decomposes onto two regime bases, V_s(r, beta) = C-hat [exp(-beta g0) DA_s(r) + exp(-beta g1)
-DB_s(r)], so the two regimes apply two DIFFERENT monotone transforms of the same project
-beta. That produces curvature in the map from beta to the premium WITHIN a regime, which a
-common scaling of the price of risk cannot. This is why regime-gamma creates room in BGN and
-not in KP14.
-
-**Why it was tried.** The KP regime (Path 2 there) was built first and proved inert; the BGN
-version was then built in closed form to test the same mechanism where the cross-section had
-heterogeneity to bend. g0520 worked; g0330 widened it; g0235 pushed to the frontier.
-
-**Result.** The third-largest gap, with the tightest relative error bar of the four (se
-0.0027). DKKM 0.1081 against best linear 0.0855 (linrank; Fama-MacBeth collapses to 0.067 and
-the level-linear method to 0.034, because regime shifts move raw levels). Room +0.0188
-all-month; gap/room 1.20, so the realized gap exceeds the constant-coefficient room in seven
-of ten seeds -- the finding that first showed room is not a ceiling (WORKING.md §40). The
-published single-seed row (room +0.0233, gap +0.0297, t 29.1) is reproduced exactly by seed 0
-and sits 0.8 sd above the ten-seed mean.
-
-**Provenance.** Spec `var-bgn_gam-g0235-v2`; solve `be222462dd017b2c` (the J* table
-`Jstar_g0235.csv`); seed array `SEED_SPEC=g0235`.
-
-#### g0520 and g0330 -- LEGACY, single seed, same economy family
-
-- **regime-g** (`g0520`, gmult = [0.5, 2.0]; room +0.0214, gap +0.0219, t 21.5): the first
-  build. DKKM landed at its unconditional ceiling, 100% of the room harvested; at the time
-  "the strongest estimated gap of the project". REPORT.md §13f/h.
-- **regime-g wide** (`g0330`, gmult = [0.3, 3.0]; room +0.0254, gap +0.0240, t 31.7): only the
-  spread changed. Room grows with the regime gap; the classical raw-level methods break
-  outright (FMR 0.105, FF 0.132) because regime shifts move raw characteristic levels; DKKM
-  beats FMR by 89% relative. §16.
-
-Read as a path: room saturates around +0.021 to +0.025 across the three while the gap keeps
-rising with the spread, from +0.022 to +0.030 (single-seed) -- the widening damages the
-linear methods faster than it adds population room.
-
-### Path 2 -- a continuous state-dependent price of risk in the rate, gamma(r)
-
-**gamma(r) nonlin** (`bgn_gamr`) -- LEGACY, single seed, room +0.0934, gap +0.0060, t -2.7.
-The regime replaced by a logistic multiplier 0.5 to 3.0 on the market-shock price as a
-function of the short rate, the model's own continuous state. Closed forms break; solved on
-an r grid with a rank-7 factorisation of the value function. The largest room of the entire
-project, and rolling Fama-MacBeth harvests it: FMR 0.470 against DKKM 0.464, because raw
-characteristic levels co-move with r and a rolling raw-level regression conditions on the
-rate for free. The conditioning gap is contestable by cheap classical conditioning. REPORT.md
-§17c.
-
-### Path 3 -- crash risk with firm types
-
-**crash** (`bgn_dis`) -- LEGACY, single seed, room +0.0658, gap +0.0053, t 8.9. The kernel is
-multiplied by kappa^D / ((1-p) + p kappa) with D a monthly disaster indicator, p = 3% and kappa
-= 2.5; three permanent firm types whose live projects die in a disaster month with
-probability 0, 0.15 or 0.30; a value compensation omega = 1.3 so that disaster-exposed firms
-look like growth firms rather than being revealed by value. Motivation: book-to-market then
-carries two offsetting premium channels (the beta channel rising, the disaster channel
-falling), a shape no linear rule can sign. The largest BGN room short of gamma(r), only
-three-quarters captured. REPORT.md §9, §14.
-
-### Path 4 -- the earlier exploration (oracle only)
-
-Parameter sweeps, thin versus fat cash-flow tails, size-dependent idiosyncratic volatility,
-firm types with dispersed versus standard projects, and a U-shaped rate-shock correlation
-were run through the oracle only (no estimators) before the grid. None produced room above
-+0.008 except the disaster and regime paths above. REPORT.md §3-§8 is the record; the
-57-row table that held their numbers spanned seven model families with no code in this
-repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
+- **G5. Re-verify the capture frontier.** The legacy bx9 (beta to 9, regime [0.5, 4.0]) found
+  room tripling while the gap over linear vanished, and that single-seed result on the wrong
+  calibration is why the exposure path stopped at bx7. **Why.** A conclusion that shapes the
+  design space should not rest on deleted code. **Prediction.** Unknown; if it reproduces the
+  frontier is real, if not bx7 is not the endpoint. Lower priority than G1, which changes the
+  question.
 
 ---
 
@@ -523,6 +665,42 @@ repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
    exposure heterogeneity under a regime, small room, small gap. The largest gap by a factor
    of four comes from the premium-side design, as REPORT.md §19d conjectured.
 
+## Proposed next, ranked
+
+Ranked by information per node-hour against the question this file exists for: where is the
+proportional gap large, and why. Each is described in its model's section.
+
+| rank | proposal | what it decides | new solves | cluster time |
+|---|---|---|---|---|
+| 1 | B1 regime persistence ladder | whether the rolling window is the mechanism behind gap > room | J* rebuilds, minutes | 3 points x 35 h |
+| 2 | G1 gamma(x) x exposure types | whether exposure heterogeneity does anything in GS once the state prices it; retires or revives the bx path | 5 solves, ~25 h | 40 h |
+| 3 | K1 continuum of exposures | whether vyx's linear methods live off three type points | 15 integrals, ~8 h | 28 h |
+| 4 | X1 window ladder on g0235 | the same mechanism as B1 from the estimator side, with no new solve | none; panels exist on Sol | 2 windows x 38 h |
+| 5 | K3 kappa_y ladder | the room-versus-capture trade-off in the priced state | 2 x ~90 min | 2 x 28 h |
+| 6 | G3 default-channel probe | whether GS's own nonlinearity can be made to fire | 1 oracle probe, 20 min | decide after |
+| 7 | B2 frontier ladder | multiplier versus dispersion | J* rebuilds | 2 points x 35 h, plus controls |
+| 8 | K2 rare extreme type | the rank transform's tail compression | 3 integrals | 28 h |
+| 9 | G4, G5, K4, G2 | wider gamma(x); bx9 re-verified; one more gamma_v step; the no-regime control | 1 to 5 solves each | 40 h each |
+
+Two estimation-side items belong alongside whatever runs first:
+
+- **X1. Window ladder on the existing panels.** All forty seeded panels and their moment files
+  are on Sol. Re-scoring at windows of 240 and 480 (the oracle re-run at the matching
+  `--eval_window`, about 1 h, plus estimators at about 2.7 h per seed) tests the rolling-window
+  mechanism with no new economy: if gap/room above one is the window tracking a moving tangency,
+  a shorter window raises DKKM's gap in g0235 and bx7 at the cost of noise, and a longer one
+  lowers it toward the constant-coefficient room. Start with g0235.
+- **X2. Ten more seeds for g28 and bx7.** Their cross-seed sd is 48% and 63% of the mean, so
+  the GS ordering is the least certain thing in the current table. About 80 node-hours halves
+  both standard errors. Not a parameterization, but the cheapest way to make the GS rows mean
+  something before building on them.
+
+**On pushing further.** vyx's type premia were already near 6, 15 and 28 percent a year under
+the pre-fix labels. Every proposal that turns a dial up should report the annualised premia the
+oracle prints (E[mu] and its cross-sectional sd are in every oracle JSON) next to the gap, so a
+reader can see when an economy has left the empirically defensible range. The largest gap in a
+laboratory economy is worth less than a moderate gap in one a referee will accept.
+
 ## Superseded and retired
 
 - `var-kp_vy-vyx-v1`: the vyx parameters under the mis-normalised arrival rate (mean 1.72).
@@ -558,4 +736,6 @@ repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
 5. `python variants/aggregate_seeds.py --flagship`, commit the result files and the tables,
    and add the economy here: to the current table, and as a subsection under the path it
    extends (or a new path), with what differs from the baseline in economic terms first.
-   `tests/test_results_md_matches_table.py` will fail until the table row is added.
+   If it was one of the proposals, move it up out of "Proposed next" into its path and record
+   what the result decided. `tests/test_results_md_matches_table.py` will fail until the
+   table row is added.
