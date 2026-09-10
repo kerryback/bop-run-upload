@@ -6,8 +6,9 @@ this further"; (b) I know what code and parameters produced those results.
 Nothing in this repo recorded (b) before 2026-09-08. `solstamp` content-addresses
 SOLVES so a six-hour solve can be reused safely, and `runstamp` links a run to the
 solves it consumed -- both real, both about caching and staleness. Neither records the
-CODE VERSION, and the summary CSVs you actually read (`*_summary.csv`,
-`grid_summary.csv`) carried no link to anything at all.
+CODE VERSION, and the summary CSVs you actually read carried no link to anything at
+all -- including the published `grid_summary.csv`, which was deleted on 2026-09-10
+precisely because nothing it contained could be traced back to a commit or a spec.
 
 This module is the whole of (b), and it is deliberately small. A sidecar next to every
 summary:

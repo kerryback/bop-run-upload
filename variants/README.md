@@ -3,7 +3,11 @@
 These are the experiments behind `REPORT.md` ("why does DKKM barely beat FMR/FFC in the simulated
 economies, and what would change that"). Of the 24 economies in that study, the three flagships that give
 a complexity method the most to find are kept here, each fully reproducible. The other 21 are gone;
-their numbers survive in `results/grid_summary.csv` / `results/summary_grid.xlsx` and in `REPORT.md`.
+their numbers survive in `REPORT.md`. The machine-readable copies of that study
+(`results/grid_summary.csv`, `results/oracle_summary.csv`, `results/summary_grid.xlsx`) were
+deleted on 2026-09-10: single-seed measurements of code that is either gone or since corrected,
+which no one could reproduce or check. They are recoverable at 23f9380; see
+[`docs/RESULTS.md`](../docs/RESULTS.md) for what is current.
 
 Everything here is self-contained: nothing imports from the main pipeline (`utils_*`, `config.py`),
 and nothing in the main pipeline imports from here. The simulators are modified copies of the Dropbox
@@ -189,6 +193,4 @@ regenerates both), and `results/logs/`.
 | `common/dkkm_functions.py`, `common/fama_functions.py` | RFF+ridge and Fama-French / Fama-MacBeth estimators with rolling `WINDOW` and conditioning columns `RF_COLS` |
 | `unconditional_sr.py` | exact unconditional Sharpe ratio of each estimated portfolio from the true conditional moments |
 | `aggregate_seeds.py` | THE results table: one row per seeded run in `results/seed_table.csv`, one row per (model, tag, N, T, window) with mean/sd/se across seeds in `results/economy_table.csv`; every row carries spec_id, solve ids and prov tags. `--flagship` narrows the printout to N=500/T=500 |
-| `collect_results.py` | LEGACY: the oracle-only, single-run table behind `results/oracle_summary.csv` (57 rows from seven model families that no longer exist here). Running it overwrites that file with the current oracle JSONs, seeded and unseeded alike; use `aggregate_seeds.py` |
-| `make_excel.py` | rebuilds `results/summary_grid.xlsx` (Headlines, Summary grid, Definitions sheets) from `results/grid_summary.csv` (needs openpyxl) |
 | `REPORT.md` | the full narrative, sections 1-19d, including the 21 economies that were removed |

@@ -70,10 +70,13 @@ seeds) unless the entry says otherwise.
 - **CURRENT** -- ten seeds at N=500, T=500, window 360, run under a spec that pins the solve
   ids the run must consume; every result file carries the spec id, the solve ids and a
   provenance tag naming the commit.
-- **LEGACY, single seed** -- one row of `variants/results/grid_summary.csv`, produced before
-  the 2026-09 refactor by code that is no longer in the repository (21 of its 24 economies) and
-  never replicated. Quoted for the path it documents, never for a ranking: cross-seed sd of a
-  gap runs 15% to 63% of its mean, so single-seed rows are not distinguishable below the top.
+- **LEGACY, single seed** -- one economy of the pre-refactor grid, run once, by code that is
+  either gone (21 of its 24) or since corrected. Quoted for the path it documents, never for a
+  ranking: cross-seed sd of a gap runs 15% to 63% of its mean, so single-seed rows are not
+  distinguishable below the top. **The tables themselves were deleted on 2026-09-10** for the
+  reasons in `WORKING.md` §50; the figures quoted below come from `variants/REPORT.md`, which
+  is the narrative record of that study and stays, and the deleted tables are recoverable in
+  full at `23f9380:variants/results/grid_summary.csv` and `:oracle_summary.csv`.
 - **SUPERSEDED** -- an economy the current code no longer builds, kept as the record behind a
   published number.
 
@@ -140,7 +143,7 @@ alone -- the finding behind every inert path below.
 
 **Legacy rows are a different economy.** Until 2026-09-04 the regime probability was read
 with the wrong label, so the mean arrival rate simulated was 1.72 instead of 1. Every KP row
-of `grid_summary.csv`, including the baseline row (room +0.0037, gap +0.0036, t -8.5), was
+of the pre-refactor grid, including its baseline row (room +0.0037, gap +0.0036, t -8.5), was
 produced at that rate. Levels of legacy KP numbers are not citable for the current code;
 the direction of each path's finding is what survives.
 
@@ -257,8 +260,8 @@ cross-section, and the gap it produces comes from somewhere else.
 
 **Legacy rows are a different economy.** Until 2026-09-06 the solver ran with rho_x =
 0.96^(1/3) (the paper says 0.95), delta = 0.02 per month (the paper's 0.02 is per quarter),
-and kappa_e = 0 (the paper's benchmark is 0.025). Every GS row of `grid_summary.csv`,
-including the baseline row (room +0.0010, gap +0.0163, t 21.8), was solved under those values.
+and kappa_e = 0 (the paper's benchmark is 0.025). Every GS row of the pre-refactor grid,
+including its baseline row (room +0.0010, gap +0.0163, t 21.8), was solved under those values.
 Levels are not citable for the current code; the mechanism findings survive.
 
 ### Path 1 -- a countercyclical, continuous price of risk gamma(x): g28
@@ -463,10 +466,10 @@ three-quarters captured. REPORT.md §9, §14.
 
 Parameter sweeps, thin versus fat cash-flow tails, size-dependent idiosyncratic volatility,
 firm types with dispersed versus standard projects, and a U-shaped rate-shock correlation
-were run through the oracle only (no estimators) before the grid; their rows survive in
-`variants/results/oracle_summary.csv` under models `bgn`, `bgn_types` and `bgn_dis`, with no
-code. REPORT.md §3-§8. None produced room above +0.008 except the disaster and regime paths
-above.
+were run through the oracle only (no estimators) before the grid. None produced room above
++0.008 except the disaster and regime paths above. REPORT.md §3-§8 is the record; the
+57-row table that held their numbers spanned seven model families with no code in this
+repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
 
 ---
 
@@ -523,14 +526,22 @@ above.
 ## Superseded and retired
 
 - `var-kp_vy-vyx-v1`: the vyx parameters under the mis-normalised arrival rate (mean 1.72).
-  Its published row is the vyx line of `grid_summary.csv`. Numbers describe a different
+  Its published row is the vyx line of the pre-refactor grid. Numbers describe a different
   economy from v2; do not quote.
 - `var-gs_bx-bx7-v1` and `-v2`: old calibration and the level-shift ladder; v2 was superseded
   before it ran. The retired manifest `a8ef7a2522eda19d` is the pre-kappa_e `sol_reg`.
 - `var-gs_bx-g28-v1`: identical economy to v2; its precommitted solve id was invalidated by a
   comment-only edit to the solver source.
-- 21 of the 24 economies in `grid_summary.csv`, and all 57 rows of `oracle_summary.csv`, have
-  no code in this repository. Their numbers are history, not results.
+- The pre-refactor tables (`grid_summary.csv`, 24 economies; `oracle_summary.csv`, 57 rows
+  over seven model families; `summary_grid.xlsx`) and the two scripts that maintained them
+  were deleted on 2026-09-10. Nothing in them was reproducible, and for every economy still
+  in use the ten-seed measurement strictly dominates the single-seed one -- for g0235,
+  demonstrably the same economy. `WORKING.md` §50. Recoverable at `23f9380`.
+- The unseeded run files that produced the three surviving grid rows
+  (`kp_vy_oracle_vyx.json` and the rest, no seed suffix) went with them. They sat beside the
+  seeded files distinguished only by that suffix, and two of the three described superseded
+  economies: `kp_vy_oracle_vyx.json` carried SR_max 1.2607 where the current economy gives
+  1.1945.
 
 ## Adding an experiment
 

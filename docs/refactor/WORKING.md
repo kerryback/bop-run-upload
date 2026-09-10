@@ -3251,3 +3251,64 @@ economies**: g0235 26.5%, vyx 16.3%, g28 10.5%, bx7 2.7% -- vyx's fourfold absol
 partly that everything in vyx is large, its linear methods already reaching 0.64 against
 g0235's 0.086. `docs/RESULTS.md` carries both, and its "How to read this" is now a per-column
 glossary.
+
+## §50. The pre-refactor results deleted (2026-09-10)
+
+Seth: "there is no reason I can see to keep around legacy results on code that was broken and
+now has been fixed. What case is there to retain it?" Checked rather than agreed, because
+"broken" does not describe all of it, and found no case that survives.
+
+**Removed:** `variants/results/grid_summary.csv` (24 economies), `oracle_summary.csv` (57 rows
+over `bgn, bgn_dis, bgn_types, gs_dis, gs_fixed, kp, kp_dis`), `summary_grid.xlsx`, the 32
+unseeded run files that produced the three surviving grid rows plus the N=100/T=30-scale
+calibration and timing probes, and the two scripts whose only purpose was those tables
+(`make_excel.py`, which read `grid_summary.csv`, and `collect_results.py`, which wrote
+`oracle_summary.csv`). All recoverable at `23f9380`.
+
+**Kept:** `variants/REPORT.md`. It is the narrative of that study, explicitly historical,
+carries the mechanism findings and rounded versions of the figures, and does not look like
+live data. `docs/RESULTS.md`'s LEGACY entries now cite it.
+
+### The distinction Seth's framing does not make, and why it does not matter
+
+"Broken code" is accurate for the KP rows (the growth-option arrival rate ran at 1.72 instead
+of 1) and the GS rows (three Table I parameters wrong). It is NOT accurate for the seven BGN
+rows: BGN's calibration passed the audit 11 of 11, and the `mat` draw-averaging defect never
+touched the variants path (§18). Those results were correct; their code was deleted by
+`bba735f` rather than found wrong.
+
+The distinction does not create a retention case, because the operative property is not
+"broken" but **unreproducible and superseded**:
+
+1. **All 24 rows are unreproducible.** 21 have no code at all. Of the three that do, KP's and
+   GS's describe economies the current code no longer builds.
+2. **The one row whose economy still exists has been strictly improved on.**
+   `bgn_gam_oracle_g0235.json` gave SR_max 0.1860; the seeded run gives 0.1860 -- the same
+   economy, reproduced to the digit (§39) -- and there are now ten seeds of it. One seed of an
+   identical economy carries no information the ten do not.
+3. **Deleting from the working tree is not deleting.** Git retains every byte, and the
+   recovery is one `git show`. The choice was never keep-or-lose; it was working tree or
+   history, and history is where an unreproducible single-seed measurement belongs.
+
+### The costs of keeping them, which are real
+
+- **A standing caveat tax.** Which of the three models' rows still describe the economy the
+  code builds is a three-part rule, and it had been written out three times (README,
+  RESULTS.md, here) because every reader needs it.
+- **`collect_results.py` was a live trap.** It rebuilds `oracle_summary.csv` by globbing every
+  oracle JSON on disk, seeded and unseeded alike, so running it would have overwritten a
+  57-row historical table with a mixture that is neither history nor current results.
+- **The unseeded files sat next to the seeded ones**, distinguished only by a missing `_s000`.
+  `kp_vy_oracle_vyx.json` (SR_max 1.2607, the pre-lambda economy) beside
+  `kp_vy_oracle_vyx_s000.json` (1.1945) is exactly the shape of a mistake, and
+  `aggregate_seeds.py` carries a guard and a test *because of it*. Removing the files removes
+  the hazard rather than defending against it.
+
+### What was checked before deleting
+
+The calibration and timing probes (`pin_*`, `cput_*`, `calib*`, `cal_*`) are cited by no file
+in the repository; the cost models they fed are recorded in `run_seeds_slurm.sh`'s header and
+in §19/§33/§46. Only `tests/test_oracle_nesting.py` referenced the deleted tables, in its
+docstring, to explain why two grid rows reported a negative room -- repointed, since the
+nesting defect it pins outlives the table that exposed it. `variants/results` now holds 316
+seeded result files and the two generated tables, and nothing else.

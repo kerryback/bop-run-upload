@@ -13,7 +13,6 @@ joblib>=1.1.0
 # pandas I/O backends -- never imported, resolved at runtime inside pandas, so an
 # import scan does not find them. Missing pyarrow broke --save_panel on Sol 2026-09-07.
 pyarrow>=14.0.0
-openpyxl>=3.1.0
 
 # AWS S3 integration for result storage
 boto3>=1.26.0
