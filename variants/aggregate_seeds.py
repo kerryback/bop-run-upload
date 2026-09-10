@@ -27,6 +27,17 @@ Definitions (variants/common/oracle.py evaluate_bases; run_estimators.py):
   gap       = dkkm - lin
   t         = max t_vs_fm over the rff methods
   gap/room  in the economy table is the RATIO OF MEANS (§40: not the mean of per-seed ratios)
+  *_pct_lin = room and gap as a percentage of the LINEAR SHARPE ACTUALLY ATTAINED (`lin`),
+              which says whether a gap is a large or a small deal relative to what the
+              classical methods deliver in that economy: vyx's +0.1046 is 16% of a linear
+              0.6428, while g0235's smaller +0.0227 is 27% of a linear 0.0855. The per-seed
+              ratio is in seed_table.csv; the economy table carries BOTH the mean and sd of
+              those per-seed ratios (`*_pct_lin_mean/_sd`) and the RATIO OF MEANS
+              (`room_all_over_lin`, `gap_over_lin`). They differ where `lin` is itself
+              dispersed across seeds -- g0235's lin has sd 0.0359 on a mean of 0.0855, and
+              its gap reads 31% as a mean of ratios against 27% as a ratio of means, because
+              the low-denominator seeds dominate the first. The printed table and RESULTS.md
+              quote the RATIO OF MEANS, for the same reason §40 gives for gap/room.
 
 usage:
   python variants/aggregate_seeds.py                 # every (model, tag, N, T, window)
@@ -90,7 +101,8 @@ def seed_rows(results):
         ests = sorted(glob.glob(os.path.join(results, f"{model}_estimators_{tag}_s{seed:03d}_w*_summary.csv")))
         if not ests:
             rows.append(dict(base, window=np.nan, sr_max_eval=np.nan, dkkm=np.nan, lin=np.nan,
-                             gap=np.nan, t=np.nan, dkkm_method=None, lin_method=None, prov_est=None))
+                             gap=np.nan, t=np.nan, room_all_pct_lin=np.nan, room_eval_pct_lin=np.nan,
+                             gap_pct_lin=np.nan, dkkm_method=None, lin_method=None, prov_est=None))
             continue
         for e in ests:
             w = int(re.search(r"_w(\d+)_summary\.csv$", e).group(1))
@@ -99,8 +111,15 @@ def seed_rows(results):
             dk = best.loc[[k for k in RFF if k in best.index]].sharpe
             ln = best.loc[[k for k in LIN if k in best.index]].sharpe
             t = s.loc[s.method.str.startswith("rff"), "t_vs_fm"].max() if "t_vs_fm" in s else np.nan
+            _lin = ln.max()
+            # A percentage of a linear Sharpe near zero is not informative, and a negative
+            # one is meaningless; guard rather than emit a huge or signed-wrong number.
+            _pct = (lambda v: 100.0 * v / _lin if _lin > 1e-6 else np.nan)
             rows.append(dict(base, window=w, sr_max_eval=sr_max_eval(w),
-                             dkkm=dk.max(), lin=ln.max(), gap=dk.max() - ln.max(), t=t,
+                             dkkm=dk.max(), lin=_lin, gap=dk.max() - _lin, t=t,
+                             room_all_pct_lin=_pct(base["room_all"]),
+                             room_eval_pct_lin=_pct(base["room_eval"]),
+                             gap_pct_lin=_pct(dk.max() - _lin),
                              dkkm_method=dk.idxmax(), lin_method=ln.idxmax(),
                              prov_est=s["prov"].iloc[0] if "prov" in s else None))
     return pd.DataFrame(rows)
@@ -116,7 +135,8 @@ def economy_table(seeds):
         specs, solves = sorted(set(g["spec_id"].dropna())), sorted(set(g.solves.dropna()))
         rec["spec_id"] = specs[0] if len(specs) == 1 else ("MIXED:" + "|".join(specs) if specs else None)
         rec["solves"] = solves[0] if len(solves) == 1 else ("MIXED:" + "|".join(solves) if solves else None)
-        for col in ("sr_max", "sr_max_eval", "room_all", "room_eval", "dkkm", "lin", "gap", "t"):
+        for col in ("sr_max", "sr_max_eval", "room_all", "room_eval", "dkkm", "lin", "gap", "t",
+                    "room_all_pct_lin", "room_eval_pct_lin", "gap_pct_lin"):
             v = g[col].astype(float).dropna()
             rec[f"{col}_mean"] = v.mean() if len(v) else np.nan
             rec[f"{col}_sd"] = v.std(ddof=1) if len(v) > 1 else np.nan
@@ -124,13 +144,21 @@ def economy_table(seeds):
             rec[f"{col}_n"] = int(len(v))
         rec["gap_over_room_all"] = rec["gap_mean"] / rec["room_all_mean"] if rec["room_all_mean"] else np.nan
         rec["gap_over_room_eval"] = rec["gap_mean"] / rec["room_eval_mean"] if rec["room_eval_mean"] else np.nan
+        # Ratio of means, the figure the printed table and RESULTS.md quote. The mean and sd
+        # of the per-seed ratios are the *_pct_lin_mean/_sd columns above; see the docstring.
+        _lm = rec["lin_mean"]
+        ok = _lm is not None and not np.isnan(_lm) and _lm > 1e-6
+        rec["room_all_over_lin"] = 100.0 * rec["room_all_mean"] / _lm if ok else np.nan
+        rec["room_eval_over_lin"] = 100.0 * rec["room_eval_mean"] / _lm if ok else np.nan
+        rec["gap_over_lin"] = 100.0 * rec["gap_mean"] / _lm if ok else np.nan
         out.append(rec)
     return pd.DataFrame(out).sort_values(["model", "tag", "N", "T", "window"]).reset_index(drop=True)
 
 
 def render(econ):
-    lines = ["| economy | spec | n | SR_max all | SR_max eval | room all | room eval | DKKM | best lin | gap | t | gap/room all | gap/room eval |",
-             "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    lines = ["| economy | spec | n | SR_max all | SR_max eval | room all | room eval | room % of lin | "
+             "DKKM | best lin | gap | gap % of lin | t | gap/room all | gap/room eval |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 
     def ms(r, c, sign=False):
         m, sd = r[f"{c}_mean"], r[f"{c}_sd"]
@@ -143,18 +171,22 @@ def render(econ):
     def ratio(x):
         return "-" if pd.isna(x) else f"{x:.2f}"
 
+    def pct(x):
+        return "-" if pd.isna(x) else f"{x:.1f}%"
+
     for _, r in econ.iterrows():
         w = "-" if pd.isna(r["window"]) else int(r["window"])
         econ_name = f"{r['model']}/{r['tag']} N={r['N']} T={r['T']} w={w}"
         spec = r["spec_id"] or "-"
         lines.append(f"| {econ_name} | {spec} | {r['n_seeds']} | {ms(r, 'sr_max')} | {ms(r, 'sr_max_eval')} | "
-                     f"{ms(r, 'room_all', True)} | {ms(r, 'room_eval', True)} | {ms(r, 'dkkm')} | "
-                     f"{ms(r, 'lin')} | {ms(r, 'gap', True)} | {ms(r, 't')} | "
-                     f"{ratio(r['gap_over_room_all'])} | {ratio(r['gap_over_room_eval'])} |")
+                     f"{ms(r, 'room_all', True)} | {ms(r, 'room_eval', True)} | {pct(r['room_all_over_lin'])} | "
+                     f"{ms(r, 'dkkm')} | {ms(r, 'lin')} | {ms(r, 'gap', True)} | {pct(r['gap_over_lin'])} | "
+                     f"{ms(r, 't')} | {ratio(r['gap_over_room_all'])} | {ratio(r['gap_over_room_eval'])} |")
     lines.append("")
-    lines.append("mean (sd across seeds). gap/room = ratio of means. room_eval is NaN for oracles "
-                 "run before --eval_window (2026-09-09); SR_max eval is available for every run, "
-                 "from the per-month series, and is the bound DKKM must respect.")
+    lines.append("mean (sd across seeds). gap/room and the two `% of lin` columns are RATIOS OF MEANS; "
+                 "the mean and sd of the per-seed ratios are in economy_table.csv as *_pct_lin_mean/_sd. "
+                 "room_eval is NaN for oracles run before --eval_window (2026-09-09); SR_max eval is "
+                 "available for every run, from the per-month series, and is the bound DKKM must respect.")
     return "\n".join(lines)
 
 

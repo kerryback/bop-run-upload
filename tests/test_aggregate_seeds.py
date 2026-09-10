@@ -7,8 +7,11 @@ row carries a spec_id, and gap/room is the ratio of means (§40's correction).
 
 Run with: python -m pytest tests/ -k aggregate
 """
+import json
 import os
 import sys
+
+import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "variants"))
@@ -103,10 +106,34 @@ def test_the_csvs_are_the_complete_set_regardless_of_flagship():
             assert n >= 5, f"economy_table.csv has {n} rows under {flag or 'no flag'}; probes at other N/T are missing"
 
 
-def test_room_eval_is_nan_where_the_oracle_predates_the_flag():
+def test_room_eval_is_present_exactly_where_the_oracle_computed_it():
+    """room_eval must come from the oracle, never be inferred.
+
+    It requires the per-basis conditional-SR series restricted to the evaluation months, which
+    only run_oracle.py --eval_window produces; the series itself is never saved, so nothing
+    downstream can reconstruct it. Until 2026-09-10 the vyx and g0235 oracles predated the flag
+    and this asserted their room_eval was absent; the twenty re-runs supplied it, reproducing
+    every all-month field bit-for-bit (WORKING.md §49). The durable invariant is the
+    correspondence, not which side of it a given economy is on.
+    """
     seeds, _ = _flagship()
-    old = seeds[(seeds["tag"] == "vyx")]
-    assert old.room_eval.isna().all(), "vyx oracles predate --eval_window; a value here is a bug"
+    bad = []
+    for _, r in seeds.iterrows():
+        f = os.path.join(RESULTS, f"{r['model']}_oracle_{r['tag']}_s{int(r['seed']):03d}.json")
+        computed = json.load(open(f)).get("eval_window") is not None
+        have = not pd.isna(r["room_eval"])
+        if computed != have:
+            bad.append(f"{r['model']}/{r['tag']} s{int(r['seed']):03d}: oracle computed={computed}, table has={have}")
+    assert not bad, "room_eval does not match what the oracle produced:\n  " + "\n  ".join(bad)
+
+
+def test_all_four_flagship_economies_now_carry_eval_window_room():
+    """The commensurable room exists for every current economy, so a gap/room ratio no longer
+    has to be quoted against a different month sample from the gap."""
+    _, econ = _flagship()
+    missing = [f"{r['model']}/{r['tag']}" for _, r in econ.iterrows()
+               if r["window"] == 360 and r["room_eval_n"] != r["room_all_n"]]
+    assert not missing, f"flagship economies without eval-window room on every seed: {missing}"
 
 
 if __name__ == "__main__":

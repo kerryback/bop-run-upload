@@ -1,23 +1,10 @@
 {
  "schema": 1,
  "git": {
-  "sha": "dd0199e4ddeebfd6d63a63619ae383ba505f8a61",
+  "sha": "132cbc89969b4721e7e1a37f7718e202c1adf635",
   "branch": "main",
   "root": "/data/sjpruitt/GitHub/bop-run-upload",
-  "dirty": true,
-  "status": [
-   "M variants/results/bgn_gam_oracle_g0235_s001.json",
-   " M variants/results/bgn_gam_oracle_g0235_s001_ts.csv",
-   "?? variants/results/bgn_gam_oracle_g0235_s001.json.prov.json",
-   "?? variants/results/bgn_gam_oracle_g0235_s006.json",
-   "?? variants/results/bgn_gam_oracle_g0235_s006.json.prov.json",
-   "?? variants/results/bgn_gam_oracle_g0235_s006_ts.csv",
-   "?? variants/results/bgn_gam_oracle_g0235_s008.json",
-   "?? variants/results/bgn_gam_oracle_g0235_s008.json.prov.json",
-   "?? variants/results/bgn_gam_oracle_g0235_s008_ts.csv"
-  ],
-  "diff_truncated": false,
-  "diff": ""
+  "dirty": false
  },
  "argv": [
   "run_oracle.py",
@@ -33,8 +20,9 @@
   "g0235",
   "--spec",
   "var-bgn_gam-g0235-v2",
-  "--levels",
-  "--save_panel"
+  "--eval_window",
+  "360",
+  "--levels"
  ],
  "run_from": "variants",
  "cwd_at_write": "variants/bgn_gam",
@@ -46,24 +34,25 @@
   "OMP_NUM_THREADS": "8",
   "OPENBLAS_NUM_THREADS": "8",
   "SEED_SPEC": "g0235",
-  "SLURMD_NODENAME": "sc091",
-  "SLURM_ARRAY_JOB_ID": "62901300",
+  "SEED_STAGE": "oracle",
+  "SLURMD_NODENAME": "sc088",
+  "SLURM_ARRAY_JOB_ID": "62949933",
   "SLURM_ARRAY_TASK_ID": "7",
   "SLURM_CPUS_PER_TASK": "8",
-  "SLURM_JOB_ID": "62901308",
+  "SLURM_JOB_ID": "62950670",
   "VECLIB_MAXIMUM_THREADS": "8"
  },
- "when": "2026-09-09T09:05:01-0700",
+ "when": "2026-09-10T09:13:47-0700",
  "environment": {
   "python": "3.14.3",
   "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
-  "hostname": "sc091",
+  "hostname": "sc088",
   "numpy": "2.4.3",
   "scipy": "1.17.1",
   "pandas": "3.0.1",
   "pyarrow": "24.0.0"
  },
- "how_to_reproduce": "git checkout dd0199e4ddeebfd6d63a63619ae383ba505f8a61 && cd variants && <env below> python run_oracle.py --model bgn_gam --N 500 --T 500 --seed 7 --tag g0235 --spec var-bgn_gam-g0235-v2 --levels --save_panel",
+ "how_to_reproduce": "git checkout 132cbc89969b4721e7e1a37f7718e202c1adf635 && cd variants && <env below> python run_oracle.py --model bgn_gam --N 500 --T 500 --seed 7 --tag g0235 --spec var-bgn_gam-g0235-v2 --eval_window 360 --levels",
  "inputs": [
   {
    "stage": "jstar",
@@ -76,6 +65,9 @@
  "extra": {
   "spec_id": "var-bgn_gam-g0235-v2",
   "engine": "oracle",
-  "spec_check": "verified"
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "verified",
+  "eval_window": 360
  }
 }

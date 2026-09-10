@@ -9,64 +9,111 @@ cannot fall behind the numbers without the suite saying so.
 
 ## How to read this
 
-**The quantity we are after is the realized gap**: the Sharpe ratio a random-feature ridge
-estimator (DKKM: `rff`, `rff_ens`, `rff_lev`, `rff_lev_ens`, best P and best kappa) achieves
-minus the best any linear method achieves (`linrank`, `linlev`, Fama-MacBeth `fm`,
-Fama-French `ff`). Every estimator is fit on a 360-month rolling window of simulated data and
-its portfolio is then scored against the economy's TRUE conditional moments, month by month,
-over the 125 evaluation months of a 500-month panel with 500 firms. `t` is the paired t-stat
-of DKKM against Fama-MacBeth across evaluation months.
+**The protocol behind every current number.** Each estimator is fit on a 360-month rolling
+window of simulated data, and the portfolio it produces is then scored against the economy's
+TRUE conditional moments, month by month, over the 125 evaluation months of a 500-month panel
+of 500 firms. So an estimator is never judged on its own realized returns; it is judged on
+what its weights were actually worth. Ten seeds per economy; every figure is mean (sd across
+seeds) unless the entry says otherwise.
 
-**Room** is the population quantity we used to screen candidate economies: the best
-constant-coefficient Sharpe ratio a nonlinear feature basis can reach minus the best a linear-
-in-ranks basis can reach, both computed by the oracle from the true moments with one fixed
-coefficient vector for the whole sample. It is reported two ways since 2026-09-09: over all 485
-panel months (`room all`, what every number before that date meant) and over the 125
-evaluation months (`room eval`, the one commensurable with a gap). **Room is not a ceiling on
-the gap and not a reliable screen for it** -- see the cross-cutting findings at the end, and
-`docs/refactor/WORKING.md` §40 and §48.
+### The columns
 
-**Status labels.**
-- **CURRENT** -- ten seeds at N=500, T=500, window 360, run under a spec in `experiments/specs/`
-  that pins the solve ids the run must consume; every result file carries the spec id, the
-  solve ids and a provenance tag naming the commit. Numbers are mean (sd across seeds).
+- **economy** -- `model/tag`. The model directory under `variants/` and the run tag that names
+  its result files.
+- **spec** -- the file in `experiments/specs/` that defines this economy: its parameters, its
+  estimator settings, and the `expected_solves` a run must consume or abort.
+- **n** -- seeds. Ten for every current economy.
+- **room all** -- the population headroom for nonlinearity, over all 485 panel months. The best
+  Sharpe a nonlinear feature basis reaches with ONE fixed coefficient vector for the whole
+  sample, minus the best a linear-in-ranks basis reaches the same way, both computed by the
+  oracle from the true moments. No estimation, no sampling error: a statement about the
+  economy's geometry.
+- **room eval** -- the same quantity restricted to the 125 evaluation months. This is the one
+  commensurable with `gap`, because it covers the months the estimators are scored on.
+  Available for every current economy since 2026-09-10; the two figures differ by up to 23%
+  (see caution 2).
+- **room eval % of lin** -- `room eval` divided by the linear Sharpe attained, in percent.
+  Puts the headroom on the scale of what the classical methods actually deliver here. The
+  all-month version is in `variants/results/economy_table.csv` as `room_all_over_lin`; it
+  differs modestly (vyx 54.3% against 56.1%, g0235 22.0% against 20.6%, bx7 3.0% against 2.3%,
+  g28 0.0% against 0.2%).
+- **gap** -- the quantity the project is after. The Sharpe a random-feature ridge estimator
+  achieves (DKKM: `rff`, `rff_ens`, `rff_lev`, `rff_lev_ens`, best number of features and best
+  ridge penalty) minus the best any linear method achieves (`linrank`, `linlev`, Fama-MacBeth
+  `fm`, Fama-French `ff`).
+- **gap % of lin** -- `gap` divided by the linear Sharpe attained, in percent. An absolute gap
+  of +0.10 means something different against a linear Sharpe of 0.64 than against one of 0.09,
+  and this column is what separates the two cases. It reorders the economies; see finding 6.
+- **t** -- the paired t-statistic of DKKM against Fama-MacBeth across the evaluation months,
+  averaged over seeds.
+- **DKKM** -- the Sharpe the winning random-feature estimator attained.
+- **best linear** -- the Sharpe the winning linear method attained. The denominator of both
+  percentage columns.
+- **SR_max eval** -- the oracle's maximum attainable conditional Sharpe, averaged over the
+  evaluation months. A hard upper bound on every estimator by Cauchy-Schwarz, so `DKKM` and
+  `best linear` must both sit under it. They do, on all forty runs.
+
+### Two cautions on these quantities
+
+1. **Room is not a ceiling on the gap, and not a reliable screen for it.** A rolling-window
+   estimator can beat any fixed-coefficient rule when the conditional tangency portfolio moves,
+   so `gap` exceeding `room` is not a contradiction and happens in two of the four economies.
+   Ranking candidate economies by room does not rank them by gap. Findings 1 and 2.
+2. **Every ratio in this file is a RATIO OF MEANS, not the mean of the per-seed ratios.** The
+   two differ where the denominator is itself dispersed across seeds: g0235's linear Sharpe has
+   sd 0.0359 on a mean of 0.0855, so its gap reads 26.5% as a ratio of means and 31.2% (sd
+   17.5) as a mean of ratios. `WORKING.md` §40 records getting this wrong once. Both live in
+   `variants/results/economy_table.csv`, as `gap_over_lin` and `gap_pct_lin_mean`/`_sd`.
+
+### Status labels
+
+- **CURRENT** -- ten seeds at N=500, T=500, window 360, run under a spec that pins the solve
+  ids the run must consume; every result file carries the spec id, the solve ids and a
+  provenance tag naming the commit.
 - **LEGACY, single seed** -- one row of `variants/results/grid_summary.csv`, produced before
-  the 2026-09 refactor by code that is no longer in the repository (21 of its 24 economies)
-  and never replicated. Quoted for the path it documents, never for a ranking: the cross-seed
-  sd of a gap is 10-50% of its mean, so single-seed rows are not distinguishable below the top.
+  the 2026-09 refactor by code that is no longer in the repository (21 of its 24 economies) and
+  never replicated. Quoted for the path it documents, never for a ranking: cross-seed sd of a
+  gap runs 15% to 63% of its mean, so single-seed rows are not distinguishable below the top.
 - **SUPERSEDED** -- an economy the current code no longer builds, kept as the record behind a
   published number.
 
-**Whether a model's legacy rows describe the same economy as its current code differs by
-model** and is stated in each section: yes for BGN, no for KP14 (the growth-option arrival
-rate was mis-normalised until 2026-09-04) and no for GS21 (three calibration parameters were
-corrected against the paper's Table I on 2026-09-06).
+### Whether a model's legacy rows describe the economy the code still builds
 
-**Provenance of every CURRENT number**: `experiments/specs/<spec>.json` names the parameters
-and `expected_solves`; `experiments/registry/<solve_id>.json` records what each solve was
-built from; `variants/results/<model>_oracle_<tag>_s<seed>.json` and
-`<model>_estimators_<tag>_s<seed>_w360_summary.csv` carry the per-seed numbers and their
-`.prov.json` sidecars name the commit; `variants/aggregate_seeds.py` produces the table.
+Differs by model, and is stated in each section: **yes for BGN**, **no for KP14** (the
+growth-option arrival rate was mis-normalised until 2026-09-04) and **no for GS21** (three
+calibration parameters were corrected against the paper's Table I on 2026-09-06).
 
-**Ordering.** Model sections are ordered by their best CURRENT gap, and within a model the
-paths are ordered the same way; paths with no current economy come after those with one,
-ordered by their best legacy gap.
+### Provenance of every current number
+
+`experiments/specs/<spec>.json` names the parameters and `expected_solves`;
+`experiments/registry/<solve_id>.json` records what each solve was built from;
+`variants/results/<model>_oracle_<tag>_s<seed>.json` and
+`<model>_estimators_<tag>_s<seed>_w360_summary.csv` carry the per-seed numbers, and their
+`.prov.json` sidecars name the commit. `variants/aggregate_seeds.py` produces the tables.
+
+### Ordering
+
+Model sections are ordered by their best current ABSOLUTE gap, and within a model the paths are
+ordered the same way; paths with no current economy come after those with one, ordered by their
+best legacy gap.
 
 ## Current results
 
 All four CURRENT economies, ranked by realized gap. Mean (sd) over ten seeds.
 
-| economy | spec | n | room all | room eval | gap | t | DKKM | best linear | SR_max eval |
-|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | - | +0.1046 (0.0155) | 30.2 | 0.7475 | 0.6428 | 1.1778 |
-| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | +0.0283 (0.0136) | 24.6 | 0.2975 | 0.2692 | 0.3087 |
-| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | - | +0.0227 (0.0084) | 33.4 | 0.1081 | 0.0855 | 0.1461 |
-| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | +0.0078 (0.0049) | 16.0 | 0.2964 | 0.2887 | 0.3121 |
+| economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 |
+| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 |
+| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 |
+| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 |
 
-`room eval` is blank where the oracle predates the eval-window flag; re-runs for those two
-economies are in progress (2026-09-10). `SR_max eval` is the oracle's maximum attainable
-conditional Sharpe averaged over the evaluation months, the hard upper bound every estimator
-must respect. Regenerate: `python variants/aggregate_seeds.py --flagship`.
+Rows are ordered by ABSOLUTE gap. **By proportional gap the order is different**: g0235 first
+at 26.5%, then vyx 16.3%, g28 10.5%, bx7 2.7%. Which ordering matters depends on the question
+-- see cross-cutting finding 6.
+
+Regenerate with `python variants/aggregate_seeds.py --flagship`, which also writes the per-seed
+rows to `variants/results/seed_table.csv`.
 
 ---
 
@@ -439,19 +486,32 @@ above.
    estimation efficiency (g28, everywhere at +0.01 to +0.03), conditioning (g28, the
    regime-only rows), and cross-sectional curvature (g0235, vyx).
 
-3. **Room and gap were averaged over different months until 2026-09-09.** The oracle
-   averaged over all 485 months, the estimators over the last 125, and the last 125 carry a
-   higher attainable Sharpe on every panel (vyx 1.1531 to 1.1778, g28 0.2621 to 0.3087). The
-   symptom was g28's DKKM exceeding the all-month SR_max, which Cauchy-Schwarz forbids within
-   a month; against the evaluation-window SR_max the bound holds on all forty runs. Every
-   number in this file dated before 2026-09-09 uses all-month room; the vyx and g0235
-   oracles are being re-run to supply the evaluation-window version.
+3. **The different-month confound was real, measured, and is NOT the explanation for gap
+   exceeding room.** Until 2026-09-09 the oracle averaged over all 485 months and the
+   estimators over the last 125, and the last 125 carry a higher attainable Sharpe on every
+   panel (vyx 1.1531 to 1.1778, g28 0.2621 to 0.3087). The symptom was g28's DKKM exceeding
+   the all-month SR_max, which Cauchy-Schwarz forbids within a month; against the
+   evaluation-window SR_max the bound holds on all forty runs. Twenty oracle re-runs on
+   2026-09-10 supplied the commensurable room for vyx and g0235, reproducing every all-month
+   field bit-for-bit. **Correcting the month sample does not rescue the ceiling reading**: for
+   g0235 gap/room goes from 1.20 to 1.28, and for bx7 from 0.90 to 1.17. Both move the wrong
+   way. So the realized gap genuinely exceeds the constant-coefficient room, and the
+   explanation is the rolling window, not the month sample. `WORKING.md` §49.
 
 4. **Single seeds mislead.** g28's seed 0 gave +0.0119 against a ten-seed +0.0283; bx7's seed 0
    put its evaluation-window room above its all-month room and ten seeds reversed the order;
    vyx's seed 0 read "stronger than published" and ten seeds read "unchanged". Cross-seed sd
    of the gap is 15% of the mean for vyx, 37% for g0235, 48% for g28, 63% for bx7. No ranking
    below the top of a single-seed table means anything.
+
+6. **Absolute and proportional gaps rank the economies differently.** By absolute gap the
+   order is vyx (+0.1046), g28 (+0.0283), g0235 (+0.0227), bx7 (+0.0078); as a share of the
+   linear Sharpe attained it is g0235 (26.5%), vyx (16.3%), g28 (10.5%), bx7 (2.7%). vyx has
+   four times g0235's absolute gap because everything in vyx is large -- its linear methods
+   already reach 0.64 where g0235's reach 0.086. g0235 is the economy where a complexity
+   method most changes what an investor gets, vyx the one where it adds the most Sharpe. Room
+   splits the same way: 54.3% of the linear Sharpe in vyx against 22.0% in g0235, and 0.0% in
+   g28, which is the room-free economy stated on this scale.
 
 5. **The four gaps are three mechanisms.** vyx: a priced state bends heterogeneous exposures
    with stationary levels (curvature, capture 0.30). g0235: two regimes apply different
