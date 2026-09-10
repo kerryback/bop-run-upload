@@ -1,20 +1,10 @@
 {
  "schema": 1,
  "git": {
-  "sha": "71a4b676d8072b78b5434df1d65f842be81afc59",
+  "sha": "132cbc89969b4721e7e1a37f7718e202c1adf635",
   "branch": "main",
   "root": "/data/sjpruitt/GitHub/bop-run-upload",
-  "dirty": true,
-  "status": [
-   "?? 0",
-   "?? t3_bgn.sh"
-  ],
-  "diff_truncated": false,
-  "diff": "",
-  "untracked_code": [
-   "t3_bgn.sh"
-  ],
-  "untracked_code_warning": "these files are NOT in the sha and NOT in the diff; `git checkout` will not restore them and this run is not fully reproducible from the sha alone"
+  "dirty": false
  },
  "argv": [
   "run_oracle.py",
@@ -30,8 +20,9 @@
   "vyx",
   "--spec",
   "var-kp_vy-vyx-v2",
-  "--levels",
-  "--save_panel"
+  "--eval_window",
+  "360",
+  "--levels"
  ],
  "run_from": "variants",
  "cwd_at_write": "variants/kp_vy",
@@ -44,24 +35,25 @@
   "OMP_NUM_THREADS": "8",
   "OPENBLAS_NUM_THREADS": "8",
   "SEED_SPEC": "vyx",
-  "SLURMD_NODENAME": "sc020",
-  "SLURM_ARRAY_JOB_ID": "62856030",
+  "SEED_STAGE": "oracle",
+  "SLURMD_NODENAME": "sc009",
+  "SLURM_ARRAY_JOB_ID": "62949932",
   "SLURM_ARRAY_TASK_ID": "0",
   "SLURM_CPUS_PER_TASK": "8",
-  "SLURM_JOB_ID": "62856030",
+  "SLURM_JOB_ID": "62949939",
   "VECLIB_MAXIMUM_THREADS": "8"
  },
- "when": "2026-09-08T12:04:51-0700",
+ "when": "2026-09-10T07:31:48-0700",
  "environment": {
   "python": "3.14.3",
   "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
-  "hostname": "sc020",
+  "hostname": "sc009",
   "numpy": "2.4.3",
   "scipy": "1.17.1",
   "pandas": "3.0.1",
   "pyarrow": "24.0.0"
  },
- "how_to_reproduce": "git checkout 71a4b676d8072b78b5434df1d65f842be81afc59 && cd variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 0 --tag vyx --spec var-kp_vy-vyx-v2 --levels --save_panel",
+ "how_to_reproduce": "git checkout 132cbc89969b4721e7e1a37f7718e202c1adf635 && cd variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 0 --tag vyx --spec var-kp_vy-vyx-v2 --eval_window 360 --levels",
  "inputs": [
   {
    "stage": "G",
@@ -81,6 +73,9 @@
  "extra": {
   "spec_id": "var-kp_vy-vyx-v2",
   "engine": "oracle",
-  "spec_check": "verified"
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "verified",
+  "eval_window": 360
  }
 }

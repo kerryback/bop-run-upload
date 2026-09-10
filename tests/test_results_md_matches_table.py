@@ -1,5 +1,11 @@
 """docs/RESULTS.md's current-results table must agree with variants/results/economy_table.csv.
 
+Including the two `% of lin` columns, which are RATIOS OF MEANS (economy_table.csv's
+`room_all_over_lin` / `gap_over_lin`) and not the mean of the per-seed ratios -- those differ
+by 5 points for g0235 and live in the same CSV as `*_pct_lin_mean`. Pinning the ratio of means
+here is what stops the two definitions being mixed in the document, which is the mistake
+WORKING.md §40 records for gap/room.
+
 RESULTS.md is the ongoing, human-written record of what each economy is and what it
 produced; economy_table.csv is produced by aggregate_seeds.py from the result files. The
 numbers in the prose table are copied by hand and go stale the moment a new seed or a new
@@ -31,13 +37,19 @@ def _md_rows():
         if not m:
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        # economy | spec | n | room all | room eval | gap | t | DKKM | best linear | SR_max eval
+        # economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin |
+        # t | DKKM | best linear | SR_max eval
         def num(c):
             mm = re.match(r"^([+-]?\d+\.\d+)", c)
             return float(mm.group(1)) if mm else None
+
+        def pct(c):
+            mm = re.match(r"^([+-]?\d+\.\d+)%", c)
+            return float(mm.group(1)) if mm else None
         rows[(m.group(1), m.group(2))] = dict(spec=cells[1], n=int(cells[2]), room_all=num(cells[3]),
-                                             room_eval=num(cells[4]), gap=num(cells[5]), t=num(cells[6]),
-                                             dkkm=num(cells[7]), lin=num(cells[8]), sr_max_eval=num(cells[9]))
+                                             room_eval=num(cells[4]), room_pct=pct(cells[5]),
+                                             gap=num(cells[6]), gap_pct=pct(cells[7]), t=num(cells[8]),
+                                             dkkm=num(cells[9]), lin=num(cells[10]), sr_max_eval=num(cells[11]))
     assert rows, "no economy rows parsed from the 'Current results' table"
     return rows
 
@@ -72,7 +84,10 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
                   ("t", row["t"], c["t_mean"], 0.051),
                   ("dkkm", row["dkkm"], c["dkkm_mean"], 5.1e-5),
                   ("lin", row["lin"], c["lin_mean"], 5.1e-5),
-                  ("sr_max_eval", row["sr_max_eval"], c["sr_max_eval_mean"], 5.1e-5)]
+                  ("sr_max_eval", row["sr_max_eval"], c["sr_max_eval_mean"], 5.1e-5),
+                  # ratio of means, in percent -- NOT the mean of the per-seed ratios
+                  ("room_pct", row["room_pct"], c["room_eval_over_lin"], 0.051),
+                  ("gap_pct", row["gap_pct"], c["gap_over_lin"], 0.051)]
         if row["room_eval"] is not None or not pd.isna(c["room_eval_mean"]):
             checks.append(("room_eval", row["room_eval"], c["room_eval_mean"], 5.1e-5))
         for name, got, want, tol in checks:

@@ -3202,3 +3202,52 @@ is not saved -- only its mean across months.
 **Do not difference a pre-2026-09-09 room against a gap, and do not compare a gap to an
 all-month SR_max.** The vyx and g0235 oracle re-runs (arrays `62949932`, `62949933`) are
 running to close the first of those.
+
+## §49. The eval-window re-runs: bit-identical, and they do not rescue the ceiling (2026-09-10)
+
+Twenty oracle-only re-runs (arrays `62949932` vyx, `62949933` g0235; `SEED_STAGE=oracle`,
+output staged outside `variants/results`) to supply the evaluation-window room that §41 and
+§48 said was missing for the two older flagships. All COMPLETED. vyx 1:00-1:36 at 30.6 GiB,
+g0235 1:21-3:41 at 16.4-40.7 GiB, matching the full runs' oracle stages.
+
+**They reproduce the committed economies EXACTLY.** 51 fields per file -- `sr_max_mean`,
+`mean_mu`, `sd_mu`, `mean_idio_sd` and `const_best`/`const_z0`/`unc_best`/`cond_oracle` for
+every basis -- compared against the committed JSONs: **max absolute difference 0.000e+00 on
+all twenty files.** Not "within tolerance": bit-identical. The panel is a deterministic
+function of (spec, seed) and that is now demonstrated rather than assumed, which is also the
+strongest check yet that the seeded-replication machinery does what it claims. The staged
+files are strict supersets (same numbers, same `spec_id` and `solves`, plus the `_eval`
+fields, and a clean `prov` tag replacing seed 0's old `71a4b67+dirty`), so they were adopted.
+
+**The confound is real and is not the explanation.** Room, both definitions:
+
+| economy | room all | room eval | gap | gap/room all | gap/room eval |
+|---|---|---|---|---|---|
+| kp_vy/vyx | +0.3491 (0.0365) | +0.3606 (0.0394) | +0.1046 | 0.30 | 0.29 |
+| bgn_gam/g0235 | +0.0188 (0.0065) | +0.0176 (0.0119) | +0.0227 | 1.20 | **1.28** |
+| gs_bx/bx7 | +0.0086 (0.0035) | +0.0066 (0.0041) | +0.0078 | 0.90 | **1.17** |
+| gs_bx/g28 | +0.0001 (0.0003) | +0.0004 (0.0003) | +0.0283 | 393 | 70 |
+
+§40 flagged the month-sample mismatch as an unruled-out confound under "the realized gap
+exceeds the const-θ room" and said to check it before treating the rolling window as the
+explanation. **Checked, and it is not the confound: correcting the months moves g0235 from
+1.20 to 1.28 and bx7 from 0.90 to 1.17, both further above one.** vyx is unmoved (0.30 to
+0.29). The finding stands on the commensurable numbers, and the explanation is what §40
+proposed -- a rolling-window estimator beats a fixed-coefficient rule when the conditional
+tangency moves. What the confound DID explain is the apparent Cauchy-Schwarz violation in
+§48, which was entirely a month-sample artifact.
+
+`tests/test_aggregate_seeds.py`'s eval-room test was inverted: it used to assert vyx's
+room_eval was ABSENT, which was pinning a temporary state. It now asserts the correspondence
+-- room_eval present exactly where the oracle JSON carries `eval_window` -- plus that all four
+flagships now have it on every seed.
+
+**Also this session:** `aggregate_seeds.py` gained `room_*_pct_lin` and `gap_pct_lin`, room and
+gap as a percentage of the linear Sharpe actually attained, per seed and aggregated both as
+ratio-of-means (`*_over_lin`, what the tables quote) and mean-of-ratios (`*_pct_lin_mean/_sd`).
+They differ for g0235, whose linear Sharpe has sd 0.0359 on a mean of 0.0855: gap reads 26.5%
+as a ratio of means and 31.2% as a mean of ratios. **The proportional gap reorders the
+economies**: g0235 26.5%, vyx 16.3%, g28 10.5%, bx7 2.7% -- vyx's fourfold absolute lead is
+partly that everything in vyx is large, its linear methods already reaching 0.64 against
+g0235's 0.086. `docs/RESULTS.md` carries both, and its "How to read this" is now a per-column
+glossary.
