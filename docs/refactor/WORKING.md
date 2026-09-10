@@ -3146,3 +3146,59 @@ The flagship table as of this entry (g28 and bx7 one seed each; their arrays are
 | gs_bx/g28 | 1 | +0.0003 | +0.0003 | +0.0119 | 36.4 | 38.9 | 45.9 |
 
 Regenerate: `python variants/aggregate_seeds.py --flagship`.
+
+## §48. Both GS economies at ten seeds, and an inequality that could not hold (2026-09-10)
+
+Arrays `62942411` (g28) and `62942412` (bx7), seeds 1-9, all eighteen COMPLETED at
+`--mem=24G`. Every post-run check reported CURRENT, including nine over the union of bx7's
+FIVE solve ids -- §45's 3a fix in production. Wall 3:30-4:57, MaxRSS 4.4-4.9 GiB, so 24G was
+5x the peak. Consistency 3/3 over all 140 files.
+
+**All four flagship economies now have ten seeds.**
+
+| economy | SR_max all | SR_max eval | room all | room eval | DKKM | best lin | gap | t | gap/room all |
+|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyx | 1.1531 | 1.1778 | +0.3491 (0.0365) | - | 0.7475 | 0.6428 | **+0.1046** (0.0155) | 30.2 | 0.30 |
+| bgn_gam/g0235 | 0.1384 | 0.1461 | +0.0188 (0.0065) | - | 0.1081 | 0.0855 | **+0.0227** (0.0084) | 33.4 | 1.20 |
+| gs_bx/g28 | 0.2621 | 0.3087 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2975 | 0.2692 | **+0.0283** (0.0136) | 24.6 | 393 |
+| gs_bx/bx7 | 0.2993 | 0.3121 | +0.0086 (0.0035) | +0.0066 (0.0041) | 0.2964 | 0.2887 | **+0.0078** (0.0049) | 16.0 | 0.90 |
+
+**g28 has the second-largest gap in the repo and essentially no room.** +0.0283 (se 0.0043)
+against room +0.0001, larger than g0235's +0.0227 on an economy where the const-theta
+nonlinear ceiling exceeds the linear one by 0.0001. The whole advantage is the linear
+estimator failing to reach its own ceiling, not nonlinear structure. That is the mechanism
+PLAN §0.0 read off the deleted gamma(x) rows, now on a runnable, spec-verified economy with
+error bars. **Ranking candidate economies by const-theta room would put g28 last of four and
+it is second by realized gap.** Room is not a screen for this channel at all.
+
+**Both GS seed-0 figures were unrepresentative**, which is the §37 lesson repeating: g28 seed 0
+gave +0.0119 against a ten-seed +0.0283 (2.4x), and bx7 seed 0 gave +0.0104 against +0.0078.
+Worse, seed 0 had bx7's room_eval ABOVE its room_all (+0.0094 vs +0.0063) while the ten-seed
+means run the other way (+0.0066 vs +0.0086). Nothing in §46's one-seed reading of the
+eval-window direction survives; the ten-seed numbers replace it.
+
+**bx7's gap is +0.0078 (se 0.0016) against the v1 economy's published +0.0013** -- six times,
+still, on ten seeds. Its rank-22-of-24 demotion does not survive the calibration corrections.
+
+### The inequality that could not hold
+
+The ten-seed table showed **DKKM 0.2975 for g28 against SR_max 0.2621**. That is impossible
+within a month: the estimators are scored against the TRUE moments, and Cauchy-Schwarz gives
+`w'mu / sqrt(w' Sigma w) <= sqrt(mu' Sigma^-1 mu) = sr_max` for every w. So either something
+was badly wrong, or the two sides were averaged over different months.
+
+It is the second, and the size is the point: g28's sr_max is **0.2621 over all 485 months and
+0.3087 over the 125 the estimators are scored on**, a gap of 18%. DKKM sits under the second.
+Checked on all four economies and all forty runs: the bound holds every time once the window
+matches, and never for g28 against the all-month figure.
+
+This is the §41 confound stated as a violated inequality rather than a caveat, and it is
+retroactively checkable: `sr_max` was always saved per month in `*_ts.csv`, so
+`aggregate_seeds.py` now computes `sr_max_eval` for EVERY run including the twenty whose
+oracles predate `--eval_window`. `tests/test_aggregate_seeds.py` asserts no method beats it.
+`room_eval` still needs the re-runs, because the per-basis conditional series (`cond_sr_ts`)
+is not saved -- only its mean across months.
+
+**Do not difference a pre-2026-09-09 room against a gap, and do not compare a gap to an
+all-month SR_max.** The vyx and g0235 oracle re-runs (arrays `62949932`, `62949933`) are
+running to close the first of those.

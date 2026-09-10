@@ -1,0 +1,110 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "20d55098dfd0ff6b3b56d2ddb4008515abe581f3",
+  "branch": "main",
+  "root": "/data/sjpruitt/GitHub/bop-run-upload",
+  "dirty": true,
+  "status": [
+   "?? variants/results/gs_bx_oracle_bx7_s005.json",
+   "?? variants/results/gs_bx_oracle_bx7_s005.json.prov.json",
+   "?? variants/results/gs_bx_oracle_bx7_s005_ts.csv"
+  ],
+  "diff_truncated": false,
+  "diff": ""
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "gs_bx",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "6",
+  "--tag",
+  "bx7",
+  "--spec",
+  "var-gs_bx-bx7-v3",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants/gs_bx",
+ "env": {
+  "CONDA_DEFAULT_ENV": "bop",
+  "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
+  "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2",
+  "GS_BX_SOLDIRS": "sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c",
+  "MKL_NUM_THREADS": "8",
+  "NUMEXPR_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "SEED_SPEC": "bx7",
+  "SLURMD_NODENAME": "sc018",
+  "SLURM_ARRAY_JOB_ID": "62942412",
+  "SLURM_ARRAY_TASK_ID": "6",
+  "SLURM_CPUS_PER_TASK": "8",
+  "SLURM_JOB_ID": "62942436",
+  "VECLIB_MAXIMUM_THREADS": "8"
+ },
+ "when": "2026-09-10T03:19:47-0700",
+ "environment": {
+  "python": "3.14.3",
+  "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "sc018",
+  "numpy": "2.4.3",
+  "scipy": "1.17.1",
+  "pandas": "3.0.1",
+  "pyarrow": "24.0.0"
+ },
+ "how_to_reproduce": "git checkout 20d55098dfd0ff6b3b56d2ddb4008515abe581f3 && cd variants && <env below> python run_oracle.py --model gs_bx --N 500 --T 500 --seed 6 --tag bx7 --spec var-gs_bx-bx7-v3 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "sol_reg",
+   "solve_id": "63fa7ebbc2db49ea",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 92094205
+  },
+  {
+   "stage": "sol_b25c",
+   "solve_id": "649bb384300faadf",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 97206611
+  },
+  {
+   "stage": "sol_b40c",
+   "solve_id": "a3bb50b66287307c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 99774345
+  },
+  {
+   "stage": "sol_b55c",
+   "solve_id": "645262a8e72d944c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 102372818
+  },
+  {
+   "stage": "sol_b70c",
+   "solve_id": "0818d7153d5708cc",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 104054943
+  }
+ ],
+ "extra": {
+  "spec_id": "var-gs_bx-bx7-v3",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "not requested",
+  "eval_window": 360
+ }
+}

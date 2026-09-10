@@ -14,6 +14,14 @@ Definitions (variants/common/oracle.py evaluate_bases; run_estimators.py):
               lin_rank's const-theta SR, averaged over ALL months
   room_eval = the same restricted to the estimators' evaluation months (oracle --eval_window,
               2026-09-09+); NaN for oracles run before the flag existed
+  sr_max_eval = mean of the oracle's per-month sr_max over those same evaluation months,
+              read from the run's _ts.csv. Available for EVERY run, including oracles that
+              predate --eval_window, because the per-month series was always saved. It is a
+              hard per-month upper bound on any portfolio's conditional SR (Cauchy-Schwarz:
+              w'mu / sqrt(w'Sigma w) <= sqrt(mu' Sigma^-1 mu)), so dkkm <= sr_max_eval must
+              hold. Against the ALL-MONTH sr_max it does not: g28's DKKM is 0.2975 against
+              0.2621 all-month and 0.3087 over the evaluation months. That apparent violation
+              of an inequality is the month-sample confound (WORKING.md §41) made visible
   dkkm      = best sharpe over rff, rff_ens, rff_lev, rff_lev_ens (any P, any kappa)
   lin       = best sharpe over linrank, linlev, fm, ff
   gap       = dkkm - lin
@@ -58,6 +66,12 @@ def seed_rows(results):
         lin, lin_e = b["lin_rank"]["const_best"], b["lin_rank"].get("const_best_eval", np.nan)
         best_nl = max(b[k]["const_best"] for k in nl)
         best_nl_e = max(b[k].get("const_best_eval", np.nan) for k in nl) if nl else np.nan
+        ts_path = os.path.join(results, f"{model}_oracle_{tag}_s{seed:03d}_ts.csv")
+        ts_months = ts_sr = None
+        if os.path.exists(ts_path):
+            ts = pd.read_csv(ts_path)
+            if {"month", "sr_max"} <= set(ts.columns):
+                ts_months, ts_sr = ts["month"].to_numpy(), ts["sr_max"].to_numpy()
         base = dict(model=model, tag=tag, seed=seed, N=d.get("N"), T=d.get("T"), months=d.get("months"),
                     spec_id=d.get("spec_id"),
                     solves=",".join(s["solve_id"] or "UNREGISTERED" for s in (d.get("solves") or [])),
@@ -65,10 +79,18 @@ def seed_rows(results):
                     room_all=best_nl - lin, lin_ceiling_eval=lin_e, nonlin_ceiling_eval=best_nl_e,
                     room_eval=best_nl_e - lin_e, eval_window=d.get("eval_window"),
                     eval_months_oracle=d.get("eval_months"), prov_oracle=d.get("prov"))
+
+        def sr_max_eval(window):
+            """Mean per-month sr_max over the months an estimator at `window` is scored on.
+            Same rule as run_estimators.py: month >= first_month + window."""
+            if ts_months is None or window is None or np.isnan(window):
+                return np.nan
+            mask = ts_months >= ts_months.min() + int(window)
+            return float(ts_sr[mask].mean()) if mask.any() else np.nan
         ests = sorted(glob.glob(os.path.join(results, f"{model}_estimators_{tag}_s{seed:03d}_w*_summary.csv")))
         if not ests:
-            rows.append(dict(base, window=np.nan, dkkm=np.nan, lin=np.nan, gap=np.nan, t=np.nan,
-                             dkkm_method=None, lin_method=None, prov_est=None))
+            rows.append(dict(base, window=np.nan, sr_max_eval=np.nan, dkkm=np.nan, lin=np.nan,
+                             gap=np.nan, t=np.nan, dkkm_method=None, lin_method=None, prov_est=None))
             continue
         for e in ests:
             w = int(re.search(r"_w(\d+)_summary\.csv$", e).group(1))
@@ -77,7 +99,8 @@ def seed_rows(results):
             dk = best.loc[[k for k in RFF if k in best.index]].sharpe
             ln = best.loc[[k for k in LIN if k in best.index]].sharpe
             t = s.loc[s.method.str.startswith("rff"), "t_vs_fm"].max() if "t_vs_fm" in s else np.nan
-            rows.append(dict(base, window=w, dkkm=dk.max(), lin=ln.max(), gap=dk.max() - ln.max(), t=t,
+            rows.append(dict(base, window=w, sr_max_eval=sr_max_eval(w),
+                             dkkm=dk.max(), lin=ln.max(), gap=dk.max() - ln.max(), t=t,
                              dkkm_method=dk.idxmax(), lin_method=ln.idxmax(),
                              prov_est=s["prov"].iloc[0] if "prov" in s else None))
     return pd.DataFrame(rows)
@@ -93,7 +116,7 @@ def economy_table(seeds):
         specs, solves = sorted(set(g["spec_id"].dropna())), sorted(set(g.solves.dropna()))
         rec["spec_id"] = specs[0] if len(specs) == 1 else ("MIXED:" + "|".join(specs) if specs else None)
         rec["solves"] = solves[0] if len(solves) == 1 else ("MIXED:" + "|".join(solves) if solves else None)
-        for col in ("sr_max", "room_all", "room_eval", "dkkm", "lin", "gap", "t"):
+        for col in ("sr_max", "sr_max_eval", "room_all", "room_eval", "dkkm", "lin", "gap", "t"):
             v = g[col].astype(float).dropna()
             rec[f"{col}_mean"] = v.mean() if len(v) else np.nan
             rec[f"{col}_sd"] = v.std(ddof=1) if len(v) > 1 else np.nan
@@ -106,8 +129,8 @@ def economy_table(seeds):
 
 
 def render(econ):
-    lines = ["| economy | spec | n | SR_max | room all | room eval | DKKM | best lin | gap | t | gap/room all | gap/room eval |",
-             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    lines = ["| economy | spec | n | SR_max all | SR_max eval | room all | room eval | DKKM | best lin | gap | t | gap/room all | gap/room eval |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 
     def ms(r, c, sign=False):
         m, sd = r[f"{c}_mean"], r[f"{c}_sd"]
@@ -124,13 +147,14 @@ def render(econ):
         w = "-" if pd.isna(r["window"]) else int(r["window"])
         econ_name = f"{r['model']}/{r['tag']} N={r['N']} T={r['T']} w={w}"
         spec = r["spec_id"] or "-"
-        lines.append(f"| {econ_name} | {spec} | {r['n_seeds']} | {ms(r, 'sr_max')} | "
+        lines.append(f"| {econ_name} | {spec} | {r['n_seeds']} | {ms(r, 'sr_max')} | {ms(r, 'sr_max_eval')} | "
                      f"{ms(r, 'room_all', True)} | {ms(r, 'room_eval', True)} | {ms(r, 'dkkm')} | "
                      f"{ms(r, 'lin')} | {ms(r, 'gap', True)} | {ms(r, 't')} | "
                      f"{ratio(r['gap_over_room_all'])} | {ratio(r['gap_over_room_eval'])} |")
     lines.append("")
     lines.append("mean (sd across seeds). gap/room = ratio of means. room_eval is NaN for oracles "
-                 "run before --eval_window (2026-09-09).")
+                 "run before --eval_window (2026-09-09); SR_max eval is available for every run, "
+                 "from the per-month series, and is the bound DKKM must respect.")
     return "\n".join(lines)
 
 
