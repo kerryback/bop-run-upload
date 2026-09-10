@@ -3117,3 +3117,32 @@ month-sample. Not started.
 Arrays submitted 2026-09-10 02:2x: g28 seeds 1-9, bx7 seeds 1-9, from the repo root on Sol
 at 4e9a378 with `--mem=24G`. Results, aggregates and the watcher: `_scratch/watch_gs_x10.sh`
 -> `_scratch/GS-X10.md`.
+
+## §47. The tracked aggregate producer, and a correction to §41 (2026-09-10)
+
+`variants/aggregate_seeds.py` closes the gap §41 called the one to close first. It reads every
+SEEDED oracle JSON with its estimator summary, writes `results/seed_table.csv` (one row per
+run: spec_id, consumed solve ids, both prov tags, room all-month and eval-window, DKKM, best
+linear, gap, t) and `results/economy_table.csv` (one row per model/tag/N/T/window with
+mean, sd, se, n across seeds, and gap/room as the RATIO OF MEANS per §40). Unseeded legacy
+files are never read. `tests/test_aggregate_seeds.py` pins it to §37's vyx and §40's g0235
+ten-seed numbers, so the tracked table cannot drift from what was written down; the CSVs
+are the complete set whatever flag was passed, and `--flagship` narrows only the printout.
+
+**Correction to §41.** I wrote there that "nothing regenerates" either legacy table.
+`variants/collect_results.py` does regenerate `results/oracle_summary.csv`: it is the
+oracle-only, one-row-per-run producer from the original repo, blind to seeds, estimators,
+specs and the eval window, and running it today would overwrite the 57-row legacy table with
+the current 43 oracle JSONs, seeded and unseeded alike. The claim stands for
+`grid_summary.csv`, which only `make_excel.py` reads. README marks `collect_results.py` legacy.
+
+The flagship table as of this entry (g28 and bx7 one seed each; their arrays are running):
+
+| economy | n | room all | room eval | gap | t | gap/room all | gap/room eval |
+|---|---|---|---|---|---|---|---|
+| kp_vy/vyx | 10 | +0.3491 (0.0365) | - | +0.1046 (0.0155) | 30.2 (11.8) | 0.30 | - |
+| bgn_gam/g0235 | 10 | +0.0188 (0.0065) | - | +0.0227 (0.0084) | 33.4 (28.4) | 1.20 | - |
+| gs_bx/bx7 | 1 | +0.0063 | +0.0094 | +0.0104 | 11.2 | 1.63 | 1.10 |
+| gs_bx/g28 | 1 | +0.0003 | +0.0003 | +0.0119 | 36.4 | 38.9 | 45.9 |
+
+Regenerate: `python variants/aggregate_seeds.py --flagship`.
