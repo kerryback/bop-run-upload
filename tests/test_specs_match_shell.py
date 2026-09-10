@@ -278,6 +278,45 @@ def test_seed_array_passes_its_window_to_the_oracle():
     assert re.search(r'run_estimators\.py.*?--window\s+"\$WINDOW"', body, re.DOTALL)
 
 
+def test_seed_array_output_paths_all_derive_from_one_results_dir():
+    """BOP_RESULTS_DIR moves the output; the log and the run record must move with it.
+
+    The script hardcoded `results/` for both while run_oracle.py and run_estimators.py
+    honoured the variable, so setting it split the output from the checkpoint that reads
+    it: the per-seed guard would look for a run record that had been written somewhere
+    else and re-run a finished seed, silently.
+    """
+    body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines()
+                     if not l.lstrip().startswith("#"))
+    assert re.search(r'RESULTS=\$\{BOP_RESULTS_DIR:-results\}', body), (
+        "the script must mirror BOP_RESULTS_DIR into one shell variable")
+    for var in ("LOG=", "RUNJSON=", "ORACLEJSON="):
+        m = re.search(r"(?m)^\s*" + var + r'"([^"]*)"', body)
+        assert m, f"no {var} assignment"
+        assert m.group(1).startswith("$RESULTS/"), (
+            f"{var}{m.group(1)!r} does not live under $RESULTS")
+    assert not re.search(r'(?m)^\s*(LOG|RUNJSON|ORACLEJSON)="results/', body)
+
+
+def test_seed_array_oracle_stage_runs_the_oracle_and_nothing_else():
+    """SEED_STAGE=oracle re-derives ceilings on an existing economy. It must not reach
+    run_estimators.py (there is no panel: --save_panel is dropped in this mode) and must
+    not be able to pass an unrecognised stage silently."""
+    body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines()
+                     if not l.lstrip().startswith("#"))
+    assert re.search(r'SEED_STAGE=\$\{SEED_STAGE:-both\}', body)
+    assert re.search(r'case "\$SEED_STAGE" in both\|oracle\)', body), "unknown stages must be rejected"
+    # the early exit sits between the oracle call and the estimator call
+    o = body.index("run_oracle.py")
+    e = body.index("run_estimators.py")
+    guard = body[o:e]
+    assert re.search(r'if \[ "\$SEED_STAGE" = oracle \]; then(.|\n)*?exit 0', guard), (
+        "SEED_STAGE=oracle must exit before run_estimators.py")
+    assert re.search(r'\[ "\$SEED_STAGE" = oracle \] && SAVE_PANEL=', body), (
+        "oracle-only runs must drop --save_panel; nothing downstream reads the panel")
+    assert "--levels $SAVE_PANEL" in body
+
+
 def test_seed_array_does_not_solve():
     """The array must consume a recorded solve, never produce one."""
     txt = read_script(SEED_ARRAY)

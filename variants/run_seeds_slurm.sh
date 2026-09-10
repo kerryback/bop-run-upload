@@ -22,6 +22,17 @@
 #     sbatch --export=ALL,SEED_SPEC=g0235 variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=g28   variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=bx7   variants/run_seeds_slurm.sh
+#
+#   SEED_STAGE=oracle runs ONLY the oracle stage, and BOP_RESULTS_DIR sends its output
+#   somewhere other than variants/results. Together they re-derive population ceilings
+#   for panels that already exist without touching the committed record:
+#
+#     sbatch --export=ALL,SEED_SPEC=vyx,SEED_STAGE=oracle,BOP_RESULTS_DIR=/data/.../evalwin \
+#            --array=0-9 variants/run_seeds_slurm.sh
+#
+#   The panel is a deterministic function of (spec, seed), so an oracle re-run reproduces
+#   the one the estimators were scored on; the all-month figures must come back unchanged,
+#   which is the check that says the re-run is the same economy (WORKING.md §48).
 # SBATCH -o is resolved before the script body runs, so outslurm/ must already exist.
 # Size and window can be overridden per submission, e.g.
 #     sbatch --export=ALL,SEED_SPEC=vyx,SEED_N=200,SEED_T=300 variants/run_seeds_slurm.sh
@@ -240,6 +251,20 @@ N=${SEED_N:-500}
 T=${SEED_T:-500}
 WINDOW=${SEED_WINDOW:-360}
 
+# both  = oracle then estimators (the default; what every campaign run does)
+# oracle = the oracle ONLY, and without --save_panel: nothing downstream consumes the
+#          panel or the moments file in this mode, and skipping them saves ~35 MB/seed.
+SEED_STAGE=${SEED_STAGE:-both}
+case "$SEED_STAGE" in both|oracle) ;; *)
+  echo "unknown SEED_STAGE '$SEED_STAGE' (expected both or oracle)" >&2; exit 2 ;;
+esac
+
+# run_oracle.py and run_estimators.py both honour BOP_RESULTS_DIR. This script used to
+# hardcode `results/` for the log and the run record, so setting that variable moved the
+# OUTPUT while the checkpoint kept looking in the old place -- it would have re-run a
+# finished seed, or skipped an unfinished one, without saying so. Mirror it here.
+RESULTS=${BOP_RESULTS_DIR:-results}
+
 CONDA_ENV=${CONDA_ENV:-bop}
 module load mamba/latest
 source activate "$CONDA_ENV"
@@ -279,10 +304,10 @@ if [ ! -f "$REPO/variants/run_seeds_slurm.sh" ]; then
   exit 2
 fi
 cd "$REPO/variants"
-mkdir -p results/logs
-LOG="results/logs/log_${TAG}_s${SS}.txt"
+mkdir -p "$RESULTS/logs"
+LOG="$RESULTS/logs/log_${TAG}_s${SS}.txt"
 
-echo "=== $MODEL/$TAG seed $SEED on $(hostname) $(date '+%F %T') threads=$NT N=$N T=$T ===" | tee "$LOG"
+echo "=== $MODEL/$TAG seed $SEED on $(hostname) $(date '+%F %T') threads=$NT N=$N T=$T stage=$SEED_STAGE results=$RESULTS ===" | tee "$LOG"
 
 # ---- the solve must exist and be registered, before any compute is spent -------
 if ! python common/runstamp.py current --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"; then
@@ -300,20 +325,38 @@ fi
 # current. Re-solving the economy makes every seed stale at once -- which a bare
 # `[ -f panel.parquet ]` guard cannot express, and which is exactly the hazard the
 # existence check in run_gs_bx7.sh was removed for.
-RUNJSON="results/${MODEL}_estimators_${TAG}_s${SS}_w${WINDOW}_run.json"
-if python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" >>"$LOG" 2>&1; then
+RUNJSON="$RESULTS/${MODEL}_estimators_${TAG}_s${SS}_w${WINDOW}_run.json"
+ORACLEJSON="$RESULTS/${MODEL}_oracle_${TAG}_s${SS}.json"
+if [ "$SEED_STAGE" = oracle ]; then
+  # There is no run record in this mode, so the checkpoint asks the oracle's own output
+  # whether it already covers this window. Makes the array restartable after a walltime
+  # kill without re-deriving ceilings that are already there.
+  if python -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get('eval_window')==int(sys.argv[2]) else 1)" \
+       "$ORACLEJSON" "$WINDOW" 2>/dev/null; then
+    echo "seed $SEED oracle already carries eval_window $WINDOW -- nothing to do" | tee -a "$LOG"
+    exit 0
+  fi
+elif python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" >>"$LOG" 2>&1; then
   echo "seed $SEED already complete and current for the recorded solve -- nothing to do" | tee -a "$LOG"
   exit 0
 fi
 
 S=$(date +%s)
+SAVE_PANEL=--save_panel
+[ "$SEED_STAGE" = oracle ] && SAVE_PANEL=
 # --spec makes the run VERIFY, before it records anything, that the tables it read are
 # the ones the spec declares. Without it a summary could carry a spec_id for an economy
 # it did not build -- which is the failure the whole registry exists to prevent.
 python -W ignore run_oracle.py --model "$MODEL" --N "$N" --T "$T" --seed "$SEED" \
-       --tag "$TAG" --spec "$SPEC" --eval_window "$WINDOW" --levels --save_panel 2>&1 | tee -a "$LOG"
+       --tag "$TAG" --spec "$SPEC" --eval_window "$WINDOW" --levels $SAVE_PANEL 2>&1 | tee -a "$LOG"
 MID=$(date +%s)
 echo "=== oracle done in $((MID-S))s ===" | tee -a "$LOG"
+
+if [ "$SEED_STAGE" = oracle ]; then
+  echo "=== seed $SEED END $(date '+%F %T') oracle=$((MID-S))s (stage=oracle, estimators not run) ===" | tee -a "$LOG"
+  python -c "import json,sys; d=json.load(open(sys.argv[1])); print('ORACLE OK: eval_window %s over %s of %s months' % (d.get('eval_window'), d.get('eval_months'), d.get('months')))" "$ORACLEJSON" | tee -a "$LOG"
+  exit 0
+fi
 
 python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
        --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
