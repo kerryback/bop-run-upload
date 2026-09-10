@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-g0235r-v1",
+  "title": "BGN regime-gamma with RARE, short stress (10% of months)",
+  "question": "Can a complexity method learn a regime interaction from a window holding only a few stress months?",
+  "notes": "B1-rare. Changes BOTH switch probabilities AND the stationary mix: p01 0.05/12, p10 0.45/12, so stress is 10% of months instead of 33%, with calm spells of 240 months and stress spells of 27. gmult unchanged at [0.2, 3.5]. Unlike g0235f/g0235s this is a DIFFERENT economy, not the same one at a different speed: the stationary mix moves, so the premia and the ceilings move with it. This is the crash-like calibration -- rare, severe, short -- and the question is a small-sample one: a 360-month window holds about 36 stress months, so the regime interaction must be learned from a tenth of the data. PREDICTION: room falls (less time spent in the high-price regime), and the gap falls further because DKKM's advantage here is an interaction it now has few observations of. A gap that HOLDS UP would be the strong result, since rare-and-severe is the empirically defensible shape.\n\nVERIFIED 2026-09-10: the J* table was rebuilt on the laptop and produced exactly the precommitted solve_id above. solves_pending cleared.\n\nNOT A PRECOMMITMENT, AND THE FIELD SAYS SO. The id WAS computed before solving (_scratch/precommit_id.sh, whose path was validated by recomputing g28's 8b584c38614695ac) and the rebuilt table then produced exactly it. But that evidence lived in a terminal, and the J* table was built BEFORE this spec was committed, so the manifest's recorded_at precedes the spec's first commit and git cannot certify the ordering. tests/test_precommitment_is_real.py classifies by git dates and would call this retrofitted -- correctly. Claiming precommitment here would be exactly the unsupported claim that test exists to catch. The lesson for the next economy: commit the spec, THEN solve.",
+  "lineage": {
+    "parent_spec": "var-bgn_gam-g0235-v2",
+    "supersedes": null,
+    "changes": [
+      "p01 0.020833333333333332 -> 0.004166666666666667; p10 0.041666666666666664 -> 0.0375",
+      "jstar_gam_file gets its own name so the three points do not overwrite one table",
+      "gmult, every other parameter, and the estimator settings are unchanged"
+    ]
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 300
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "gmult": [
+      0.2,
+      3.5
+    ],
+    "p01": 0.004166666666666667,
+    "p10": 0.0375,
+    "jstar_gam_file": "Jstar_g0235r.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "gmult": [
+            0.2,
+            3.5
+          ],
+          "p01": 0.004166666666666667,
+          "p10": 0.0375,
+          "jstar_gam_file": "Jstar_g0235r.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-10 as B1 in docs/RESULTS.md; the runner is variants/run_seeds_slurm.sh (SEED_SPEC=g0235r)",
+    "runner": "variants/run_seeds_slurm.sh",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "05930fca8514bfe531a0ee6516f2432044b72c39c04b29d6f47fd75c434679fa",
+  "expected_solves": {
+    "jstar": "0c624174cf4b26fa"
+  },
+  "precommitted": false,
+  "solves_pending": null
+}

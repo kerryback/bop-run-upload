@@ -70,19 +70,31 @@ def manifest_tracked_at(solve_id):
     return out.splitlines()[-1] if out else None
 
 
+def _is_tracked(rel):
+    return _git(["ls-files", "--error-unmatch", rel]) != ""
+
+
 def classify():
-    """{spec_id: {stage: 'precommitted' | 'retrofitted' | 'unknown'}}"""
+    """{spec_id: {stage: 'precommitted' | 'retrofitted' | 'unknown' | 'uncommitted'}}
+
+    `uncommitted` is a spec file that is not in git yet, which happens while an economy is
+    being authored. Git cannot date what it has never seen, and that is a transient state
+    rather than a defect -- distinct from `unknown`, which is a COMMITTED spec whose pinned
+    id has no history anywhere and so can never be classified.
+    """
     out = {}
     for fn in sorted(os.listdir(SPECS)):
         if not fn.endswith(".json"):
             continue
         d = json.load(open(os.path.join(SPECS, fn)))
+        rel = os.path.join("experiments", "specs", fn)
+        tracked = _is_tracked(rel)
         stages = {}
         for stage, sid in (d.get("expected_solves") or {}).items():
-            sp = spec_pinned_at(os.path.join("experiments", "specs", fn), sid)
+            sp = spec_pinned_at(rel, sid)
             mp = manifest_tracked_at(sid)
             if sp is None:
-                stages[stage] = "unknown"
+                stages[stage] = "unknown" if tracked else "uncommitted"
             elif mp is None or sp < mp:
                 stages[stage] = "precommitted"
             else:
@@ -123,7 +135,7 @@ def test_the_classification_is_computable_for_every_pinned_id():
     cls = classify()
     assert cls, "no spec pins any solve_id -- the classifier found nothing to check"
     unknown = {s: [k for k, v in st.items() if v == "unknown"]
-               for s, st in cls.items()}
+               for s, st in cls.items()}  # 'uncommitted' is authoring, not a defect
     unknown = {s: v for s, v in unknown.items() if v}
     assert not unknown, (
         "pinned ids with no git history, so precommitment cannot be established: "

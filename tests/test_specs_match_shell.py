@@ -32,6 +32,11 @@ CURRENT = {
     "vyx": "var-kp_vy-vyx-v2",
     "bx7": "var-gs_bx-bx7-v3",
     "g28": "var-gs_bx-g28-v2",
+    # proposed 2026-09-10 (docs/RESULTS.md); B1's three persistence points and G1
+    "g0235f": "var-bgn_gam-g0235f-v1",
+    "g0235s": "var-bgn_gam-g0235s-v1",
+    "g0235r": "var-bgn_gam-g0235r-v1",
+    "gx7": "var-gs_bx-gx7-v1",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"
 
@@ -334,15 +339,29 @@ def test_seed_array_does_not_solve():
 
 
 def test_gs_solve_hints_fetch_rather_than_resolve():
-    """When a GS solve is missing the array must say how to FETCH it: the solves exist,
-    are published content-addressed, and cost 3-6 h each to remake."""
+    """When a GS solve is missing the array must say how to get it, and for an economy
+    whose solves ALREADY EXIST that means FETCH, never re-solve: they are published
+    content-addressed and cost 3-6 h each to remake.
+
+    An economy still declaring `solves_pending` has nothing to fetch -- nobody has built
+    its solves yet -- so its hint is the job that builds them. The distinction is the
+    point: a fetch hint on an unsolved economy would send someone looking for a file that
+    does not exist, and a solve hint on a published one burns a day of cluster time.
+    """
     for name, c in seed_array_cases().items():
         if c["MODEL"] != "gs_bx":
             continue
         block = re.search(r"^\s{2}" + name + r"\)\s*$(.*?)^\s*;;", read_script(SEED_ARRAY), re.DOTALL | re.M).group(1)
         hint = re.search(r"SOLVE_HINT=(['\"])(.*?)\1", block, re.DOTALL)
-        assert hint and "fetch_solves.py" in hint.group(2) and c["SPEC"] in hint.group(2), (
-            f"{name}: SOLVE_HINT must be a fetch_solves.py --spec {c['SPEC']} command")
+        assert hint, f"{name}: no SOLVE_HINT"
+        body = hint.group(2)
+        if load_spec(c["SPEC"]).get("solves_pending"):
+            assert "sbatch" in body, (
+                f"{name}: its solves are declared pending, so the hint must be the job that "
+                f"builds them, not a fetch of something that does not exist yet")
+        else:
+            assert "fetch_solves.py" in body and c["SPEC"] in body, (
+                f"{name}: SOLVE_HINT must be a fetch_solves.py --spec {c['SPEC']} command")
 
 
 # --------------------------------------------------------------------------
@@ -440,6 +459,13 @@ def test_the_seed_array_can_actually_find_each_economys_solve():
 
     missing = []
     for name, c in seed_array_cases().items():
+        # A spec may legitimately PRECOMMIT solve ids before the solve runs -- the id is a
+        # hash of inputs, so it is knowable in advance, and the array's own precondition is
+        # what stops it starting early. That state is declared by `solves_pending`, exactly
+        # as test_expected_solves_are_live_manifests treats it; without the flag a case
+        # pointing at a solve nobody ever built would pass forever.
+        if c["SPEC"] and load_spec(c["SPEC"]).get("solves_pending"):
+            continue
         for tag in (c["SOLVE_TAG"] or c["TAG"]).split(","):
             if not runstamp.live_solves(c["MODEL"], tag.strip()):
                 missing.append(f"SEED_SPEC={name}: no live solve for model={c['MODEL']} "

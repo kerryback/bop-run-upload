@@ -23,6 +23,10 @@
 #     sbatch --export=ALL,SEED_SPEC=g28   variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=bx7   variants/run_seeds_slurm.sh
 #
+#   Proposed economies added 2026-09-10 (docs/RESULTS.md, "Proposed next, ranked"):
+#     g0235f g0235s g0235r   BGN regime-gamma at 4x faster / 5x slower / rare-and-short
+#     gx7                    GS gamma(x) crossed with the five exposure types
+#
 #   SEED_STAGE=oracle runs ONLY the oracle stage, and BOP_RESULTS_DIR sends its output
 #   somewhere other than variants/results. Together they re-derive population ceilings
 #   for panels that already exist without touching the committed record:
@@ -58,6 +62,11 @@
 #     kp_vy   vyx    G f7be27e39d2b530f   integ 84e195172f091cd2
 #     bgn_gam g0235  jstar be222462dd017b2c
 #     gs_bx   g28    sol_g28 8b584c38614695ac
+#     bgn_gam g0235f jstar 8662d7c1079f4b41   g0235s jstar 05ad848ab3779695
+#     bgn_gam g0235r jstar 0c624174cf4b26fa
+#     gs_bx   gx7    sol_g28 8b584c38614695ac  sol_gx25 a145001bf661632e
+#                    sol_gx40 bcc4e59f41f4a040  sol_gx55 9bc863211011b5d9
+#                    sol_gx70 89546b0b36dfd2d0
 #     gs_bx   bx7    sol_reg 63fa7ebbc2db49ea  sol_b25c 649bb384300faadf
 #                    sol_b40c a3bb50b66287307c  sol_b55c 645262a8e72d944c
 #                    sol_b70c 0818d7153d5708cc  (five tags -> one economy; SOLVE_TAG
@@ -176,7 +185,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g28 | bx7) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -204,6 +213,44 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
+  g0235f)
+    # B1, the regime-PERSISTENCE ladder (docs/RESULTS.md). gmult stays at g0235's
+    # [0.2, 3.5]; only the switch probabilities move, and each point needs its own J*
+    # table because p01/p10 enter the solve through Preg.
+    # 4x FASTER than g0235: calm 12mo, stress 6mo, ~40 switches inside a 360-month window.
+    # Stationary stress share held at EXACTLY 1/3, as g0235 has it, so this is the same
+    # economy at a different speed -- which is what makes it a clean test of the
+    # rolling-window mechanism behind gap > room (WORKING.md §40, §49).
+    MODEL=bgn_gam; TAG=g0235f; SPEC=var-bgn_gam-g0235f-v1; SOLVE_TAG=Jstar_g0235f
+    export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.08333333333333333, "p10": 0.16666666666666666, "jstar_gam_file": "Jstar_g0235f.csv"}'
+    KAPPAS=0.001,0.01,0.1,1
+    SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
+    ;;
+  g0235s)
+    # B1, the regime-PERSISTENCE ladder (docs/RESULTS.md). gmult stays at g0235's
+    # [0.2, 3.5]; only the switch probabilities move, and each point needs its own J*
+    # table because p01/p10 enter the solve through Preg.
+    # 5x SLOWER: calm 240mo, stress 120mo, ~2 switches inside a 360-month window.
+    # Stationary stress share also held at 1/3. Paired with g0235f as a 20x speed ladder:
+    # if the gap is flat across it, the rolling-window explanation is refuted.
+    MODEL=bgn_gam; TAG=g0235s; SPEC=var-bgn_gam-g0235s-v1; SOLVE_TAG=Jstar_g0235s
+    export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.008333333333333333, "jstar_gam_file": "Jstar_g0235s.csv"}'
+    KAPPAS=0.001,0.01,0.1,1
+    SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
+    ;;
+  g0235r)
+    # B1, the regime-PERSISTENCE ladder (docs/RESULTS.md). gmult stays at g0235's
+    # [0.2, 3.5]; only the switch probabilities move, and each point needs its own J*
+    # table because p01/p10 enter the solve through Preg.
+    # RARE AND SHORT: stress 10% of months, calm 240mo, stress 27mo.
+    # This one moves the stationary MIX as well as the speed, so it is a different
+    # economy rather than a different speed. It is the crash-like shape, and the question
+    # is whether a window holding ~36 stress months can still learn the interaction.
+    MODEL=bgn_gam; TAG=g0235r; SPEC=var-bgn_gam-g0235r-v1; SOLVE_TAG=Jstar_g0235r
+    export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.0375, "jstar_gam_file": "Jstar_g0235r.csv"}'
+    KAPPAS=0.001,0.01,0.1,1
+    SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
+    ;;
   bx7)
     # GS21 with five exposure types beta in {1, 2.5, 4, 5.5, 7}, one solve per type. FIVE
     # solve tags, so SOLVE_TAG lists them all and every runstamp lookup below unions them
@@ -219,6 +266,22 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
     SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    ;;
+  gx7)
+    # G1: gamma(x) crossed with the five exposure types (docs/RESULTS.md). Type f's
+    # premium is proportional to beta_f * gamma(x), a product that is nonlinear in
+    # (beta_f, x) because gamma is clipped -- the state bends a heterogeneous exposure
+    # map, which is the rule that produced vyx, here with GS21's own state.
+    # FIVE solve tags, and the first of them is sol_g28 REUSED: beta = 1 at this slope
+    # is the g28 economy, so only four solves are new (run_gx7_slurm.sh).
+    MODEL=gs_bx; TAG=gx7; SPEC=var-gs_bx-gx7-v1
+    SOLVE_TAG=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
+    export GS_BX_SOLDIRS=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
+    export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
+    export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
+    unset GS_SIM_OVERRIDES
+    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
+    SOLVE_HINT='sbatch variants/gs_bx/run_gx7_slurm.sh   # four solves, ~6 h each; sol_g28 already exists'
     ;;
   g28)
     # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of
@@ -239,7 +302,7 @@ case "$SEED_SPEC" in
     SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g28 or bx7)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7 or gx7)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
