@@ -68,6 +68,9 @@ Thumbs.db
 
 # Claude working files -- durable across tmp cleanup, never committed
 _scratch/
+# oracle-only re-runs staged on the cluster (SEED_STAGE=oracle + BOP_RESULTS_DIR);
+# never adopted into variants/results until the reproduction check has been read
+_evalwin/
 
 # variants/: large reproducible binaries stay out of git (see variants/README.md)
 variants/gs_bx/sol_*/
