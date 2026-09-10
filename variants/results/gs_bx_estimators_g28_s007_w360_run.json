@@ -1,0 +1,32 @@
+{
+ "model": "gs_bx",
+ "tag": "g28",
+ "seed": 7,
+ "prov": "gs_bx_estimators_g28_s007_w360_summary@9a5156b+dirty",
+ "spec_id": "var-gs_bx-g28-v2",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.03,
+  0.1,
+  0.3,
+  1.0,
+  3.0,
+  10.0
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_g28",
+   "solve_id": "8b584c38614695ac",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 93780991
+  }
+ ],
+ "panel": "gs_bx_panel_g28_s007.parquet"
+}

@@ -68,6 +68,30 @@ def test_unseeded_legacy_files_are_never_read():
     assert (seeds[(seeds["model"] == "kp_vy") & (seeds["tag"] == "vyx")].sr_max < 1.25).all()
 
 
+def test_no_estimator_beats_the_windowed_oracle_bound():
+    """Cauchy-Schwarz: w'mu / sqrt(w' Sigma w) <= sqrt(mu' Sigma^-1 mu) = sr_max, every month.
+    The estimators are scored against the TRUE moments, so no method can beat the oracle's
+    sr_max averaged over the SAME months. Violating it means a real bug -- or, as happened
+    on 2026-09-10, that the two sides were averaged over different months: g28's DKKM is
+    0.2975 against an all-month sr_max of 0.2621 and an evaluation-window sr_max of 0.3087.
+    """
+    seeds, _ = _flagship()
+    scored = seeds[seeds["sr_max_eval"].notna() & seeds["dkkm"].notna()]
+    assert len(scored) >= 40, f"only {len(scored)} scored runs; the bound is not being checked"
+    bad = scored[(scored["dkkm"] > scored["sr_max_eval"] + 1e-9)
+                 | (scored["lin"] > scored["sr_max_eval"] + 1e-9)]
+    assert bad.empty, ("estimators beating the windowed oracle bound:\n"
+                       + bad[["model", "tag", "seed", "window", "dkkm", "lin", "sr_max_eval"]].to_string())
+
+
+def test_sr_max_eval_exceeds_all_month_sr_max_on_these_panels():
+    """Not a law, a fact about these four economies, and the reason the confound bites: the
+    last 125 months of every flagship panel carry a higher tangency SR than the full 485."""
+    _, econ = _flagship()
+    for _, r in econ[econ["sr_max_eval_n"] > 0].iterrows():
+        assert r["sr_max_eval_mean"] > r["sr_max_mean"], (r["model"], r["tag"])
+
+
 def test_the_csvs_are_the_complete_set_regardless_of_flagship():
     """--flagship narrows the printout only; the tracked tables must not depend on it."""
     import subprocess, tempfile
