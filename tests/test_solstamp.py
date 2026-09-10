@@ -388,7 +388,9 @@ def test_kp_no_longer_uses_the_hand_rolled_meta_key():
 def test_gs_shell_guard_is_not_a_bare_existence_check():
     """Only EXECUTABLE lines count -- the removal is documented in a comment that
     quotes the old guard verbatim, and that quote must not trip this test."""
-    src = open(os.path.join(ROOT, "variants/gs_bx/run_gs_bx7.sh")).read()
+    # run_gs_bx7.sh, where the guard lived, was deleted 2026-09-09; the SLURM array is
+    # now the only script that invokes the GS solver, so it is where a guard would return.
+    src = open(os.path.join(ROOT, "variants/gs_bx/run_gs_bx7_slurm.sh")).read()
     live = "\n".join(l for l in src.splitlines() if not l.lstrip().startswith("#"))
     assert "[ -f sol_reg/solution.npz ] ||" not in live, (
         "the parameter-blind existence guard is back"

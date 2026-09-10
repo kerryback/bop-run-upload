@@ -107,7 +107,10 @@
     "source_script": null,
     "reconstructed_from": "variants/REPORT.md:553 (sol_g28) and 13g",
     "reconstructed": "2026-09-07",
-    "verified_by": "tests/test_gs_solver_parity.py"
+    "verified_by": "tests/test_gs_solver_parity.py",
+    "solve_script": "variants/gs_bx/run_g28_slurm.sh",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=g28"
   },
   "expected_solves": {
     "sol_g28": "8b584c38614695ac"

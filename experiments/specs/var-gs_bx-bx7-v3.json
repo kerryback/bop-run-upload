@@ -10,7 +10,8 @@
     "changes": [
       "gs_ashift 0.15*(gs_bx-1) -> 0 for every exposure type. Decision 2026-09-07: the five types should differ in EXPOSURE, and the level compensation dominated the exposure it accompanied -- at gs_bx = 7 the shift was +146% against a one-sd exposure swing of +-31%, a ratio of 3.3x, so the cross-section was mostly a size sort wearing a beta label.",
       "This also RESOLVES the solve/simulate inconsistency open since 2026-09-04 without a code change: gs_solve_reg.py computes exp(b*x + z + gs_ashift) and gs_sim_bx.py computes exp(b*x + z), which are identical at gs_ashift = 0. gs_sim_bx.py now raises if handed a solution with a nonzero gs_ashift, so the trap cannot return silently.",
-      "sol_reg's solve_id is UNCHANGED (63fa7ebbc2db49ea): type 0 always ran at gs_ashift = 0. Only the four exposure types are re-solved."
+      "sol_reg's solve_id is UNCHANGED (63fa7ebbc2db49ea): type 0 always ran at gs_ashift = 0. Only the four exposure types are re-solved.",
+      "2026-09-09 correction, in place: types.exposure.gs_ashift still listed the v2 ladder [0, 0.225, 0.45, 0.675, 0.9] while method.gs_ashift_ladder and every one of the five pinned solves record gs_ashift = 0.0. The types block was a stale transcription, not a change to the experiment -- no result stamped var-gs_bx-bx7-v3 exists -- so it is corrected here rather than by cutting a v4. spec_hash recomputed; the previous value was 00b9d310a1c14ce3dfc13ee4d91779938fd26cc23f0524365db5c7599d65923b."
     ]
   },
   "engine": "oracle",
@@ -55,10 +56,10 @@
       ],
       "gs_ashift": [
         0.0,
-        0.225,
-        0.45,
-        0.675,
-        0.9
+        0.0,
+        0.0,
+        0.0,
+        0.0
       ]
     },
     "soldirs": [
@@ -190,11 +191,14 @@
     ]
   },
   "provenance": {
-    "source_script": "variants/gs_bx/run_gs_bx7.sh",
+    "source_script": "variants/gs_bx/run_gs_bx7_slurm.sh",
+    "source_script_note": "the SLURM array that produced the five pinned solves on Sol (2026-09-07); its OVERRIDES array restates the five solve stages exactly",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=bx7 builds the panel and scores the estimators under --spec; the laptop script run_gs_bx7.sh was deleted 2026-09-09 (it re-solved the v2 ladder and ran unspec'd, unseeded)",
     "transcribed": "2026-09-04",
     "verified_by": "tests/test_specs_match_shell.py"
   },
-  "spec_hash": "00b9d310a1c14ce3dfc13ee4d91779938fd26cc23f0524365db5c7599d65923b",
+  "spec_hash": "fcd46b565fe1b4966933b854028428cb24f166baf67982d9fab1e2aa5ca9959f",
   "expected_solves": {
     "sol_reg": "63fa7ebbc2db49ea",
     "sol_b25c": "649bb384300faadf",
