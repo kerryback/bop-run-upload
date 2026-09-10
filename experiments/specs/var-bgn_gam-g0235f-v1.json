@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-g0235f-v1",
+  "title": "BGN regime-gamma at g0235's multipliers, switching 4x FASTER",
+  "question": "Does a rolling window capture more of the regime premium when regimes turn over many times inside it?",
+  "notes": "B1-fast. IDENTICAL to var-bgn_gam-g0235-v2 except the two switch probabilities, scaled by 4: p01 0.25/12 -> 1/12 and p10 0.50/12 -> 2/12. The STATIONARY STRESS SHARE IS UNCHANGED at exactly 1/3 (p01/(p01+p10)), and gmult is unchanged at [0.2, 3.5], so the cross-section, the premia and the whole-sample constant-theta ceilings are the same economy seen at a different speed: calm spells 12 months instead of 48, stress spells 6 instead of 24, about 40 switches inside a 360-month estimation window instead of 10. PREDICTION: room (a constant-theta, whole-sample quantity that depends on the stationary mix, not the path) is unchanged within seed noise; the LINEAR methods lose ground because a window average blends the two regimes ever more finely; DKKM holds if the exported regime feature lets it condition; so the proportional gap rises. If room moves materially, the claim that it depends only on the stationary mix is wrong and that is the more interesting result. Paired with var-bgn_gam-g0235s-v1 (4x slower) as a speed ladder.\n\nVERIFIED 2026-09-10: the J* table was rebuilt on the laptop and produced exactly the precommitted solve_id above. solves_pending cleared.\n\nNOT A PRECOMMITMENT, AND THE FIELD SAYS SO. The id WAS computed before solving (_scratch/precommit_id.sh, whose path was validated by recomputing g28's 8b584c38614695ac) and the rebuilt table then produced exactly it. But that evidence lived in a terminal, and the J* table was built BEFORE this spec was committed, so the manifest's recorded_at precedes the spec's first commit and git cannot certify the ordering. tests/test_precommitment_is_real.py classifies by git dates and would call this retrofitted -- correctly. Claiming precommitment here would be exactly the unsupported claim that test exists to catch. The lesson for the next economy: commit the spec, THEN solve.",
+  "lineage": {
+    "parent_spec": "var-bgn_gam-g0235-v2",
+    "supersedes": null,
+    "changes": [
+      "p01 0.020833333333333332 -> 0.08333333333333333; p10 0.041666666666666664 -> 0.16666666666666666",
+      "jstar_gam_file gets its own name so the three points do not overwrite one table",
+      "gmult, every other parameter, and the estimator settings are unchanged"
+    ]
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 300
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "gmult": [
+      0.2,
+      3.5
+    ],
+    "p01": 0.08333333333333333,
+    "p10": 0.16666666666666666,
+    "jstar_gam_file": "Jstar_g0235f.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "gmult": [
+            0.2,
+            3.5
+          ],
+          "p01": 0.08333333333333333,
+          "p10": 0.16666666666666666,
+          "jstar_gam_file": "Jstar_g0235f.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.1,
+      1
+    ]
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-10 as B1 in docs/RESULTS.md; the runner is variants/run_seeds_slurm.sh (SEED_SPEC=g0235f)",
+    "runner": "variants/run_seeds_slurm.sh",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "b785b9c5df8861ba661ed50410be1118f5e3838ff4eb89a31619726a01df14a4",
+  "expected_solves": {
+    "jstar": "8662d7c1079f4b41"
+  },
+  "precommitted": false,
+  "solves_pending": null
+}

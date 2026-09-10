@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-gx7-v1",
+  "title": "GS21 with a countercyclical gamma(x) AND five exposure types",
+  "question": "Does exposure heterogeneity add anything in GS once the state actually prices risk?",
+  "notes": "G1. The two current GS economies crossed. In g28 the price of risk is countercyclical, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0), but every firm loads on x identically. In bx7 five types load on x as exp(beta_f x + z) with beta in {1, 2.5, 4, 5.5, 7}, but the price of risk only alternates between two constants. Here both: type f's premium is proportional to beta_f times gamma(x), a product that is NONLINEAR in the pair (beta_f, x) because gamma is clipped, so the state bends a heterogeneous exposure map. That is the design rule REPORT.md 18 extracted from KP's failures and which produced vyx, applied for the first time with GS21's own aggregate state. No regime: gmreg = [1, 1], so gamma(x) is the only price-of-risk variation. gs_ashift = 0 for every type, per the 2026-09-07 decision.\n\nTHE LADDER REUSES sol_g28. beta = 1 with slope 0.28 IS the g28 economy, and its solve id 8b584c38614695ac is the one already recorded and published, verified by recomputing it from these parameters. So this spec needs FOUR new solves, not five.\n\nPREDICTION: room appears (at least bx7's +0.0086) while g28's conditioning gap persists, so the proportional gap exceeds g28's 10.5%. THE DECISIVE NEGATIVE: if the gap does not beat g28 alone, exposure heterogeneity contributes nothing in GS even when the state prices it, and the bx path retires rather than being pushed to bx9.\n\nPRECOMMITMENT: the four new ids below were computed from these parameters and this source WITHOUT solving, via _scratch/precommit_id.sh, whose path was validated by recomputing 8b584c38614695ac. If the array produces anything else, stop and chase it before using any number from this economy.",
+  "lineage": {
+    "parent_spec": "var-gs_bx-g28-v2",
+    "supersedes": null,
+    "changes": [
+      "one type -> five, gs_bx in {1, 2.5, 4, 5.5, 7}, equal shares, gs_ashift 0 throughout",
+      "the gamma(x) price of risk (slope 0.28) is unchanged and applies to every type",
+      "sol_g28 is reused unchanged as the beta = 1 member of the ladder"
+    ]
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "gs_ashift_ladder": "none (single type, gs_bx = 1.0)",
+    "gs_price_of_risk": "gamma_x_linear_clipped"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      1.0,
+      1.0
+    ],
+    "gs_gamma_slope": 0.28
+  },
+  "types": {
+    "share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0,
+        2.5,
+        4.0,
+        5.5,
+        7.0
+      ],
+      "gs_ashift": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "soldirs": [
+      "sol_g28",
+      "sol_gx25",
+      "sol_gx40",
+      "sol_gx55",
+      "sol_gx70"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_g28",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28,
+          "gs_bx": 1.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      },
+      {
+        "name": "sol_gx25",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28,
+          "gs_bx": 2.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 1
+      },
+      {
+        "name": "sol_gx40",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28,
+          "gs_bx": 4.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 2
+      },
+      {
+        "name": "sol_gx55",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28,
+          "gs_bx": 5.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 3
+      },
+      {
+        "name": "sol_gx70",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.28,
+          "gs_bx": 7.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 4
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70",
+    "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
+    "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.001,
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1,
+      3,
+      10
+    ]
+  },
+  "provenance": {
+    "source_script": "variants/gs_bx/run_gx7_slurm.sh",
+    "source_script_note": "the four-task array that produces the new solves; sol_g28 comes from run_g28_slurm.sh",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=gx7",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "sol_g28": "8b584c38614695ac",
+    "sol_gx25": "a145001bf661632e",
+    "sol_gx40": "bcc4e59f41f4a040",
+    "sol_gx55": "9bc863211011b5d9",
+    "sol_gx70": "89546b0b36dfd2d0"
+  },
+  "spec_hash": "8903a0139831cc52af49ac71883bbc213553139a9211386c66bd44152d0fa3f0",
+  "precommitted": true,
+  "solves_pending": true
+}
