@@ -146,7 +146,7 @@ def test_gs_variant_matches_config_on_the_settled_parameters():
     assert not bad, ("gs_bx still carries superseded GS21 parameters:\n  "
                      + "\n  ".join(bad)
                      + "\n(config.py is right on all three -- see "
-                       "docs/refactor/FINDINGS-config-divergence.md)")
+                       "docs/refactor/WORKING.md §43)")
 
 
 def test_rho_x_is_checked_not_exempted():

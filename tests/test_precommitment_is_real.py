@@ -1,6 +1,6 @@
 """A spec that CLAIMS precommitment must actually be one, by git dates.
 
-WHY: docs/refactor/DECISION-provenance-layers.md defers the "delete the precommitment
+WHY: docs/refactor/WORKING.md §44 defers the "delete the precommitment
 layer?" decision to a count of `extra.spec_check` across sidecars. ASU pointed out the
 hole on 2026-09-08: a wall of `verified` is only evidence if the spec was written BEFORE
 the solve. If the id was read off an existing manifest and pasted in, `verified` can

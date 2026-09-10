@@ -336,7 +336,7 @@ Judge scores (0-10) across three candidate architectures:
 | maintenance risk | **8** | 3 | 7 |
 
 Outcome: **spec_first spine + unify's config discipline**; `adapter` (six permanent
-simulators) rejected. Full plan in [PLAN.md](PLAN.md).
+simulators) rejected. Full plan in PLAN.md (absorbed into §43, 2026-09-09).
 
 ### New verified facts from this phase
 
@@ -380,7 +380,7 @@ simulators) rejected. Full plan in [PLAN.md](PLAN.md).
 
 ### The empirical finding that reorders the experiment plan
 
-See [PLAN.md §0.0](PLAN.md). Short version, verified directly from
+See PLAN.md §0.0 (absorbed into §43). Short version, verified directly from
 `variants/results/grid_summary.csv`:
 
 - `corr(room, gap) = +0.675` over all 24 economies, but **−0.234 once the two KP
@@ -1090,7 +1090,7 @@ the "rebuild the vyx tables" item that has been open since 2026-09-04.
 ### ASU session's Job 5 handoff: verified, with corrections
 
 `_scratch/handoff-job5-repo-merge.md` +
-[`docs/refactor/FINDINGS-repo-merge.md`](FINDINGS-repo-merge.md). Its three flagged
+`FINDINGS-repo-merge.md` (absorbed into §43). Its three flagged
 corrections to §5 were each checked rather than accepted; see §5 for what landed. Net:
 the path-limited-log point was **right**, the `config` count was **right on the file
 metric** (41 files, though 46 import lines and 156 attribute uses also exist — the
@@ -2633,3 +2633,364 @@ established explanation for gap > room.** The cheap version: have the oracle als
 
 Also stale and worth fixing when the description is written: `variants/README.md` quotes the
 superseded vyx room 0.350, states `realized gap = room x capture`, and predates g28.
+
+## §42. The parameters → spec link, closed (2026-09-09)
+
+Asked to confirm that `param -> solfile -> economy result` was ensured before starting a
+campaign of new economies. Three of the four links were closed **by content**; the fourth
+was not closed at all.
+
+| link | mechanism | was |
+|---|---|---|
+| params → solve_id | `solstamp` hashes the producer's namespace + source digests | closed |
+| solve_id → artifact | manifest records sha256 per file; `solfiles.py check` | closed |
+| artifact → run | `runstamp.consumed_solves` re-hashes what the run READ | closed |
+| **run params → spec** | recorded in the sidecar, never compared | **OPEN** |
+
+`verify_against_spec` compared solve ids and nothing else, so the simulator's own
+parameters were free to describe a different economy from the one the spec named.
+
+**Reproduced, not theorised.** Simulating BGN at `gmult [0.2, 3.0]` while reading the J*
+table built at `[0.2, 3.5]`, under `--spec var-bgn_gam-g0235-v2`:
+
+```
+[runstamp] jstar    <- solve_id be222462dd017b2c
+[spec] jstar    be222462dd017b2c  matches var-bgn_gam-g0235-v2      <- PASSED
+=== overrides={"gmult":[0.2,3.0],...}                               <- different economy
+```
+
+It wrote a summary carrying `spec_id: var-bgn_gam-g0235-v2` and `spec_check: "verified"`.
+Solve-id checking structurally cannot see this: **the artifact is innocent; the parameters
+layered on top of it are not.** The wrong overrides did reach the sidecar, so it was
+discoverable after the fact — but nothing refused it, and a wrong number that has been
+written down is already the expensive kind.
+
+### What was added
+
+`runstamp.verify_env_against_spec(spec_id, ov_env, env)`, called from `run_oracle.py`
+**before the panel is built** — it needs only the spec and the environment, so it refuses
+in a tenth of a second instead of after a 35-minute panel build. Three rules:
+
+- `spec["param_env"]` names a variable carrying `spec["params"]` as JSON → compared by
+  VALUE, so whitespace and key order cannot refuse a correct run.
+- `spec["env"]` is a flat map of literal variable → value. A declared value that looks
+  like a JSON object is compared as one (unset reads as `{}`); everything else is an
+  exact string, where unset IS the mismatch.
+- The run-side override variable must be **accounted for**, not merely absent from the
+  spec. `GS_SIM_OVERRIDES='{"gamma_x":0.9}'` would overwrite a value the simulator read
+  out of `solution.npz` — undeclared, and invisible to both rules above. Refused.
+
+**gs_bx needed the third rule and must not get the first.** Its `params`
+(`{"gmreg": [0.6, 3.0]}`) is `GS_PARAM_OVERRIDES`, read by the SOLVER and already covered
+by the solve_id; its simulator takes structural parameters out of the npz. Comparing
+gs_bx's `params` against `GS_SIM_OVERRIDES` would refuse every correct run. That is why
+gs_bx has no `param_env` — an absence with a reason, not an omission.
+
+### Two content guards in `gs_sim_bx.py`
+
+Independent of any spec, so they hold for a run that passes no `--spec` at all:
+
+1. **`GS_BX_BETAS` vs the solutions' own `gs_bx`.** Each `solution.npz` has carried its
+   beta since 2026-09-04 and nothing had ever compared them. A reordered
+   `GS_BX_SOLDIRS`, or a ladder edited in one place and not the other, prices firms off
+   value functions solved for a different exposure — every solve id resolves, the spec
+   check passes, the panel is wrong.
+2. **Cross-type agreement.** `_s = _sols[0]` takes the grids, `pr_x/pr_z`, the kernel
+   `Mx`, `psw` and the 15-element `params` from the FIRST soldir and applies them to all
+   types. That is correct only if the types differ in `gs_bx` and nothing else. Five
+   separate multi-hour jobs is exactly the setting where one drifts — `sol_reg` has
+   already been re-solved once, for `kappa_e` — and the discrepancy is invisible in every
+   id, because each solution is individually registered and individually correct.
+
+Both refuse at import, which is *earlier* than the env check, so for gs_bx the more
+specific message wins. Verified: a wrong ladder and a reversed soldir list are both
+refused.
+
+### The eval-window restriction (the §40 confound)
+
+`room` came from this file averaged over all 485 months of a flagship panel; `gap` came
+from `run_estimators.py` averaged over the 125 months that survive a 360-month rolling
+window. §41 flagged that they were never commensurable. `run_oracle.py` now takes
+`--eval_window` (default 360) and reports every ceiling **twice** — over all months, which
+is what every number published before today means, and restricted to the estimator's
+evaluation months.
+
+The mask reproduces `run_estimators.py:80` exactly rather than §41's approximate "last
+`T - window - 15` months"; `tests/test_eval_window_matches_estimators.py` fails if either
+rule is edited without the other. `run_estimators.py` warns when the oracle's
+`--eval_window` is not its own `--window` — a warning and not an abort, because re-scoring
+an existing panel at a new window is legitimate and has been done three times.
+
+It matters. On a 25×80 probe at `--eval_window 40`, `lin_rank` const-θ went 0.0770
+all-month against 0.1346 window-restricted. **Do not difference a pre-2026-09-09 room
+against any gap.**
+
+### Also
+
+`spec_id` now travels from the oracle summary into the estimator sidecar and `_run.json`.
+`*_summary.csv` — the file actually read to adjudicate an economy — named its solves but
+not the experiment they belonged to, so the last hop had to be reconstructed by looking
+ids up in the registry by hand.
+
+`env_check` is recorded in the sidecar as a **separate key** from `spec_check`:
+DECISION-provenance-layers.md decides the fate of the precommitment layer by counting
+`spec_check`, and folding a second question into that tally would corrupt it.
+
+Tests: `tests/test_spec_env_refusal.py` (13), `tests/test_eval_window_matches_estimators.py`
+(5). Suite 176 → 194, all passing.
+
+### The one hole left open, deliberately
+
+**Overriding a DERIVED parameter is still silently discarded in `bgn_gam` and `gs_bx`.**
+`globals().update(ov)` accepts any key; a name recomputed after that line reverts, and a
+misspelled name is created and read by nothing. So a spec can declare a parameter the
+economy never used, and the new env check will happily confirm the environment matches
+that spec. `parameters_kp14.py` already guards this — it raises `"entries that had NO
+EFFECT"` — but `bgn_gam/parameters.py` and the gs modules do not.
+
+Not fixed here because **`variants/bgn_gam/parameters.py` is digest-bearing**: it backs
+`be222462dd017b2c`, so adding the guard moves that solve_id, un-pins
+`var-bgn_gam-g0235-v2`, and marks all ten committed g0235 seeds STALE. The J* rebuild
+itself is minutes; the invalidation is the cost. Batch it with the next functional change
+to that file, exactly as REVIEW-override-shadowing recommended for kp_vy's 88-minute
+integral rebuild. Residual names at risk in bgn: `prob_calm`, `Preg`, `nchars`, and any
+misspelling.
+
+---
+
+## §43. docs/refactor consolidated into this file (2026-09-09)
+
+Eleven documents were folded here and deleted. Everything below is what survived the
+question *"would a future session act on this, or does it explain why code looks the way
+it does?"* Task briefs, timing logs, completed checklists and superseded audits did not.
+
+**Two files were kept, and one of the reasons is load-bearing.**
+
+- **`FINDINGS-gs21-table1.md` cannot be renamed or deleted.** It is cited from
+  `gs_solve_reg.py:48` and `gs_solve_gam.py:26`, and those two files are **digest-bearing**
+  — they back six live solves worth roughly 30 h of cluster time. Editing a comment in
+  either moves their `solve_id`s. The citation pins the filename.
+- **This file** is cited from seven places including `WORKING.md:1284` by LINE number, so
+  it is only ever appended to, never inserted into.
+
+Digest-bearing sources, for reference (live solves backed): `gs_solve_reg.py` 5,
+`gs_solve_gam.py` 1, `parameters_kp14.py` 2, `integ_kp14.py` 1, `kp14_fd_vy.py` 1,
+`bgn_gam/parameters.py` 1, `bgn_gam/vasicek.py` 1. Regenerate with a scan of
+`experiments/registry/*.json` `sources`.
+
+### From FINDINGS-gs21 — four solver defects still open, all unfixable cheaply
+
+Confirmed still present 2026-09-09. Each is cosmetic or diagnostic; each costs five solves
+(~17–25 h) to fix, because `gs_solve_reg.py` is digest-bearing:
+
+1. `converged` is printed on the **cycle-capped** exit as well as the tolerance exit.
+   `run_g28_slurm.sh` already works around this by grepping for `cycle-averaged; stopping`
+   rather than trusting the word. The manifest's `achieved.exit` is the reliable answer.
+2. `tol * 20` — the enforced threshold is 20× the requested `tol`, undocumented in the
+   usage string. `solfiles.py show` prints the overshoot ratio, which is the mitigation.
+3. A dead `range(60000)` when the real cap is 5600. A cost model reading the source gets
+   the wrong number.
+4. Under `GS_SOLVE_FORCE`, the solver prints *"provenance is unrecorded; re-solving"* about
+   a solve whose manifest matches exactly — a false statement emitted by the provenance
+   system itself.
+
+**Batch all four with the next functional change to that file.** The `achieved`
+recommendation from the same document WAS implemented and is why manifests now carry
+`exit`/`sweeps`/`qerr_rel`.
+
+Also from that document, and still the right budget: **GS is 5600 sweeps at ~2.2 s**, so
+~3.4 h per solve and ~17 h for a five-type bx7 economy on this laptop. The README's
+original "about a minute each" was wrong by ~180×.
+
+### From FINDINGS-gs21-kappa-e
+
+`kappa_e` is not a one-line change: it makes the debt policy debt-dependent. All five bx7
+solves and g28 run at `kappa_e = 0.025`, recorded in each manifest and stored as its own
+key in `solution.npz` (it cannot go in the 15-element `params` array, which is unpacked
+positionally and so cannot grow). Pre-2026-09-06 solutions have no such key and are read
+as `kappa_e = 0`, which is what they were solved at. `a8ef7a2522eda19d` (the retired
+`sol_reg`) is the one such artifact.
+
+### From FINDINGS-config-divergence
+
+The variants tree is deliberately self-contained: nothing imports `config.py` or `utils_*`,
+and nothing in the main pipeline imports from `variants/`. The 2026-09-06 reconciliation
+corrected `delta`, `rho_x`, `sigma_x` and `kappa_e` against GS21 Table I; `rho_x` was
+settled then and should not be re-litigated. `tests/test_config_parity.py` is the durable
+part and it cites this section — the test, not the prose, is what enforces the parity.
+
+### From FINDINGS-repo-merge — a decision, still open
+
+The question was whether to merge `bop-analyze-remote` into this repo under one Python
+environment. **Recommendation was two environments, not unified.** The bloat concern as
+originally phrased — "module bloat slowing cluster compute" — did not survive the numbers;
+the real obstacle is a semantic collision on the module name `config`, which both trees
+define differently. Nothing has been merged. This is a decision waiting on Seth, not a
+refactor task.
+
+### From REVIEW-override-shadowing — resolved for kp_vy, open elsewhere
+
+Three categories of post-override re-assignment were measured across the parameter
+modules: **coercion** (re-assignment reads the name it assigns → override survives, fine),
+**genuine derivation** (recomputed from other parameters → required for coherence), and
+**dead pre-assignment** (assigned identically on both sides of the override site → the one
+real defect, `lambda_L`).
+
+Both were fixed in `parameters_kp14.py`: the dead line is gone and a readback now raises on
+any override that had no effect. `bgn_gam` and `gs_bx` still lack it — see the open hole at
+the end of §42, which is the same finding reached from the other direction.
+
+### From PLAN.md — the staleness audit is the only durable part
+
+`variants/results/grid_summary.csv`, 24 economies, was PLAN §0.0's evidence base. **23 of
+24 rows are no longer reproducible**: 21 have no code (`bba735f` kept three economies and
+dropped the rest), `vyx` changed with the λ regime-label fix, `bx7` changed twice. `g0235`
+is the sole survivor and reproduces to the digit (§39).
+
+What survives of its conclusions: the correlation claim (`corr(room, gap) = +0.675` over 24
+rows, `−0.234` over 22) is **arithmetically correct and permanently unverifiable**, because
+the two rows carrying the entire positive association are both pre-fix. The direction
+survives independently — post-correction vyx room 0.2281 against g0235's 0.0091 at matched
+N=200/T=200 — so *"room does not predict gap outside the KP channel"* remains the right
+prior but is no longer an established result.
+
+The rest of PLAN.md was a phased proposal that has been overtaken: phases 1–2 shipped (see
+DECISION-provenance-layers.md), phase 3 is on a counting trigger, and the spec schema and
+directory layout it proposed are now what exists.
+
+### Deleted with nothing retained
+
+`TASK-gs21-solves.md`, `TASK-cluster-deploy-gs-solves.md`, `TASK-repo-merge-assessment.md`,
+`TASK-asu-2026-09-07-gs-bx-verification.md` — task briefs whose work is done and whose git
+states, queue states and machine states are long stale. Each produced a FINDINGS document,
+which is where its content went.
+
+## §44. Provenance layers: the decision record (absorbed 2026-09-09)
+
+Was `DECISION-provenance-layers.md`. Phases 1–2 done 2026-09-08; **Phase 3 deferred on a
+usage trigger, not a date.** Folded here so the refactor record is one file; the citations
+in `run_oracle.py` and `tests/test_precommitment_is_real.py` now point at this section.
+
+### The goal, in Seth's words
+
+> (a) I see some results are good, and think "let's pursue this further"
+> (b) I know what code and parameters produced those results. That's the whole goal here.
+
+### What was actually wrong
+
+Five subsystems, ~1,700 lines, and none recorded (b). `solstamp` content-addresses solves;
+`runstamp` links a run to the solves it consumed. Both real. Neither recorded the **code
+version**, and `grid_summary.csv` and the `*_summary.csv` files — the ones actually read to
+adjudicate — carried **no link to anything at all**. So the complexity was real but the
+diagnosis "too much provenance" was wrong. It was *the wrong provenance*: a lot of
+machinery for caching and staleness, and nothing for traceability.
+
+### Done (Phases 1–2)
+
+`variants/common/provenance.py`, ~150 lines. Every summary gets `<summary>.prov.json`: git
+sha, dirty flag with the diff inline, untracked-code warning, `argv`, `run_from`, the
+`*_OVERRIDES` env, consumed solve ids, host, library versions, and a runnable
+`how_to_reproduce`. Every summary CSV gains a `prov` column — redundant per row on purpose,
+because a row copied into a notebook must not lose its pointer.
+
+Answering (b) is now: **read one file, `git checkout` the sha, run the argv.**
+
+With the sidecar in place, **`solve_id` stops being the provenance story and becomes a
+cache key nobody looks at.** That is the simplification, and it required deleting nothing.
+
+### What must NOT be deleted, and why (measured)
+
+Replacing staleness checking with a git-sha comparison read out of the `.npz` cannot work:
+
+> **207 commits in this repo. SIX touched `gs_solve_reg.py`.**
+
+A sha-based check refuses on all 207; content-addressing refuses on 6 — a **34× false-
+invalidation rate** against a solve costing ~5 h. You would hit it on a docs commit,
+re-solve for nothing, and within a week disable the check — at which point the thing that
+caught both real bugs (the bare `[ -f solution.npz ]` reusing another economy's solve; the
+KP "converged" that verified nothing) is gone. A repo-wide sha structurally cannot
+distinguish *"the solver changed"* from *"the repo changed"*.
+
+`utils/solfile_stamp.py` is **not** legacy — `utils_bgn/regen_solfiles.py` imports it.
+
+### Phase 3, deferred: retire the PRECOMMITMENT layer
+
+Candidates, ~400–500 lines: `spec_hash` + `test_every_spec_hash_is_reproducible`
+(reimplements `git diff` for files already in git); `solves_pending` (status inside a
+hashed view; caused a spurious "hash drifted"); `expected_solves` + the refusal path
+(precommitment, not traceability); the 7 `method` keys (**read by zero Python files**, not
+hashed — two specs differing only there are the same run).
+
+**Keep specs themselves.** "Different specs" is the unit of experimentation. It is the
+*hashing ceremony* that is the candidate, not the file.
+
+**The trigger is a count, not a date.** Has precommitment ever earned its keep? As of
+2026-09-08 it had **confirmed** something (5/5 bx7 ids on Sol) but never **caught**
+anything. Only the second justifies the machinery.
+
+```bash
+grep -ho '"spec_check": "[a-z ]*"' variants/results/*.prov.json | sort | uniq -c
+```
+
+**Tally as of 2026-09-09: 24 `verified`, 0 `refused`, 0 `not requested`.** Note that
+`env_check` is deliberately a separate key (§42) so it does not contaminate this count.
+
+**`verified` only counts if the spec predated the solve.** A wall of `verified` is evidence
+only if the spec was written **before** the solve; if the id was read off an existing
+manifest and pasted in, `verified` merely confirms that the id you copied is the id that is
+there — vacuous. Same failure shape as `test_registry_ids_are_still_reachable`, which
+passed vacuously because its filter excluded exactly what it was looking for. Three pinned
+ids are retrofitted, and they are the two economies actually in use:
+
+| spec | stages | spec pinned | manifest tracked | |
+|---|---|---|---|---|
+| `var-kp_vy-vyx-v2` | G, integ | 09:27:14 | **08:38:19** | retrofitted |
+| `var-bgn_gam-g0235-v2` | jstar | 09:27:14 | **08:38:19** | retrofitted |
+| `var-gs_bx-bx7-v3` | all five | 10:03:22 | 18:09:05 | genuine |
+| `var-gs_bx-g28-v1` | sol_g28 | 18:16:41 | not yet solved | genuine |
+
+`tests/test_precommitment_is_real.py` classifies every pinned id from git dates and fails
+if a spec that claims precommitment in words is not one in fact. Read the tally **only over
+genuinely-precommitted specs**, and treat `not requested` and `unverifiable` as the
+*interesting* rows: they say the layer is being routed around in practice.
+
+**Revisit at ~20 real experiment runs.** Any `refused` that was a genuine mismatch →
+precommitment earned its keep. All `verified` with no genuine catch → delete the four rows
+above. Many `not requested` → the layer is already being routed around, which is its own
+answer.
+
+**One data point since:** `var-gs_bx-g28-v1` made a real precommitment (`fa9032525bff9489`)
+which was invalidated by a documentation-only `sed` that rewrote one `print()` string in
+`gs_solve_gam.py`, forcing `g28-v2` with `8b584c38614695ac`. The economy never changed.
+That is the layer costing churn without catching an error — evidence toward deletion, not
+toward keeping.
+
+### What would reverse Phases 1–2
+
+A sidecar found to be *wrong* rather than merely absent — pointing at a sha that does not
+reproduce the result. One such bug already shipped and was caught: `how_to_reproduce`
+recorded `getcwd()`, which follows `run_oracle.py`'s chdir and produced an instruction that
+could not run. `tests/test_provenance.py` should grow a case for any recurrence.
+
+### Considered and rejected: an AST-based `solve_id` (2026-09-08)
+
+Proposed after a rename's `sed` moved six solve_ids. Measured first: **0 of 15** historical
+solver commits were comment/docstring/format-only, so an AST digest would have absorbed
+none of them; `ast.dump` **is not stable across Python versions** (laptop 3.11 / Phoenix
+3.12 / Sol 3.14 give three digests of one file), which would have broken the cross-machine
+agreement verified 5/5 the day before; and the recompute would cost ~31 h and republish
+504 MB for a benefit that has never occurred.
+
+Instead: `variants/solve_impact.py`, wired as an advisory pre-commit hook
+(`hooks/pre-commit`, enable with `git config core.hooksPath hooks`). Byte-exact id
+unchanged; the tool says before a commit which solves a change invalidates and whether the
+change was functional. The six stale ids were repaired by **reverting the one string** —
+restoring the recorded digest byte-for-byte — not by re-stamping or re-solving.
+**Do not run bulk `sed` over solver sources.**
+
+### Open
+
+A manifest's recorded `params` do not reproduce its own `solve_id` when fed back through
+`Snapshot` (0 of 9 live manifests). The producer probe does reproduce it, so the id is
+sound; but the manifest alone is not a complete record of how it was computed. Not
+blocking; noted so it is not rediscovered.

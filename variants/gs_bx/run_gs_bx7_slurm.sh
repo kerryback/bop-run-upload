@@ -11,7 +11,7 @@
 #
 # Calibration: Gomes & Schmid (2021) Table I, as corrected on 2026-09-06 -- delta =
 # 0.02/3, rho_x = 0.95^(1/3), kappa_e = 0.025. The five solve_ids this array will
-# produce are listed in docs/refactor/FINDINGS-gs21-kappa-e.md; anything computed
+# produce are listed in docs/refactor/WORKING.md §43; anything computed
 # under the earlier 0.96 / 0.02 / no-kappa_e parameters is a different economy.
 #
 # Submit from the REPO ROOT (not this directory), after `mkdir -p outslurm`:
@@ -21,7 +21,7 @@
 # ---------------------------------------------------------------------------
 # Why these resource requests -- all measured on 2026-09-05, not guessed.
 # (variants/README.md said "~a minute each"; the measurement is in
-#  docs/refactor/FINDINGS-gs21.md.)
+#  docs/refactor/WORKING.md §43.)
 #
 #   -t 0-08:00      sol_reg measured 3 h 23 m 36 s wall at ~4.7 cores, riding the
 #                   5600-sweep cap (2.18 s/sweep mean). The cap BOUNDS the work:
@@ -60,7 +60,7 @@
 #                   (xnum=161, znum=200, bnum=20): 2.61 GiB before the kappa_e change,
 #                   2.74 GiB after (+135 MB, the (200,161,20,20) = 103 MB b-by-b'
 #                   array plus one temporary). The earlier "0.9-2.4 GB" figure in
-#                   FINDINGS-gs21.md was sampled with ps mid-run, not a peak; 2.74 GiB
+#                   WORKING.md §43 was sampled with ps mid-run, not a peak; 2.74 GiB
 #                   is the number to size against. 8 G is 2.9x that.
 #
 #                   The dominant term is still smooth(), which builds
