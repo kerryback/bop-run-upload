@@ -116,13 +116,32 @@ def claims_precommitment(spec):
 
 
 def test_a_spec_claiming_precommitment_actually_is_one():
+    """A spec that claims precommitment must not have pinned any id after its solve.
+
+    With one declared exception. A spec may REUSE a solve another spec already produced --
+    var-gs_bx-gx7-v1's beta = 1 member is sol_g28, solved two days before gx7 existed -- and
+    that stage is truthfully classified retrofitted, because it was. The claim is then about
+    the solves the spec CAUSED. `reused_solves` names the inherited stages and the spec that
+    first pinned each; only a DECLARED reuse is exempt, and it must name a spec that really
+    pins that same id, so this cannot become a way to wave away an ordinary retrofit.
+    """
     cls = classify()
     bad = []
     for sid, stages in cls.items():
         spec = json.load(open(os.path.join(SPECS, sid + ".json")))
         if not claims_precommitment(spec):
             continue
-        retro = [st for st, v in stages.items() if v == "retrofitted"]
+        reused = spec.get("reused_solves") or {}
+        for stage, origin in reused.items():
+            src = os.path.join(SPECS, origin + ".json")
+            if not os.path.exists(src):
+                bad.append(f"{sid}: reused_solves names {origin}, which does not exist")
+                continue
+            pinned = (json.load(open(src)).get("expected_solves") or {}).values()
+            if (spec.get("expected_solves") or {}).get(stage) not in pinned:
+                bad.append(f"{sid}: claims {stage} is reused from {origin}, but {origin} "
+                           f"does not pin that id")
+        retro = [st for st, v in stages.items() if v == "retrofitted" and st not in reused]
         if retro:
             bad.append(f"{sid}: claims precommitment but {retro} were pinned AFTER "
                        f"their manifests were tracked")

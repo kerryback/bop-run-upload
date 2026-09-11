@@ -372,8 +372,9 @@ def test_every_spec_hash_is_reproducible():
     """spec_hash must be recomputable from the spec's own hashed view."""
     import hashlib
     excluded = {"title", "question", "notes", "lineage", "provenance", "spec_hash",
-                # solves_pending is STATUS; precommitted records HOW the spec was made
-                "solves_pending", "precommitted"}
+                # solves_pending is STATUS; precommitted and reused_solves record HOW the
+                # spec was made, not what economy it defines
+                "solves_pending", "precommitted", "reused_solves"}
     for fn in sorted(os.listdir(SPECS)):
         if not fn.endswith(".json"):
             continue

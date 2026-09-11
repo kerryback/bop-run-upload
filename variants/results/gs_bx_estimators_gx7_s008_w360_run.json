@@ -1,0 +1,60 @@
+{
+ "model": "gs_bx",
+ "tag": "gx7",
+ "seed": 8,
+ "prov": "gs_bx_estimators_gx7_s008_w360_summary@c3d60c8+dirty",
+ "spec_id": "var-gs_bx-gx7-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.03,
+  0.1,
+  0.3,
+  1.0,
+  3.0,
+  10.0
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_g28",
+   "solve_id": "8b584c38614695ac",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 93780991
+  },
+  {
+   "stage": "sol_gx25",
+   "solve_id": "a145001bf661632e",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 97660451
+  },
+  {
+   "stage": "sol_gx40",
+   "solve_id": "bcc4e59f41f4a040",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 101053492
+  },
+  {
+   "stage": "sol_gx55",
+   "solve_id": "9bc863211011b5d9",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 103493411
+  },
+  {
+   "stage": "sol_gx70",
+   "solve_id": "89546b0b36dfd2d0",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 105111322
+  }
+ ],
+ "panel": "gs_bx_panel_gx7_s008.parquet"
+}
