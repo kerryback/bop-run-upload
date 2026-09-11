@@ -3335,3 +3335,62 @@ gamma(x) times exposure types in GS (the design rule that produced vyx, with GS2
 its negative would retire the bx path); a continuum of exposures in KP (whether vyx's linear
 methods live off three type points). Also flagged: vyx's premia are already 6-28% a year, and
 every dial-up should report the annualised premia beside the gap.
+
+## §52. Four new economies on Phoenix: one pre-registered negative, one failed prediction, and memory (2026-09-11)
+
+The top two proposals from §51, launched on Phoenix 2026-09-10 14:19 (`c3d60c8`): B1's three BGN
+persistence points and G1's gamma(x)-times-exposure GS economy, the latter as four solves with its
+seed array chained `--dependency=afterok` behind them. The laptop watcher died at 19:20 when the
+machine slept; nothing was lost, since every job writes to the shared `/data` checkout.
+
+**The chain worked.** All four new GS solves exited on the tolerance test and each produced
+exactly the id computed beforehand by `_scratch/precommit_id.sh`, whose path had been validated by
+recomputing g28's `8b584c38614695ac`. The gx7 seed array waited correctly on `(Dependency)` and then
+ran; all ten seeds CURRENT. All 32 finished seeds across the four economies report CURRENT.
+
+**G1 / gx7: the pre-registered negative fired.** Gap +0.0229 against g28's +0.0283; 5.5% of the
+linear Sharpe against 10.5%; room +0.0053 (eval) against bx7's +0.0066. The spec said a gap no better
+than g28's alone would retire the GS exposure path, and it does. The reason is in the attainable
+Sharpe: the beta ladder raised it from 0.3087 to 0.4473 over the evaluation months, and the linear
+methods took 93% of that (87% in g28), because a beta ladder is close to a linear sort on the
+characteristics that reveal it. This rests on a genuine precommitment for the four new solves.
+
+**B1 / g0235f: the prediction failed on both halves, and the J* table said so first.** Predicted:
+room unchanged (stationary stress share held at 1/3), proportional gap rising. Observed: room
++0.0176 to +0.0350, proportional gap 26.5% to 18.9%. Switching speed is not a path parameter -- it
+changes what a growth option is worth, hence which projects firms take, hence the cross-section.
+g0235f's J* range is 37-345 against g0235's 57-483, visible before any seed ran; I treated it as
+bookkeeping. The spec and `c3d60c8`'s message called it "the same economy at a different speed";
+that was wrong. A post-hoc reading in gap/room (0.60 fast vs 1.28 baseline) runs the way the
+rolling-window mechanism predicts, but it was not pre-registered and the slow point that would make
+it a test is still running. X1 (a window ladder on existing panels, room fixed by construction) is
+now the clean form of the test B1 was meant to be, and moves up the ranking.
+
+**Memory is the finding for the slow and rare points, and it explains §40's bimodality.** The J*
+value scale orders exactly as peak memory does -- g0235f 15.7-21.6 GiB, g0235 15.7-38.9, g0235s up
+to 63.9 on the seeds that fit, g0235r 71.8-74.0 -- because longer calm spells make options worth
+more, firms carry larger project inventories, and the panel arrays grow. All ten g0235r seeds and
+three g0235s seeds were killed at the 64 GiB cap (one g0235s seed finished 200 MB under it). Six
+g0235r seeds were re-run on `highmem` at 200 GiB to measure the peak, five finished at 14-20 h, one
+still running at 22.8 h; the remaining seven were resubmitted at 110 GiB (`21569821`, `21569822`).
+Whether a seed's aggregate path spends long in calm is what decided g0235's own 15.7-vs-38.9 split.
+
+**Held out of the tables on purpose.** g0235s (7/10) and g0235r (5/10) are not in
+`economy_table.csv` or `docs/RESULTS.md`'s table: the missing seeds are the memory-heavy ones, i.e.
+the long-calm ones, so a mean over the finished seeds is biased. The partial files are in
+`_scratch/partial_g0235sr/`; the watcher re-fetches all ten from the cluster when they land. The
+provisional g0235r reading (DKKM 0.040 against a linear 0.014) is striking and is exactly the kind
+of number that selection could manufacture.
+
+**Four test changes, each forced by a real case.**
+- `reused_solves` is a new spec field, hash-excluded like `precommitted`: gx7's beta = 1 member is
+  sol_g28, solved two days before gx7 existed, so a blanket precommitment claim overstated it.
+  `test_precommitment_is_real.py` now exempts a stage only if it is DECLARED reused and the named
+  origin spec really pins that id; both an undeclared retrofit and a bogus origin were checked to fail.
+- `test_sr_max_eval_exceeds_all_month_sr_max_on_these_panels` was deleted. I wrote it labelled "not
+  a law, a fact about these four economies", and g0235s and g0235r reverse it: in a slow or rare
+  regime economy the evaluation window's mix can be calmer than the full sample's. The invariant
+  that IS a law, no method beating the windowed SR_max, stays and holds.
+- gx7's seed-array hint switched from "sbatch the solves" to `fetch_solves.py`, now that they exist;
+  the test that distinguishes pending from built economies enforced it.
+- The results document's pinning test required the two complete new economies to be added.

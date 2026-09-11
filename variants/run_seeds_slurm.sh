@@ -281,7 +281,9 @@ case "$SEED_SPEC" in
     export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
     unset GS_SIM_OVERRIDES
     KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
-    SOLVE_HINT='sbatch variants/gs_bx/run_gx7_slurm.sh   # four solves, ~6 h each; sol_g28 already exists'
+    # Built 2026-09-10 on Phoenix, every id matching its precommitment, and published. So the
+    # hint is FETCH: remaking them is four ~5 h solves (run_gx7_slurm.sh, if ever needed).
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7-v1 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   g28)
     # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of

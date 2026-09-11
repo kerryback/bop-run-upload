@@ -1,0 +1,28 @@
+{
+ "model": "bgn_gam",
+ "tag": "g0235f",
+ "seed": 2,
+ "prov": "bgn_gam_estimators_g0235f_s002_w360_summary@c3d60c8+dirty",
+ "spec_id": "var-bgn_gam-g0235f-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.1,
+  1.0
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "jstar",
+   "solve_id": "8662d7c1079f4b41",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 9322
+  }
+ ],
+ "panel": "bgn_gam_panel_g0235f_s002.parquet"
+}
