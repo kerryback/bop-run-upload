@@ -51,8 +51,10 @@ nothing unique.
 
 | experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
 |---|---|---|---|---|---|---|---|
-| K4 solve | `var-kp_vy-vyg25-v1` | Sol | `63188594` | public, 8 cpu, 16G, 6 h | -- | `variants/kp_vy/*vyg25*`, `experiments/registry` | running (16:06) |
-| K4 seeds 0-9 | `vyg25` | Sol | `63188595` | public, 64G, 2 d | afterok `63188594` | `variants/results/kp_vy_*_vyg25_*` | pending on the solve |
+| K4 solve, first attempt | `var-kp_vy-vyg25-v1` | Sol | `63188594` | public, 8 cpu, 16G, 6 h | -- | moved to `/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/` | CANCELLED at 11 min: printed integ `a2cc8d99c1bc474b`, not the precommitted `8d1308e8f21723f8` |
+| K4 solve | `var-kp_vy-vyg25-v1` | Sol | `63188972` | public, 8 cpu, 16G, 6 h | -- | integ tables and manifest; G shipped from the Mac, byte-identical | submitted |
+| K4 seeds 0-9, first chain | `vyg25` | Sol | `63188595` | public, 64G, 2 d | afterok `63188594` | -- | CANCELLED with its solve; never started |
+| K4 seeds 0-9 | `vyg25` | Sol | `63188973` | public, 64G, 2 d | afterok `63188972` | `variants/results/kp_vy_*_vyg25_*` | pending on the solve |
 | X3 seeds 0-9 | `vyxT860` | Sol | `63188596` | public, 96G, 2 d | -- | `variants/results/kp_vy_*_vyxT860_*` | 2 running, 8 pending (16:06) |
 | B4 solve | `var-bgn_gam-g0235d-v1` | Phoenix | `21571505` | htc, 4 cpu, 8G, 2 h | -- | `variants/bgn_gam/Jstar_g0235d.csv`, `experiments/registry` | running (16:06) |
 | B4 seed 0, the screen | `g0235d` | Phoenix | `21571506` | public, 64G, 2 d | afterok `21571505` | `variants/results/bgn_gam_*_g0235d_s000*` | pending on the solve |
@@ -65,6 +67,16 @@ nothing unique.
 | E1 g28 | `g28`, linear | Phoenix | `21571530` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
 | E1 gx7 | `gx7`, linear | Phoenix | `21571531` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
 | E1 bx7 | `bx7`, linear | Phoenix | `21571532` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
+
+**K4's first solve did not reproduce its precommitted integ id, and was cancelled.** Sol job `63188594`
+rebuilt the G stage and printed the precommitted G id `f41d052f1f960c4c`, then integ `a2cc8d99c1bc474b`
+instead of `8d1308e8f21723f8`. The integ stage's id hashes its upstream G tables' RAW FILE BYTES
+(`solstamp.artifact_digests`); only parameters are quantised to 8 significant digits. The Mac and Sol direct
+solves write G with different trailing digits, so a chained id computed on one platform is not reproducible
+on another. The fix keeps the precommitment exact: the G tables built on the Mac, from which the integ id was
+precommitted, were shipped to Sol byte-identical with their manifest (`solstamp.lookup` finds it and reports no
+artifact problems), and `63188972` builds only the integ stage from those bytes. The first attempt's G, 36
+integ tables, manifest and log are kept in `/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/`.
 
 **E1 finished within minutes of submission**: 80 of 80 tasks COMPLETED in 52 to 76 s at 1.5 to 1.7
 GiB peak, every run record CURRENT for its solves, and every economy's fair gap inside its registered

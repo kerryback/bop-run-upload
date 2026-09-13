@@ -3493,3 +3493,17 @@ g0235s +0.0012, g0235r -0.0025, g28 -0.0022 (t -3.0; the fair linear wins 9 seed
 -0.0009. Winners outside vyx are mkt_est and linrank_m. RESULTS.md's table gains a pinned `fair gap (E1)`
 column. Archives verified: Sol 63188497 and Phoenix 21571504 both ARCHIVE_OK, no checksum differences, read-only;
 Phoenix `bop_temp_kp14` was 22 byte-identical duplicates of `bop_kp14` files.
+
+**K4's first solve failed its integ precommitment (same day), and why.** Sol `63188594` printed G
+`f41d052f1f960c4c`, as precommitted, then integ `a2cc8d99c1bc474b` against the precommitted `8d1308e8f21723f8`.
+`solstamp.artifact_digests` gives a downstream stage the sha256 of its upstream files' RAW bytes; HASH_SIG_DIGITS
+quantises parameters only. Mac against Sol G tables: 41,970 / 41,842 / 41,887 of 44,000 values differ by type, max
+relative 2.1e-12; after 8-significant-digit quantising 0 / 0 / 1 still differ, so hashing canonical values would not
+have made it portable either. The precommit path's sanity check was also weaker than the K4 spec claimed: vyx's G
+tables are tracked in git, so the worktree read them and never rebuilt G. Fix, keeping the precommitment exact:
+`63188594`/`63188595` cancelled at 11 min, before any seed (their files kept in
+`/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/`); G rebuilt on the Mac in the real repo
+(both ids reproduced; residuals 6-9e-13); G tables, their checkpoints and the manifest rsynced to Sol byte-identical
+(`solstamp.lookup` reports no artifact problems); solve resubmitted as `63188972`, which builds only the integ stage,
+with seeds `63188973` afterok. K4's G tables and manifest are committed; the spec's notes carry the correction
+(spec_hash unchanged).
