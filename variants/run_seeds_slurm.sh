@@ -27,6 +27,18 @@
 #     g0235f g0235s g0235r   BGN regime-gamma at 4x faster / 5x slower / rare-and-short
 #     gx7                    GS gamma(x) crossed with the five exposure types
 #
+#   Proposed 2026-09-13 (docs/RESULTS.md finding 8, "Proposed next, ranked"):
+#     vyg25    K4  vyx with gamma_v 2.5 (its own tables, prefix vyg25)
+#     vyxT860  X3  the vyx economy at T=860 / window 720 (vyx's solves; its OWN TAG, because every
+#                  result file is named by model, tag and seed only)
+#     g0235d   B4  g0235 stressed two thirds of the time -- seed 0 is a screen, run it alone first
+#
+#   SEED_STAGE=linear (E1) re-scores a SAVED panel's linear methods, plus the fair ones, reading
+#   panel/moments/oracle from BOP_INPUTS_DIR (default results/) and writing to BOP_RESULTS_DIR,
+#   which must be a DIFFERENT directory -- the output names equal the recorded run's:
+#     sbatch --export=ALL,SEED_SPEC=g28,SEED_STAGE=linear,BOP_RESULTS_DIR=/data/.../e1 --array=0-9 \
+#            variants/run_seeds_slurm.sh
+#
 #   SEED_STAGE=oracle runs ONLY the oracle stage, and BOP_RESULTS_DIR sends its output
 #   somewhere other than variants/results. Together they re-derive population ceilings
 #   for panels that already exist without touching the committed record:
@@ -185,7 +197,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vyxT860 | g0235d) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -303,8 +315,38 @@ case "$SEED_SPEC" in
     # fetch. The hint says fetch, never re-solve.
     SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
+  vyg25)
+    # K4: vyx with the price of the state's risk raised from 1.8 to 2.5 -- the dial finding 8
+    # says matters, since the Sharpe the state's shock carries is the part the market misses.
+    # Its own tables under prefix vyg25, built by variants/run_solve_slurm.sh from the spec.
+    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v1; SOLVE_TAG=vyg25
+    KAPPAS=0.001,0.01,0.1,1
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2}'
+    export KP_VY_PREFIX=vyg25
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v1 variants/run_solve_slurm.sh'
+    ;;
+  vyxT860)
+    # X3: the vyx ECONOMY -- same parameters, same solves -- on a longer sample, T=860 with a
+    # 720-month window, so the same 125 evaluation months. Its own TAG: under TAG=vyx this would
+    # overwrite vyx's panels, moments and oracle files. Ridge grid extended down to 1e-4.
+    MODEL=kp_vy; TAG=vyxT860; SPEC=var-kp_vy-vyxT860-v1; SOLVE_TAG=vyx
+    KAPPAS=0.0001,0.001,0.01,0.1,1
+    : "${SEED_T:=860}"; : "${SEED_WINDOW:=720}"
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
+    export KP_VY_PREFIX=vyx
+    SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
+    ;;
+  g0235d)
+    # B4: g0235's multipliers with the switch probabilities SWAPPED, so stress is two thirds of
+    # months (48-month stress spells, 24-month calm). Seed 0 is a SCREEN: seeds 1-9 only if its
+    # evaluation-window room >= +0.05 and non-market Sharpe >= 0.30 (the spec's notes).
+    MODEL=bgn_gam; TAG=g0235d; SPEC=var-bgn_gam-g0235d-v1; SOLVE_TAG=Jstar_g0235d
+    export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.041666666666666664, "p10": 0.020833333333333332, "jstar_gam_file": "Jstar_g0235d.csv"}'
+    KAPPAS=0.001,0.01,0.1,1
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v1 variants/run_solve_slurm.sh'
+    ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7 or gx7)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vyxT860 or g0235d)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
@@ -319,9 +361,11 @@ WINDOW=${SEED_WINDOW:-360}
 # both  = oracle then estimators (the default; what every campaign run does)
 # oracle = the oracle ONLY, and without --save_panel: nothing downstream consumes the
 #          panel or the moments file in this mode, and skipping them saves ~35 MB/seed.
+# linear = E1: no oracle; re-score the SAVED panel's linear methods and the fair ones
+#          (run_estimators.py --linear_only --fair_linear) from $INPUTS into $RESULTS.
 SEED_STAGE=${SEED_STAGE:-both}
-case "$SEED_STAGE" in both|oracle) ;; *)
-  echo "unknown SEED_STAGE '$SEED_STAGE' (expected both or oracle)" >&2; exit 2 ;;
+case "$SEED_STAGE" in both|oracle|linear) ;; *)
+  echo "unknown SEED_STAGE '$SEED_STAGE' (expected both, oracle or linear)" >&2; exit 2 ;;
 esac
 
 # run_oracle.py and run_estimators.py both honour BOP_RESULTS_DIR. This script used to
@@ -329,6 +373,7 @@ esac
 # OUTPUT while the checkpoint kept looking in the old place -- it would have re-run a
 # finished seed, or skipped an unfinished one, without saying so. Mirror it here.
 RESULTS=${BOP_RESULTS_DIR:-results}
+INPUTS=${BOP_INPUTS_DIR:-results}   # read by SEED_STAGE=linear only
 
 CONDA_ENV=${CONDA_ENV:-bop}
 module load mamba/latest
@@ -369,6 +414,14 @@ if [ ! -f "$REPO/variants/run_seeds_slurm.sh" ]; then
   exit 2
 fi
 cd "$REPO/variants"
+if [ "$SEED_STAGE" = linear ]; then
+  mkdir -p "$RESULTS"
+  if [ "$(cd "$INPUTS" && pwd -P)" = "$(cd "$RESULTS" && pwd -P)" ]; then
+    echo "ABORT: SEED_STAGE=linear writes *_estimators_* files under the SAME names as the run it re-scores." >&2
+    echo "Set BOP_RESULTS_DIR to a directory other than its inputs ($INPUTS)." >&2
+    exit 2
+  fi
+fi
 mkdir -p "$RESULTS/logs"
 LOG="$RESULTS/logs/log_${TAG}_s${SS}.txt"
 
@@ -407,6 +460,19 @@ elif python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${S
 fi
 
 S=$(date +%s)
+if [ "$SEED_STAGE" = linear ]; then
+  for f in "$INPUTS/${MODEL}_panel_${TAG}_s${SS}.parquet" "$INPUTS/${MODEL}_moments_${TAG}_s${SS}.npz" \
+           "$INPUTS/${MODEL}_oracle_${TAG}_s${SS}.json"; do
+    [ -f "$f" ] || { echo "ABORT: SEED_STAGE=linear needs $f" | tee -a "$LOG"; exit 2; }
+  done
+  python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
+         --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
+         --linear_only --fair_linear --inputs_from "$INPUTS" --n_jobs "$NT" 2>&1 | tee -a "$LOG"
+  E=$(date +%s)
+  echo "=== seed $SEED END $(date '+%F %T') stage=linear estimators=$((E-S))s inputs=$INPUTS ===" | tee -a "$LOG"
+  python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"
+  exit 0
+fi
 SAVE_PANEL=--save_panel
 [ "$SEED_STAGE" = oracle ] && SAVE_PANEL=
 # --spec makes the run VERIFY, before it records anything, that the tables it read are
@@ -424,7 +490,7 @@ if [ "$SEED_STAGE" = oracle ]; then
 fi
 
 python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
-       --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
+       --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" --fair_linear \
        --n_jobs "$NT" 2>&1 | tee -a "$LOG"
 E=$(date +%s)
 

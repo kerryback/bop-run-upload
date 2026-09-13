@@ -558,19 +558,14 @@ and the type-by-state integrals (about 30 min per type), then ten seeds at about
   +0.20. **Falsified if** the gap is below +0.12. **Caveat.** Type premia approach 40% a year; report
   the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.
 
-- **K5. Signed exposures, so the market carries little of the state's risk. NEW.** Type loadings
-  (-0.06, +0.04, +0.14) in equal shares instead of (0.02, 0.07, 0.14): the spread of exposures rises
-  from 0.12 to 0.20 while the market's average exposure falls from 0.077 to 0.040. **Why.** Two
-  effects, both in the direction finding 8 says matters. The premium spread across types widens, so
-  there is more non-market Sharpe, and the market spans less of it. And the nonlinearity sharpens: a
-  positive-loading firm's value rises with the state while a negative-loading firm's falls, so which
-  characteristic ranks earn the premium flips as the state moves -- a state-by-characteristic
-  interaction that a fixed-coefficient linear rule averages away and a random-feature basis that sees
-  the state can represent. **Prediction.** Room above +0.42, the market below 25% of SR_max, gap
-  above +0.12. **Falsified if** room does not rise. **Check first.** A claim on e^(beta y) is
-  discounted at r + gamma_x sigma_x + delta - mu_x + beta gamma_v sigma_y + beta kappa_y y
-  - beta^2 sigma_y^2 / 2. At beta = -0.06 and the top of the state grid that is +0.065, against about
-  +0.23 for vyx's lowest -- positive, but the tightest ever built; at beta = -0.07 it is +0.037.
+- **K5. Signed exposures -- WITHDRAWN before it ran: the economy does not exist.** Proposed as type
+  loadings (-0.06, +0.04, +0.14), so that the market would carry little of the state's risk. The
+  feasibility check first written here used the VALUE discount, const_ty, and found +0.065. But the G
+  solve discounts growth options at rho_ty, which also subtracts the growth terms, and from
+  `parameters_kp14` itself rho_ty is -0.149 at the top of the state grid for a loading of -0.06, and
+  -0.076 even at y = 0. A negative discount removes the G operator's dissipation, so there is no
+  solution to build. The most negative loading with rho_ty positive everywhere is about -0.005 -- no
+  exposure at all. The intent survives only as K1's right-skewed shares on non-negative loadings.
 
 - **X3. vyx on a longer sample: T = 860, window 720, the same 125 evaluation months, ridge grid
   extended down to 1e-4. NEW, estimation side.** Same economy, same solves, same room. **Why.** The
@@ -585,7 +580,7 @@ and the type-by-state integrals (about 30 min per type), then ten seeds at about
 - **K1. A continuum of exposures.** Fifteen types on a grid over [0, 0.14], shares right-skewed so
   most firms sit low. **Why, through finding 8.** Right skew lowers the market's average exposure, so
   less of the state's Sharpe is spanned, and a smooth exposure map suits random features better than
-  three steps. **Prediction.** Room and gap up modestly -- less confidently than K4 or K5, because the
+  three steps. **Prediction.** Room and gap up modestly -- less confidently than K4, because the
   three-type structure was never shown to be what the linear methods exploit. About 7.5 h of integrals.
 
 - **K3. Persistence of the priced state.** kappa_y from 0.35 to 0.15 and to 0.70. Slower reversion
@@ -927,11 +922,11 @@ re-measures seven of the eight current gaps; it is not itself a bigger-gap exper
 | 1 | E1 fair linear benchmark | whether the BGN and GS gaps survive giving linear methods the market DKKM has | BGN and GS fair gaps at most +0.008; vyx at least +0.08 | none | minutes a seed on 80 panels, after an estimator change |
 | 2 | K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | 3 integrals, about 90 min | 30 h |
 | 3 | X3 vyx at T=860, window 720 | whether DKKM's shortfall in vyx is data | gap +0.13 to +0.17, room unchanged | none | about 40 h |
-| 4 | K5 signed exposures | whether a state-by-characteristic crossing adds room the market cannot span | room above +0.42, gap above +0.12 | 3 integrals | 30 h |
-| 5 | B4 stress-dominant BGN, screened | whether BGN can produce a fair gap at all | room above +0.04, fair gap +0.005 to +0.015 | J* rebuild | 1 h screen, then 35 h |
-| 6 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | 15 integrals, about 8 h | 30 h |
-| 7 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | 2 x about 90 min | 2 x 30 h |
-| 8 | G3 default-channel probe | whether GS has any non-market Sharpe to find | proceed only if the market is below 85% of SR_max | 1 oracle probe | 20 min, decide after |
+| 4 | B4 stress-dominant BGN, screened | whether BGN can produce a fair gap at all | room above +0.04, fair gap +0.005 to +0.015 | J* rebuild | 1 h screen, then 35 h |
+| 5 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | 15 integrals, about 8 h | 30 h |
+| 6 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | 2 x about 90 min | 2 x 30 h |
+| 7 | G3 default-channel probe | whether GS has any non-market Sharpe to find | proceed only if the market is below 85% of SR_max | 1 oracle probe | 20 min, decide after |
+| - | ~~K5 signed exposures~~ | WITHDRAWN: infeasible, the growth-option discount rho_ty turns negative (-0.149 at a loading of -0.06) | | | |
 | - | ~~X1 window ladder on g0235~~ | RETIRED: the gap-over-room question it tested is answered by finding 8 | | | |
 | - | ~~X2 ten more seeds for g28 and bx7~~ | MOOT until E1 says whether those gaps exist | | | |
 | - | ~~G4 wider gamma(x)~~ | DROPPED: moves the market's Sharpe, not the part it misses | | | |

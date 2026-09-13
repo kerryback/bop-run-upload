@@ -37,6 +37,10 @@ CURRENT = {
     "g0235s": "var-bgn_gam-g0235s-v1",
     "g0235r": "var-bgn_gam-g0235r-v1",
     "gx7": "var-gs_bx-gx7-v1",
+    # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4, X3, B4
+    "vyg25": "var-kp_vy-vyg25-v1",
+    "vyxT860": "var-kp_vy-vyxT860-v1",
+    "g0235d": "var-bgn_gam-g0235d-v1",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"
 
@@ -89,6 +93,9 @@ def seed_array_cases():
         for k in ("MODEL", "TAG", "SPEC", "SOLVE_TAG", "KAPPAS"):
             mm = re.search(r"(?m)(?:^|[;\s])" + k + r"=([^;\s]+)", block)
             c[k] = mm.group(1) if mm else None
+        for k in ("SEED_T", "SEED_WINDOW"):          # per-case sample defaults, e.g. X3's T=860 / w=720
+            mm = re.search(k + r":=(\d+)", block)
+            c[k] = int(mm.group(1)) if mm else None
         for mm in re.finditer(r"(?m)^\s*export\s+(\w+)=(?:'([^']*)'|\"([^\"]*)\"|(\S+))", block):
             c["env"][mm.group(1)] = mm.group(2) if mm.group(2) is not None else (mm.group(3) or mm.group(4))
         cases[name] = c
@@ -252,6 +259,15 @@ def test_seed_array_cases_match_the_specs_they_name():
         assert c["KAPPAS"], f"{name}: no KAPPAS= (the estimator grid must come from the spec)"
         assert [float(x) for x in c["KAPPAS"].split(",")] == spec["estimation"]["kappas"], (
             f"{name}: KAPPAS {c['KAPPAS']} but {c['SPEC']} says {spec['estimation']['kappas']}")
+        # The sample is part of the economy's definition -- X3 differs from vyx in nothing else --
+        # so the panel length and window a branch runs must be the spec's.
+        txt = read_script(SEED_ARRAY)
+        t_def = int(re.search(r"T=\$\{SEED_T:-(\d+)\}", txt).group(1))
+        w_def = int(re.search(r"WINDOW=\$\{SEED_WINDOW:-(\d+)\}", txt).group(1))
+        assert (c["SEED_T"] or t_def) == spec["panel"]["T"], (
+            f"{name}: runs T={c['SEED_T'] or t_def} but {c['SPEC']} says panel T {spec['panel']['T']}")
+        assert (c["SEED_WINDOW"] or w_def) == spec["estimation"]["window"], (
+            f"{name}: runs window {c['SEED_WINDOW'] or w_def} but {c['SPEC']} says {spec['estimation']['window']}")
 
 
 def test_seed_array_passes_the_case_kappas_to_the_estimators():
@@ -310,10 +326,10 @@ def test_seed_array_oracle_stage_runs_the_oracle_and_nothing_else():
     body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines()
                      if not l.lstrip().startswith("#"))
     assert re.search(r'SEED_STAGE=\$\{SEED_STAGE:-both\}', body)
-    assert re.search(r'case "\$SEED_STAGE" in both\|oracle\)', body), "unknown stages must be rejected"
+    assert re.search(r'case "\$SEED_STAGE" in both\|oracle\|linear\)', body), "unknown stages must be rejected"
     # the early exit sits between the oracle call and the estimator call
     o = body.index("run_oracle.py")
-    e = body.index("run_estimators.py")
+    e = body.index("run_estimators.py", o)
     guard = body[o:e]
     assert re.search(r'if \[ "\$SEED_STAGE" = oracle \]; then(.|\n)*?exit 0', guard), (
         "SEED_STAGE=oracle must exit before run_estimators.py")
@@ -362,6 +378,43 @@ def test_gs_solve_hints_fetch_rather_than_resolve():
         else:
             assert "fetch_solves.py" in body and c["SPEC"] in body, (
                 f"{name}: SOLVE_HINT must be a fetch_solves.py --spec {c['SPEC']} command")
+
+
+def test_seed_array_linear_stage_rescores_saved_panels_without_overwriting_them():
+    """SEED_STAGE=linear (E1, 2026-09-13) re-scores a saved panel's linear methods. Its output files
+    carry the SAME names as the recorded run's, so it must never write where it reads; and it must
+    never reach the oracle, whose outputs it would also overwrite."""
+    body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines() if not l.lstrip().startswith("#"))
+    assert re.search(r'INPUTS=\$\{BOP_INPUTS_DIR:-results\}', body)
+    i = body.index("--linear_only")
+    start = body.rfind('if [ "$SEED_STAGE" = linear ]; then', 0, i)
+    assert start >= 0, "the --linear_only call must sit inside the linear branch"
+    blk = body[start:body.index("exit 0", i)]
+    assert "run_oracle.py" not in blk
+    for flag in ("--fair_linear", '--inputs_from "$INPUTS"'):
+        assert flag in blk, flag
+    assert start < body.index("run_oracle.py"), "the linear branch must exit before the oracle call"
+    guard = body.index('cd "$INPUTS" && pwd -P')
+    assert guard < body.index('mkdir -p "$RESULTS/logs"'), "refuse same-directory runs before writing anything"
+    assert "exit 2" in body[guard:guard + 400]
+
+
+def test_seed_array_full_runs_score_the_fair_linear_methods_too():
+    body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines() if not l.lstrip().startswith("#"))
+    o = body.index("run_oracle.py")
+    e = body.index("run_estimators.py", o)
+    assert "--fair_linear" in body[e:e + 400]
+
+
+def test_solve_job_reads_the_spec_and_refuses_an_unexpected_id():
+    """variants/run_solve_slurm.sh builds a solve from the spec's own parameters and must exit
+    non-zero unless every id it prints is the precommitted one, so an afterok seed array cannot
+    start on a different economy."""
+    txt = read_script("variants/run_solve_slurm.sh")
+    body = "\n".join(l for l in txt.splitlines() if not l.lstrip().startswith("#"))
+    assert 'SPECF="experiments/specs/$SOLVE_SPEC.json"' in body
+    assert "expected_solves" in body and "sys.exit(3)" in body
+    assert not re.search(r"(KP|BGN)_PARAM_OVERRIDES='\{", body), "never restate a parameter blob here"
 
 
 # --------------------------------------------------------------------------
