@@ -3453,3 +3453,43 @@ first, with a pre-registered bound: BGN/GS fair gaps <= DKKM best - DKKM at top 
 effective discount +0.065 at the grid edge), B4 (stress-dominant BGN, oracle screen first: room >=
 +0.05 and non-market Sharpe >= 0.30), K1, K3, G3 (screen: market < 85% of SR_max). Retired X1 (answered),
 X2 (moot until E1), G4 (moves the market's Sharpe, not the part it misses).
+
+## §54. The 2026-09-13 campaign: E1, K4, X3 and B4 launched across Sol and Phoenix; K5 withdrawn (2026-09-13)
+
+**Pulled off first.** Seth: result names overwrite each other, so archive earlier runs before launching.
+The inventory found the at-risk data on Phoenix `/scratch` (the 2026-08-31 KP14 `main.py` output, 58 GB,
+in the fixed-name `bop_kp14`/`bop_temp_kp14`) and, in the shared checkout, 80 panels + 80 moments (31 GB)
+plus logs and `_evalwin/`, none in git. Both are copied into `/data/sjpruitt/projects/bop-run-upload/archive/`
+by jobs that verify by checksum, write `SHA256SUMS` and chmod the copy read-only. Two planned runs would
+have overwritten committed results under the existing naming (`runstamp.stem` is model/tag/seed only): X3
+under tag `vyx`, and E1 in `variants/results`. X3 got tag `vyxT860`; E1 writes to
+`/data/sjpruitt/projects/bop-run-upload/e1_fair_linear`, and `SEED_STAGE=linear` refuses same-dir.
+
+**K5 withdrawn.** The RESULTS.md feasibility line used the value discount `const_ty` (+0.065 at beta -0.06).
+The G solve's operator uses `rho_ty`, which also subtracts the growth terms: from `parameters_kp14`,
+rho_ty = -0.149 at the grid top and -0.076 at y = 0 for beta = -0.06; the most negative feasible loading is
+about -0.005. K4 (gamma_v 2.5) is feasible: min rho_ty +0.0329 (vyx +0.0212).
+
+**Precommitted ids.** B4 jstar `e136e8b440bce761` (precommit_id.sh, re-validated on g0235f). K4 G
+`f41d052f1f960c4c`, integ `8d1308e8f21723f8`: the integ id needs G tables, so the G stage (7 s) was built in a
+throwaway `git worktree` whose registry was discarded, after the same path reproduced vyx's G and integ ids.
+Specs committed in `fef5802` before any solve ran.
+
+**E1 code, smoke-tested at N=60 before launch.** Linear rows bit-identical with and without the RFF stage
+(812 rows, max |diff| 0); DKKM at its top penalty, `mkt_est`, and `linrank_m` at full shrinkage coincide
+(-0.0796 / -0.0795 / -0.0796) -- the portfolio finding 8's fair-gap bound assumes.
+
+**Jobs** (ledger with partitions and outputs: `docs/RUNS.md`). Sol: K4 solve `63188594` -> K4 seeds `63188595`
+(afterok); X3 seeds `63188596`; archive `63188205` (died on rsync's single-component mkdir after copying the
+31 GB) -> `63188497`. Phoenix: B4 solve `21571505` -> seed 0 screen `21571506` (afterok; seeds 1-9 gated on
+room_eval >= +0.05 and sr_orth_eval >= 0.30); E1 arrays `21571507`, `21571508`, `21571527`-`21571532` on htc;
+archive `21571504`. Watcher `_scratch/watch_campaign.sh` -> `_scratch/CAMPAIGN_STATUS.md`.
+
+**E1 result (same day).** All 80 Phoenix htc tasks finished in 52-76 s; the original four methods reproduced
+the committed summaries to 3.1e-9. `variants/fair_gap.py` grades fair gap = DKKM - best of {ff, fm, linrank,
+linlev, linrank_m, linlev_m, mkt_est} against the bounds registered at 7f82711: every economy PASSES. vyx
++0.1046 (unchanged: its linear methods already beat the market), g0235 +0.0006 (t 2.1), g0235f +0.0025 (t 2.8),
+g0235s +0.0012, g0235r -0.0025, g28 -0.0022 (t -3.0; the fair linear wins 9 seeds of 10), gx7 +0.0001, bx7
+-0.0009. Winners outside vyx are mkt_est and linrank_m. RESULTS.md's table gains a pinned `fair gap (E1)`
+column. Archives verified: Sol 63188497 and Phoenix 21571504 both ARCHIVE_OK, no checksum differences, read-only;
+Phoenix `bop_temp_kp14` was 22 byte-identical duplicates of `bop_kp14` files.

@@ -1,0 +1,87 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "fef5802f57e922ae9f773e8ff304ecdbd2acfc8a",
+  "branch": "main",
+  "root": "/data/sjpruitt/GitHub/bop-run-upload",
+  "dirty": true,
+  "status": [
+   "?? experiments/registry/f41d052f1f960c4c.json",
+   "?? variants/kp_vy/G_vyg250.csv",
+   "?? variants/kp_vy/G_vyg251.csv",
+   "?? variants/kp_vy/G_vyg252.csv"
+  ],
+  "diff_truncated": false,
+  "diff": ""
+ },
+ "argv": [
+  "run_estimators.py",
+  "--model",
+  "bgn_gam",
+  "--tag",
+  "g0235s",
+  "--seed",
+  "8",
+  "--window",
+  "360",
+  "--levels",
+  "--include_mkt",
+  "--kappas",
+  "0.001,0.01,0.1,1",
+  "--linear_only",
+  "--fair_linear",
+  "--inputs_from",
+  "results",
+  "--n_jobs",
+  "4"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants",
+ "env": {
+  "BGN_PARAM_OVERRIDES": "{\"gmult\": [0.2, 3.5], \"p01\": 0.004166666666666667, \"p10\": 0.008333333333333333, \"jstar_gam_file\": \"Jstar_g0235s.csv\"}",
+  "CONDA_DEFAULT_ENV": "bop",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "g0235s",
+  "SEED_STAGE": "linear",
+  "SLURMD_NODENAME": "pc243",
+  "SLURM_ARRAY_JOB_ID": "21571528",
+  "SLURM_ARRAY_TASK_ID": "8",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "21571550",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-09-13T16:03:26-0700",
+ "environment": {
+  "python": "3.12.13",
+  "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "pc243",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "pandas": "3.0.3",
+  "sklearn": "1.9.0",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout fef5802f57e922ae9f773e8ff304ecdbd2acfc8a && cd variants && <env below> python run_estimators.py --model bgn_gam --tag g0235s --seed 8 --window 360 --levels --include_mkt --kappas 0.001,0.01,0.1,1 --linear_only --fair_linear --inputs_from results --n_jobs 4",
+ "inputs": [
+  {
+   "stage": "jstar",
+   "solve_id": "05ad848ab3779695",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 9357
+  }
+ ],
+ "extra": {
+  "engine": "estimators",
+  "window": 360,
+  "linear_only": true,
+  "fair_linear": true,
+  "inputs_from": "results",
+  "spec_id": "var-bgn_gam-g0235s-v1",
+  "oracle_eval_window": 360,
+  "panel": "bgn_gam_panel_g0235s_s008.parquet"
+ }
+}
