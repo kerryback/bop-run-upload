@@ -24,6 +24,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MD = os.path.join(ROOT, "docs", "RESULTS.md")
 CSV = os.path.join(ROOT, "variants", "results", "economy_table.csv")
+E1 = os.path.join(ROOT, "variants", "results_e1", "fair_gap_economy_table.csv")
 
 
 def _md_rows():
@@ -49,7 +50,8 @@ def _md_rows():
         rows[(m.group(1), m.group(2))] = dict(spec=cells[1], n=int(cells[2]), room_all=num(cells[3]),
                                              room_eval=num(cells[4]), room_pct=pct(cells[5]),
                                              gap=num(cells[6]), gap_pct=pct(cells[7]), t=num(cells[8]),
-                                             dkkm=num(cells[9]), lin=num(cells[10]), sr_max_eval=num(cells[11]))
+                                             dkkm=num(cells[9]), lin=num(cells[10]), sr_max_eval=num(cells[11]),
+                                             fair_gap=num(cells[12]) if len(cells) > 12 else None)
     assert rows, "no economy rows parsed from the 'Current results' table"
     return rows
 
@@ -100,6 +102,23 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
             if not ok:
                 bad.append(f"{key[0]}/{key[1]} {name}: RESULTS.md {got!r} vs economy_table.csv {want!r}")
     assert not bad, "RESULTS.md is stale:\n  " + "\n  ".join(bad)
+
+
+def test_the_fair_gap_column_matches_the_e1_table():
+    """The last column is E1's fair gap (variants/fair_gap.py): DKKM against linear methods given the
+    equal-weighted market on DKKM's terms. Outside vyx it is the only complexity gap the table shows
+    (RESULTS.md finding 8), so it is pinned like every other cell. An economy whose own run scored the
+    fair methods (--fair_linear) will need fair_gap.py to read that run as well as results_e1/."""
+    md = _md_rows()
+    e = pd.read_csv(E1)
+    e = {(r["model"], r["tag"]): r for _, r in e.iterrows() if int(r["window"]) == 360}
+    bad = []
+    for key, row in md.items():
+        if key not in e:
+            bad.append(f"{key[0]}/{key[1]}: no row in {os.path.relpath(E1, ROOT)}")
+        elif row["fair_gap"] is None or abs(row["fair_gap"] - e[key]["fair_gap"]) > 5.1e-5:
+            bad.append(f"{key[0]}/{key[1]} fair gap: RESULTS.md {row['fair_gap']!r} vs {e[key]['fair_gap']!r}")
+    assert not bad, "RESULTS.md fair-gap column is stale:\n  " + "\n  ".join(bad)
 
 
 if __name__ == "__main__":

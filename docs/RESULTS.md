@@ -3,7 +3,7 @@
 An ongoing record of every economy we have run through the oracle-and-estimator pipeline,
 organised by model, with the experiments inside each model grouped into the paths that
 produced them. Updated as new paths are tried. Last updated 2026-09-13 (the persistence ladder
-complete, and cross-cutting finding 8 on the market portfolio); the current-results table below is checked against
+complete; finding 8 on the market portfolio, and E1's fair re-scoring of all 80 panels); the current-results table below is checked against
 `variants/results/economy_table.csv` by `tests/test_results_md_matches_table.py`, so this file
 cannot fall behind the numbers without the suite saying so.
 
@@ -53,6 +53,11 @@ seeds) unless the entry says otherwise.
 - **SR_max eval** -- the oracle's maximum attainable conditional Sharpe, averaged over the
   evaluation months. A hard upper bound on every estimator by Cauchy-Schwarz, so `DKKM` and
   `best linear` must both sit under it. They do, on all eighty runs.
+- **fair gap (E1)** -- DKKM minus the best linear method when the linear methods are given the
+  equal-weighted market on DKKM's terms: `linrank_m`, `linlev_m` (the market a separate unpenalised
+  column) and `mkt_est` (the market alone, its weight estimated the same way), alongside the original
+  four. Mean (sd) over ten seeds, from `variants/results_e1/fair_gap_economy_table.csv`, produced by
+  `variants/fair_gap.py`. Outside vyx this, not `gap`, is the complexity gap (finding 8).
 
 ### Two cautions on these quantities
 
@@ -108,26 +113,28 @@ with the parameterizations proposed next for it, and those are collected and ran
 All eight CURRENT economies, ranked by gap as a share of the linear Sharpe attained. Mean (sd)
 over ten seeds.
 
-| economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 |
-| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 |
-| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 |
-| bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 |
-| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 |
-| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 |
-| gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 |
-| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 |
+| economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap (E1) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 | -0.0025 (0.0069) |
+| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 | +0.0012 (0.0034) |
+| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 | +0.0006 (0.0009) |
+| bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 | +0.0025 (0.0029) |
+| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 | +0.1046 (0.0154) |
+| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 | -0.0022 (0.0023) |
+| gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 | +0.0001 (0.0006) |
+| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 | -0.0009 (0.0028) |
 Rows are ordered by PROPORTIONAL gap. **By absolute gap the order is different**: vyx first at
 +0.1046, then g28 +0.0283, gx7 +0.0229, g0235 +0.0227, g0235f +0.0211, g0235r +0.0209, g0235s
 +0.0180, bx7 +0.0078. Which ordering matters depends on the question -- see cross-cutting finding 5.
 
-**Read the gap column with cross-cutting finding 8 in hand.** In seven of these eight economies
-the winning DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market,
-which DKKM carries unpenalised and the linear methods do not. Outside vyx the `gap` column
-therefore measures how far the linear methods fall below the market, not what the random
-features learn. The proportional ordering is the most affected: g0235r's 192% is a linear Sharpe
-of 0.011 in months where the equal-weighted market earns 0.047.
+**The gap column is not a complexity gap outside vyx; the last column is.** In seven of these eight
+economies the winning DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted
+market, which DKKM carries unpenalised and the linear methods did not get on those terms
+(cross-cutting finding 8). E1 re-scored all 80 panels with linear methods given that market as DKKM
+has it: the fair gap is at most +0.0025 outside vyx and negative in three economies, each inside the
+bound registered before the re-scoring ran, while vyx's +0.1046 is untouched. The proportional
+ordering misleads most: g0235r's 192% is a linear Sharpe of 0.011 in months where the equal-weighted
+market earns 0.047, and its fair gap is -0.0025.
 
 Regenerate with `python variants/aggregate_seeds.py --flagship`, which also writes the per-seed
 rows to `variants/results/seed_table.csv`.
@@ -911,27 +918,52 @@ misses.
    saved true moments (6.5 min for all 80 seeds on one Sol node); `variants/market_decomposition.py`
    produces both tables from `variants/results/market_sr.csv`. `WORKING.md` §53.
 
+   **E1 confirmed it, against bounds registered before it ran.** All 80 saved panels were re-scored
+   with `linrank_m` and `linlev_m` (the market a separate unpenalised column, penalties two decades past
+   the top of the DKKM grid) and `mkt_est` (the market alone, its weight estimated as DKKM's is). The
+   original four methods reproduced to 3e-9. Fair gap = DKKM minus the best of those seven:
+
+   | economy | gap | fair gap | t | registered bound | seeds DKKM wins | fair winner, seeds |
+   |---|---|---|---|---|---|---|
+   | kp_vy/vyx | +0.1046 | +0.1046 | 21.5 | at least +0.08: PASS | 10 | linlev 4, fm 3, linrank_m 2, linrank 1 |
+   | bgn_gam/g0235 | +0.0227 | +0.0006 | 2.1 | at most +0.003: PASS | 6 | mkt_est 6, linrank_m 4 |
+   | bgn_gam/g0235f | +0.0211 | +0.0025 | 2.8 | at most +0.008: PASS | 10 | linrank_m 7, mkt_est 3 |
+   | bgn_gam/g0235s | +0.0180 | +0.0012 | 1.1 | at most +0.008: PASS | 5 | mkt_est 6, linrank_m 2, linrank 1, linlev_m 1 |
+   | bgn_gam/g0235r | +0.0209 | -0.0025 | -1.1 | at most +0.004: PASS | 3 | mkt_est 4, linrank_m 3, linlev_m 3 |
+   | gs_bx/g28 | +0.0283 | -0.0022 | -3.0 | at most +0.006: PASS | 1 | linrank_m 8, mkt_est 2 |
+   | gs_bx/gx7 | +0.0229 | +0.0001 | 0.3 | at most +0.004: PASS | 3 | mkt_est 5, linrank_m 5 |
+   | gs_bx/bx7 | +0.0078 | -0.0009 | -1.0 | at most +0.006: PASS | 3 | linrank_m 9, mkt_est 1 |
+
+   Outside vyx the complexity gap is at most a quarter of a hundredth of Sharpe. In g28, once the
+   second-largest gap in this file, a linear method given the market beats DKKM in nine seeds of ten
+   (t -3.0). What g0235f and g0235 keep (+0.0025, t 2.8; +0.0006, t 2.1) is measurable and negligible
+   beside the gaps this file used to report. In g0235r the always-long market (0.047) beats every
+   estimator, DKKM (0.032) included; it is reported but kept out of the fair benchmark because it
+   assumes the premium's sign. `variants/fair_gap.py` grades the table from `variants/results_e1/`;
+   the re-scoring ran as Phoenix arrays `21571507`, `21571508` and `21571527`-`21571532`
+   (`docs/RUNS.md`).
+
 ## Proposed next, ranked
 
 Ranked by what each decides per node-hour, against the question this file exists for: where a
-complexity method genuinely beats linear ones, and by how much. E1 comes first because it
-re-measures seven of the eight current gaps; it is not itself a bigger-gap experiment.
+complexity method genuinely beats linear ones, and by how much. E1 ran first and is done; every
+proposal is now judged by its fair gap. Which cluster and job each running one is on: `docs/RUNS.md`.
 
 | rank | proposal | what it decides | predicted | new solves | cluster time |
 |---|---|---|---|---|---|
-| 1 | E1 fair linear benchmark | whether the BGN and GS gaps survive giving linear methods the market DKKM has | BGN and GS fair gaps at most +0.008; vyx at least +0.08 | none | minutes a seed on 80 panels, after an estimator change |
-| 2 | K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | 3 integrals, about 90 min | 30 h |
-| 3 | X3 vyx at T=860, window 720 | whether DKKM's shortfall in vyx is data | gap +0.13 to +0.17, room unchanged | none | about 40 h |
-| 4 | B4 stress-dominant BGN, screened | whether BGN can produce a fair gap at all | room above +0.04, fair gap +0.005 to +0.015 | J* rebuild | 1 h screen, then 35 h |
-| 5 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | 15 integrals, about 8 h | 30 h |
-| 6 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | 2 x about 90 min | 2 x 30 h |
-| 7 | G3 default-channel probe | whether GS has any non-market Sharpe to find | proceed only if the market is below 85% of SR_max | 1 oracle probe | 20 min, decide after |
+| - | ~~E1 fair linear benchmark~~ | DONE 2026-09-13: every registered bound held; fair gap at most +0.0025 outside vyx, vyx +0.1046 (finding 8) | as registered | none | 80 x about 1 min, Phoenix htc |
+| 1 | K4 gamma_v 2.5 -- RUNNING, Sol | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | 3 integrals, about 90 min | 30 h |
+| 2 | X3 vyx at T=860, window 720 -- RUNNING, Sol | whether DKKM's shortfall in vyx is data | gap +0.13 to +0.17, room unchanged | none | about 40 h |
+| 3 | B4 stress-dominant BGN -- screen seed RUNNING, Phoenix | whether BGN can produce a fair gap at all | room above +0.04, fair gap +0.005 to +0.015 | J* rebuild | 1 h screen, then 35 h |
+| 4 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | 15 integrals, about 8 h | 30 h |
+| 5 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | 2 x about 90 min | 2 x 30 h |
+| 6 | G3 default-channel probe | whether GS has any non-market Sharpe to find | proceed only if the market is below 85% of SR_max | 1 oracle probe | 20 min, decide after |
 | - | ~~K5 signed exposures~~ | WITHDRAWN: infeasible, the growth-option discount rho_ty turns negative (-0.149 at a loading of -0.06) | | | |
 | - | ~~X1 window ladder on g0235~~ | RETIRED: the gap-over-room question it tested is answered by finding 8 | | | |
 | - | ~~X2 ten more seeds for g28 and bx7~~ | MOOT until E1 says whether those gaps exist | | | |
 | - | ~~G4 wider gamma(x)~~ | DROPPED: moves the market's Sharpe, not the part it misses | | | |
 
-**E1 in detail.** Give `linrank` and `linlev` the equal-weighted market exactly as DKKM has it -- a
+**E1 in detail, as registered before it ran (the result is in finding 8).** Give `linrank` and `linlev` the equal-weighted market exactly as DKKM has it -- a
 separate unpenalised column instead of a penalised constant -- with a penalty grid that reaches full
 shrinkage, and report the market itself, its weight estimated the same way, as a benchmark row. Keep
 the existing methods so every current number stays reproducible. Re-run only the linear stage on the
