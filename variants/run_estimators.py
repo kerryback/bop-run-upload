@@ -29,6 +29,18 @@ ap.add_argument("--n_jobs", type=int, default=6)
 ap.add_argument("--include_mkt", action="store_true", help="append the unpenalised EW market to the RFF factor sets (as in the paper)")
 ap.add_argument("--levels", action="store_true", help="add rff_lev / linlev methods using fixed-stats level features")
 ap.add_argument("--winsor", type=float, default=0.0, help="if >0, winsorise xret at +/- this level BEFORE the estimators see it (evaluation still uses the true moments)")
+ap.add_argument("--linear_only", action="store_true",
+                help="skip the random-feature stage entirely (factor histories, fits, rows) and re-score only "
+                     "the linear methods of a SAVED panel -- minutes instead of hours. Its output files have the "
+                     "same names as the run that made the panel, so it refuses to write into its inputs.")
+ap.add_argument("--fair_linear", action="store_true",
+                help="also score linear methods given the EW market exactly as --include_mkt gives it to DKKM, "
+                     "a separate UNPENALISED column (linrank_m, linlev_m), on a penalty grid two decades past "
+                     "the DKKM grid's top; the market alone with its weight estimated the same way (mkt_est); "
+                     "and the always-long EW market (ew). docs/RESULTS.md cross-cutting finding 8.")
+ap.add_argument("--inputs_from", type=str, default=None,
+                help="read the panel, moments and oracle summary from this directory; output still goes to "
+                     "BOP_RESULTS_DIR (default results/)")
 args = ap.parse_args()
 dkkm.WINDOW = args.window; fama.WINDOW = args.window
 rng = np.random.default_rng(args.seed + 7)
@@ -44,7 +56,15 @@ gamma_grid = np.arange(0.5, 1.1, 0.1)
 # that if /data ever does get tight, moving output is a flag rather than a refactor.
 out = os.environ.get("BOP_RESULTS_DIR") or os.path.join(HERE, "results")
 _st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
-_panel_path = _st("panel") + ".parquet"
+os.makedirs(out, exist_ok=True)
+_in = os.path.abspath(args.inputs_from) if args.inputs_from else out
+if args.linear_only and os.path.realpath(_in) == os.path.realpath(out):
+    raise SystemExit(
+        f"--linear_only writes *_estimators_* files under the SAME names as the run that saved this panel, "
+        f"so reading and writing {out} would overwrite the recorded results. Set BOP_RESULTS_DIR to another "
+        f"directory and pass --inputs_from {out}.")
+_st_in = lambda kind: os.path.join(_in, runstamp.stem(args.model, kind, args.tag, args.seed))
+_panel_path = _st_in("panel") + ".parquet"
 if not os.path.exists(_panel_path):
     legacy = os.path.join(out, f"{args.model}_panel_{args.tag}.parquet")
     raise SystemExit(
@@ -58,11 +78,11 @@ if not os.path.exists(_panel_path):
            f"the file deliberately if you know what it is.\n"
            if os.path.exists(legacy) else ""))
 panel = pd.read_parquet(_panel_path)
-mom = np.load(_st("moments") + ".npz")
+mom = np.load(_st_in("moments") + ".npz")
 
 # The oracle summary records which solve built this panel; carry that forward so the
 # estimator output is traceable to the same economy without re-deriving it.
-_oracle_summary = _st("oracle") + ".json"
+_oracle_summary = _st_in("oracle") + ".json"
 _solves = None
 _spec_id = None
 _oracle_eval_window = None
@@ -111,7 +131,7 @@ fm_rets = fama.factors(fama.fama_macbeth, panel, n_jobs=args.n_jobs, start=start
 Plist = [int(p) for p in args.rff.split(",") if p]
 Pmax = max(Plist); half = Pmax // 2
 Ws, frets = [], []
-for i in range(args.nmat):
+for i in range(0 if args.linear_only else args.nmat):
     W = rng.standard_normal(size=(half, len(chars) + (len(dkkm.RF_COLS) if model_for_rff == "bgn" else 0)))
     W = rng.choice(gamma_grid, size=(half, 1)) * W
     Ws.append(W)
@@ -124,7 +144,7 @@ def lin_rank_weights(data):
     return X
 lr_rets = pd.concat([(lin_rank_weights(panel.loc[m]).T @ panel.loc[m].xret).rename(m) for m in range(start, end + 1)], axis=1).T
 lr_rets.index.name = "month"
-mkt_rets = panel.groupby("month").xret.mean() if args.include_mkt else None
+mkt_rets = panel.groupby("month").xret.mean() if (args.include_mkt or args.fair_linear) else None
 lev_stats = None
 if args.levels:
     first = panel.loc[start:start + args.window - 1]
@@ -145,7 +165,7 @@ if args.levels:
                 cols.append(np.full((len(Xr), 1), float(data[c].iloc[0])))
         return np.column_stack(cols)
     WsL, fretsL = [], []
-    for i in range(args.nmat):
+    for i in range(0 if args.linear_only else args.nmat):
         WL = rng.standard_normal(size=(half, 2 * len(chars) + (len(dkkm.RF_COLS) if model_for_rff == "bgn" else 0)))
         WL = rng.choice(gamma_grid, size=(half, 1)) * WL
         WsL.append(WL)
@@ -169,6 +189,10 @@ if args.levels:
     ll_rets.index.name = "month"
 print(f"factor histories built in {time.time()-t0:.0f}s", flush=True)
 kappas = [float(k) for k in args.kappas.split(",")]
+# The fair linear grid runs two decades past the top of the DKKM grid, so it reaches full shrinkage onto
+# the unpenalised market -- the portfolio every DKKM fit collapses to at its largest penalty.
+fair_kappas = sorted(set(kappas) | {10 * max(kappas), 100 * max(kappas)})
+mkt_frame = mkt_rets.to_frame("mkt") if mkt_rets is not None else None
 
 def evaluate(w, mu, Sigma, xret):
     # a month where the estimator itself blew up (e.g. FMR on explosive raw levels) scores NaN
@@ -203,6 +227,21 @@ for k, month in enumerate(eval_months):
     for j, kap in enumerate([0.0] + kappas):
         w = (fw @ thetas.iloc[:, j]).to_numpy()
         rows.append({"month": month, "method": "linrank", "P": 6, "kappa": kap, "mat": 0, **evaluate(w, mu, Sigma, xret)})
+    if args.fair_linear:
+        n_ = len(data)
+        # the market alone, its weight from the same unpenalised regression DKKM's market column gets
+        th_m = float(fama.mve_data(mkt_frame, month, 0).iloc[0])
+        rows.append({"month": month, "method": "mkt_est", "P": 1, "kappa": 0.0, "mat": 0,
+                     **evaluate(np.full(n_, th_m / n_), mu, Sigma, xret)})
+        rows.append({"month": month, "method": "ew", "P": 1, "kappa": 0.0, "mat": 0,
+                     **evaluate(np.full(n_, 1.0 / n_), mu, Sigma, xret)})
+        # linrank with the market as a separate unpenalised column instead of a penalised constant
+        fw = lin_rank_weights(data).iloc[:, 1:].copy()
+        fw["mkt_rf"] = 1.0 / n_
+        thetas = dkkm.mve_data(lr_rets.iloc[:, 1:], month, len(chars) * np.array([0.0] + fair_kappas), mkt_rets)
+        for j, kap in enumerate([0.0] + fair_kappas):
+            w = (fw @ thetas.iloc[:, j]).to_numpy()
+            rows.append({"month": month, "method": "linrank_m", "P": fw.shape[1], "kappa": kap, "mat": 0, **evaluate(w, mu, Sigma, xret)})
     # DKKM
     rf = data[RFC] if model_for_rff == "bgn" else None
     ens = {}
@@ -233,6 +272,13 @@ for k, month in enumerate(eval_months):
         for j, kap in enumerate([0.0] + kappas):
             w = (fw @ thetas.iloc[:, j]).to_numpy()
             rows.append({"month": month, "method": "linlev", "P": fw.shape[1], "kappa": kap, "mat": 0, **evaluate(w, mu, Sigma, xret)})
+        if args.fair_linear:
+            fw = lin_lev_weights(data).iloc[:, 1:].copy()
+            fw["mkt_rf"] = 1.0 / len(fw)
+            thetas = dkkm.mve_data(ll_rets.iloc[:, 1:], month, 2 * len(chars) * np.array([0.0] + fair_kappas), mkt_rets)
+            for j, kap in enumerate([0.0] + fair_kappas):
+                w = (fw @ thetas.iloc[:, j]).to_numpy()
+                rows.append({"month": month, "method": "linlev_m", "P": fw.shape[1], "kappa": kap, "mat": 0, **evaluate(w, mu, Sigma, xret)})
         # RFF on ranks + levels (+rf)
         ensL = {}
         for mi, (WL, fr) in enumerate(zip(WsL, fretsL)):
@@ -277,7 +323,8 @@ print(f"\n=== {args.model}/{args.tag}: window={args.window}, eval months={len(ev
 print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
 _prov, _ptag = provenance.write_sidecar(
     _base + "_summary.csv", inputs=_solves,
-    extra={"engine": "estimators", "window": args.window,
+    extra={"engine": "estimators", "window": args.window, "linear_only": args.linear_only,
+           "fair_linear": args.fair_linear, "inputs_from": args.inputs_from,
            "spec_id": _spec_id, "oracle_eval_window": _oracle_eval_window,
            "panel": os.path.basename(_panel_path)})
 summ["prov"] = _ptag           # every row carries it; see provenance.short_tag
@@ -288,6 +335,7 @@ print(f"[prov] {_ptag}  -> {os.path.basename(_base)}_summary.csv.prov.json", flu
 json.dump({"model": args.model, "tag": args.tag, "seed": args.seed, "prov": _ptag,
            "spec_id": _spec_id, "oracle_eval_window": _oracle_eval_window,
            "window": args.window, "winsor": args.winsor, "kappas": kappas,
+           "linear_only": args.linear_only, "fair_linear": args.fair_linear, "inputs_from": args.inputs_from,
            "eval_months": len(eval_months), "N": N,
            "solves": _solves,
            "panel": os.path.basename(_panel_path)},

@@ -196,7 +196,13 @@ for k, month in enumerate(months):
     months_data.append(md)
     rows.append({"month": month, "n": len(keep), "sr_max": max_sr(mu, Sigma), "sr_max_code": sr_max_code,
                  "rf": float(np.atleast_1d(md["rf"])[0]) if md["rf"] is not None else None, "mean_mu": mu.mean(), "sd_mu": mu.std(),
-                 "mean_idio_sd": np.sqrt(np.diag(Sigma)).mean()})
+                 "mean_idio_sd": np.sqrt(np.diag(Sigma)).mean(),
+                 # The EW market's conditional Sharpe, and the Sharpe of what the market does NOT
+                 # span: on the conditional frontier SR_max^2 = SR_ew^2 + SR_orth^2. A DKKM fit
+                 # collapses onto the market unless SR_orth is large (docs/RESULTS.md finding 8),
+                 # so this is the screen every proposed economy is read against.
+                 "sr_ew": float(mu.mean() / np.sqrt(max(Sigma.mean(), 1e-300)))})
+    rows[-1]["sr_orth"] = float(np.sqrt(max(rows[-1]["sr_max"] ** 2 - rows[-1]["sr_ew"] ** 2, 0.0)))
     if k % 100 == 0:
         print(f"  moments month {month} ({k+1}/{len(months)}) n={len(keep)} SRmax={rows[-1]['sr_max']:.3f}  {time.time()-t0:.0f}s", flush=True)
 ts = pd.DataFrame(rows)
@@ -272,6 +278,10 @@ summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.se
            "solves": solves, "aggregate_seeds": _agg, "spec_id": args.spec,
            "eval_window": args.eval_window, "eval_months": _n_eval,
            "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
+           "sr_ew_mean": float(ts.sr_ew.mean()), "sr_orth_mean": float(ts.sr_orth.mean()),
+           "sr_ew_eval": float(ts.sr_ew[_eval_mask].mean()) if _n_eval else None,
+           "sr_orth_eval": float(ts.sr_orth[_eval_mask].mean()) if _n_eval else None,
+           "sr_max_eval": float(ts.sr_max[_eval_mask].mean()) if _n_eval else None,
            "mean_mu": float(ts.mean_mu.mean()), "sd_mu": float(ts.sd_mu.mean()), "mean_idio_sd": float(ts.mean_idio_sd.mean()),
            "bases": {}}
 print(f"\n=== {args.model}/{args.tag}: mean SR_max = {ts.sr_max.mean():.4f}  N={N} months={len(ts)}  "

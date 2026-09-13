@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyxT860-v1",
+  "title": "The vyx economy on a longer sample: T = 860 and a 720-month window, the same 125 evaluation months",
+  "question": "Is DKKM's shortfall from its population ceiling in vyx a data limit?",
+  "notes": "X3 (docs/RESULTS.md, KP14 proposals). The vyx ECONOMY unchanged -- same parameters, same G and integ solves -- simulated for 860 months instead of 500 and estimated on a 720-month window instead of 360, so the evaluation months are the same count (845 - 720 = 125). The ridge grid gains 1e-4 below vyx's smallest penalty, which won in 9 of 10 vyx seeds.\n\nWHY: in vyx the linear methods reach 99% of their population ceiling and DKKM 74% of its, and DKKM wants less shrinkage than the grid allows. If DKKM's shortfall is data, doubling the window closes part of it and leaves the linear methods where they are.\n\nPREDICTION (2026-09-13): DKKM +0.03 to +0.08 over vyx's 0.7475; the linear methods within +0.01 of vyx's 0.6428; gap +0.13 to +0.17; room unchanged within seed noise, since the economy is the same and the oracle ceilings move only with the month sample. FALSIFIED IF DKKM gains less than +0.02. Report the gap restricted to vyx's grid (kappa >= 0.001) beside the full-grid gap, so the window and the grid extension are separable.\n\nOWN TAG: result files are named by model, tag and seed only, so under tag vyx this run would overwrite vyx's panels, moments and oracle files.\n\nREUSED SOLVES: pins vyx's G f7be27e39d2b530f and integ 84e195172f091cd2, recorded for var-kp_vy-vyx-v2; this spec causes no solve of its own. estimation.fair_linear: the linear methods are also scored with the EW market unpenalised (finding 8); `lin` keeps its definition over ff, fm, linrank, linlev. Memory: vyx's oracle peaked at 30.6 GiB at T=500; expect ~53 GiB.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyx-v2",
+    "supersedes": null,
+    "changes": [
+      "panel T 500 -> 860",
+      "estimation window 360 -> 720 (125 evaluation months either way)",
+      "kappas gain 0.0001 below 0.001",
+      "estimation.fair_linear added",
+      "tag vyxT860; solves reused from var-kp_vy-vyx-v2"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 860,
+    "burnin": 200
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 1.8,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyx"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            0.02,
+            0.07,
+            0.14
+          ],
+          "gamma_v": 1.8,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyx"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 720,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-13 as X3 in docs/RESULTS.md",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=vyxT860",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "f03dc214383df699a23b4bd5d86ebf6a87b9368172bd3e294551893046220e91",
+  "expected_solves": {
+    "G": "f7be27e39d2b530f",
+    "integ": "84e195172f091cd2"
+  },
+  "precommitted": false,
+  "solves_pending": null,
+  "reused_solves": {
+    "G": "var-kp_vy-vyx-v2",
+    "integ": "var-kp_vy-vyx-v2"
+  }
+}
