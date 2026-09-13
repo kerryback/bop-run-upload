@@ -2,8 +2,8 @@
 
 An ongoing record of every economy we have run through the oracle-and-estimator pipeline,
 organised by model, with the experiments inside each model grouped into the paths that
-produced them. Updated as new paths are tried. Last updated 2026-09-10 at commit `132cbc8`
-(the ten-seed GS results); the current-results table below is checked against
+produced them. Updated as new paths are tried. Last updated 2026-09-13 (the persistence ladder
+complete, and cross-cutting finding 8 on the market portfolio); the current-results table below is checked against
 `variants/results/economy_table.csv` by `tests/test_results_md_matches_table.py`, so this file
 cannot fall behind the numbers without the suite saying so.
 
@@ -40,7 +40,8 @@ seeds) unless the entry says otherwise.
 - **gap** -- the quantity the project is after. The Sharpe a random-feature ridge estimator
   achieves (DKKM: `rff`, `rff_ens`, `rff_lev`, `rff_lev_ens`, best number of features and best
   ridge penalty) minus the best any linear method achieves (`linrank`, `linlev`, Fama-MacBeth
-  `fm`, Fama-French `ff`).
+  `fm`, Fama-French `ff`). **Outside vyx this measures the linear methods against the equal-weighted
+  market that DKKM holds unpenalised -- cross-cutting finding 8.**
 - **gap % of lin** -- `gap` divided by the linear Sharpe attained, in percent. An absolute gap
   of +0.10 means something different against a linear Sharpe of 0.64 than against one of 0.09,
   and this column is what separates the two cases. It reorders the economies; see finding 5.
@@ -51,7 +52,7 @@ seeds) unless the entry says otherwise.
   percentage columns.
 - **SR_max eval** -- the oracle's maximum attainable conditional Sharpe, averaged over the
   evaluation months. A hard upper bound on every estimator by Cauchy-Schwarz, so `DKKM` and
-  `best linear` must both sit under it. They do, on all forty runs.
+  `best linear` must both sit under it. They do, on all eighty runs.
 
 ### Two cautions on these quantities
 
@@ -104,11 +105,13 @@ with the parameterizations proposed next for it, and those are collected and ran
 
 ## Current results
 
-All six CURRENT economies, ranked by gap as a share of the linear Sharpe attained. Mean (sd)
+All eight CURRENT economies, ranked by gap as a share of the linear Sharpe attained. Mean (sd)
 over ten seeds.
 
 | economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 |
+| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 |
 | bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 |
 | bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 |
 | kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 |
@@ -116,15 +119,15 @@ over ten seeds.
 | gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 |
 | gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 |
 Rows are ordered by PROPORTIONAL gap. **By absolute gap the order is different**: vyx first at
-+0.1046, then g28 +0.0283, gx7 +0.0229, g0235 +0.0227, g0235f +0.0211, bx7 +0.0078.
++0.1046, then g28 +0.0283, gx7 +0.0229, g0235 +0.0227, g0235f +0.0211, g0235r +0.0209, g0235s
++0.0180, bx7 +0.0078. Which ordering matters depends on the question -- see cross-cutting finding 5.
 
-**Two more are running** and are deliberately not in this table: `g0235s` and `g0235r`, the slow
-and rare points of the persistence ladder. Seven of ten and five of ten seeds have finished; the
-rest were killed for memory and resubmitted (see BGN, Path 1). The seeds still missing are not a
-random subset -- they are the memory-heavy ones, which by the mechanism in that section are the
-seeds whose aggregate path spent longest in the calm regime -- so a mean over the finished seeds
-would be biased, and a biased mean in a results table is worse than a blank row. Which ordering matters depends on the
-question -- see cross-cutting finding 5.
+**Read the gap column with cross-cutting finding 8 in hand.** In seven of these eight economies
+the winning DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market,
+which DKKM carries unpenalised and the linear methods do not. Outside vyx the `gap` column
+therefore measures how far the linear methods fall below the market, not what the random
+features learn. The proportional ordering is the most affected: g0235r's 192% is a linear Sharpe
+of 0.011 in months where the equal-weighted market earns 0.047.
 
 Regenerate with `python variants/aggregate_seeds.py --flagship`, which also writes the per-seed
 rows to `variants/results/seed_table.csv`.
@@ -189,6 +192,10 @@ of ten seeds -- the finding that first showed room is not a ceiling (WORKING.md 
 published single-seed row (room +0.0233, gap +0.0297, t 29.1) is reproduced exactly by seed 0
 and sits 0.8 sd above the ten-seed mean.
 
+**Read through finding 8.** DKKM's 0.1081 is the equal-weighted market's 0.1061 plus 0.0020, and the
+gap is the linear methods' 0.0206 shortfall below that market. The room is a real property of this
+economy; the estimators did not reach it.
+
 **Provenance.** Spec `var-bgn_gam-g0235-v2`; solve `be222462dd017b2c` (the J* table
 `Jstar_g0235.csv`); seed array `SEED_SPEC=g0235`.
 
@@ -226,37 +233,106 @@ window, the window cannot track the conditional tangency, the estimators collaps
 constant-coefficient rule, and they finish short of it. It was not the pre-registered reading, so it
 is an observation that sharpens what the slow point has to show, not a confirmation. `g0235s`, where
 the window should track and gap over room should be HIGHEST, is the half that would make it a test.
+**It did not survive the slow point, and finding 8 says why:** here DKKM is 0.0116 above the market and
+the linear methods 0.0094 below it, so gap over room tracks the linear shortfall rather than a window's
+ability to follow the regime.
 
 **Provenance.** Spec `var-bgn_gam-g0235f-v1` (`precommitted: false` -- the table was built before
 the spec was committed; the id was nonetheless computed first and matched); solve
 `8662d7c1079f4b41`; Phoenix array `21564268`, all ten seeds CURRENT, 3.0 to 3.3 h each.
 
-#### g0235s and g0235r -- RUNNING, the slow and rare points
+#### bgn_gam/g0235s -- CURRENT, gap +0.0180 (sd 0.0127), 41.3% of the linear Sharpe, t 43.8
 
-`g0235s` switches five times more slowly than g0235 at the same one-third stress share (calm 240
-months, stress 120, about two switches per window); `g0235r` makes stress rare and short (10% of
-months, spells of 27 months). Both finished some seeds -- seven of ten and five of ten -- and are held
-out of the table above until the rest land, because the missing seeds are systematically the heavy
-ones.
+**What differs from g0235.** Only the two regime switch probabilities, both scaled by 0.2:
+calm-to-stress 0.25/12 to 0.05/12 and stress-to-calm 0.50/12 to 0.10/12. Calm spells average 240
+months and stress spells 120, so a 360-month window holds about two switches. The stationary stress
+share stays at one third, the multipliers at [0.2, 3.5]; J* is re-solved.
 
-**Memory is the finding so far, and it is the mechanism above made visible.** Longer calm spells
-price risk cheaply for longer, so options are worth more, firms accept more projects and carry
-larger inventories, and the panel arrays grow with them. The exercise-threshold value scale orders
-exactly as memory does:
+**Why it was tried.** B1's slow point: if g0235f's post-hoc reading were right -- a rolling window
+that tracks the regime gets past the constant-coefficient room -- gap over room should peak here.
 
-| economy | J* value range | peak memory (Phoenix) | wall per seed |
+**What it decided.** The spec predicted room unchanged and the gap falling toward or below the room.
+The second half failed: the gap exceeds the evaluation-window room in nine of ten seeds. The post-hoc
+reading does not survive either. Its evaluation-window ordering holds (gap over room 0.60 fast, 1.28
+baseline, 1.52 slow), its all-month ordering does not (0.62, 1.20, 0.93), and g0235s's
+evaluation-window room is 1.4 standard errors from zero, so no ratio over it is determined.
+Cross-cutting finding 8 removes the question: in this economy the gap is the linear methods'
+distance below the equal-weighted market, not a window tracking a regime.
+
+**The evaluation window is one draw of a slow regime path.** Under 240-month calm spells, the 125
+evaluation months contain no stress month at all in six of ten seeds, and 74% stress in one (seed 2).
+Every level statistic follows that occupancy -- across seeds the evaluation-window stress share
+correlates 0.98 with SR_max, 0.99 with DKKM and 0.97 with room, and seed 2 alone supplies 74% of the
+mean evaluation-window room -- but the gap does not (-0.11): the two largest gaps, +0.041 and
++0.034, come from seeds with 7 and 0 stress months in the evaluation window.
+
+**Provenance.** Spec `var-bgn_gam-g0235s-v1`; solve `05ad848ab3779695`. Seeds 0, 2 and 5-9 on
+Phoenix array `21564269` at `c3d60c8`; seeds 1, 3 and 4, killed there at the 64 GiB cap, on Sol
+array `63033314` at `1fb6f44`. No Python differs between the two commits (the only change a run
+could see is a solve-hint string in the submit script). All ten CURRENT, with the spec, environment
+and override-readback checks verified in every seed's sidecar.
+
+#### bgn_gam/g0235r -- CURRENT, gap +0.0209 (sd 0.0166), 192.1% of the linear Sharpe, t 80.0
+
+**What differs from g0235.** Both switch probabilities, and with them the stationary mix:
+calm-to-stress 0.05/12 and stress-to-calm 0.45/12, so stress occupies 10% of months in spells of
+about 27 months between calm spells of 240. The multipliers stay at [0.2, 3.5]; J* is re-solved.
+Unlike g0235f and g0235s this is a different economy rather than g0235 at another speed: the price
+of risk spends less time high.
+
+**Why it was tried.** Rare, severe and short is the empirically defensible shape of a stress regime,
+and a 360-month window holds only about 36 stress months to learn the regime interaction from.
+
+**What it decided.** Room fell, as the spec predicted (evaluation window +0.0176 to +0.0026). The gap
+did not fall further, which the spec also predicted: +0.0227 to +0.0209. The 192% is a denominator
+effect -- the best linear Sharpe averages 0.0109 and is below zero in four seeds, in months where the
+equal-weighted market earns 0.047. Eight of ten seeds have no stress month in the evaluation window.
+DKKM itself collapses in seeds 0, 5, 6 and 7 (0.004, 0.034, 0.006, -0.012), and not for want of a
+nonlinear target: at its largest penalty it holds a scaled market, a scaled market can score below
+the market only if its estimated weight is negative in some months, and the calm-regime premium is
+small enough against a 360-month sample mean for that to happen.
+
+**Provenance.** Spec `var-bgn_gam-g0235r-v1`; solve `0c624174cf4b26fa`. Seeds 1, 3, 4, 6, 8 and 9 on
+the Phoenix highmem array `21564312` at `c3d60c8`; seeds 0, 2, 5 and 7 on Sol array `63033315` at
+`1fb6f44`. **Seed 3's two stages ran at different commits**: its oracle at `c3d60c8`, its estimators
+at `1fb6f44`, because the shared checkout was pulled while that 24.5-hour task sat between stages.
+Harmless here for the reason above, and a hazard in general -- pulling the shared `/data` checkout
+moves the code under every running task. All ten CURRENT, all checks verified.
+
+#### Holding the partial means out was right, for the reason given
+
+Both economies were kept out of the table while seeds were missing, on the argument that the missing
+seeds were the calm-heavy, memory-heavy ones. They were: the late seeds' mean whole-panel stress share
+was 0.15 against 0.42 for the early ones in g0235s, and 0.06 against 0.13 in g0235r. And it mattered,
+though not everywhere:
+
+| | early-seed snapshot | all ten | bias of the snapshot |
 |---|---|---|---|
-| g0235f | 37 to 345 | 15.7 to 21.6 GiB | 3.0 to 3.3 h |
-| g0235 | 57 to 483 | 15.7 to 38.9 GiB (Sol) | about 3.2 h |
-| g0235s | 148 to 1262 | 31.9 to 63.9 GiB on the seeds that fit | 4 to 12.4 h |
-| g0235r | 390 to 2041 | 71.8 to 74.0 GiB | 14 to 20 h |
+| g0235s gap | +0.0177 | +0.0180 | none |
+| g0235s room, evaluation window | +0.0149 | +0.0119 | +25% |
+| g0235r gap | +0.0256 | +0.0209 | +22% |
+| g0235r DKKM | 0.0398 | 0.0318 | +25% |
 
-All ten `g0235r` seeds and three `g0235s` seeds were killed at the 64 GiB cap; one `g0235s` seed
-finished 200 MB under it. Six `g0235r` seeds were re-run on the highmem partition at 200 GiB to
-MEASURE the peak rather than guess it again, and the rest were resubmitted at 110 GiB. This also
-supplies an explanation for the unexplained bimodality in g0235's memory (15.7 to 38.9 GiB across
-seeds on identical nodes, `WORKING.md` §40): whether a seed's aggregate path spends long stretches
-in calm decides how large the inventories grow.
+#### Memory: the calm-spell mechanism holds seed by seed
+
+Longer calm spells price risk cheaply for longer, so options are worth more, firms accept more
+projects and carry larger inventories, and the panel arrays grow with them. Across economies the
+exercise-threshold value scale orders exactly as memory does; within each of the two new economies,
+the longest calm spell in a seed's panel ranks with its peak memory at Spearman +0.84 (g0235s) and
++0.80 (g0235r). The panels that never enter stress are the heaviest and slowest in both: g0235s seed
+3 at 74.2 GiB and 22.3 h, g0235r seed 3 at 77.0 GiB and 24.5 h.
+
+| economy | J* value range | peak memory, all ten seeds | wall per seed |
+|---|---|---|---|
+| g0235f | 37 to 345 | 15.7 to 22.5 GiB (Phoenix) | 2.9 to 4.3 h |
+| g0235 | 57 to 483 | 15.7 to 38.9 GiB (Sol) | about 3.2 h |
+| g0235s | 148 to 1262 | 31.9 to 74.2 GiB | 4.0 to 22.3 h |
+| g0235r | 390 to 2041 | 68.9 to 77.0 GiB | 10.5 to 24.5 h |
+
+Wall times mix Phoenix public, Phoenix highmem and Sol nodes and are not comparable across rows.
+All ten `g0235r` seeds and three `g0235s` seeds were first killed at a 64 GiB cap. The same
+mechanism explains g0235's unexplained bimodality (15.7 to 38.9 GiB on identical nodes,
+`WORKING.md` §40).
 
 #### g0520 and g0330 -- LEGACY, single seed, same economy family
 
@@ -305,42 +381,46 @@ repository and was deleted (`23f9380:variants/results/oracle_summary.csv`).
 
 ### Proposed next parameterizations -- BGN
 
-Each entry says what would differ from g0235, why the number is worth having, what result would
-mean, and what it costs. The regime block sits inside the J* solve, so every point needs a J*
-rebuild (minutes), then ten seeds at about 3.5 h each on Sol.
+Finding 8 changes what a BGN proposal has to do. Across the four regime economies room moved from
++0.003 to +0.035 while the gap stayed between +0.018 and +0.023, because the gap was the linear
+methods' distance below the market and DKKM sat on the market throughout. So a BGN economy earns
+estimator time only if it raises BOTH room and the Sharpe the market does not span. The one BGN seed
+that had both -- g0235s seed 2, stressed in 84% of its months, non-market Sharpe 0.40, room +0.087 --
+put DKKM 0.116 above the market but only 0.011 above the linear methods, which followed most of it.
+**Screen every point with one oracle-only seed first**, and run seeds only if room is at least +0.05
+and the non-market Sharpe at least 0.30 (interpolated between that seed and vyx: two points, a
+heuristic rather than a law). The oracle reports the non-market Sharpe once E1's addition lands.
 
-- **B1. Regime persistence -- RUNNING; the fast point is in, and its prediction failed.**
-  Three points on g0235's multipliers: fast (4x), slow (5x slower), and rare-and-short stress.
-  The design assumed that holding the stationary stress share fixed would hold room fixed, so a
-  gap moving across the speed ladder would isolate the rolling-window mechanism. The fast point
-  refuted that assumption: room nearly doubled, because switching speed changes option values and
-  therefore the cross-section (Path 1, g0235f). What survives is a post-hoc reading in terms of gap
-  over room -- 0.60 fast against 1.28 at the baseline speed -- which the slow point, still running,
-  would have to extend to count. The slow and rare points also turned out to be the memory-heavy
-  end of the whole project, 64 to 74 GiB and up to 20 hours a seed.
+- **B1. Regime persistence -- DONE.** Four points; room ranged over a factor of thirteen and the gap
+  did not move. The fast point's prediction failed on both halves, the slow and rare points' on their
+  second halves. What it established is finding 8's pattern and the calm-spell memory mechanism.
 
-- **B2. Along the frontier.** The multiplier is capped near 3.65 by the closed-form requirement
-  2 x gmult x scale < 1, where `scale` is the exponential tail of the project-beta distribution
-  and is fitted from the two acceptance-probability targets (0.10, 0.05). The path from g0520 to
-  g0235 walked the gmult axis at fixed scale and found room saturating while the gap rose. The
-  frontier is a curve, not a point: a thinner tail (targets lowered so scale is near 0.10)
-  admits gmult up to 5, a fatter one (scale near 0.20) caps it at 2.5 but gives the two regime
-  transforms a more dispersed beta cross-section to bend. **Why.** Whether the gap is about the
-  size of the multiplier or the dispersion of the exposures it acts on is the open design
-  question for this path, and two points on the frontier settle it. **Prediction.** Not
-  confident either way, which is the point. **Caveat.** The acceptance targets also move the
-  baseline cross-section, so each frontier point wants its gmult = [1, 1] control, oracle only,
-  to separate the two effects.
+- **B4. A stress-dominant regime.** Swap the switch probabilities: calm-to-stress 0.50/12,
+  stress-to-calm 0.25/12, so two thirds of months are stressed, in 48-month spells between 24-month
+  calm ones; multipliers [0.2, 3.5]. **Why.** Within g0235s a seed's evaluation-window stress share
+  correlates 0.97 to 0.99 with its SR_max, room and DKKM, and the only BGN seed with a large
+  non-market Sharpe was the one that spent 84% of its months stressed; this puts a whole economy where
+  that seed was. **Prediction.** Room above +0.04, non-market Sharpe 0.2 to 0.3, DKKM 0.03 to 0.06
+  above the market -- and a fair gap (E1) of only +0.005 to +0.015, because BGN's within-regime
+  premium is close to affine in book-to-price and 1/price and the linear methods follow most of what
+  DKKM finds, as they did in seed 2. **Cost.** A J* rebuild (minutes); stress-heavy seeds were the
+  light ones (32 GiB, 4 h). It is the test of whether BGN can produce a fair gap at all: if the screen
+  misses, the regime path is finished.
 
-- **B3. A live interest rate under the regime.** sigma_r = 0.002 makes the short rate nearly
-  constant, so the model's own continuous state does nothing. The legacy gamma(r) economy showed
-  the rate is a powerful state and that rolling raw-level regressions harvest it because levels
-  co-move with r. With the discrete regime doing the pricing and sigma_r raised to 0.004 or
-  0.006 supplying a second, continuous state, the question is whether DKKM's rate-by-regime
-  interactions gain more than the linear methods' level timing. **Prediction.** The linear
-  methods improve, since raw book-to-price levels time the rate; DKKM improves more only if the
-  rate-by-regime interaction is where the premium moves. The proportional gap could go either
-  way. Lower priority than B1 and B2.
+- **B2. Along the frontier.** The multiplier is capped by the closed-form requirement
+  2 x gmult x scale < 1, with `scale` the exponential tail of the project-beta distribution, fitted
+  from the acceptance targets (0.10, 0.05). A thinner tail (scale near 0.10) admits gmult up to 5, so
+  a higher price of risk in stress months and more non-market Sharpe there. **Prediction.** Room and
+  non-market Sharpe rise in stress months; whether the economy clears the screen on average depends on
+  how much time it spends stressed, so run it with B4's switching if B4's screen falls just short.
+  Oracle-only screen first; each frontier point wants its gmult = [1, 1] control, since the targets
+  also move the baseline cross-section.
+
+- **B3. A live interest rate under the regime.** sigma_r 0.002 to 0.006. The rate is the one second
+  source of variation BGN already has, and a project's rate sensitivity depends on the timing of its
+  cash flows, which is not proportional to its market beta -- the kind of exposure the market cannot
+  span. **Prediction.** The screen misses at the current pricing of the rate shock (beta_zr =
+  -0.00014): the rate moves values but earns almost no premium of its own. Oracle-only.
 
 ---
 
@@ -461,45 +541,61 @@ DKKM. §12b: "crash risk per se does not create a DKKM gap."
 
 ### Proposed next parameterizations -- KP14
 
-vyx already has the largest absolute gap and the largest room, and its linear methods reach
-0.64, so the proportional gap is only 16%. Every proposal below tries to lower what the linear
-methods can do without lowering what DKKM can. Each point needs the G solve (seconds per type)
-and the type-by-state integrals (about 30 min per type), then ten seeds at about 2.8 h.
+vyx is the one economy where DKKM genuinely leaves the market (finding 8): the market reaches 31% of
+SR_max, the linear methods beat it by 0.28 and DKKM by 0.38. It is also data-limited in a measurable
+way: the winning ridge penalty is the SMALLEST on the grid in nine of ten seeds, and DKKM reaches 74%
+of its population ceiling while the linear methods reach 99% of theirs. So the levers that should
+widen the gap are more non-market Sharpe carried by exposures the characteristics reveal
+nonlinearly, and more data for DKKM to spend. Each economy point needs the G solve (seconds per type)
+and the type-by-state integrals (about 30 min per type), then ten seeds at about 3 h on Sol.
 
-- **K1. A continuum of exposures.** Replace the three point-mass types with fifteen on a grid
-  over [0, 0.14], shares right-skewed so most firms sit low. **Why.** Three types can be nearly
-  spanned by a linear rule keyed on any characteristic that reveals type, which is exactly what
-  the compensation knob (bv_comp = 1.2) is there to hide. A continuum has no three points to key
-  on: the exposure map is smooth in a latent variable that the characteristics reveal only
-  nonlinearly. **Prediction.** The linear Sharpe falls, room rises with the added dispersion,
-  DKKM holds, so the proportional gap rises. If the linear methods keep 0.64 the type structure
-  was never what they were exploiting. The machinery takes any number of types; the integral
-  stage is the cost, about 7.5 h once for fifteen types.
+- **K4. A higher price of the state's risk: gamma_v 1.8 to 2.5. PROMOTED.** **Why.** The Sharpe
+  carried by the state's shock scales with its price, and that Sharpe is the non-market component --
+  this turns the dial finding 8 identifies directly. It is also the step with a track record: vy to
+  vyx raised gamma_v from 1.2 to 1.8 and the gap rose with the room (legacy levels are a different
+  economy; the direction survives). **Prediction.** Room from +0.36 to +0.45-0.50; SR_max and the
+  non-market Sharpe up by about 40%; the winning penalty still at the bottom of the grid; gap +0.15 to
+  +0.20. **Falsified if** the gap is below +0.12. **Caveat.** Type premia approach 40% a year; report
+  the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.
 
-- **K2. A rare extreme type.** Three types with shares (0.45, 0.45, 0.10) and the top exposure
-  raised from 0.14 to 0.20. **Why.** This targets the rank transform specifically. A 10% type at
-  the top gets ranks 0.9 to 1.0 whatever its exposure, so a linear-in-rank premium is bounded
-  while the true premium is not; a random-feature basis can place a bump on those ranks, a
-  linear rule can only tilt. **Prediction.** Room and proportional gap both rise; the
-  level-linear method may hold better than the rank-linear one, which would itself be
-  informative. **Check first.** The per-type value coefficients need a positive effective
-  discount across the state grid; the table builder refuses if not, and beta = 0.20 sits closer
-  to that bound than anything run so far.
+- **K5. Signed exposures, so the market carries little of the state's risk. NEW.** Type loadings
+  (-0.06, +0.04, +0.14) in equal shares instead of (0.02, 0.07, 0.14): the spread of exposures rises
+  from 0.12 to 0.20 while the market's average exposure falls from 0.077 to 0.040. **Why.** Two
+  effects, both in the direction finding 8 says matters. The premium spread across types widens, so
+  there is more non-market Sharpe, and the market spans less of it. And the nonlinearity sharpens: a
+  positive-loading firm's value rises with the state while a negative-loading firm's falls, so which
+  characteristic ranks earn the premium flips as the state moves -- a state-by-characteristic
+  interaction that a fixed-coefficient linear rule averages away and a random-feature basis that sees
+  the state can represent. **Prediction.** Room above +0.42, the market below 25% of SR_max, gap
+  above +0.12. **Falsified if** room does not rise. **Check first.** A claim on e^(beta y) is
+  discounted at r + gamma_x sigma_x + delta - mu_x + beta gamma_v sigma_y + beta kappa_y y
+  - beta^2 sigma_y^2 / 2. At beta = -0.06 and the top of the state grid that is +0.065, against about
+  +0.23 for vyx's lowest -- positive, but the tightest ever built; at beta = -0.07 it is +0.037.
 
-- **K3. Persistence of the priced state.** kappa_y = 0.35 gives y a two-year half-life. The
-  bending comes from the state entering the value of an exp(beta y) stream through the
-  mean-reversion pull, so slower reversion (0.15, half-life 4.6 years) bends more but gives a
-  360-month window fewer independent cycles to learn from; faster (0.70) does the reverse.
-  **Why.** The mechanism has a dial that trades room against capture and it has never been
-  turned. **Prediction.** Room rises as kappa_y falls; capture falls; the gap has an interior
-  optimum, which may or may not be at 0.35.
+- **X3. vyx on a longer sample: T = 860, window 720, the same 125 evaluation months, ridge grid
+  extended down to 1e-4. NEW, estimation side.** Same economy, same solves, same room. **Why.** The
+  linear methods are at 99% of their population ceiling and have nothing to spend more data on; DKKM
+  is at 74% of its and wants less shrinkage than the grid allows. Doubling the window tests directly
+  whether DKKM's shortfall is data. The grid extension alone is worth little -- mean Sharpe gained 0.154,
+  0.100 and 0.035 per decade of penalty from 1 down to 0.001, flattening -- which is why it rides along
+  rather than running by itself. **Prediction.** DKKM +0.03 to +0.08, linear methods within +0.01, gap
+  +0.13 to +0.17. **Falsified if** DKKM gains less than +0.02. **Cost.** The oracle at 1.7 times the
+  rows (about 50 GiB, 2 h a seed on Sol); estimators over the same 125 months; about 40 node-hours.
 
-- **K4. One more premium-side step.** gamma_v from 1.8 to 2.5. The path from vy to vyx raised
-  capture from 0.10 to 0.29 along with room, the basis for the conjecture that premium-side
-  extremity raises both. One more step says whether that continues. **Caveat, and the reason
-  this is last.** The type premia were already near 6, 15 and 28 percent a year under the old
-  labels (not re-derived since the arrival-rate fix); at gamma_v = 2.5 they approach 40 percent.
-  Worth knowing where the mechanism ends; not a calibration anyone would defend.
+- **K1. A continuum of exposures.** Fifteen types on a grid over [0, 0.14], shares right-skewed so
+  most firms sit low. **Why, through finding 8.** Right skew lowers the market's average exposure, so
+  less of the state's Sharpe is spanned, and a smooth exposure map suits random features better than
+  three steps. **Prediction.** Room and gap up modestly -- less confidently than K4 or K5, because the
+  three-type structure was never shown to be what the linear methods exploit. About 7.5 h of integrals.
+
+- **K3. Persistence of the priced state.** kappa_y from 0.35 to 0.15 and to 0.70. Slower reversion
+  bends values more, so room rises, but gives a 360-month window fewer independent cycles. **Prediction,
+  sharpened by X3's premise that DKKM is already data-limited:** the gap FALLS at 0.15 and holds or
+  rises at 0.70.
+
+- **K2. A rare extreme type.** Shares (0.45, 0.45, 0.10), top loading 0.14 to 0.20: a 10% type gets
+  ranks 0.9 to 1.0 whatever its exposure, so a linear-in-rank premium is bounded where the true one is
+  not. Lower priority; the discount check applies.
 
 ---
 
@@ -558,6 +654,9 @@ evaluation-window ceilings: the best linear estimator lands 0.020 below its own 
 random-feature estimator's ability to use the exported state feature. Ranked by room this
 economy is last of four; ranked by gap it is second. The cross-seed sd (0.0136) is half the
 mean, the noisiest gap of the four.
+
+**Read through finding 8.** The "estimation efficiency" above is the market. The equal-weighted market
+alone reaches 95% of SR_max here; DKKM is 0.0032 above it and the linear methods 0.0251 below it.
 
 **The seed-0 reading was misleading.** Seed 0 alone gave +0.0119; the ten-seed mean is 2.4
 times that. WORKING.md §48.
@@ -671,38 +770,30 @@ Both LEGACY, single seed, old calibration.
 
 ### Proposed next parameterizations -- GS21
 
-Two current economies with opposite profiles: g28 has a gap and no room, bx7 has a little of
-each. The natural first move combines them. Every GS point is expensive at the solve stage
-(3.5 to 6 h per type on Sol, one solve per type), so the order matters.
+Finding 8 is decisive for GS. In all three economies the equal-weighted market reaches 94% to 98% of
+SR_max, so there is almost no Sharpe outside the market for any method to find, and the three gaps are
+the linear methods falling 0.004 to 0.025 short of the market while DKKM sits on it. GS21 prices one
+shock that every firm loads on in the same direction, and no parameterization inside the gamma(x) or
+exposure-type families is predicted to change that: they move the market's Sharpe, not the part it
+misses.
 
-- **G1. gamma(x) times exposure types -- DONE, and the pre-registered negative fired.** Gap
-  +0.0229 against g28's +0.0283, 5.5% of the linear Sharpe against 10.5%. The GS exposure path is
-  retired (Path 1, gx7). **G2**, the no-regime control, was to run only if G1 was ambiguous; it
-  was not, so G2 is dropped.
+- **G1. gamma(x) times exposure types -- DONE; the pre-registered negative fired** and the GS exposure
+  path is retired (Path 1, gx7). G2, its control, was dropped.
 
-- **G3. Wake the default channel.** GS21's native nonlinearity is equity as a levered claim
-  near default, and it has never fired: zero realized defaults even at a stressed price of risk
-  of 1.5 (legacy §17g), because firms delever. Levers that push firms toward the boundary:
-  higher idiosyncratic volatility (sigma_z from 0.16 to 0.25 at the quarterly scale) or a larger
-  tax advantage of debt (tau from 0.2 to 0.3) so optimal leverage rises. **Probe first.** The
-  simulator exports a per-firm-month default flag in the panel, so one oracle-only run at
-  N=200, T=200 (about 20 min) reports the realized default rate before any estimator time is
-  spent; proceed only if defaults reach half a percent a year. **Prediction if it fires.** The
-  leverage characteristic, already exported, acquires a convex premium map near the boundary
-  that a rank-linear rule cannot follow, and GS shows room from a source of its own for the
-  first time.
+- **G3. Wake the default channel -- the only GS proposal left.** Equity near default is a convex claim
+  on the same shock, so its return loading rises as the state worsens: heterogeneous, state-dependent
+  exposures that the market does not replicate. The channel has never fired -- zero realized defaults
+  even at a stressed price of risk of 1.5 (legacy §17g), because firms delever. Levers: idiosyncratic
+  volatility sigma_z from 0.16 to 0.25 (quarterly) or the tax advantage of debt tau from 0.2 to 0.3.
+  **Probe first**, oracle only at N=200, T=200 (about 20 min): the panel exports a per-firm-month
+  default flag. **Proceed only if** defaults reach half a percent a year AND the market falls below
+  85% of SR_max.
 
-- **G4. A wider gamma(x).** Slope 0.5 with the clip widened to [0.02, 2.0]. **Why.** g28's DKKM
-  already reaches 96% of the attainable Sharpe and its linear methods 87%, so g28's gap is
-  capped by the linear shortfall unless the attainable Sharpe itself grows; larger price-of-risk
-  swings raise it and enlarge the common-premium variation the linear methods fail to time.
-  **Prediction.** The absolute gap grows; the proportional gap may not, because the linear
-  Sharpe grows too. **Risk.** Convergence at gamma = 2: g28 met tolerance at sweep 2974 of a
-  5600 cap, and the manifest records which exit a solve took.
+- **G4. A wider gamma(x) -- DROPPED.** Its own prediction was an absolute gap growing through
+  common-premium variation. That variation is exactly what the market captures and DKKM shrinks to, so
+  it would raise the market's Sharpe and the linear shortfall, not anything a complexity method learns.
 
-- **G5. Re-verify the capture frontier -- DROPPED.** It existed to decide whether bx7 was the
-  end of the exposure path. gx7 settled that from the other direction: the path is retired, so
-  there is no frontier to locate.
+- **G5. Re-verify the capture frontier -- DROPPED.** The exposure path it served is retired.
 
 ---
 
@@ -721,6 +812,8 @@ each. The natural first move combines them. Every GS point is expensive at the s
    wrong thing for that. What survives of REPORT.md's taxonomy (§16) is the three sources:
    estimation efficiency (g28, everywhere at +0.01 to +0.03), conditioning (g28, the
    regime-only rows), and cross-sectional curvature (g0235, vyx).
+   **Superseded by finding 8 except for vyx:** the "efficiency" and "curvature" readings of g28 and
+   g0235 were DKKM holding the market while the linear methods fell below it.
 
 3. **The different-month confound was real, measured, and is NOT the explanation for gap
    exceeding room.** Until 2026-09-09 the oracle averaged over all 485 months and the
@@ -733,6 +826,9 @@ each. The natural first move combines them. Every GS point is expensive at the s
    g0235 gap/room goes from 1.20 to 1.28, and for bx7 from 0.90 to 1.17. Both move the wrong
    way. So the realized gap genuinely exceeds the constant-coefficient room, and the
    explanation is the rolling window, not the month sample. `WORKING.md` §49.
+   **The last sentence is superseded by finding 8:** gap exceeds room in BGN and GS because the linear
+   methods fall below the market portfolio that DKKM holds, not because a window tracks a moving
+   tangency.
 
 4. **Single seeds mislead.** g28's seed 0 gave +0.0119 against a ten-seed +0.0283; bx7's seed 0
    put its evaluation-window room above its all-month room and ten seeds reversed the order;
@@ -749,54 +845,109 @@ each. The natural first move combines them. Every GS point is expensive at the s
    splits the same way: 54.3% of the linear Sharpe in vyx against 22.0% in g0235, and 0.0% in
    g28, which is the room-free economy stated on this scale.
 
-6. **Two proposals, two falsified predictions, and one was pre-registered.** gx7's decisive
-   negative was written into its spec before any solve ran, and it fired: exposure heterogeneity
-   adds nothing in GS even under a state-dependent price of risk. g0235f's prediction failed on
-   both halves, and the reason -- switching speed changes option values -- was visible in the J*
-   table before a seed ran. The practical lesson for the next proposal: when a parameter enters
-   the SOLVE, check whether the solved table moved before assuming the cross-section did not.
+6. **Of the four B1 and G1 specs, one pre-registered decision fired and the predictions mostly
+   failed.** gx7's written negative fired: exposure heterogeneity adds nothing in GS. g0235f's
+   prediction failed on both halves (room nearly doubled; the proportional gap fell), g0235s's on its
+   second (the gap stayed above the room in nine of ten seeds), and g0235r's on its second (the gap did
+   not fall further). The lessons: when a parameter enters the SOLVE, check whether the solved table
+   moved before assuming the cross-section did not; and decompose a gap against the market before
+   explaining it (finding 8).
 
-7. **The four gaps are three mechanisms.** vyx: a priced state bends heterogeneous exposures
-   with stationary levels (curvature, capture 0.30). g0235: two regimes apply different
-   transforms to the same project beta (curvature, capture above one). g28: a countercyclical
-   price of risk on a flat cross-section (efficiency plus conditioning, no room). bx7:
-   exposure heterogeneity under a regime, small room, small gap. The largest gap by a factor
-   of four comes from the premium-side design, as REPORT.md §19d conjectured.
+7. **The eight gaps are one mechanism in seven economies and a second in vyx.** In the seven BGN and GS
+   economies DKKM holds the equal-weighted market, unpenalised, and the linear methods -- which are made
+   to shrink that market or never see it -- fall 0.004 to 0.036 below it. In vyx a priced,
+   mean-reverting state bends heterogeneous exposures, the market reaches only 31% of SR_max, the
+   linear methods beat the market by 0.28 and DKKM beats it by 0.38. The earlier taxonomy -- curvature
+   in g0235, efficiency and conditioning in g28 -- described the linear side of a shortfall as if it
+   were DKKM's achievement.
+
+8. **Outside vyx, the measured gap is the market portfolio against linear methods that are not given it
+   on the same terms.** DKKM appends the equal-weighted market to its random features UNPENALISED
+   (`--include_mkt`, as in the paper). `linrank` and `linlev` carry that same market as their constant
+   column but penalise it with everything else -- in g28 linrank's mean Sharpe goes from 0.256
+   unpenalised to 0.065 at the smallest penalty on the grid. Fama-French carries a value-weighted market
+   with no shrinkage on its other factors; Fama-MacBeth carries none. At its largest penalty DKKM
+   collapses onto the market: in 54 of the 70 BGN and GS seeds its Sharpe there equals the
+   equal-weighted market's true-moment Sharpe to within 0.001, identically across 36, 360 and 3600
+   features. Its WINNING portfolio is barely off that point. Splitting each seed's gap exactly into
+   what DKKM adds over the market and what the market has over the best linear method, means over ten
+   seeds:
+
+   | economy | SR_max eval | EW market | market / SR_max | DKKM - market | market - best linear | gap | fair-gap bound |
+   |---|---|---|---|---|---|---|---|
+   | kp_vy/vyx | 1.1778 | 0.3675 | 0.31 | +0.3800 | -0.2753 | +0.1046 | n/a |
+   | bgn_gam/g0235 | 0.1461 | 0.1061 | 0.73 | +0.0020 | +0.0206 | +0.0227 | +0.0002 |
+   | bgn_gam/g0235f | 0.2043 | 0.1209 | 0.59 | +0.0116 | +0.0094 | +0.0211 | +0.0046 |
+   | bgn_gam/g0235s | 0.0946 | 0.0516 | 0.55 | +0.0100 | +0.0080 | +0.0180 | +0.0052 |
+   | bgn_gam/g0235r | 0.0559 | 0.0472 | 0.84 | -0.0154 | +0.0363 | +0.0209 | +0.0007 |
+   | gs_bx/g28 | 0.3087 | 0.2944 | 0.95 | +0.0032 | +0.0251 | +0.0283 | +0.0027 |
+   | gs_bx/gx7 | 0.4473 | 0.4385 | 0.98 | +0.0007 | +0.0222 | +0.0229 | +0.0005 |
+   | gs_bx/bx7 | 0.3121 | 0.2926 | 0.94 | +0.0038 | +0.0039 | +0.0078 | +0.0033 |
+
+   The fair-gap bound is DKKM's winning Sharpe minus its Sharpe at the largest penalty: a linear
+   benchmark given the same unpenalised market, with a penalty grid that reaches full shrinkage,
+   collapses to the same portfolio there and so trails DKKM by at most this much. It says nothing for
+   vyx, whose largest penalty does not reach the market.
+
+   In g0235, g28 and gx7, 89% to 97% of the gap is the linear methods below the market. In g0235r DKKM
+   is itself 0.015 BELOW the market: in four seeds its market weight turns negative in part of the
+   evaluation months, against a true market premium that is positive in every one of them, and the
+   linear methods are further below still. vyx is the other case entirely -- both sides beat the
+   market, DKKM by more.
+
+   **When does DKKM leave the market?** When there is Sharpe the market does not span. Per seed, the
+   non-market Sharpe sqrt(SR_max^2 - SR_ew^2) ranks with DKKM's margin over the market at Spearman +0.76
+   across all 80 seeds and +0.65 across the 70 without vyx. The non-market SHARE of SR_max does not
+   (+0.06 without vyx), so it is the level that matters. Over the 70 BGN and GS seeds:
+
+   | non-market Sharpe | seeds | DKKM - market | market - best linear | gap |
+   |---|---|---|---|---|
+   | up to 0.05 | 20 | -0.0084 | +0.0274 | +0.0190 |
+   | 0.05 to 0.10 | 24 | +0.0016 | +0.0179 | +0.0195 |
+   | 0.10 to 0.20 | 24 | +0.0047 | +0.0168 | +0.0215 |
+   | above 0.30 | 2 | +0.0890 | -0.0625 | +0.0265 |
+   | vyx, 1.12 on average | 10 | +0.3800 | -0.2753 | +0.1046 |
+
+   **What it does and does not overturn.** Room is untouched: the oracle's linear and nonlinear bases
+   both carry the constant column and are scored over the same penalty grid, zero included, so room
+   remains a statement about each economy. The gap needs re-measuring against a fair linear benchmark
+   (proposal E1), and the mechanism readings in findings 2, 3 and 7 and in g0235f's post-hoc paragraph
+   were readings of the linear shortfall. Evidence: `variants/score_market.py` scores the market on the
+   saved true moments (6.5 min for all 80 seeds on one Sol node); `variants/market_decomposition.py`
+   produces both tables from `variants/results/market_sr.csv`. `WORKING.md` §53.
 
 ## Proposed next, ranked
 
-Ranked by information per node-hour against the question this file exists for: where is the
-proportional gap large, and why. Each is described in its model's section.
+Ranked by what each decides per node-hour, against the question this file exists for: where a
+complexity method genuinely beats linear ones, and by how much. E1 comes first because it
+re-measures seven of the eight current gaps; it is not itself a bigger-gap experiment.
 
-| rank | proposal | what it decides | new solves | cluster time |
-|---|---|---|---|---|
-| - | ~~G1 gamma(x) x exposure types~~ | DONE: pre-registered negative; the GS exposure path is retired | 4 solves, done | done |
-| - | B1 regime persistence ladder | RUNNING: fast point in (prediction failed; post-hoc gap/room reading); slow and rare pending | done | 7 retries at 110-200 GiB, up to 20 h each |
-| 1 | K1 continuum of exposures | whether vyx's linear methods live off three type points | 15 integrals, ~8 h | 28 h |
-| 2 | X1 window ladder on g0235 | the rolling-window mechanism from the estimator side, at FIXED room -- which B1 turned out unable to hold | none; panels exist | 2 windows x 38 h |
-| 3 | K3 kappa_y ladder | the room-versus-capture trade-off in the priced state | 2 x ~90 min | 2 x 28 h |
-| 4 | G3 default-channel probe | whether GS's own nonlinearity can be made to fire; now the only live GS direction | 1 oracle probe, 20 min | decide after |
-| 5 | B2 frontier ladder | multiplier versus dispersion | J* rebuilds | 2 points x 35 h, plus controls |
-| 6 | K2 rare extreme type | the rank transform's tail compression | 3 integrals | 28 h |
-| 7 | G4, K4 | wider gamma(x); one more gamma_v step | 1 to 3 solves each | 40 h each |
+| rank | proposal | what it decides | predicted | new solves | cluster time |
+|---|---|---|---|---|---|
+| 1 | E1 fair linear benchmark | whether the BGN and GS gaps survive giving linear methods the market DKKM has | BGN and GS fair gaps at most +0.008; vyx at least +0.08 | none | minutes a seed on 80 panels, after an estimator change |
+| 2 | K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | 3 integrals, about 90 min | 30 h |
+| 3 | X3 vyx at T=860, window 720 | whether DKKM's shortfall in vyx is data | gap +0.13 to +0.17, room unchanged | none | about 40 h |
+| 4 | K5 signed exposures | whether a state-by-characteristic crossing adds room the market cannot span | room above +0.42, gap above +0.12 | 3 integrals | 30 h |
+| 5 | B4 stress-dominant BGN, screened | whether BGN can produce a fair gap at all | room above +0.04, fair gap +0.005 to +0.015 | J* rebuild | 1 h screen, then 35 h |
+| 6 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | 15 integrals, about 8 h | 30 h |
+| 7 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | 2 x about 90 min | 2 x 30 h |
+| 8 | G3 default-channel probe | whether GS has any non-market Sharpe to find | proceed only if the market is below 85% of SR_max | 1 oracle probe | 20 min, decide after |
+| - | ~~X1 window ladder on g0235~~ | RETIRED: the gap-over-room question it tested is answered by finding 8 | | | |
+| - | ~~X2 ten more seeds for g28 and bx7~~ | MOOT until E1 says whether those gaps exist | | | |
+| - | ~~G4 wider gamma(x)~~ | DROPPED: moves the market's Sharpe, not the part it misses | | | |
 
-**X1 moved up.** B1 was meant to test the rolling-window mechanism by moving the switching speed
-at constant room, and the fast point showed that switching speed moves room. X1 moves the WINDOW
-instead, on panels that already exist, so the economy -- and its room -- is fixed by construction.
-It is now the clean version of the test B1 was designed to be.
-
-Two estimation-side items belong alongside whatever runs first:
-
-- **X1. Window ladder on the existing panels.** All forty seeded panels and their moment files
-  are on Sol. Re-scoring at windows of 240 and 480 (the oracle re-run at the matching
-  `--eval_window`, about 1 h, plus estimators at about 2.7 h per seed) tests the rolling-window
-  mechanism with no new economy: if gap/room above one is the window tracking a moving tangency,
-  a shorter window raises DKKM's gap in g0235 and bx7 at the cost of noise, and a longer one
-  lowers it toward the constant-coefficient room. Start with g0235.
-- **X2. Ten more seeds for g28 and bx7.** Their cross-seed sd is 48% and 63% of the mean, so
-  the GS ordering is the least certain thing in the current table. About 80 node-hours halves
-  both standard errors. Not a parameterization, but the cheapest way to make the GS rows mean
-  something before building on them.
+**E1 in detail.** Give `linrank` and `linlev` the equal-weighted market exactly as DKKM has it -- a
+separate unpenalised column instead of a penalised constant -- with a penalty grid that reaches full
+shrinkage, and report the market itself, its weight estimated the same way, as a benchmark row. Keep
+the existing methods so every current number stays reproducible. Re-run only the linear stage on the
+eighty saved panels (the random-feature stage is the hours; the linear stage is minutes) into a
+separate results directory, as the evaluation-window re-runs were. Two additions ride along: record the
+ridgeless DKKM column the estimator already computes and then discards, and have the oracle report the
+market's Sharpe and the non-market Sharpe so every screen above can read them. **Pre-registered
+prediction**, the fair-gap bound of finding 8 plus 0.003 for incomplete shrinkage at the top penalty:
+fair gap at most +0.003 for g0235, +0.008 for g0235f and g0235s, +0.004 for g0235r and gx7, +0.006 for
+g28 and bx7; vyx at least +0.08. A BGN or GS fair gap above +0.01 would mean the random features add
+something beyond the market that this reading misses.
 
 **On pushing further.** vyx's type premia were already near 6, 15 and 28 percent a year under
 the pre-fix labels. Every proposal that turns a dial up should report the annualised premia the

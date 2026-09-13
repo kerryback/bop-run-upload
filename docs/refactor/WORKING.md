@@ -3394,3 +3394,62 @@ of number that selection could manufacture.
 - gx7's seed-array hint switched from "sbatch the solves" to `fetch_solves.py`, now that they exist;
   the test that distinguishes pending from built economies enforced it.
 - The results document's pinning test required the two complete new economies to be added.
+
+## §53. The persistence ladder completes, and the gap outside vyx turns out to be the market (2026-09-13)
+
+**What landed.** The seven g0235s/g0235r seeds moved from Phoenix (queued at `(Priority)`, estimated
+starts 1 and 3 days out: 110G is ~88% of a 125 GB public node) to Sol public (515 GB nodes), where
+they started within two minutes: arrays `63033314` (g0235s 1,3,4) and `63033315` (g0235r 0,2,5,7) at
+128G. Nothing was copied -- `/data` is shared and the variants pipeline never touches `/scratch`. The
+Phoenix arrays were cancelled after the Sol pair was queued. Both economies are now 10/10 and CURRENT:
+every seed's post-run line says CURRENT against the spec's solve id, and every oracle sidecar records
+`spec_check`, `env_check` and `readback` as verified. Seeds span `c3d60c8` and `1fb6f44`; no Python
+differs between them.
+
+**Provenance event.** g0235r seed 3 ran its oracle at `c3d60c8` and its estimators at `1fb6f44`: the
+shared checkout was pulled (the gated pull of 2026-09-11) while that 24.5-hour highmem task sat
+between stages. Harmless here, and recorded in both sidecars, but the chain assumes one commit per run.
+Check `squeue` on BOTH clusters before pulling the shared checkout.
+
+**Numbers.** g0235s gap +0.0180 (41.3% of lin), room_eval +0.0119; g0235r gap +0.0209 (192.1%), room_eval
++0.0026. The four-point ladder moved room by 13x and left the gap at +0.018 to +0.023. Holding the
+partial means out was right: the late seeds were the calm-heavy ones (mean stress share 0.15 vs 0.42,
+0.06 vs 0.13), and the snapshot overstated g0235r's gap by 22% and g0235s's room by 25% (g0235s's gap
+was unbiased). Memory follows the longest calm spell seed by seed (Spearman +0.84, +0.80); the panels
+that never enter stress are the heaviest and slowest in both economies. In g0235s, six of ten seeds
+have no stress month in the evaluation window and seed 2 supplies 74% of the mean room.
+
+**Predictions.** g0235s: gap toward or below room -- FAILED (gap > room_eval in 9/10). g0235r: room
+falls -- held; gap falls further -- FAILED (+0.0227 -> +0.0209). g0235f's post-hoc gap-over-room
+ordering holds on the evaluation window (0.60, 1.28, 1.52) and fails all-month (0.62, 1.20, 0.93), over
+a g0235s room 1.4 se from zero.
+
+**The finding.** Decomposing gap = room_eval - (nonlin_ceil - DKKM) + (lin_ceil - lin) showed DKKM
+landing on the LINEAR constant-theta ceiling to 3-4 decimals in every BGN/GS economy. Chasing that:
+the winning DKKM penalty is the TOP of the grid in 8/10 g0235 seeds (bottom in 9/10 vyx seeds), and at
+the top penalty DKKM's Sharpe is identical across P = 36/360/3600 and all four variants -- fully shrunk
+to its unpenalised part. `dkkm_functions.mve_data` appends the EW market as the last column and
+penalises every column but that one (`--include_mkt`). `linrank`/`linlev` carry the EW market as a
+`1/N` constant column that IS penalised (g28 linrank: 0.256 at kappa 0, 0.065 at kappa 0.001); FF has a
+VW market with no shrinkage; FM has none. `variants/score_market.py` then scored the EW market on the
+saved true moments for all 80 seeds (Sol job `63179983`, 6.5 min, 30 GiB): DKKM's top-penalty Sharpe
+equals the EW market's to within 0.001 in 54 of 70 BGN/GS seeds; the rest are incomplete shrinkage or
+the market weight's sign flipping in calm windows (g0235r seeds 0,5,6,7, where the true EW premium is
+positive every month). Exact split, gap = (DKKM - EW) + (EW - best linear): g0235 +0.0020 / +0.0206,
+g28 +0.0032 / +0.0251, gx7 +0.0007 / +0.0222, g0235r -0.0154 / +0.0363; vyx +0.3800 / -0.2753. DKKM's
+margin over the market ranks with the NON-market Sharpe sqrt(SR_max^2 - SR_ew^2) at Spearman +0.76
+(80 seeds), +0.65 without vyx; with its share of SR_max, +0.06 without vyx.
+
+**What it overturns.** RESULTS.md findings 2, 3 and 7 and g0235f's post-hoc paragraph read the BGN/GS
+gaps as DKKM achievements (curvature, efficiency, a rolling window beating a fixed rule). They were the
+linear methods' shortfall below a market DKKM holds for free. Room is unaffected: every oracle basis
+carries the constant column and is scored over the same z grid including zero. Recorded as RESULTS.md
+finding 8, with pointers at each superseded reading.
+
+**Proposals re-ranked on it.** E1 (fair linear benchmark: unpenalised market for linrank/linlev, a
+grid reaching full shrinkage, the market as its own row; linear stage only on the 80 saved panels)
+first, with a pre-registered bound: BGN/GS fair gaps <= DKKM best - DKKM at top penalty + 0.003; vyx >=
++0.08. Then K4 (gamma_v 2.5), X3 (vyx at T=860/window 720), K5 (signed exposures -0.06/+0.04/+0.14;
+effective discount +0.065 at the grid edge), B4 (stress-dominant BGN, oracle screen first: room >=
++0.05 and non-market Sharpe >= 0.30), K1, K3, G3 (screen: market < 85% of SR_max). Retired X1 (answered),
+X2 (moot until E1), G4 (moves the market's Sharpe, not the part it misses).
