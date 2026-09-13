@@ -52,12 +52,12 @@ nothing unique.
 | experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
 |---|---|---|---|---|---|---|---|
 | K4 solve, first attempt | `var-kp_vy-vyg25-v1` | Sol | `63188594` | public, 8 cpu, 16G, 6 h | -- | moved to `/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/` | CANCELLED at 11 min: printed integ `a2cc8d99c1bc474b`, not the precommitted `8d1308e8f21723f8` |
-| K4 solve | `var-kp_vy-vyg25-v1` | Sol | `63188972` | public, 8 cpu, 16G, 6 h | -- | integ tables and manifest; G shipped from the Mac, byte-identical | submitted |
+| K4 solve | `var-kp_vy-vyg25-v1` | Sol | `63188972` | public, 8 cpu, 16G, 6 h | -- | integ tables and manifest; G shipped from the Mac, byte-identical | running since 16:22: G found cached, integ id printed `8d1308e8f21723f8` = precommitted |
 | K4 seeds 0-9, first chain | `vyg25` | Sol | `63188595` | public, 64G, 2 d | afterok `63188594` | -- | CANCELLED with its solve; never started |
 | K4 seeds 0-9 | `vyg25` | Sol | `63188973` | public, 64G, 2 d | afterok `63188972` | `variants/results/kp_vy_*_vyg25_*` | pending on the solve |
-| X3 seeds 0-9 | `vyxT860` | Sol | `63188596` | public, 96G, 2 d | -- | `variants/results/kp_vy_*_vyxT860_*` | 2 running, 8 pending (16:06) |
-| B4 solve | `var-bgn_gam-g0235d-v1` | Phoenix | `21571505` | htc, 4 cpu, 8G, 2 h | -- | `variants/bgn_gam/Jstar_g0235d.csv`, `experiments/registry` | running (16:06) |
-| B4 seed 0, the screen | `g0235d` | Phoenix | `21571506` | public, 64G, 2 d | afterok `21571505` | `variants/results/bgn_gam_*_g0235d_s000*` | pending on the solve |
+| X3 seeds 0-9 | `vyxT860` | Sol | `63188596` | public, 96G, 2 d | -- | `variants/results/kp_vy_*_vyxT860_*` | seeds 0-1 running (oracle at month 201 of 845, 16:22), 2-9 pending on priority |
+| B4 solve | `var-bgn_gam-g0235d-v1` | Phoenix | `21571505` | htc, 4 cpu, 8G, 2 h | -- | `variants/bgn_gam/Jstar_g0235d.csv`, `experiments/registry` | COMPLETED in 15 min: `SOLVE OK: jstar=e136e8b440bce761`, the precommitted id |
+| B4 seed 0, the screen | `g0235d` | Phoenix | `21571506` | public, 64G, 2 d | afterok `21571505` | `variants/results/bgn_gam_*_g0235d_s000*` | running since 16:21 |
 | B4 seeds 1-9 | `g0235d` | -- | not submitted | -- | seed 0: evaluation-window room >= +0.05 AND `sr_orth_eval` >= 0.30 | -- | gated |
 | E1 vyx | `vyx`, `SEED_STAGE=linear` | Phoenix | `21571507` | htc, 4 cpu, 16G, 2 h | -- | `/data/sjpruitt/projects/bop-run-upload/e1_fair_linear/` | COMPLETED 10/10 |
 | E1 g0235 | `g0235`, linear | Phoenix | `21571508` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
