@@ -3507,3 +3507,67 @@ tables are tracked in git, so the worktree read them and never rebuilt G. Fix, k
 (`solstamp.lookup` reports no artifact problems); solve resubmitted as `63188972`, which builds only the integ stage,
 with seeds `63188973` afterok. K4's G tables and manifest are committed; the spec's notes carry the correction
 (spec_hash unchanged).
+
+## §55. The campaign's results: K4 and X3 widen vyx's gap, B4's screen misses (2026-09-14)
+
+Every job had finished and neither queue held anything (`docs/RUNS.md`). K4 solve `63188972`: `SOLVE OK`
+on both precommitted ids. K4 seeds `63188973` and X3 seeds `63188596`: 10/10 on Sol. B4 seed 0 `21571506`:
+Phoenix. Every run record is CURRENT for the solves its spec pins. The 147 result files were copied to the
+laptop and are sha256-identical to Sol's. Sol's 63 K4 integral tables match manifest `8d1308e8f21723f8`'s
+digests. They replace six Mac-built integral tables left in the laptop checkout by §54's G rebuild; those
+differ in bytes, as §54 predicts, and moved to `_scratch/k4_mac_partial_integ/`. The first rsync listed its
+panel and moments excludes after the includes. rsync's filter rules match first-hit, so three panel and
+moments files (560 MB, gitignored) came across before it was stopped.
+
+**Code.** `variants/fair_gap.py` also reads runs made with `--fair_linear` and tags each row "E1 re-score" or
+"own run". `tests/test_results_md_matches_table.py` ranks only ten-seed flagship rows; a flagship row with
+fewer seeds must be reported under a `-- SCREEN` heading, and RESULTS.md gains that status label.
+
+**K4, gamma_v 1.8 -> 2.5 (`vyg25`).**
+- Gap +0.1450 (sd 0.0193), t 39.2; fair gap identical (the linear methods beat the market by 0.33).
+- Room_eval +0.4108; DKKM 0.9450, linear 0.8000, EW 0.4694.
+- Against vyx: gap +0.0404 (se 0.0078), room_eval +0.0502 (se 0.0188).
+
+| prediction | outcome | graded |
+|---|---|---|
+| room +0.45 to +0.50 | +0.4108 | WRONG |
+| SR_max and non-market Sharpe up about 40% | up 18% and 17% (1.1778 -> 1.3887; 1.1178 -> 1.3064, finding 8's per-seed definition; the oracle's month-by-month figure is 1.3058) | WRONG |
+| winning penalty still at the grid bottom | 10 of 10 at 0.001 | RIGHT |
+| gap +0.15 to +0.20 | +0.1450 | WRONG, just below |
+| falsified below +0.12 | +0.1450 | not falsified |
+
+- Capture rose: the gap grew 39% on 14% more room. gap/room_eval is 0.35 against 0.29. DKKM is at 78% of its
+  nonlinear ceiling (vyx 74%), linear at 100%.
+- E[mu] 22.9% a year, cross-sectional sd 10.6% (vyx 18.2%, 7.7%).
+
+**X3, vyx at T 860, window 720, grid to 1e-4 (`vyxT860`).**
+- Gap +0.1875 (0.0393), t 54.6; DKKM 0.8452, linear 0.6577, room_eval +0.3864.
+
+| prediction | outcome | graded |
+|---|---|---|
+| DKKM +0.03 to +0.08 | +0.0977 (se 0.0244) | WRONG, high |
+| linear within +0.01 | +0.0149 (se 0.0159) | outside the band, not distinguishable from it |
+| gap +0.13 to +0.17 | +0.1875 | WRONG, high |
+| room unchanged within noise | +0.0258 (se 0.0206) | RIGHT |
+| falsified if DKKM gains less than +0.02 | +0.0977 | not falsified |
+
+- **The decomposition the spec asked for.** On vyx's grid (kappa >= 0.001), DKKM 0.7958 and gap +0.1382: the
+  window alone lands inside both predicted ranges. The 1e-4 penalty adds +0.0494 of DKKM and wins in 10 of 10
+  seeds.
+- **Where the grid-extension argument failed.** The spec's "extension alone is worth little" extrapolated vyx's
+  per-decade gains at window 360 (0.154, 0.100, 0.035). At window 720 the decades give 0.157, 0.116, 0.073, then
+  0.049, so the window is what makes the smaller penalty pay, and the grid bottom still binds.
+- The winning P moved down: 360 in 8 of 10 (vyx: 3600 in 6). DKKM is at 81% of its nonlinear ceiling (vyx 74%).
+
+**B4 screen (`g0235d` seed 0).** It missed both gates, so seeds 1-9 were never submitted; by the spec's rule
+BGN's regime path is finished, and RESULTS.md closes B2 and B3 with it.
+
+| prediction | outcome | graded |
+|---|---|---|
+| room_eval above +0.04 (gate +0.05) | +0.0186 | WRONG; gate MISSED |
+| non-market Sharpe 0.2-0.3 (gate 0.30) | `sr_orth_eval` 0.1541 (0.168 on finding 8's definition) | WRONG; gate MISSED |
+| DKKM 0.03-0.06 above the market | +0.0812 (DKKM 0.1484, EW 0.0672) | WRONG, higher |
+| fair gap +0.005 to +0.015 | +0.0004 (linrank 0.1480, without the unpenalised market column) | WRONG, lower |
+
+DKKM left the market by more than any BGN ten-seed mean, and plain linrank followed all of it. The spec's reason
+for a small fair gap held more strongly than predicted.

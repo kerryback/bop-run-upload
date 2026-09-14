@@ -9,9 +9,10 @@ WORKING.md §40 records for gap/room.
 RESULTS.md is the ongoing, human-written record of what each economy is and what it
 produced; economy_table.csv is produced by aggregate_seeds.py from the result files. The
 numbers in the prose table are copied by hand and go stale the moment a new seed or a new
-economy lands. This pins them: every flagship row of the CSV must appear in the table with
-the same n, room, gap and t to display precision, and the table must not list an economy
-the CSV does not have.
+economy lands. This pins them: every ten-seed flagship row of the CSV must appear in the table
+with the same n, room, gap and t to display precision, and the table must not list an economy
+the CSV does not have. A flagship row with fewer seeds is a screen and must instead have its
+own SCREEN heading.
 
 Run with: python -m pytest tests/ -k results_md
 """
@@ -56,10 +57,23 @@ def _md_rows():
     return rows
 
 
-def _csv_rows():
+def _csv_rows(current=True):
+    """Flagship rows (N=500, T=500, window 360). The table ranks CURRENT economies, which have ten
+    seeds (RESULTS.md, status labels); a flagship row with fewer is a screen, reported in its model's
+    section and never ranked, so current=False returns those instead."""
     e = pd.read_csv(CSV)
     e = e[(e["N"] == 500) & (e["T"] == 500) & (e["window"] == 360)]
+    e = e[e["n_seeds"] >= 10] if current else e[e["n_seeds"] < 10]
     return {(r["model"], r["tag"]): r for _, r in e.iterrows()}
+
+
+def test_every_screen_is_reported_under_a_screen_heading():
+    """A flagship economy with fewer than ten seeds can neither vanish from the document nor be
+    ranked beside ten-seed economies: it needs its own `#### <model>/<tag> -- SCREEN` heading."""
+    txt = open(MD).read()
+    missing = [f"{m}/{t}" for (m, t) in _csv_rows(current=False)
+               if not re.search(rf"^#### {re.escape(m)}/{re.escape(t)} -- SCREEN", txt, re.M)]
+    assert not missing, f"economy_table.csv has screens RESULTS.md does not report under a SCREEN heading: {missing}"
 
 
 def test_every_flagship_economy_in_the_csv_is_in_the_table():
