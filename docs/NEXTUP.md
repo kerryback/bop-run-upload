@@ -114,22 +114,31 @@ count per seed; the oracle's E[mu] beside the gap.
    gap: the prediction is that it FALLS at 0.15 and holds at 0.70. Two solves of about 90 min and two
    30 h arrays.
 5. **G3, the GS21 default-channel probe.** Twenty minutes, oracle only. Its gate (defaults at half a
-   percent a year AND the market below 85% of SR_max, from 94% to 98% today) is not predicted to pass,
+   percent a year AND the market below 85% of SR_max, from 94% to 98% today and 95% in the GS21 baseline; A1 below shows it also needs a room clause) is not predicted to pass,
    which is exactly why it is cheap to settle. Queue it on Phoenix `htc` beside X4; it competes with
    nothing.
 
-## A1, the anchor under current code -- LAUNCHED 2026-09-14
+## A1, the anchor under current code -- DONE 2026-09-15
 
-RESULTS.md presents the three baselines as the anchor, and two of the three legacy rows described
-economies the current code no longer builds. Each baseline is now a first-class economy: specs
-`var-bgn_gam-bgnbase-v1`, `var-kp_vy-kpbase-v1` and `var-gs_bx-gsbase-v1`, solve ids precommitted
-before any solve ran, `SEED_SPEC` cases `bgnbase`, `kpbase`, `gsbase`, ten seeds each with the fair
-benchmark, and the conditioning columns narrowed to the state each paper has (`--rf_cols`). The BGN
-and KP14 solves were built on the Mac and committed; the GS21 solve runs on Sol with its seed array
-chained behind it. Registered predictions: fair gap within 0.005 of zero in all three; room +0.030 to
-+0.045 (BGN, all-month), below +0.010 (KP14) and below +0.003 (GS21); falsified as no-gap baselines if
-any fair gap exceeds +0.01. Jobs: `docs/RUNS.md`. When they land, RESULTS.md's anchor table gains
-ten-seed rows beside the legacy ones and every "what the route added" sentence is re-read against them.
+Each model as published ran as a first-class economy: specs `var-bgn_gam-bgnbase-v1`,
+`var-kp_vy-kpbase-v1` and `var-gs_bx-gsbase-v1`, solve ids precommitted and reproduced, ten seeds each
+with the fair benchmark, conditioning columns narrowed to the state each paper has. Fair gaps +0.0012
+(BGN), -0.0024 (KP14) and -0.0022 (GS21): no model as published has a complexity gap, and twelve of the
+thirteen registered predictions held (BGN's all-month room came in low, +0.0251 against +0.030 to
++0.045). Numbers and grading: RESULTS.md, "Baselines: the anchor"; jobs: `docs/RUNS.md`.
+
+What the anchor changes for the choices above:
+
+- **Every Path 1 number now has a measured zero.** X4's and K6's gaps are differences against kpbase's
+  fair gap of -0.0024 and room of +0.0044, produced by the same pipeline.
+- **Leaving the market is necessary and not sufficient.** In the BGN and KP14 baselines the market
+  carries 50% and 35% of the attainable Sharpe, DKKM leaves it by 0.08 to 0.13, and the linear methods
+  follow to within 0.007. What separates vyx is room, +0.36 against +0.02 and +0.004. That favours dials
+  that raise room together with the non-market Sharpe (X4, K6, K1) over dials that only lower the
+  market's share.
+- **G3's gate is too weak as written.** "The market below 85% of SR_max" is met by the KP14 baseline at
+  35%, which has no gap. If G3 is run, its gate should also require evaluation-window room of at least
+  +0.05, as B4's did.
 
 ## Not worth running
 

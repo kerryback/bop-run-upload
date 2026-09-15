@@ -1,0 +1,38 @@
+{
+ "model": "gs_bx",
+ "tag": "gsbase",
+ "seed": 0,
+ "prov": "gs_bx_estimators_gsbase_s000_w360_summary@a5b5673+dirty",
+ "spec_id": "var-gs_bx-gsbase-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.03,
+  0.1,
+  0.3,
+  1.0,
+  3.0,
+  10.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_gsbase",
+   "solve_id": "c6ae2d52428a7ce5",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 93707462
+  }
+ ],
+ "panel": "gs_bx_panel_gsbase_s000.parquet"
+}

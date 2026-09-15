@@ -1,0 +1,39 @@
+{
+ "model": "kp_vy",
+ "tag": "kpbase",
+ "seed": 2,
+ "prov": "kp_vy_estimators_kpbase_s002_w360_summary@a5b5673+dirty",
+ "spec_id": "var-kp_vy-kpbase-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  0.001,
+  0.01,
+  0.1,
+  1.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "7bc1f92a225c01b6",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 789777
+  },
+  {
+   "stage": "integ",
+   "solve_id": "f299747cd77fc4a1",
+   "files": 21,
+   "files_expected": 21,
+   "bytes": 1907220
+  }
+ ],
+ "panel": "kp_vy_panel_kpbase_s002.parquet"
+}

@@ -117,6 +117,6 @@
     "sol_gsbase": "c6ae2d52428a7ce5"
   },
   "precommitted": true,
-  "solves_pending": "sol_gsbase precommitted 2026-09-14; to be built on Sol by variants/gs_bx/run_gsbase_slurm.sh after this spec is committed",
+  "solves_pending": null,
   "spec_hash": "1548c0bfddb6bd6a1d801e486f20dc6fd25041818d71d7f21be277d6ea9ed01b"
 }

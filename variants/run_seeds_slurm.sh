@@ -387,10 +387,10 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
     RF_COLS=rf_stand
-    # Solves pending (2026-09-14): the hint is the job that builds them. Once the solve is
-    # published, change it to the fetch form every other GS case uses:
-    #   python variants/fetch_solves.py --spec var-gs_bx-gsbase-v1 --from "<the shared solves folder>"
-    SOLVE_HINT='cd <repo> && mkdir -p outslurm && sbatch variants/gs_bx/run_gsbase_slurm.sh   # 3.5-6 h; chain the seed array afterok'
+    # Built on Sol 2026-09-15 (job 63257244: tolerance exit at sweep 3024, the precommitted id) and
+    # published content-addressed, so the hint is FETCH. Remaking it is one 5.6 h solve
+    # (run_gsbase_slurm.sh).
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v1 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   *)
     echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vyxT860, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;

@@ -21,7 +21,7 @@ updated when jobs end; between updates, `_scratch/watch_campaign.sh` polls both 
 
 ---
 
-## Campaign 2026-09-14 -- the baselines (A1), commit `a5b5673`
+## Campaign 2026-09-14 -- the baselines (A1), commit `a5b5673`: COMPLETED 2026-09-15
 
 Each paper's economy as published, run through the pipeline exactly as every path that departs from
 it (`docs/RESULTS.md`, "Baselines: the anchor"; `docs/NEXTUP.md`, A1). Specs precommitted in `3fcfe56`;
@@ -46,14 +46,28 @@ nodes to 4e-12, so the economy does not depend on y; every manifest's `recorded_
 
 | experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
 |---|---|---|---|---|---|---|---|
-| GS21 baseline solve | `var-gs_bx-gsbase-v1` via `variants/gs_bx/run_gsbase_slurm.sh` | Sol | `63257244` | public, 4 cpu, 8G, 1 d | -- | `variants/gs_bx/sol_gsbase/solution.npz` (untracked, about 100 MB), `experiments/registry/c6ae2d52428a7ce5.json` | PENDING at submission (Priority) |
-| GS21 baseline seeds 0-9 | `gsbase` | Sol | `63257245` | public, 8 cpu, 64G, 2 d | afterok `63257244` | `variants/results/gs_bx_*_gsbase_*` | PENDING (Dependency) |
-| BGN baseline seeds 0-9 | `bgnbase` | Sol | `63257246` | public, 8 cpu, 64G, 2 d | -- | `variants/results/bgn_gam_*_bgnbase_*` | PENDING at submission |
-| KP14 baseline seeds 0-9 | `kpbase` | Sol | `63257247` | public, 8 cpu, 64G, 2 d | -- | `variants/results/kp_vy_*_kpbase_*` | PENDING at submission |
+| GS21 baseline solve | `var-gs_bx-gsbase-v1` via `variants/gs_bx/run_gsbase_slurm.sh` | Sol | `63257244` | public, 4 cpu, 8G, 1 d | -- | `variants/gs_bx/sol_gsbase/solution.npz` (untracked, about 100 MB), `experiments/registry/c6ae2d52428a7ce5.json` | COMPLETED in 5 h 34 min, peak 2.0 GiB: tolerance exit at sweep 3024, `SOLVE OK: sol_gsbase=c6ae2d52428a7ce5` |
+| GS21 baseline seeds 0-9 | `gsbase` | Sol | `63257245` | public, 8 cpu, 64G, 2 d | afterok `63257244` | `variants/results/gs_bx_*_gsbase_*` | COMPLETED 10/10, 3.6 to 5.3 h, peak 4.5 GiB; every seed CURRENT |
+| BGN baseline seeds 0-9 | `bgnbase` | Sol | `63257246` | public, 8 cpu, 64G, 2 d | -- | `variants/results/bgn_gam_*_bgnbase_*` | COMPLETED 10/10, 2.2 to 2.9 h, peak 15.8 GiB; every seed CURRENT |
+| KP14 baseline seeds 0-9 | `kpbase` | Sol | `63257247` | public, 8 cpu, 64G, 2 d | -- | `variants/results/kp_vy_*_kpbase_*` | COMPLETED 10/10, 2.3 to 3.5 h, peak 29.2 GiB; every seed CURRENT |
 
 Expected: BGN seeds about 3 h each at well under g0235's memory (the unit-multiplier J* range is a third
 of g0235's); KP14 seeds about 3 h at about 30 GiB; the GS solve 3.5 to 6 h, then its seeds about 3 h.
 `_scratch/watch_baselines.sh` polls Sol every ten minutes and writes `_scratch/BASELINE_STATUS.md`.
+
+**Outcome, 2026-09-15.** Every job COMPLETED and both queues were empty at 07:11. The watcher addressed
+Sol by the short name `sol`, which stopped resolving when the laptop moved to campus ethernet; its last
+cycles failed and it was stopped. Use `sjpruitt@sol.asu.edu` in scripts. All 30 seed logs end CURRENT for
+their spec's solve ids, and every oracle sidecar records `spec_check` and `env_check` verified and the
+spec's `rf_cols` (readback is verified for BGN and KP14 and "not requested" for GS21, as for every GS
+economy). The 210 result files (oracle JSON, sidecars and time series; estimator CSVs, summaries,
+sidecars and run records; no panels or moments) and the GS manifest were copied to the laptop and match
+Sol's sha256 sums, 211 of 211. Provenance tags read `a5b5673+dirty` with an empty recorded code diff: the
+seeds wrote untracked results into the checkout. `solution.npz` was copied to the laptop, verified
+against its manifest, and published to the shared solves folder under `c6ae2d52428a7ce5`; the gsbase
+`SOLVE_HINT` is now the fetch form and its spec's `solves_pending` is cleared. Peak memory in the
+watcher's first report was misread from sacct's KiB: the figures in the table above are GiB. What the
+runs found is in `docs/RESULTS.md`, "Baselines: the anchor".
 
 ### Reading the outcome
 
