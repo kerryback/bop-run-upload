@@ -82,11 +82,21 @@ def _match(paths):
     A retired manifest still describes real artifacts truthfully -- it is only its
     ID that can no longer be recomputed -- so it is reported when nothing live
     matches, flagged rather than hidden.
+
+    A SUPERSEDED manifest has to lose to a live one too, and for a sharper reason.
+    Several manifests can record the SAME bytes: when the 2026-09-15 burn-in change
+    re-keyed the six BGN jstar solves, five of the six rebuilt tables came back
+    byte-identical, so the old manifest and the new one carry the same sha256 and both
+    match here. Taking whichever came first out of iter_manifests() would have written the
+    superseded id into the run record, and run_is_current -- which compares that against
+    live_solves -- would then have called the seed STALE. So `superseded_by` is checked
+    with the same precedence as `retired`, and for the same purpose: the run record must
+    name the solve the tag currently means.
     """
     present = [p for p in paths if os.path.exists(p)]
     if not present:
         return None, "artifacts absent"
-    live, retired = None, None
+    live, superseded, retired = None, None, None
     want = {}
     for p in present:
         ap = os.path.abspath(p)
@@ -99,10 +109,17 @@ def _match(paths):
             continue
         if man.get("retired"):
             retired = retired or man
+        elif man.get("superseded_by"):
+            superseded = superseded or man
         else:
             live = live or man
     if live is not None:
         return live, None
+    if superseded is not None:
+        sb = (superseded.get("superseded_by") or {}).get("solve_id")
+        return superseded, (f"matches only a SUPERSEDED manifest; the live solve for these "
+                            f"parameters is {sb}. The artifacts on disk are not the ones the "
+                            f"live solve recorded")
     if retired is not None:
         return retired, ("matches only a RETIRED manifest: its solve_id cannot be "
                          "recomputed, so re-solving will not reproduce this id")
@@ -168,17 +185,35 @@ def solve_tags(tag):
 
 
 def live_solves(model, tag):
-    """Non-retired solve_ids recorded for this model under ANY of `tag`'s tags, sorted.
+    """Live solve_ids recorded for this model under ANY of `tag`'s tags, sorted.
 
     `tag` is a str (comma-separated for several) or a list; one tag reproduces the
     pre-2026-09-09 behaviour exactly. Until then this took a single tag, so for bx7 --
     whose run record names FIVE solve_ids -- run_is_current compared five ids against the
     one id of whichever tag it was handed and reported STALE forever: every resubmission
     re-ran every finished seed, the opposite of what a checkpoint is for.
+
+    Several ids under one tag is NORMAL and is why this returns a set: a kp_vy economy's
+    tag carries its G stage and its integ stage, and a run consumes both. What is not
+    normal is two ids for the SAME stage, which is what happens when a stage is re-keyed --
+    on 2026-09-15 the burn-in change moved all six BGN jstar ids without changing a byte of
+    their tables. Both the old and the new manifest then sat under `Jstar_g0235`, `want`
+    held two ids where a run consumes one, and run_is_current would have called every BGN
+    seed STALE: the same failure the 2026-09-09 fix above was written for, from the other
+    direction.
+
+    So a manifest excludes itself here two ways. `retired` means the id can never be
+    reached again (a canonicaliser changed under it). `superseded_by` means the id is still
+    perfectly reachable -- re-run the producer on those parameters and you get it back --
+    but it is no longer the live solve for this tag. They have to be separate: a spec that
+    pinned the old id is still a truthful record of what produced earlier results, and
+    tests/test_expected_solves_are_live_manifests refuses a spec that pins a RETIRED id,
+    so marking a merely-superseded manifest retired would make the old specs unusable.
     """
     want = set(solve_tags(tag))
     return sorted({m["solve_id"] for m in solstamp.iter_manifests()
                    if m.get("model") == model and not m.get("retired")
+                   and not m.get("superseded_by")
                    and want & set(m.get("tags") or [])})
 
 

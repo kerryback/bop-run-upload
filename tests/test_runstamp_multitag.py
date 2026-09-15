@@ -43,8 +43,34 @@ def test_solve_tags_parses_strings_and_lists():
 
 
 def test_one_tag_is_unchanged():
-    assert runstamp.live_solves("bgn_gam", "Jstar_g0235") == ["be222462dd017b2c"]
+    # The bgn_gam id moved on 2026-09-15: the protocol's burn-in change re-keyed every BGN
+    # jstar solve without changing a byte of its table. be222462dd017b2c is the same economy
+    # at burn-in 300 and is marked superseded_by this id, which is why exactly one comes back.
+    assert runstamp.live_solves("bgn_gam", "Jstar_g0235") == ["2d462ae0f4463f03"]
     assert runstamp.live_solves("gs_bx", "sol_g28") == ["8b584c38614695ac"]
+
+
+def test_a_superseded_manifest_is_not_live_but_is_still_pinnable():
+    """Two manifests for the same STAGE under one tag would make every run look STALE.
+
+    `superseded_by` is what keeps them apart from retired ids. It has to be a separate flag:
+    test_expected_solves_are_live_manifests refuses a spec that pins a RETIRED id, and the
+    superseded v1/v2 BGN specs pin these ids as the record of what produced their results.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "variants"))
+    from common import solstamp
+    old = solstamp.lookup("be222462dd017b2c")
+    assert old is not None, "the superseded manifest must still be in the registry"
+    assert not old.get("retired"), "superseded is not retired: this id is still reachable"
+    sb = old.get("superseded_by")
+    assert sb and sb.get("solve_id") == "2d462ae0f4463f03", sb
+    assert (sb.get("reason") or "").strip(), "a supersession must say why"
+    # and the tag it used to own now resolves to exactly one live solve
+    for tag in ("Jstar_bgnbase", "Jstar_g0235", "Jstar_g0235f",
+                "Jstar_g0235s", "Jstar_g0235r", "Jstar_g0235d"):
+        assert len(runstamp.live_solves("bgn_gam", tag)) == 1, (
+            f"{tag} has {runstamp.live_solves('bgn_gam', tag)}; two ids for one stage make "
+            f"run_is_current report every seed STALE")
 
 
 def test_five_tags_resolve_to_the_five_pinned_solves():

@@ -51,17 +51,59 @@ No economy's parameters change. What changes: burn-in 400 for all three models (
 300), the ridge grid `1e-5 … 10` for every economy (it was three different grids), the model's full
 conditioning set for the baselines too, and ten seeds for `g0235d`, which had one.
 
+**Split across both clusters.** `bash variants/submit_campaign.sh <sol|phx>` holds the allocation and
+the reason for each row; `--dry` asks each scheduler for its own start estimate without queueing
+anything. Two economies on Sol, eleven on Phoenix. Why, measured on 2026-09-15 rather than assumed:
+
+| | Sol | Phoenix |
+|---|---|---|
+| `public` node memory | ~515 GB | 112-125 GB, six nodes at 186 GB |
+| `highmem` | 11 nodes at 2.0-2.3 TB, 3 idle | 2 nodes at 1.5 TB |
+| `public` pending / idle nodes | 725 pending, 2 idle | 12 pending, 253 idle |
+| fairshare | 0.0102 | 0.1303 |
+| the scheduler's own estimate for one task | highmem today 17:53; **public Sept 18** | immediate at every size up to 112G |
+
+- **Memory is the durable constraint and it decides first.** `run_oracle.py:152-154` allocates its
+  arrays over `T + burnin`, so burn-in 300 -> 400 raises BGN's and GS21's peaks by 12.5%: g0235r's
+  measured 77.0 GiB projects to ~87 and g0235s's 74.0 to ~83. Those two are the only economies that
+  cannot sit comfortably on a 112-125 GB Phoenix node -- and the historical record is what happens
+  when they do not fit, since all ten g0235r seeds and three g0235s seeds were once killed at a 64
+  GiB cap. They go to Sol. KP14's peaks (29-31 GiB) are unchanged, its burn-in already being 400.
+- **Fairshare and backlog are temporary and decide the rest.** Phoenix's fairshare is 12.7x Sol's and
+  its public partition has 253 idle nodes against Sol's 2, so the eleven economies that fit anywhere
+  go to Phoenix, where they start at once.
+- **On Sol, use `highmem`, not `public`.** Sol's own scheduler put an identical task three days out on
+  public and six hours out on highmem. The two BGN economies need the memory anyway, so highmem is
+  both the right hardware and the shorter queue. 128G against a projected 87 GiB is 58% headroom on a
+  2 TB node; if a seed still OOMs, 256G there costs nothing.
+- **Re-check before submitting.** `sshare -U` and `squeue -h -p public -t PD | wc -l` on each, then
+  `--dry`. Fairshare and backlog move; if they have flipped, move rows between the two lists. The
+  memory column is the only part that is not negotiable.
+
+**One seed first, or not.** The standing rule is one seed then `sacct` before sizing an array
+(`docs/RESULTS.md`, "Adding an experiment"). It is deliberately skipped here, for these thirteen
+only: they are re-runs of economies whose peak memory is already measured, the single change is a
+known +12.5%, every request above carries at least 45% headroom on the projection, and Phoenix starts
+immediately -- so a resubmission after an OOM costs hours, while thirteen serial probes cost days.
+The rule stands for any economy whose memory has never been measured.
+
 ### Before submission, in this order
 
 | step | what | why this order |
 |---|---|---|
 | 1 | `python variants/solve_impact.py --worktree` | names every solve the burn-in edit re-keys. Expect exactly BGN's six J\* ids; KP14's and GS21's producers did not change |
-| 2 | commit the specs, the runner, `protocol.py` and the tests | the six new BGN jstar ids were computed WITHOUT solving and must be committed BEFORE their manifests, or `tests/test_precommitment_is_real.py` classifies them retrofitted and the specs' `precommitted: true` becomes a false claim |
+| 2 | commit the specs, the runner, `protocol.py` and the tests | DONE, `066e2d6`. The six new BGN jstar ids were computed WITHOUT solving and must be committed BEFORE their manifests, or `tests/test_precommitment_is_real.py` classifies them retrofitted and the specs' `precommitted: true` becomes a false claim |
 | 3 | `bash variants/bgn_gam/rebuild_all_jstar.sh`, about 3 to 4 min per table | reads each live spec's `params` rather than taking a hand-copied blob, and builds all six on ONE machine -- see below for why that matters |
 | 4 | check each printed solve_id against its spec's `expected_solves` | the six ids were computed without solving; each must come back exactly |
-| 5 | clear `solves_pending` in the six BGN specs; commit the tables and manifests | `tests/test_specs_match_shell.py` pins the pairing |
-| 6 | archive `variants/results` and `variants/results_e1` to `/data/sjpruitt/projects/bop-run-upload/archive/2026-09-15_pre-protocol/` with `SHA256SUMS` | result names key on model, tag and seed only, so the campaign overwrites them |
-| 7 | push; `bash variants/cluster_pull.sh` in the shared checkout, with both queues empty | never a plain `git pull` |
+| 5 | clear `solves_pending` in the six BGN specs; commit the tables and manifests; push | `tests/test_specs_match_shell.py` pins the pairing. **Until this lands, the six BGN seed jobs abort in seconds** on the runner's "no live solve recorded" precondition, so there is no point submitting them earlier |
+| 6 | `bash variants/cluster_pull.sh` in the shared checkout, **once**, with both queues empty | never a plain `git pull`. Both clusters import Python from this one tree, so this is the last moment anything may pull until both queues are empty again. It must come BEFORE anything is removed from `variants/results`: the 956 files there are TRACKED, the pull deletes 106 of them itself, and a checkout that cannot fast-forward aborts the script |
+| 7 | decide what to do with the 51 GB of pre-protocol panels and moments in `variants/results` | They are the 398 GITIGNORED files -- panels 2.6 GB, moments 48 GB -- and are the only content there that is not in git; the 956 tracked summary files live in history at `066e2d6`. The campaign overwrites all of them except `kp_vy/vyxT860`'s twenty, whose economy is retired, so those are pure leftovers. Archiving is optional and `docs/RESULTS.md`'s own policy says superseded results are not retained; `/data` has 846 GB free either way, so nothing forces the decision |
+| 8 | `bash variants/submit_campaign.sh sol --dry` and `... phx --dry`, then without `--dry` | the dry run is each scheduler's own answer on start time and whether the request fits its nodes |
+
+GS21's four solutions are reused as published and all eleven `variants/gs_bx/sol_*/solution.npz`
+(88-101 MB each) are already present in the shared checkout, so **one copy serves both clusters** and
+no fetch is needed; KP14's 8 G tables and 148 integral tables are committed. No solve job is needed on
+either cluster. `/data/sjpruitt` has 846 GB free against about 52 GB of new panels.
 
 **Burn-in does not enter the BGN J\* solve, and the rebuild is a formality -- but it must happen on
 one machine.** `vasicek.py` never reads `burnin`; it only arrives in the module namespace through
@@ -76,44 +118,49 @@ the same machine that recorded it. Hence one machine for all six. The old manife
 (`c6287d53674cc1ef` and the other five) stay in the registry describing tables no longer on disk;
 nothing live references them.
 
-GS21's four solutions are reused as published (`python variants/fetch_solves.py --spec
-var-gs_bx-gsbase-v2`, and the same for g28, gx7, bx7); KP14's G and integral tables are committed.
-No solve job is needed on either cluster.
-
 ### Jobs
 
-One seed first per economy, `sacct` before the array. `sbatch --export=ALL,SEED_SPEC=<tag>
-variants/run_seeds_slurm.sh`, with `--array=0` then `--array=1-9`.
+| cluster | experiment | SEED_SPEC | partition | request | status |
+|---|---|---|---|---|---|
+| Sol | BGN regime, slow | `g0235s` | highmem | 8 cpu, 128G, 4 d | not submitted |
+| Sol | BGN regime, rare | `g0235r` | highmem | 8 cpu, 128G, 4 d | not submitted |
+| Phoenix | BGN as published | `bgnbase` | public | 8 cpu, 40G, 1 d | not submitted |
+| Phoenix | KP14 as published | `kpbase` | public | 8 cpu, 48G, 1 d | not submitted |
+| Phoenix | GS21 as published | `gsbase` | public | 8 cpu, 32G, 1 d | not submitted |
+| Phoenix | KP14 Path 1 parent | `vyx` | public | 8 cpu, 48G, 2 d | not submitted |
+| Phoenix | KP14 higher price of risk | `vyg25` | public | 8 cpu, 48G, 2 d | not submitted |
+| Phoenix | GS21 gamma(x) | `g28` | public | 8 cpu, 32G, 1 d | not submitted |
+| Phoenix | GS21 gamma(x) x types | `gx7` | public | 8 cpu, 32G, 1 d | not submitted |
+| Phoenix | GS21 types under a regime | `bx7` | public | 8 cpu, 32G, 1 d | not submitted |
+| Phoenix | BGN regime | `g0235` | public | 8 cpu, 64G, 2 d | not submitted |
+| Phoenix | BGN regime, fast | `g0235f` | public | 8 cpu, 40G, 1 d | not submitted |
+| Phoenix | BGN regime, stress-dominant | `g0235d` | public | 8 cpu, 40G, 1 d | **nine new seeds**, not submitted |
 
-| order | experiment | SEED_SPEC | cluster | request | why | status |
-|---|---|---|---|---|---|---|
-| 1 | BGN as published | `bgnbase` | Sol public | 8 cpu, 64G, 1 d | the baselines gate every statement that follows; peak was 15.8 GiB at the old grid | not submitted |
-| 2 | KP14 as published | `kpbase` | Sol public | 8 cpu, 64G, 1 d | peak 29.2 GiB | not submitted |
-| 3 | GS21 as published | `gsbase` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
-| 4 | KP14 Path 1 parent | `vyx` | Sol public | 8 cpu, 64G, 2 d | peak 30.6 GiB; the economy the wider grid should move most | not submitted |
-| 5 | KP14 higher price of risk | `vyg25` | Sol public | 8 cpu, 64G, 2 d | peak 29.2 GiB, longest 7.6 h at the old grid | not submitted |
-| 6 | GS21 gamma(x) | `g28` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
-| 7 | GS21 gamma(x) x types | `gx7` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
-| 8 | GS21 types under a regime | `bx7` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
-| 9 | BGN regime | `g0235` | Sol public | 8 cpu, 96G, 2 d | 15.7 to 38.9 GiB | not submitted |
-| 10 | BGN regime, fast | `g0235f` | Sol public | 8 cpu, 96G, 2 d | 22 GiB; the lightest of the ladder | not submitted |
-| 11 | BGN regime, stress-dominant | `g0235d` | Sol public | 8 cpu, 96G, 2 d | 15.6 GiB; **nine new seeds**, the only economy gaining any | not submitted |
-| 12 | BGN regime, slow | `g0235s` | Sol public | 8 cpu, 128G, 3 d | 74 GiB: long calm spells mean more live projects | not submitted |
-| 13 | BGN regime, rare | `g0235r` | Sol public | 8 cpu, 128G, 3 d | 77.0 GiB and 24.5 h for one seed at the old grid -- the binding job of the campaign | not submitted |
-
-**Memory follows calm spells**, which is why the BGN ladder goes last and takes the largest
-allocations: longer calm spells price risk cheaply for longer, so firms accept more projects and the
-panel arrays grow. The J\* value scale orders exactly as memory does (g0235f 37 to 345, g0235 57 to
-483, g0235s 148 to 1262, g0235r 390 to 2041; peak memory 22, 39, 74 and 77 GiB), and within an
-economy the longest calm spell in a seed's panel ranks with its peak memory at Spearman +0.84
-(g0235s) and +0.80 (g0235r). All ten g0235r seeds and three g0235s seeds were once killed at a 64 GiB
-cap.
+**Memory follows calm spells**, which is why the two slow BGN economies are the ones that needed Sol:
+longer calm spells price risk cheaply for longer, so firms accept more projects and the panel arrays
+grow. The J\* value scale orders exactly as memory does (g0235f 37 to 345, g0235 57 to 483, g0235s
+148 to 1262, g0235r 390 to 2041; peak memory 22, 39, 74 and 77 GiB), and within an economy the
+longest calm spell in a seed's panel ranks with its peak memory at Spearman +0.84 (g0235s) and +0.80
+(g0235r).
 
 **The wider ridge grid is the added cost.** It is seven penalties against four for BGN and KP14 and
 eight for GS21, and `run_seeds_slurm.sh`'s own measurement is 77 to 81 s per evaluation month at eight
 penalties, so about 2.8 h of DKKM per seed on top of the panel build. Budget roughly 1.75x the old
 estimator stage for the BGN and KP14 economies and about the same as before for GS21. Total on the
 order of 650 node-hours across 130 seed-jobs.
+
+### While it runs
+
+- **Nothing may `git pull` on either cluster.** Both import from the one shared tree. The campaign is
+  not finished until `squeue -u sjpruitt` is empty on BOTH.
+- Both clusters write into the same shared `variants/results`. No two economies share a filename, so
+  they cannot collide there; `outslurm/` is shared too, which is why `submit_campaign.sh` prefixes
+  each log with its cluster (`outslurm/sol.seeds.*`, `outslurm/phx.seeds.*`) rather than relying on
+  the two job-id sequences never meeting.
+- Watch with `squeue -u sjpruitt -h -o "%.10i %.10P %.9j %.2t %.10M %.6D %R"` on each, and
+  `sacct -u sjpruitt -o JobID,JobName%14,State,Elapsed,MaxRSS,ReqMem --units=G` for peaks as tasks
+  land. **sacct reports MaxRSS in KiB unless told otherwise**; the first 2026-09-15 baseline report
+  misread it by a factor of 1024.
 
 ### Reading the outcome
 
