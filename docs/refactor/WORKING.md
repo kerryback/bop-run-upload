@@ -3631,3 +3631,50 @@ vacuously (`_find_by_artifacts([])`) and prints a parameter diff against an unre
 cosmetic, K4 saw the same. And `ssh phoenix` fails host-key verification under BatchMode: the known alias
 is `phx` (`sjpruitt@phx.asu.edu`), which the campaign watcher used.
 
+## §57. The baselines land: no model as published has a complexity gap (2026-09-15)
+
+**Jobs.** Sol `63257244` (gsbase solve, 5 h 34 min, tolerance exit at sweep 3024, `SOLVE OK` on the
+precommitted `c6ae2d52428a7ce5`), `63257245` (gsbase seeds, afterok, 3.6 to 5.3 h, peak 4.5 GiB),
+`63257246` (bgnbase, 2.2 to 2.9 h, 15.8 GiB), `63257247` (kpbase, 2.3 to 3.5 h, 29.2 GiB): 31 of 31
+COMPLETED, all 30 seeds CURRENT, spec and env checks verified in every sidecar, `rf_cols` as specified.
+210 result files and the GS manifest copied, 211 of 211 sha256-identical to Sol. `solution.npz` verified
+against its manifest and published to the shared solves folder; gsbase's hint is now fetch, its
+`solves_pending` cleared. Two process notes: `_scratch/watch_baselines.sh` used the short host `sol`,
+which stopped resolving on campus ethernet (use `sjpruitt@sol.asu.edu`); and I first read sacct's
+MaxRSS in KiB as GiB when reporting peaks (4.7 / 16.6 / 30.6 reported, 4.5 / 15.8 / 29.2 actual).
+
+**Numbers** (ten seeds, fair gap from each run's own fair methods):
+
+| | room eval | gap | fair gap (t) | DKKM | best linear | EW | EW / SR_max |
+|---|---|---|---|---|---|---|---|
+| bgnbase | +0.0225 | +0.0066 | +0.0012 (0.5) | 0.2214 | 0.2148 | 0.1405 | 0.50 |
+| kpbase | +0.0044 | +0.0053 | -0.0024 (-1.6) | 0.2073 | 0.2020 | 0.0797 | 0.35 |
+| gsbase | +0.0012 | +0.0125 | -0.0022 (-5.0) | 0.2908 | 0.2782 | 0.2838 | 0.95 |
+
+**Predictions.** Twelve of thirteen graded right; BGN's all-month room was predicted +0.030 to +0.045
+from the legacy +0.0365 and came in +0.0251 (se 0.0017). No fair gap near the +0.01 falsification line.
+
+**Seed 0 reproduces the legacy BGN row** to the displayed digit on SR_max, nonlinear ceiling, FMR, FF,
+best linear and gap; DKKM within 0.0001; linear ceiling and room within 0.0004. So `--rf_cols rf_stand`
+is the legacy BGN protocol, and the legacy +0.0365 was a 2.1-sd draw. kpbase and gsbase seed 0 do not
+reproduce their legacy rows (SR_max 0.2289 vs 0.2396; 0.3020 vs 0.4012), as the arrival-rate and Table I
+corrections predict.
+
+**What it changes in RESULTS.md.** Three sentences were wrong against the anchor and are rewritten: "neither
+[BGN nor GS21] has nonlinear room to begin with" (BGN has +0.0225); "the regime path created room here"
+(the four regime points span +0.0026 to +0.0350 around the baseline's +0.0225; only g0235f exceeds it);
+and "every other model has ... a market that already carries 55% to 98%" (the BGN and KP14 baselines are
+at 50% and 35%). The regime's effect was to raise the market's share and put DKKM on the market. In the
+BGN and KP14 baselines DKKM leaves the market by 0.081 and 0.128 and the linear methods follow to within
+0.007 (in no seed does DKKM's top-penalty portfolio equal the market); in GS21 it does in 6 of 10, as in
+g28. So non-market Sharpe of about 0.2 without room gives no gap: leaving the market is necessary, not
+sufficient, which is added to finding 8. Against the anchor, Path 1 adds +0.107 of fair gap (vyx) and
+the BGN and GS routes add at most +0.0023.
+
+**Docs.** RESULTS.md: anchor section with the ten-seed table, graded predictions, how each baseline is
+produced, and the legacy rows demoted to history; three baseline rows first in the pinned current-results
+table; the per-model baseline subsections; the BGN ladder table gains the baseline; finding 8's table gains
+three rows and the necessary-not-sufficient point; finding 6 counts eleven specs; route log gains A1.
+NEXTUP.md: A1 DONE, with G3's gate flagged as too weak (the KP14 baseline meets "market below 85%" with no
+gap; add a room clause as B4 had). RUNS.md: statuses and outcome.
+

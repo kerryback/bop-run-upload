@@ -1,0 +1,94 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "perr_rel": 6.07897110382934e-06,
+    "qerr_rel": 7.862344684279166e-06,
+    "sweeps": 3024,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 165.87284037811548
+  },
+  "artifacts": [
+    {
+      "bytes": 93707462,
+      "path": "variants/gs_bx/sol_gsbase/solution.npz",
+      "sha256": "4da991a9e653ec54235571501a0479b9c925008866ce32b9331a1dda70da78ca"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "environment": {
+    "hostname": "sc031",
+    "machine": "x86_64",
+    "numpy": "2.4.3",
+    "omp_num_threads": "4",
+    "pandas": "3.0.1",
+    "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.3",
+    "scipy": "1.17.1",
+    "slurm_cpus_per_task": "4",
+    "slurm_job_id": "63257244"
+  },
+  "extra": {
+    "outdir": "sol_gsbase"
+  },
+  "inputs": {},
+  "model": "gs_bx",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "bnum": 20,
+    "delta": "0.006666666666666667",
+    "g": "1.14",
+    "gamma_x": "0.5",
+    "gmreg": {
+      "__array__": [
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "gs_ashift": "0.0",
+    "gs_bx": "1.0",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "kappa_e": "0.025",
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "phi": "0.4",
+    "psw": {
+      "__array__": [
+        "0.020833333333333332",
+        "0.041666666666666664"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_z": "0.9654893846056297",
+    "sigma_m": 5,
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.2",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "znum": 200
+  },
+  "recorded_at": "2026-09-15T01:18:49-0700",
+  "solve_id": "c6ae2d52428a7ce5",
+  "sources": {
+    "variants/gs_bx/gs_solve_reg.py": "b6106234c03db64d47178d8e48a22ef146bfd799c096a4157142074d77faf2be"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_gsbase"
+  ],
+  "total_bytes": 93707462
+}
