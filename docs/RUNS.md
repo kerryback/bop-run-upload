@@ -18,6 +18,13 @@ updated when jobs end; between updates, `_scratch/watch_campaign.sh` polls both 
   are independent sequences.
 - **No `git pull` of the shared checkout while a job that imports from it is running** on either
   cluster. Every task reads its Python from that one tree.
+- **Pull the shared checkout only with `bash variants/cluster_pull.sh`**, run inside it on the cluster.
+  Jobs write their outputs into the checkout; the laptop copies, commits and pushes them; the cluster
+  then holds untracked copies of files the pull brings in as tracked, and a plain `git pull` refuses to
+  overwrite them, identical or not. The script clears those copies only if every one is byte-identical
+  to what origin carries, then fast-forwards; any difference, or a checkout that cannot fast-forward,
+  aborts with nothing touched (`tests/test_cluster_pull.py`). Tracked since 2026-09-15; before that it
+  lived untracked at `/data/sjpruitt/cluster_pull.sh`.
 
 ---
 
@@ -172,4 +179,4 @@ eighty one-minute re-scorings and B4's light, stress-heavy BGN panel.
 - E1's output is never copied into `variants/results`: its file names equal the committed runs'. It
   is aggregated beside them, against the pre-registered bound in RESULTS.md ("E1 in detail").
 - Commit results from the laptop only once every job that imports the checkout has finished; then
-  pull the shared checkout.
+  pull the shared checkout with `bash variants/cluster_pull.sh`.
