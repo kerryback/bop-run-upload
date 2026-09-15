@@ -25,6 +25,11 @@ Definitions (variants/common/oracle.py evaluate_bases; run_estimators.py):
   dkkm      = best sharpe over rff, rff_ens, rff_lev, rff_lev_ens (any P, any kappa)
   lin       = best sharpe over linrank, linlev, fm, ff
   gap       = dkkm - lin
+  fm        = Fama-MacBeth's sharpe (the method has one row: no penalty grid)
+  gap_fm    = dkkm - fm, the gap against Fama-MacBeth alone. RESULTS.md reports gap and room as
+              percentages of fm (2026-09-15): gap_fm_over_fm = 100 * gap_fm_mean / fm_mean and
+              room_*_over_fm = 100 * room_*_mean / fm_mean, ratios of means like every other ratio here.
+              fm's Sharpe is near zero in some BGN regime economies (g0235r 0.0003), where these explode.
   t         = max t_vs_fm over the rff methods
   gap/room  in the economy table is the RATIO OF MEANS (§40: not the mean of per-seed ratios)
   *_pct_lin = room and gap as a percentage of the LINEAR SHARPE ACTUALLY ATTAINED (`lin`),
@@ -102,7 +107,9 @@ def seed_rows(results):
         if not ests:
             rows.append(dict(base, window=np.nan, sr_max_eval=np.nan, dkkm=np.nan, lin=np.nan,
                              gap=np.nan, t=np.nan, room_all_pct_lin=np.nan, room_eval_pct_lin=np.nan,
-                             gap_pct_lin=np.nan, dkkm_method=None, lin_method=None, prov_est=None))
+                             gap_pct_lin=np.nan, fm=np.nan, gap_fm=np.nan, room_all_pct_fm=np.nan,
+                             room_eval_pct_fm=np.nan, gap_fm_pct_fm=np.nan,
+                             dkkm_method=None, lin_method=None, prov_est=None))
             continue
         for e in ests:
             w = int(re.search(r"_w(\d+)_summary\.csv$", e).group(1))
@@ -115,11 +122,18 @@ def seed_rows(results):
             # A percentage of a linear Sharpe near zero is not informative, and a negative
             # one is meaningless; guard rather than emit a huge or signed-wrong number.
             _pct = (lambda v: 100.0 * v / _lin if _lin > 1e-6 else np.nan)
+            _fm = float(best.loc["fm", "sharpe"]) if "fm" in best.index else np.nan
+            # Per-seed percentages of fm are recorded for completeness, but fm can be at or below zero in
+            # a seed, so only the RATIO OF MEANS (economy table) is quoted; see the docstring.
+            _pfm = (lambda v: 100.0 * v / _fm if (not np.isnan(_fm)) and _fm > 1e-6 else np.nan)
             rows.append(dict(base, window=w, sr_max_eval=sr_max_eval(w),
                              dkkm=dk.max(), lin=_lin, gap=dk.max() - _lin, t=t,
                              room_all_pct_lin=_pct(base["room_all"]),
                              room_eval_pct_lin=_pct(base["room_eval"]),
                              gap_pct_lin=_pct(dk.max() - _lin),
+                             fm=_fm, gap_fm=dk.max() - _fm,
+                             room_all_pct_fm=_pfm(base["room_all"]), room_eval_pct_fm=_pfm(base["room_eval"]),
+                             gap_fm_pct_fm=_pfm(dk.max() - _fm),
                              dkkm_method=dk.idxmax(), lin_method=ln.idxmax(),
                              prov_est=s["prov"].iloc[0] if "prov" in s else None))
     return pd.DataFrame(rows)
@@ -136,7 +150,8 @@ def economy_table(seeds):
         rec["spec_id"] = specs[0] if len(specs) == 1 else ("MIXED:" + "|".join(specs) if specs else None)
         rec["solves"] = solves[0] if len(solves) == 1 else ("MIXED:" + "|".join(solves) if solves else None)
         for col in ("sr_max", "sr_max_eval", "room_all", "room_eval", "dkkm", "lin", "gap", "t",
-                    "room_all_pct_lin", "room_eval_pct_lin", "gap_pct_lin"):
+                    "room_all_pct_lin", "room_eval_pct_lin", "gap_pct_lin",
+                    "fm", "gap_fm", "room_all_pct_fm", "room_eval_pct_fm", "gap_fm_pct_fm"):
             v = g[col].astype(float).dropna()
             rec[f"{col}_mean"] = v.mean() if len(v) else np.nan
             rec[f"{col}_sd"] = v.std(ddof=1) if len(v) > 1 else np.nan
@@ -151,6 +166,12 @@ def economy_table(seeds):
         rec["room_all_over_lin"] = 100.0 * rec["room_all_mean"] / _lm if ok else np.nan
         rec["room_eval_over_lin"] = 100.0 * rec["room_eval_mean"] / _lm if ok else np.nan
         rec["gap_over_lin"] = 100.0 * rec["gap_mean"] / _lm if ok else np.nan
+        # The same ratios of means over Fama-MacBeth's Sharpe, the denominator RESULTS.md reports.
+        _fmm = rec["fm_mean"]
+        okf = _fmm is not None and not np.isnan(_fmm) and _fmm > 1e-6
+        rec["gap_fm_over_fm"] = 100.0 * rec["gap_fm_mean"] / _fmm if okf else np.nan
+        rec["room_all_over_fm"] = 100.0 * rec["room_all_mean"] / _fmm if okf else np.nan
+        rec["room_eval_over_fm"] = 100.0 * rec["room_eval_mean"] / _fmm if okf else np.nan
         out.append(rec)
     return pd.DataFrame(out).sort_values(["model", "tag", "N", "T", "window"]).reset_index(drop=True)
 
