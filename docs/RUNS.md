@@ -43,7 +43,7 @@ writes, and what became of it. Newest first.
 
 ---
 
-## Campaign 2026-09-15 -- the measurement protocol: NOT YET SUBMITTED
+## Campaign 2026-09-15 -- the measurement protocol: RUNNING
 
 All thirteen economies at one protocol, so that the only thing separating two rows of
 `docs/RESULTS.md` is the economy (`docs/RESULTS.md`, "The measurement protocol"; `docs/NEXTUP.md`).
@@ -118,23 +118,52 @@ the same machine that recorded it. Hence one machine for all six. The old manife
 (`c6287d53674cc1ef` and the other five) stay in the registry describing tables no longer on disk;
 nothing live references them.
 
+### Submitted 2026-09-15, and the restart it needed
+
+**The checkpoint skipped seventy tasks, and the reason is worth keeping.** The first submission put
+all thirteen arrays up. The six BGN arrays ran; the seven KP14 and GS21 arrays exited in three
+seconds each, 10 of 10 tasks, with `seed N already complete and current for the recorded solve --
+nothing to do`.
+
+The per-seed checkpoint keys on the SOLVE, on the premise that "re-solving the economy invalidates
+every seed at once". The protocol change broke that premise from a direction the checkpoint could not
+see: it moved the ridge grid, the burn-in and the conditioning columns while leaving KP14's and
+GS21's solve ids untouched -- only BGN's jstar ids were re-keyed, which is why only BGN ran. So
+seventy seeds matched their pre-protocol results, which were still sitting in the shared
+`variants/results`, and were skipped.
+
+Two fixes, one immediate and one durable:
+
+- **Immediate**, because a code change could not be pulled with the BGN arrays running: the seventy
+  stale `*_w360_run.json` records were removed from the shared results directory, which is the only
+  thing the checkpoint reads, and the seven economies were resubmitted. They then ran.
+- **Durable**: `runstamp.run_matches_protocol` checks the estimation half -- ridge grid, window, fair
+  benchmark, winsorisation -- against `variants/common/protocol.py`, and `run_is_current` folds it in.
+  A seed whose record predates a protocol change is no longer current whatever its solve says.
+  `tests/test_runstamp_multitag.py` pins the failure. **This is committed but deliberately NOT
+  pulled: no pull may happen while either queue is busy.** Pull it when both are empty, before any
+  resubmission.
+
+The lesson generalises past this campaign: a result depends on its solve AND on how it was measured,
+and until 2026-09-15 only the first half was checked.
+
 ### Jobs
 
 | cluster | experiment | SEED_SPEC | partition | request | status |
 |---|---|---|---|---|---|
-| Sol | BGN regime, slow | `g0235s` | highmem | 8 cpu, 128G, 4 d | not submitted |
-| Sol | BGN regime, rare | `g0235r` | highmem | 8 cpu, 128G, 4 d | not submitted |
-| Phoenix | BGN as published | `bgnbase` | public | 8 cpu, 40G, 1 d | not submitted |
-| Phoenix | KP14 as published | `kpbase` | public | 8 cpu, 48G, 1 d | not submitted |
-| Phoenix | GS21 as published | `gsbase` | public | 8 cpu, 32G, 1 d | not submitted |
-| Phoenix | KP14 Path 1 parent | `vyx` | public | 8 cpu, 48G, 2 d | not submitted |
-| Phoenix | KP14 higher price of risk | `vyg25` | public | 8 cpu, 48G, 2 d | not submitted |
-| Phoenix | GS21 gamma(x) | `g28` | public | 8 cpu, 32G, 1 d | not submitted |
-| Phoenix | GS21 gamma(x) x types | `gx7` | public | 8 cpu, 32G, 1 d | not submitted |
-| Phoenix | GS21 types under a regime | `bx7` | public | 8 cpu, 32G, 1 d | not submitted |
-| Phoenix | BGN regime | `g0235` | public | 8 cpu, 64G, 2 d | not submitted |
-| Phoenix | BGN regime, fast | `g0235f` | public | 8 cpu, 40G, 1 d | not submitted |
-| Phoenix | BGN regime, stress-dominant | `g0235d` | public | 8 cpu, 40G, 1 d | **nine new seeds**, not submitted |
+| Sol | BGN regime, slow | `g0235s` | highmem | 8 cpu, 128G, 4 d | Sol `63323405`, PENDING (highmem, est. 17:53) |
+| Sol | BGN regime, rare | `g0235r` | highmem | 8 cpu, 128G, 4 d | Sol `63323406`, PENDING (highmem, est. 17:53) |
+| Phoenix | BGN as published | `bgnbase` | public | 8 cpu, 40G, 1 d | Phoenix `21575311`, RUNNING |
+| Phoenix | KP14 as published | `kpbase` | public | 8 cpu, 48G, 1 d | Phoenix `21575424` (resubmitted), RUNNING |
+| Phoenix | GS21 as published | `gsbase` | public | 8 cpu, 32G, 1 d | Phoenix `21575427` (resubmitted), RUNNING |
+| Phoenix | KP14 Path 1 parent | `vyx` | public | 8 cpu, 48G, 2 d | Phoenix `21575425` (resubmitted), RUNNING |
+| Phoenix | KP14 higher price of risk | `vyg25` | public | 8 cpu, 48G, 2 d | Phoenix `21575426` (resubmitted), RUNNING |
+| Phoenix | GS21 gamma(x) | `g28` | public | 8 cpu, 32G, 1 d | Phoenix `21575428` (resubmitted), RUNNING |
+| Phoenix | GS21 gamma(x) x types | `gx7` | public | 8 cpu, 32G, 1 d | Phoenix `21575429` (resubmitted), RUNNING |
+| Phoenix | GS21 types under a regime | `bx7` | public | 8 cpu, 32G, 1 d | Phoenix `21575430` (resubmitted), RUNNING |
+| Phoenix | BGN regime | `g0235` | public | 8 cpu, 64G, 2 d | Phoenix `21575319`, RUNNING |
+| Phoenix | BGN regime, fast | `g0235f` | public | 8 cpu, 40G, 1 d | Phoenix `21575320`, RUNNING |
+| Phoenix | BGN regime, stress-dominant | `g0235d` | public | 8 cpu, 40G, 1 d | Phoenix `21575321`, RUNNING, **nine new seeds** |
 
 **Memory follows calm spells**, which is why the two slow BGN economies are the ones that needed Sol:
 longer calm spells price risk cheaply for longer, so firms accept more projects and the panel arrays

@@ -29,9 +29,22 @@ def _bx7():
     return list(spec["expected_solves"]), sorted(spec["expected_solves"].values())
 
 
-def _run_record(ids):
+def _run_record(ids, **over):
+    """A run record as run_estimators.py writes one: the solves AND the protocol.
+
+    The protocol half is not decoration. run_is_current checks it (see
+    test_a_pre_protocol_run_is_not_current_even_when_its_solve_is), because a protocol
+    change can invalidate every seed without moving a solve_id -- which is exactly what
+    happened on 2026-09-15 and skipped seventy cluster tasks.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
+    import protocol
+    d = {"solves": [{"stage": f"s{i}", "solve_id": sid} for i, sid in enumerate(ids)],
+         "kappas": list(protocol.KAPPAS), "window": protocol.WINDOW,
+         "fair_linear": True, "winsor": protocol.WINSOR}
+    d.update(over)
     fh = tempfile.NamedTemporaryFile("w", suffix="_run.json", delete=False)
-    json.dump({"solves": [{"stage": f"s{i}", "solve_id": sid} for i, sid in enumerate(ids)]}, fh)
+    json.dump(d, fh)
     fh.close()
     return fh.name
 
@@ -131,3 +144,49 @@ if __name__ == "__main__":
             failed += 1; print(f"  FAIL  {fn.__name__}"); traceback.print_exc()
     print(f"\n{len(fns) - failed}/{len(fns)} passed")
     sys.exit(1 if failed else 0)
+
+
+def test_a_pre_protocol_run_is_not_current_even_when_its_solve_is():
+    """The seed checkpoint must see a protocol change, not only a solve change.
+
+    THE INCIDENT, 2026-09-15. run_is_current keyed only on the solve, on the premise that
+    "re-solving the economy invalidates every seed at once". The protocol change broke that
+    premise from a direction it could not see: it moved the ridge grid, the burn-in and the
+    conditioning columns while leaving KP14's and GS21's solve ids untouched. Seventy seeds
+    therefore looked current against pre-protocol results, and seventy cluster tasks exited
+    in three seconds each with "already complete and current for the recorded solve".
+    """
+    import sys as _sys
+    _sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
+    import protocol
+
+    def rec(**over):
+        d = {"solves": [{"stage": "jstar", "solve_id": "x"}],
+             "kappas": list(protocol.KAPPAS), "window": protocol.WINDOW,
+             "fair_linear": True, "winsor": protocol.WINSOR}
+        d.update(over)
+        fh = tempfile.NamedTemporaryFile("w", suffix="_run.json", delete=False)
+        json.dump(d, fh); fh.close()
+        return fh.name
+
+    ok, why = runstamp.run_matches_protocol(rec())
+    assert ok, why
+
+    # the four ways a record can be off protocol, each named in the reason
+    for over, needle in (({"kappas": [0.001, 0.01, 0.1, 1.0]}, "kappas"),
+                         ({"window": 720}, "window"),
+                         ({"fair_linear": None}, "fair_linear"),
+                         ({"winsor": 0.05}, "winsor")):
+        ok, why = runstamp.run_matches_protocol(rec(**over))
+        assert not ok, f"{over} was accepted"
+        assert needle in why, f"{over} -> {why!r} does not name {needle}"
+
+    # and run_is_current folds it in, so the checkpoint cannot skip an off-protocol seed
+    # whose solve happens to still be live
+    live = runstamp.live_solves("gs_bx", "sol_g28")
+    assert len(live) == 1
+    stale = rec(solves=[{"stage": "sol_g28", "solve_id": live[0]}],
+                kappas=[0.001, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0])
+    ok, why = runstamp.run_is_current(stale, "gs_bx", "sol_g28")
+    assert not ok, "a pre-protocol gs_bx record with a live solve was called current"
+    assert "off protocol" in why, why
