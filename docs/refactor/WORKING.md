@@ -3714,3 +3714,34 @@ nothing to clear. The old copies at `/data/sjpruitt/cluster_pull.sh` and `_scrat
 were then deleted. RUNS.md ("Where output goes"), RESULTS.md's experiment checklist (new step 6) and
 the memory note and index name `bash variants/cluster_pull.sh`.
 
+## §59. Every gap and room in RESULTS.md carries its percentage of the linear Sharpe (2026-09-15)
+
+**Seth's request.** Report gap and room as a percentage of the Sharpe the linear method obtains, in every
+RESULTS.md table. Before this only the pinned current-results tables had it, and only for room over the
+evaluation months and for the measured gap.
+
+**Definitions, all ratios of means in percent.** Room (all months or evaluation window) and gap over
+`best linear`, the best of ff, fm, linrank and linlev: `room_all_over_lin`, `room_eval_over_lin`,
+`gap_over_lin` in `economy_table.csv`. The fair gap over the Sharpe of the best of the seven fair linear
+methods, its own linear benchmark: `fair_gap_over_fair_lin` in `fair_gap_economy_table.csv`. Legacy rows
+use their own best linear Sharpe, from the exact values at `23f9380:variants/results/grid_summary.csv`
+(BGN 15.6% room, 2.5% gap; KP14 1.9%, 1.8%; GS21 0.3%, 4.2%) and REPORT.md §19a for `vy` (best linear
+0.5417: room 51.3% all-month, gap 5.3%).
+
+**Where.** Columns beside every gap, fair gap and room column: the answer table, the anchor table (which
+also gains the `fair linear` denominator), the legacy anchor rows, both pinned current-results tables
+(new `room all % of lin` and `fair gap % of fair lin`), the KP14 and BGN ladders, finding 8. Inside the
+cell for the three prediction tables and the graded baseline predictions; inline in the route log's
+outcomes. Every value was generated from the CSVs, not typed. Column definitions added to "How to read
+this".
+
+**What the percentages show that the levels hid.** B1's room "moved 13x" in Sharpe but only from 20.6%
+to 31.4% of the linear Sharpe; the regime ladder's fair gaps span -7.2% (g0235r, a fair linear Sharpe
+of 0.034) to +2.0%. vyxT860's gap is 28.5% of linear, against vyx's 16.3%.
+
+**Test.** `tests/test_results_md_matches_table.py` now reads the current-results tables by header name
+instead of position (a positional parser reads the wrong cell when a column is added) and also pins
+`room all % of lin` against `room_all_over_lin` and `fair gap % of fair lin` against
+`fair_gap_over_fair_lin`. Checked by mutation on a temporary copy: a stale room percentage for vyx and a
+sign-flipped fair-gap percentage for kpbase both fail by name. 244 pass.
+
