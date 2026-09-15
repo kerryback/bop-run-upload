@@ -1,16 +1,17 @@
 # Cluster runs
 
 Every job started on Sol or Phoenix for this repository: where it runs, what it waits on, what it
-writes, and what became of it. One section per campaign, newest first. The status columns are
-updated when jobs end; between updates, `_scratch/watch_campaign.sh` polls both clusters and writes
-`_scratch/CAMPAIGN_STATUS.md`.
+writes, and what became of it. Newest first.
 
 ## Where output goes, and why it is arranged this way
 
 - **Result files are named by model, tag and seed only** (`variants/common/runstamp.py`, `stem`).
-  Nothing in the name records T, the window or the cluster. A run that changes the sample needs its
-  own tag -- X3 is `vyxT860`, not `vyx` -- and a re-scoring of saved panels needs its own results
-  directory (E1). `SEED_STAGE=linear` refuses to write into the directory it reads.
+  Nothing in the name records T, the window or the cluster. This used to mean that a run at another
+  sample needed its own tag; since 2026-09-15 there is no other sample -- the measurement protocol
+  fixes N, T and the window for every economy (`variants/common/protocol.py`), and
+  `run_seeds_slurm.sh` refuses to write an off-protocol run into `variants/results` at all. A
+  re-scoring of saved panels still needs its own results directory; `SEED_STAGE=linear` refuses to
+  write into the directory it reads.
 - **`/data/sjpruitt` is shared by both clusters; `/scratch` is per-cluster and purged.** The
   pre-refactor `run_bop_job.sh` writes every run of a model into the same two scratch directory
   names, so each run overwrites the last.
@@ -23,160 +24,141 @@ updated when jobs end; between updates, `_scratch/watch_campaign.sh` polls both 
   then holds untracked copies of files the pull brings in as tracked, and a plain `git pull` refuses to
   overwrite them, identical or not. The script clears those copies only if every one is byte-identical
   to what origin carries, then fast-forwards; any difference, or a checkout that cannot fast-forward,
-  aborts with nothing touched (`tests/test_cluster_pull.py`). Tracked since 2026-09-15; before that it
-  lived untracked at `/data/sjpruitt/cluster_pull.sh`.
+  aborts with nothing touched (`tests/test_cluster_pull.py`).
+
+## Two hazards worth carrying forward
+
+- **A chained solve id hashes its upstream tables' RAW FILE BYTES** (`solstamp.artifact_digests`);
+  only parameters are quantised to 8 significant digits. The Mac and Sol write a solve's tables with
+  different trailing digits, so an id computed on one platform is not reproducible on another. On
+  2026-09-13 a KP14 integ solve on Sol printed `a2cc8d99c1bc474b` against the precommitted
+  `8d1308e8f21723f8` and was cancelled at 11 minutes. The fix keeps the precommitment exact: build
+  the whole chain on one platform, or ship the upstream tables to the other byte-identical with their
+  manifest and build only the downstream stage there.
+- **`solve_id` digests a producer's whole source file**, so an edit that cannot change a solve still
+  re-keys it. Run `python variants/solve_impact.py --worktree` BEFORE paying for anything: it names
+  the solves a change invalidates and whether the change is functional (AST differs) or only
+  comments. A comment-only `sed` inside a `print()` moved a precommitted GS id on 2026-09-08, and the
+  2026-09-15 burn-in edit re-keyed all six BGN J\* solves without changing a byte of their tables.
 
 ---
 
-## Campaign 2026-09-14 -- the baselines (A1), commit `a5b5673`: COMPLETED 2026-09-15
+## Campaign 2026-09-15 -- the measurement protocol: NOT YET SUBMITTED
 
-Each paper's economy as published, run through the pipeline exactly as every path that departs from
-it (`docs/RESULTS.md`, "Baselines: the anchor"; `docs/NEXTUP.md`, A1). Specs precommitted in `3fcfe56`;
-the BGN and KP14 solves built on the Mac and committed in `a5b5673`; the GS21 solve runs on Sol. Every
-job runs from the shared checkout at `a5b5673`, pulled with both queues empty. Each case narrows the
-conditioning columns to the state its paper has (`RF_COLS`, passed as `--rf_cols` to both stages).
+All thirteen economies at one protocol, so that the only thing separating two rows of
+`docs/RESULTS.md` is the economy (`docs/RESULTS.md`, "The measurement protocol"; `docs/NEXTUP.md`).
+No economy's parameters change. What changes: burn-in 400 for all three models (it was 300 / 400 /
+300), the ridge grid `1e-5 … 10` for every economy (it was three different grids), the model's full
+conditioning set for the baselines too, and ten seeds for `g0235d`, which had one.
 
-### Solves built before submission
+### Before submission, in this order
 
-| stage | spec | id (precommitted, reproduced) | built | artifact | time |
-|---|---|---|---|---|---|
-| jstar | `var-bgn_gam-bgnbase-v1` | `c6287d53674cc1ef` | Mac | `variants/bgn_gam/Jstar_bgnbase.csv`, committed | 491 s |
-| G | `var-kp_vy-kpbase-v1` | `7bc1f92a225c01b6` | Mac | `variants/kp_vy/G_kpbase0.csv`, committed | 1 s |
-| integ | `var-kp_vy-kpbase-v1` | `f299747cd77fc4a1` | Mac | 21 `variants/kp_vy/integ_kpbase0_*.npz`, committed | 344 s |
+| step | what | why this order |
+|---|---|---|
+| 1 | `python variants/solve_impact.py --worktree` | names every solve the burn-in edit re-keys. Expect exactly BGN's six J\* ids; KP14's and GS21's producers did not change |
+| 2 | commit the specs, the runner, `protocol.py` and the tests | the six new BGN jstar ids were computed WITHOUT solving and must be committed BEFORE their manifests, or `tests/test_precommitment_is_real.py` classifies them retrofitted and the specs' `precommitted: true` becomes a false claim |
+| 3 | `bash variants/bgn_gam/rebuild_all_jstar.sh`, about 3 to 4 min per table | reads each live spec's `params` rather than taking a hand-copied blob, and builds all six on ONE machine -- see below for why that matters |
+| 4 | check each printed solve_id against its spec's `expected_solves` | the six ids were computed without solving; each must come back exactly |
+| 5 | clear `solves_pending` in the six BGN specs; commit the tables and manifests | `tests/test_specs_match_shell.py` pins the pairing |
+| 6 | archive `variants/results` and `variants/results_e1` to `/data/sjpruitt/projects/bop-run-upload/archive/2026-09-15_pre-protocol/` with `SHA256SUMS` | result names key on model, tag and seed only, so the campaign overwrites them |
+| 7 | push; `bash variants/cluster_pull.sh` in the shared checkout, with both queues empty | never a plain `git pull` |
 
-The kp integ id hashes the G table's raw bytes, so both stages were built on the Mac and shipped through
-git rather than rebuilt on Sol (the K4 hazard below). Checks before commit: the BGN table's two regime
-columns coincide to 3e-13 at unit multipliers; the 21 KP14 integral tables are identical across the state
-nodes to 4e-12, so the economy does not depend on y; every manifest's `recorded_at` is after the spec commit.
+**Burn-in does not enter the BGN J\* solve, and the rebuild is a formality -- but it must happen on
+one machine.** `vasicek.py` never reads `burnin`; it only arrives in the module namespace through
+`from parameters import *`. Measured rather than argued on 2026-09-15: five of the six tables rebuilt
+at burn-in 400 are BYTE-IDENTICAL to the committed ones, and `Jstar_g0235d.csv` -- the only one of the
+six originally built on Phoenix (job `21571505`), the rest on the Mac -- differs by 5e-15 relative on
+a bit-identical `r` grid. Rebuilding it at burn-in 300 and 400 on the same machine gives byte-identical
+output, which isolates the variable: the difference is the platform, not the burn-in. A jstar
+`solve_id` is parameters plus source digests, with no upstream artifacts, so it is
+platform-independent; the MANIFEST records the table's sha256, so the committed table must come from
+the same machine that recorded it. Hence one machine for all six. The old manifests
+(`c6287d53674cc1ef` and the other five) stay in the registry describing tables no longer on disk;
+nothing live references them.
+
+GS21's four solutions are reused as published (`python variants/fetch_solves.py --spec
+var-gs_bx-gsbase-v2`, and the same for g28, gx7, bx7); KP14's G and integral tables are committed.
+No solve job is needed on either cluster.
 
 ### Jobs
 
-| experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
-|---|---|---|---|---|---|---|---|
-| GS21 baseline solve | `var-gs_bx-gsbase-v1` via `variants/gs_bx/run_gsbase_slurm.sh` | Sol | `63257244` | public, 4 cpu, 8G, 1 d | -- | `variants/gs_bx/sol_gsbase/solution.npz` (untracked, about 100 MB), `experiments/registry/c6ae2d52428a7ce5.json` | COMPLETED in 5 h 34 min, peak 2.0 GiB: tolerance exit at sweep 3024, `SOLVE OK: sol_gsbase=c6ae2d52428a7ce5` |
-| GS21 baseline seeds 0-9 | `gsbase` | Sol | `63257245` | public, 8 cpu, 64G, 2 d | afterok `63257244` | `variants/results/gs_bx_*_gsbase_*` | COMPLETED 10/10, 3.6 to 5.3 h, peak 4.5 GiB; every seed CURRENT |
-| BGN baseline seeds 0-9 | `bgnbase` | Sol | `63257246` | public, 8 cpu, 64G, 2 d | -- | `variants/results/bgn_gam_*_bgnbase_*` | COMPLETED 10/10, 2.2 to 2.9 h, peak 15.8 GiB; every seed CURRENT |
-| KP14 baseline seeds 0-9 | `kpbase` | Sol | `63257247` | public, 8 cpu, 64G, 2 d | -- | `variants/results/kp_vy_*_kpbase_*` | COMPLETED 10/10, 2.3 to 3.5 h, peak 29.2 GiB; every seed CURRENT |
+One seed first per economy, `sacct` before the array. `sbatch --export=ALL,SEED_SPEC=<tag>
+variants/run_seeds_slurm.sh`, with `--array=0` then `--array=1-9`.
 
-Expected: BGN seeds about 3 h each at well under g0235's memory (the unit-multiplier J* range is a third
-of g0235's); KP14 seeds about 3 h at about 30 GiB; the GS solve 3.5 to 6 h, then its seeds about 3 h.
-`_scratch/watch_baselines.sh` polls Sol every ten minutes and writes `_scratch/BASELINE_STATUS.md`.
+| order | experiment | SEED_SPEC | cluster | request | why | status |
+|---|---|---|---|---|---|---|
+| 1 | BGN as published | `bgnbase` | Sol public | 8 cpu, 64G, 1 d | the baselines gate every statement that follows; peak was 15.8 GiB at the old grid | not submitted |
+| 2 | KP14 as published | `kpbase` | Sol public | 8 cpu, 64G, 1 d | peak 29.2 GiB | not submitted |
+| 3 | GS21 as published | `gsbase` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
+| 4 | KP14 Path 1 parent | `vyx` | Sol public | 8 cpu, 64G, 2 d | peak 30.6 GiB; the economy the wider grid should move most | not submitted |
+| 5 | KP14 higher price of risk | `vyg25` | Sol public | 8 cpu, 64G, 2 d | peak 29.2 GiB, longest 7.6 h at the old grid | not submitted |
+| 6 | GS21 gamma(x) | `g28` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
+| 7 | GS21 gamma(x) x types | `gx7` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
+| 8 | GS21 types under a regime | `bx7` | Sol public | 8 cpu, 64G, 1 d | -- | not submitted |
+| 9 | BGN regime | `g0235` | Sol public | 8 cpu, 96G, 2 d | 15.7 to 38.9 GiB | not submitted |
+| 10 | BGN regime, fast | `g0235f` | Sol public | 8 cpu, 96G, 2 d | 22 GiB; the lightest of the ladder | not submitted |
+| 11 | BGN regime, stress-dominant | `g0235d` | Sol public | 8 cpu, 96G, 2 d | 15.6 GiB; **nine new seeds**, the only economy gaining any | not submitted |
+| 12 | BGN regime, slow | `g0235s` | Sol public | 8 cpu, 128G, 3 d | 74 GiB: long calm spells mean more live projects | not submitted |
+| 13 | BGN regime, rare | `g0235r` | Sol public | 8 cpu, 128G, 3 d | 77.0 GiB and 24.5 h for one seed at the old grid -- the binding job of the campaign | not submitted |
 
-**Outcome, 2026-09-15.** Every job COMPLETED and both queues were empty at 07:11. The watcher addressed
-Sol by the short name `sol`, which stopped resolving when the laptop moved to campus ethernet; its last
-cycles failed and it was stopped. Use `sjpruitt@sol.asu.edu` in scripts. All 30 seed logs end CURRENT for
-their spec's solve ids, and every oracle sidecar records `spec_check` and `env_check` verified and the
-spec's `rf_cols` (readback is verified for BGN and KP14 and "not requested" for GS21, as for every GS
-economy). The 210 result files (oracle JSON, sidecars and time series; estimator CSVs, summaries,
-sidecars and run records; no panels or moments) and the GS manifest were copied to the laptop and match
-Sol's sha256 sums, 211 of 211. Provenance tags read `a5b5673+dirty` with an empty recorded code diff: the
-seeds wrote untracked results into the checkout. `solution.npz` was copied to the laptop, verified
-against its manifest, and published to the shared solves folder under `c6ae2d52428a7ce5`; the gsbase
-`SOLVE_HINT` is now the fetch form and its spec's `solves_pending` is cleared. Peak memory in the
-watcher's first report was misread from sacct's KiB: the figures in the table above are GiB. What the
-runs found is in `docs/RESULTS.md`, "Baselines: the anchor".
+**Memory follows calm spells**, which is why the BGN ladder goes last and takes the largest
+allocations: longer calm spells price risk cheaply for longer, so firms accept more projects and the
+panel arrays grow. The J\* value scale orders exactly as memory does (g0235f 37 to 345, g0235 57 to
+483, g0235s 148 to 1262, g0235r 390 to 2041; peak memory 22, 39, 74 and 77 GiB), and within an
+economy the longest calm spell in a seed's panel ranks with its peak memory at Spearman +0.84
+(g0235s) and +0.80 (g0235r). All ten g0235r seeds and three g0235s seeds were once killed at a 64 GiB
+cap.
+
+**The wider ridge grid is the added cost.** It is seven penalties against four for BGN and KP14 and
+eight for GS21, and `run_seeds_slurm.sh`'s own measurement is 77 to 81 s per evaluation month at eight
+penalties, so about 2.8 h of DKKM per seed on top of the panel build. Budget roughly 1.75x the old
+estimator stage for the BGN and KP14 economies and about the same as before for GS21. Total on the
+order of 650 node-hours across 130 seed-jobs.
 
 ### Reading the outcome
 
-- The GS solve ends `SOLVE OK: sol_gsbase=c6ae2d52428a7ce5` or `SOLVE MISMATCH` in
-  `outslurm/gs_gsbase.log`; on a mismatch `63257245` stays `DependencyNeverSatisfied` and the id must be
-  chased before anything else. Its manifest is written into the shared checkout's registry and must be
-  copied back to the laptop and committed, as K4's integ manifest was; `solution.npz` stays on `/data`
-  (publish it with `variants/fetch_solves.py --publish` for the fetch hint).
-- When the GS solve lands, switch the `gsbase` case's `SOLVE_HINT` in `variants/run_seeds_slurm.sh` to the
-  fetch form and clear `solves_pending` in its spec; `tests/test_specs_match_shell.py` enforces the pairing.
-- Results: copy the oracle, sidecar, time-series and estimator files (not panels or moments) to the
-  laptop, `python variants/aggregate_seeds.py --flagship`, `python variants/fair_gap.py`, and add the three
-  rows to RESULTS.md's current-results table; `tests/test_results_md_matches_table.py` fails until they are
-  there. Grade each spec's registered prediction in the anchor section.
-- No `git pull` of the shared checkout until all four jobs have finished.
+- **The gate that is not a test.** For each economy, read the winning penalty per seed out of
+  `variants/results/<model>_estimators_<tag>_s<seed>_w360_summary.csv` (the `kappa` column of the
+  best `rff*` row). It must be INTERIOR -- neither `1e-5` nor `10` -- in at least 8 of 10 seeds. If
+  `1e-5` wins, DKKM's Sharpe is still censored and the grid needs another decade before any new
+  economy is run. This is the whole point of the campaign, so it is checked first and reported beside
+  the results.
+- Every oracle sidecar must record `spec_check` verified, `env_check` verified, `burnin` 400 and the
+  full `rf_cols`; every estimator `run.json` must record the seven-value `kappas` and `window` 360.
+  Grep the sidecars, not the logs.
+- Copy the oracle, sidecar, time-series and estimator files (not panels or moments) to the laptop,
+  then `python variants/aggregate_seeds.py` and `python variants/fair_gap.py`. The aggregator refuses
+  to write the canonical table if any row is off protocol.
+- Once `g0235d` has ten seeds, delete the SCREEN tier: its heading in `docs/RESULTS.md`, and
+  `test_every_screen_is_reported_under_a_screen_heading` plus the `current` argument of `_csv_rows`
+  in `tests/test_results_md_matches_table.py`. The protocol's seed count is ten for every economy, so
+  there is no tier left to define.
+- Once every economy carries `--fair_linear` from its own run, `variants/results_e1/` is redundant:
+  `fair_gap.py` will read all thirteen as "own run". Fold `ew` and `fair_gap` into
+  `aggregate_seeds.py`'s `economy_table.csv`, delete the second directory and CSV, and drop the
+  two-table join in `tests/test_results_md_matches_table.py`. Deferred until then deliberately --
+  doing it now would mean writing an E1 fallback path in order to delete it.
+- Then rewrite `docs/RESULTS.md`: delete the "Status: every number below predates the protocol"
+  section, refill both tables, and grade each spec's registered prediction.
 
 ---
 
-## Campaign 2026-09-13 -- commit `fef5802`
+## Earlier campaigns
 
-The proposals ranked in `docs/RESULTS.md` after cross-cutting finding 8. Every job below runs from
-the shared checkout `/data/sjpruitt/GitHub/bop-run-upload` at `fef5802`. K5 was withdrawn before
-launch as infeasible (RESULTS.md, KP14 proposals).
+Their results are superseded by the protocol campaign above and are not quoted anywhere. Kept as the
+job record; the hazards they taught are in "Two hazards worth carrying forward".
 
-### Earlier results pulled off first
-
-| what | from | to (verified by checksum, then read-only) | size | job |
-|---|---|---|---|---|
-| panels and moments of all 80 current seeded runs | `variants/results` in the shared checkout | `/data/sjpruitt/projects/bop-run-upload/archive/2026-09-13_pre-campaign/variants_results/` | 31 GB | Sol `63188205`, rerun as `63188497` |
-| run logs, SLURM logs, root `logs/`, `_evalwin/` | the shared checkout | `.../archive/2026-09-13_pre-campaign/{logs,_evalwin}/` | ~6 MB | Sol `63188497` |
-| pre-refactor KP14 `main.py` output of 2026-08-31, runs 0-10 (88 + 22 pickles) | Phoenix `/scratch/sjpruitt/bop_kp14` and `bop_temp_kp14` | `/data/sjpruitt/projects/bop-run-upload/archive/phx-scratch-2026-08-31_kp14_main/` | 58 GB | Phoenix `21571504` |
-
-Each archive job writes `SHA256SUMS` into its archive and logs beside it. Sol `63188205` copied all
-160 panels and moments, then exited when rsync could not create the nested `logs/` parent directory;
-it had not reached its read-only step, and `63188497` re-runs it with that directory created. The
-2026-08-31 KP14 output predates the 2026-09-04 arrival-rate fix, so it is kept as a record of that
-run, not as citable numbers. The scratch originals are left in place.
-
-**Both verified.** Sol `63188497`: `ARCHIVE_OK` 16:03, 80 panels and 80 moments, no checksum
-differences, 476 files in `SHA256SUMS`, none left writable. Phoenix `21571504`: `ARCHIVE_OK` 16:07,
-88 + 22 files, no checksum differences, 110 in `SHA256SUMS`, none writable. All 22 files of
-`bop_temp_kp14` are byte-identical copies of `bop_kp14`'s panels and moments, so that directory held
-nothing unique.
-
-### Jobs
-
-| experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
-|---|---|---|---|---|---|---|---|
-| K4 solve, first attempt | `var-kp_vy-vyg25-v1` | Sol | `63188594` | public, 8 cpu, 16G, 6 h | -- | moved to `/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/` | CANCELLED at 11 min: printed integ `a2cc8d99c1bc474b`, not the precommitted `8d1308e8f21723f8` |
-| K4 solve | `var-kp_vy-vyg25-v1` | Sol | `63188972` | public, 8 cpu, 16G, 6 h | -- | integ tables and manifest; G shipped from the Mac, byte-identical | COMPLETED in 44 min: `SOLVE OK: G=f41d052f1f960c4c, integ=8d1308e8f21723f8`, both precommitted |
-| K4 seeds 0-9, first chain | `vyg25` | Sol | `63188595` | public, 64G, 2 d | afterok `63188594` | -- | CANCELLED with its solve; never started |
-| K4 seeds 0-9 | `vyg25` | Sol | `63188973` | public, 64G, 2 d | afterok `63188972` | `variants/results/kp_vy_*_vyg25_*` | COMPLETED 10/10, peak 29.2 GiB, longest 7 h 33 min; every run CURRENT for both solves |
-| X3 seeds 0-9 | `vyxT860` | Sol | `63188596` | public, 96G, 2 d | -- | `variants/results/kp_vy_*_vyxT860_*` | COMPLETED 10/10, peak 56.9 GiB, longest 5 h 59 min; every run CURRENT for vyx's solves |
-| B4 solve | `var-bgn_gam-g0235d-v1` | Phoenix | `21571505` | htc, 4 cpu, 8G, 2 h | -- | `variants/bgn_gam/Jstar_g0235d.csv`, `experiments/registry` | COMPLETED in 15 min: `SOLVE OK: jstar=e136e8b440bce761`, the precommitted id |
-| B4 seed 0, the screen | `g0235d` | Phoenix | `21571506` | public, 64G, 2 d | afterok `21571505` | `variants/results/bgn_gam_*_g0235d_s000*` | COMPLETED in 2 h 31 min, peak 15.6 GiB, CURRENT. Screen MISSED: room_eval +0.0186, `sr_orth_eval` 0.1541 |
-| B4 seeds 1-9 | `g0235d` | -- | never submitted | -- | seed 0: evaluation-window room >= +0.05 AND `sr_orth_eval` >= 0.30 | -- | closed: the screen missed both gates |
-| E1 vyx | `vyx`, `SEED_STAGE=linear` | Phoenix | `21571507` | htc, 4 cpu, 16G, 2 h | -- | `/data/sjpruitt/projects/bop-run-upload/e1_fair_linear/` | COMPLETED 10/10 |
-| E1 g0235 | `g0235`, linear | Phoenix | `21571508` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 g0235f | `g0235f`, linear | Phoenix | `21571527` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 g0235s | `g0235s`, linear | Phoenix | `21571528` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 g0235r | `g0235r`, linear | Phoenix | `21571529` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 g28 | `g28`, linear | Phoenix | `21571530` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 gx7 | `gx7`, linear | Phoenix | `21571531` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-| E1 bx7 | `bx7`, linear | Phoenix | `21571532` | htc, 4 cpu, 16G, 2 h | -- | same | COMPLETED 10/10 |
-
-**K4's first solve did not reproduce its precommitted integ id, and was cancelled.** Sol job `63188594`
-rebuilt the G stage and printed the precommitted G id `f41d052f1f960c4c`, then integ `a2cc8d99c1bc474b`
-instead of `8d1308e8f21723f8`. The integ stage's id hashes its upstream G tables' RAW FILE BYTES
-(`solstamp.artifact_digests`); only parameters are quantised to 8 significant digits. The Mac and Sol direct
-solves write G with different trailing digits, so a chained id computed on one platform is not reproducible
-on another. The fix keeps the precommitment exact: the G tables built on the Mac, from which the integ id was
-precommitted, were shipped to Sol byte-identical with their manifest (`solstamp.lookup` finds it and reports no
-artifact problems), and `63188972` builds only the integ stage from those bytes. The first attempt's G, 36
-integ tables, manifest and log are kept in `/data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/`.
-
-**E1 finished within minutes of submission**: 80 of 80 tasks COMPLETED in 52 to 76 s at 1.5 to 1.7
-GiB peak, every run record CURRENT for its solves, and every economy's fair gap inside its registered
-bound (`docs/RESULTS.md` finding 8). The 240 summary, sidecar and run-record files are committed in
-`variants/results_e1/`; the 80 per-month CSVs (58 MB) stay in
-`/data/sjpruitt/projects/bop-run-upload/e1_fair_linear/`. Their provenance tags read `fef5802+dirty`
-because K4's solve had begun writing untracked tables into the checkout; the recorded code diff is empty.
-
-**Results pulled, 2026-09-14.** Every job had finished and neither queue held anything. The 147 result
-files of K4, X3 and B4 (everything except panels and moments) were copied to the laptop and match Sol's
-sha256 sums. Sol's 63 K4 integral tables match the digests recorded in manifest `8d1308e8f21723f8`, and
-they are the ones committed. They replace six integral tables that the Mac's G rebuild had left in the
-laptop checkout; those differ in their bytes, as the chained-id hazard predicts, and are kept in
-`_scratch/k4_mac_partial_integ/`. The first copy listed its panel and moments excludes after its
-includes, and rsync applies the first rule that matches. Before it was stopped, B4's panel and moments
-and K4 seed 0's moments (560 MB, gitignored) had reached the laptop. The originals stay on `/data`. What
-the runs found is in `docs/RESULTS.md`, KP14 Path 1 and BGN Path 1.
-
-Why the split: Sol's public nodes are 515 GB and X3's longer panel is expected to peak near 53 GiB,
-so both KP14 jobs go there; Phoenix's `htc` partition starts short jobs at once, which suits E1's
-eighty one-minute re-scorings and B4's light, stress-heavy BGN panel.
-
-### Reading the outcome
-
-- A solve job ends `SOLVE OK` or `SOLVE MISMATCH` in `outslurm/solve.<spec>.<jobid>.txt`. On a
-  mismatch the dependent array stays pending as `DependencyNeverSatisfied`; cancel it and chase the id
-  before anything else.
-- E1's output is never copied into `variants/results`: its file names equal the committed runs'. It
-  is aggregated beside them, against the pre-registered bound in RESULTS.md ("E1 in detail").
-- Commit results from the laptop only once every job that imports the checkout has finished; then
-  pull the shared checkout with `bash variants/cluster_pull.sh`.
+- **2026-09-14, the baselines (A1), commit `a5b5673`: COMPLETED 2026-09-15.** Each paper's economy as
+  published, at ten seeds. Sol `63257244` (the GS solve, 5 h 34 min, tolerance exit at sweep 3024,
+  peak 2.0 GiB) then `63257245` (gsbase seeds, 3.6 to 5.3 h, peak 4.5 GiB), `63257246` (bgnbase, 2.2
+  to 2.9 h, peak 15.8 GiB) and `63257247` (kpbase, 2.3 to 3.5 h, peak 29.2 GiB). All 30 seeds CURRENT;
+  211 files copied and checksum-matched. The GS solution was published content-addressed under
+  `c6ae2d52428a7ce5` and is reused by the campaign above.
+- **2026-09-13, commit `fef5802`: COMPLETED 2026-09-14.** K4 (`vyg25`, Sol `63188972` solve +
+  `63188973` seeds, peak 29.2 GiB, longest 7 h 33 min), X3 (`vyxT860`, Sol `63188596`, peak 56.9 GiB
+  -- the economy retired 2026-09-15), B4 (`g0235d` solve Phoenix `21571505` + seed 0 `21571506`, 2 h
+  31 min, peak 15.6 GiB, screen missed both gates), and E1's eighty one-minute re-scorings on Phoenix
+  `htc` (`21571507`-`21571532`, 52 to 76 s each, peak 1.5 to 1.7 GiB). K4's first solve attempt, Sol
+  `63188594`, was cancelled at 11 minutes on the chained-id hazard. Pre-campaign archives: Sol
+  `63188205`/`63188497` (80 panels and moments, 31 GB) and Phoenix `21571504` (58 GB of 2026-08-31
+  KP14 scratch), both verified `ARCHIVE_OK`.

@@ -10,7 +10,8 @@ beta_zr = - 0.00014
 sigma_z = 0.4
 Cbar = -3.7
 I = 1
-burnin = 300          # BGN paper: ~200 months suffice; Code/ uses 500
+burnin = 400          # the protocol's BURNIN (common/protocol.py); BGN's own paper
+                      # needs ~200 and Code/ uses 500, so 400 is inside both
 gamma_grid = np.arange(0.5, 1.1, 0.1)
 chars = ["size", "bm", "agr", "roe", "mom"]
 names = ["smb", "hml", "cma", "rmw", "umd"]

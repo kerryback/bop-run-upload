@@ -1,7 +1,7 @@
-"""docs/RESULTS.md's current-results tables must agree with the tables the pipeline produces.
+"""docs/RESULTS.md's economy tables must agree with the tables the pipeline produces.
 
 Every economy-results table in RESULTS.md shares one column set (2026-09-15), defined once in "Reading
-the tables" at the top. The two tables under "Current results" are pinned here, cell by cell, against
+the tables" at the top. EVERY such table is pinned here, cell by cell, against
 variants/results/economy_table.csv (aggregate_seeds.py) and variants/results_e1/fair_gap_economy_table.csv
 (fair_gap.py): seeds, SR_max, the EW market, FMR, best linear and DKKM Sharpes, DKKM - FMR and its
 percentage of FMR, DKKM - best linear, DKKM - best fair linear, room and its percentage of FMR, and t.
@@ -12,9 +12,10 @@ in some seeds, where a per-seed ratio is meaningless. Pinning the ratio of means
 mixed in the document, the mistake WORKING.md §40 records for gap/room.
 
 The tables are read by COLUMN HEADER, not position, so adding or moving a column cannot make the parser
-read the wrong cell. Every ten-seed flagship row of the CSV must appear, and the tables must list no
-economy the CSV lacks. A flagship row with fewer seeds is a screen and must instead have its own SCREEN
-heading.
+read the wrong cell. Every ten-seed row of the CSV must appear, and the tables must list no economy the CSV lacks.
+Every row must be on the measurement protocol (variants/common/protocol.py). A row with fewer
+than ten seeds is a screen and must instead have its own SCREEN heading -- a tier that exists
+only until bgn_gam/g0235d reaches the protocol's ten seeds.
 
 Run with: python -m pytest tests/ -k results_md
 """
@@ -25,6 +26,8 @@ import sys
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
+import protocol  # noqa: E402
 MD = os.path.join(ROOT, "docs", "RESULTS.md")
 CSV = os.path.join(ROOT, "variants", "results", "economy_table.csv")
 E1 = os.path.join(ROOT, "variants", "results_e1", "fair_gap_economy_table.csv")
@@ -38,12 +41,30 @@ COLS = {  # RESULTS.md header -> field; the unified column set of every economy-
 }
 
 
+# Tables that begin with `economy` but are not economy-results tables. Listed so an
+# unrecognised shape fails loudly rather than being skipped.
+OTHER_SHAPES = [
+    ["economy", "quantity", "reference", "predicted", "result", "verdict"],
+    ["economy", "spec", "what it is in the code", "conditioning columns", "solve"],
+    ["economy", "spec", "what it is in the code", "solve"],
+    ["economy", "model", "what differs"],
+]
+
+
 def _md_rows():
-    """Every `model/tag` row of the tables under "Current results", read by column header."""
+    """Every `model/tag` row of EVERY unified-column table in the file, read by column header.
+
+    This used to parse one section, "Current results", and nothing checked the other tables:
+    the headline table, the baselines table, the per-path ladders and finding 8's eleven-row
+    split all carried the same quantities and could drift from the CSV silently. They are one
+    document making one set of claims, so every table that uses the unified columns is pinned,
+    and a row that appears in several must agree with the CSV in all of them.
+
+    A row's first cell may carry a description after the tag (`kp_vy/vyx: the parent economy`),
+    which is why the key is parsed off the front rather than matched whole.
+    """
     txt = open(MD).read()
-    start = txt.index("## Current results")
-    end = txt.index("\n## ", start + 5)
-    block = txt[start:end]
+    block = txt
 
     def num(c):
         mm = re.match(r"^([+-]?\d+(?:,\d{3})*\.\d+)", c or "")
@@ -56,27 +77,60 @@ def _md_rows():
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if cells and cells[0] == "economy":
-            assert cells == list(COLS), f"a Current results table does not use the unified columns: {cells}"
-            header, tables = cells, tables + 1
+            # Three table shapes start with `economy`: the unified economy table, a
+            # prediction table, and the descriptive "how each baseline is produced" one.
+            # Only the first is pinned -- but an unrecognised shape is an error, so a new
+            # table cannot quietly use near-miss columns and escape the check.
+            if cells == list(COLS):
+                header, tables = cells, tables + 1
+            else:
+                assert cells in OTHER_SHAPES, (
+                    f"a table starting with `economy` uses columns that are neither the "
+                    f"unified set nor a known descriptive shape: {cells}")
+                header = None
             continue
-        m = re.match(r"^([a-z_]+)/([A-Za-z0-9]+)$", cells[0])
+        m = re.match(r"^([a-z_]+)/([A-Za-z0-9]+)(?::.*)?$", cells[0])
         if not (m and header):
             continue
         assert len(cells) == len(header), f"{cells[0]}: {len(cells)} cells under a {len(header)}-column header"
         c = {COLS[h]: v for h, v in zip(header, cells)}
-        rows[(m.group(1), m.group(2))] = {k: (int(v) if k == "n" else num(v)) for k, v in c.items() if k != "economy"}
-    assert rows and tables, "no economy rows parsed from the 'Current results' tables"
+        parsed = {k: (int(v) if k == "n" else num(v)) for k, v in c.items() if k != "economy"}
+        key = (m.group(1), m.group(2))
+        if key in rows:
+            assert rows[key] == parsed, (
+                f"{key[0]}/{key[1]} appears twice with different numbers; the tables of one "
+                f"document must agree:\n  {rows[key]}\n  {parsed}")
+        rows[key] = parsed
+    assert rows and tables, "no unified-column economy tables parsed from RESULTS.md"
     return rows
 
 
 def _csv_rows(current=True):
-    """Flagship rows (N=500, T=500, window 360). The table ranks CURRENT economies, which have ten
-    seeds (RESULTS.md, status labels); a flagship row with fewer is a screen, reported in its model's
-    section and never ranked, so current=False returns those instead."""
+    """The economy rows, which are all on the measurement protocol by construction.
+
+    This used to filter to N=500, T=500, window 360, because the CSV held rows that were not:
+    smoke and scaling probes at N=60 to 500 and windows 20/36/50, and one economy at T=860.
+    The filter is now an ASSERTION (test_the_csv_holds_nothing_off_protocol) -- silently
+    dropping an off-protocol row is how one came to be published beside the others in the
+    first place. The ten-seed split stays only while bgn_gam/g0235d has a single seed; the
+    protocol's SEEDS is 10 for every economy, and the screen tier goes when it reaches that.
+    """
     e = pd.read_csv(CSV)
-    e = e[(e["N"] == 500) & (e["T"] == 500) & (e["window"] == 360)]
-    e = e[e["n_seeds"] >= 10] if current else e[e["n_seeds"] < 10]
+    if current is not None:
+        e = e[e["n_seeds"] >= protocol.SEEDS] if current else e[e["n_seeds"] < protocol.SEEDS]
     return {(r["model"], r["tag"]): r for _, r in e.iterrows()}
+
+
+def test_the_csv_holds_nothing_off_protocol():
+    """Every row of economy_table.csv is at the protocol's sample. aggregate_seeds.py refuses
+    to write otherwise; this is the same claim, checked from the committed file."""
+    e = pd.read_csv(CSV)
+    bad = [f"{r['model']}/{r['tag']} N={r['N']} T={r['T']} w={r['window']}"
+           for _, r in e.iterrows()
+           if (r["N"], r["T"], r["window"]) != (protocol.N, protocol.T, protocol.WINDOW)]
+    assert not bad, ("economy_table.csv holds rows off the protocol "
+                     f"(N={protocol.N} T={protocol.T} window={protocol.WINDOW}):\n  "
+                     + "\n  ".join(bad))
 
 
 def test_every_screen_is_reported_under_a_screen_heading():
@@ -84,7 +138,7 @@ def test_every_screen_is_reported_under_a_screen_heading():
     ranked beside ten-seed economies: it needs its own `#### <model>/<tag> -- SCREEN` heading."""
     txt = open(MD).read()
     missing = [f"{m}/{t}" for (m, t) in _csv_rows(current=False)
-               if not re.search(rf"^#### {re.escape(m)}/{re.escape(t)} -- SCREEN", txt, re.M)]
+               if not re.search(rf"^#{{3,4}} {re.escape(m)}/{re.escape(t)} -- SCREEN", txt, re.M)]
     assert not missing, f"economy_table.csv has screens RESULTS.md does not report under a SCREEN heading: {missing}"
 
 
@@ -95,13 +149,15 @@ def test_every_flagship_economy_in_the_csv_is_in_the_table():
 
 
 def test_the_table_lists_no_economy_the_csv_lacks():
-    md, csv = _md_rows(), _csv_rows()
+    md, csv = _md_rows(), _csv_rows(current=None)
     extra = sorted(set(md) - set(csv))
     assert not extra, f"RESULTS.md lists economies with no flagship row in economy_table.csv: {extra}"
 
 
 def test_every_number_in_the_table_matches_the_csv_to_display_precision():
-    md, csv = _md_rows(), _csv_rows()
+    # Every row the document shows, screens included: a screen is not RANKED, but the numbers
+    # it does show must still be the ones the pipeline produced.
+    md, csv = _md_rows(), _csv_rows(current=None)
     bad = []
     for key, row in md.items():
         c = csv[key]
@@ -133,7 +189,8 @@ def test_the_market_and_fair_gap_columns_match_the_e1_table():
     the only complexity gap the tables show (RESULTS.md finding 8), so both are pinned like every other cell."""
     md = _md_rows()
     e = pd.read_csv(E1)
-    e = {(r["model"], r["tag"]): r for _, r in e.iterrows() if int(r["window"]) == 360}
+    e = {(r["model"], r["tag"]): r for _, r in e.iterrows()
+         if int(r["window"]) == protocol.WINDOW}
     bad = []
     for key, row in md.items():
         if key not in e:

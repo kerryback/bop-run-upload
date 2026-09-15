@@ -87,15 +87,27 @@ def test_no_estimator_beats_the_windowed_oracle_bound():
                        + bad[["model", "tag", "seed", "window", "dkkm", "lin", "sr_max_eval"]].to_string())
 
 
-def test_the_csvs_are_the_complete_set_regardless_of_flagship():
-    """--flagship narrows the printout only; the tracked tables must not depend on it."""
+def test_the_canonical_table_is_every_economy_and_only_on_protocol_rows():
+    """There is one table and no filter on it.
+
+    This checked that `--flagship` narrowed only the printout, because the CSV held rows the
+    printout had to hide: probes at N=60 to 500, T=80 to 200 and windows 20/36/50, plus one
+    economy at T=860. Hiding them is what let one be published beside rows it was not
+    comparable to. The flag is gone and the guarantee is the other way round: every row the
+    canonical directory produces is on the measurement protocol, and aggregate_seeds.py
+    refuses to write the table otherwise.
+    """
     import subprocess, tempfile
+    sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
+    import protocol
     with tempfile.TemporaryDirectory() as td:
-        for flag in ([], ["--flagship"]):
-            subprocess.run([sys.executable, os.path.join(ROOT, "variants", "aggregate_seeds.py"),
-                            "--out", td] + flag, check=True, capture_output=True)
-            n = sum(1 for _ in open(os.path.join(td, "economy_table.csv"))) - 1
-            assert n >= 5, f"economy_table.csv has {n} rows under {flag or 'no flag'}; probes at other N/T are missing"
+        subprocess.run([sys.executable, os.path.join(ROOT, "variants", "aggregate_seeds.py"),
+                        "--out", td], check=True, capture_output=True)
+        e = pd.read_csv(os.path.join(td, "economy_table.csv"))
+    assert len(e) >= 12, f"economy_table.csv has {len(e)} rows; the economies are missing"
+    off = e[(e["N"] != protocol.N) | (e["T"] != protocol.T) | (e["window"] != protocol.WINDOW)]
+    assert off.empty, ("aggregate_seeds.py wrote off-protocol rows:\n"
+                       + off[["model", "tag", "N", "T", "window"]].to_string())
 
 
 def test_room_eval_is_present_exactly_where_the_oracle_computed_it():

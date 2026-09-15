@@ -1,105 +1,106 @@
 {
-  "schema_version": 1,
-  "spec_id": "var-kp_vy-kpbase-v1",
-  "title": "KP14 as published: the baseline economy, constant prices of risk, one firm type, no priced state",
-  "question": "What do the estimators find in the unmodified Kogan-Papanikolaou economy at the corrected arrival rate, measured as every current row is?",
-  "notes": "A1 (docs/NEXTUP.md; docs/RESULTS.md, 'Baselines: the anchor'). Every path in RESULTS.md is a departure from one of three baseline economies, and until this spec the only record of this one was a single pre-refactor seed. This spec makes the baseline a first-class economy: ten seeds, the current code, the same protocol as every current row, and the fair linear benchmark (finding 8), so that 'what the route added' is measured against a number produced the same way.\n\nTHE ECONOMY: variants/kp_vy with one firm type whose cash flows do not load on the state y (type_bv [0], type_share [1]), the state's price of risk gamma_v 0 and no value compensation (bv_comp 0). With beta 0 the effective discount const_ty is const_base_y at every y-node, so the A-coefficients, the G function and the integral tables are y-independent and the economy is the constant-price KP14 of the paper: gamma_x 0.69, gamma_z -0.35, the growth-option arrival regime at its CORRECTED labels (mean arrival rate exactly 1, docs/kp14_regime_labels.md), Table II matched on 17 of 18 parameters. THE ONE DEPARTURE FROM THE PAPER: r = 0.05 where the paper has 0.025. It is the repository's baseline since the initial commit and the parent of every KP14 path (vyx, vyg25, vyxT860 all run at 0.05), so it is kept here; a spec at r 0.025 would be a one-parameter child of this one. The y process is still simulated and exported to the panel as rf_stand, and nothing in the economy depends on it. REPORT.md sections 18 and 19: kp_vy at type_bv [0] reduces to the kp_gamy unit economy, which at unit multipliers reduces to the KP14 baseline (validated at each step).\n\nFEATURE COLUMNS (estimation.rf_cols): none. The paper's KP14 has no exported conditioning state in this pipeline, and y is a state no firm loads on, so it is dropped rather than interacted into every basis as noise. Every economy exports its full conditioning set into the panel; a baseline drops the columns the paper's model does not have, so that a noise column is not interacted into every basis. The seed array passes it as --rf_cols to run_oracle.py and run_estimators.py, and the oracle summary and the run record carry it.\n\nWHAT THE LEGACY ROW SAID (single seed, DIFFERENT economy -- the arrival regime was mislabelled and the mean arrival rate simulated was 1.72; 23f9380:variants/results/grid_summary.csv): SR_max 0.2396, linear ceiling 0.2226, nonlinear ceiling 0.2263, room +0.0037, FMR 0.2052, FF 0.1926, best linear 0.1969, DKKM 0.2005, gap +0.0036, t -8.5. Levels are not citable for this economy; the direction (no room, no gap) is what this spec tests.\n\nPREDICTION (2026-09-14): room over the evaluation months below +0.010 (expected returns are affine in one firm variable, the growth-option share of value, so no nonlinear basis has anything to add); SR_max over the evaluation months 0.15 to 0.35; measured gap within +-0.015; fair gap within +-0.005 of zero. FALSIFIED as a no-gap baseline if the ten-seed fair gap exceeds +0.01.\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving; the integ id hashes the G tables' raw bytes, so the G stage (one type, about a second) was built in a throwaway git worktree whose registry was discarded, and the build was killed at the integ id line before any integral table existed (_scratch/precommit_kp.sh, which first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2 from the tracked tables). Because the integ id is not portable across platforms (WORKING.md section 54), BOTH stages are built on the Mac and the tables committed, as vyx's and vyg25's are; the cluster verifies them by content.",
-  "lineage": {
-    "parent_spec": null,
-    "supersedes": null,
-    "changes": [
-      "the root of kp_vy Path 1: var-kp_vy-vyx-v2 is this economy with a priced state (gamma_v 1.8) and three exposure types",
-      "estimation.rf_cols added (none); estimation.fair_linear added"
-    ]
-  },
-  "engine": "oracle",
-  "model": "kp_vy",
-  "method": {
-    "kp_interpolation": "linear",
-    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
-    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
-    "zero_book_in_sdf_solve": true,
-    "kp_price_of_risk": "constant: gamma_x 0.69, gamma_z -0.35; no priced state (gamma_v 0, type_bv [0])"
-  },
-  "panel": {
-    "N": 500,
-    "T": 500,
-    "burnin": 200
-  },
-  "seeds": {
-    "base": 0,
-    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
-  },
-  "params": {
-    "type_share": [
-      1.0
-    ],
-    "type_bv": [
-      0.0
-    ],
-    "gamma_v": 0.0,
-    "bv_comp": 0.0
-  },
-  "param_env": "KP_PARAM_OVERRIDES",
-  "env": {
-    "KP_VY_PREFIX": "kpbase"
-  },
-  "solve": {
-    "stages": [
-      {
-        "name": "vy_tables",
-        "producer": "variants/kp_vy/build_vy_tables.py",
-        "param_env": "KP_PARAM_OVERRIDES",
-        "params": {
-          "type_share": [
+    "schema_version": 1,
+    "spec_id": "var-kp_vy-kpbase-v1",
+    "title": "KP14 as published: the baseline economy, constant prices of risk, one firm type, no priced state",
+    "question": "What do the estimators find in the unmodified Kogan-Papanikolaou economy at the corrected arrival rate, measured as every current row is?",
+    "notes": "A1 (docs/NEXTUP.md; docs/RESULTS.md, 'Baselines: the anchor'). Every path in RESULTS.md is a departure from one of three baseline economies, and until this spec the only record of this one was a single pre-refactor seed. This spec makes the baseline a first-class economy: ten seeds, the current code, the same protocol as every current row, and the fair linear benchmark (finding 8), so that 'what the route added' is measured against a number produced the same way.\n\nTHE ECONOMY: variants/kp_vy with one firm type whose cash flows do not load on the state y (type_bv [0], type_share [1]), the state's price of risk gamma_v 0 and no value compensation (bv_comp 0). With beta 0 the effective discount const_ty is const_base_y at every y-node, so the A-coefficients, the G function and the integral tables are y-independent and the economy is the constant-price KP14 of the paper: gamma_x 0.69, gamma_z -0.35, the growth-option arrival regime at its CORRECTED labels (mean arrival rate exactly 1, docs/kp14_regime_labels.md), Table II matched on 17 of 18 parameters. THE ONE DEPARTURE FROM THE PAPER: r = 0.05 where the paper has 0.025. It is the repository's baseline since the initial commit and the parent of every KP14 path (vyx, vyg25, vyxT860 all run at 0.05), so it is kept here; a spec at r 0.025 would be a one-parameter child of this one. The y process is still simulated and exported to the panel as rf_stand, and nothing in the economy depends on it. REPORT.md sections 18 and 19: kp_vy at type_bv [0] reduces to the kp_gamy unit economy, which at unit multipliers reduces to the KP14 baseline (validated at each step).\n\nFEATURE COLUMNS (estimation.rf_cols): none. The paper's KP14 has no exported conditioning state in this pipeline, and y is a state no firm loads on, so it is dropped rather than interacted into every basis as noise. Every economy exports its full conditioning set into the panel; a baseline drops the columns the paper's model does not have, so that a noise column is not interacted into every basis. The seed array passes it as --rf_cols to run_oracle.py and run_estimators.py, and the oracle summary and the run record carry it.\n\nWHAT THE LEGACY ROW SAID (single seed, DIFFERENT economy -- the arrival regime was mislabelled and the mean arrival rate simulated was 1.72; 23f9380:variants/results/grid_summary.csv): SR_max 0.2396, linear ceiling 0.2226, nonlinear ceiling 0.2263, room +0.0037, FMR 0.2052, FF 0.1926, best linear 0.1969, DKKM 0.2005, gap +0.0036, t -8.5. Levels are not citable for this economy; the direction (no room, no gap) is what this spec tests.\n\nPREDICTION (2026-09-14): room over the evaluation months below +0.010 (expected returns are affine in one firm variable, the growth-option share of value, so no nonlinear basis has anything to add); SR_max over the evaluation months 0.15 to 0.35; measured gap within +-0.015; fair gap within +-0.005 of zero. FALSIFIED as a no-gap baseline if the ten-seed fair gap exceeds +0.01.\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving; the integ id hashes the G tables' raw bytes, so the G stage (one type, about a second) was built in a throwaway git worktree whose registry was discarded, and the build was killed at the integ id line before any integral table existed (_scratch/precommit_kp.sh, which first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2 from the tracked tables). Because the integ id is not portable across platforms (WORKING.md section 54), BOTH stages are built on the Mac and the tables committed, as vyx's and vyg25's are; the cluster verifies them by content.",
+    "lineage": {
+        "parent_spec": null,
+        "supersedes": null,
+        "changes": [
+            "the root of kp_vy Path 1: var-kp_vy-vyx-v2 is this economy with a priced state (gamma_v 1.8) and three exposure types",
+            "estimation.rf_cols added (none); estimation.fair_linear added"
+        ],
+        "superseded_by": "var-kp_vy-kpbase-v2"
+    },
+    "engine": "oracle",
+    "model": "kp_vy",
+    "method": {
+        "kp_interpolation": "linear",
+        "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+        "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+        "zero_book_in_sdf_solve": true,
+        "kp_price_of_risk": "constant: gamma_x 0.69, gamma_z -0.35; no priced state (gamma_v 0, type_bv [0])"
+    },
+    "panel": {
+        "N": 500,
+        "T": 500,
+        "burnin": 200
+    },
+    "seeds": {
+        "base": 0,
+        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+    },
+    "params": {
+        "type_share": [
             1.0
-          ],
-          "type_bv": [
+        ],
+        "type_bv": [
             0.0
-          ],
-          "gamma_v": 0.0,
-          "bv_comp": 0.0
-        },
-        "args": {
-          "prefix": "kpbase"
-        },
-        "type_index": null
-      }
-    ]
-  },
-  "estimation": {
-    "chars": [
-      "size",
-      "bm",
-      "agr",
-      "roe",
-      "mom"
-    ],
-    "window": 360,
-    "levels": true,
-    "include_mkt": true,
-    "kappas": [
-      0.001,
-      0.01,
-      0.1,
-      1
-    ],
-    "fair_linear": true,
-    "rf_cols": []
-  },
-  "provenance": {
-    "source_script": null,
-    "source_script_note": "proposed 2026-09-14 as A1 in docs/NEXTUP.md",
-    "runner": "variants/run_seeds_slurm.sh",
-    "runner_note": "SEED_SPEC=kpbase",
-    "solve_note": "built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=kpbase python build_vy_tables.py kpbase; tables and manifests committed",
-    "verified_by": "tests/test_specs_match_shell.py"
-  },
-  "expected_solves": {
-    "G": "7bc1f92a225c01b6",
-    "integ": "f299747cd77fc4a1"
-  },
-  "precommitted": true,
-  "solves_pending": null,
-  "spec_hash": "b56db24cd3e6f01b834efc1468422979663ae26902ed0e379dc74584548ca035"
+        ],
+        "gamma_v": 0.0,
+        "bv_comp": 0.0
+    },
+    "param_env": "KP_PARAM_OVERRIDES",
+    "env": {
+        "KP_VY_PREFIX": "kpbase"
+    },
+    "solve": {
+        "stages": [
+            {
+                "name": "vy_tables",
+                "producer": "variants/kp_vy/build_vy_tables.py",
+                "param_env": "KP_PARAM_OVERRIDES",
+                "params": {
+                    "type_share": [
+                        1.0
+                    ],
+                    "type_bv": [
+                        0.0
+                    ],
+                    "gamma_v": 0.0,
+                    "bv_comp": 0.0
+                },
+                "args": {
+                    "prefix": "kpbase"
+                },
+                "type_index": null
+            }
+        ]
+    },
+    "estimation": {
+        "chars": [
+            "size",
+            "bm",
+            "agr",
+            "roe",
+            "mom"
+        ],
+        "window": 360,
+        "levels": true,
+        "include_mkt": true,
+        "kappas": [
+            0.001,
+            0.01,
+            0.1,
+            1
+        ],
+        "fair_linear": true,
+        "rf_cols": []
+    },
+    "provenance": {
+        "source_script": null,
+        "source_script_note": "proposed 2026-09-14 as A1 in docs/NEXTUP.md",
+        "runner": "variants/run_seeds_slurm.sh",
+        "runner_note": "SEED_SPEC=kpbase",
+        "solve_note": "built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=kpbase python build_vy_tables.py kpbase; tables and manifests committed",
+        "verified_by": "tests/test_specs_match_shell.py"
+    },
+    "expected_solves": {
+        "G": "7bc1f92a225c01b6",
+        "integ": "f299747cd77fc4a1"
+    },
+    "precommitted": true,
+    "solves_pending": null,
+    "spec_hash": "b56db24cd3e6f01b834efc1468422979663ae26902ed0e379dc74584548ca035"
 }

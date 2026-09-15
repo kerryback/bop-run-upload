@@ -25,15 +25,15 @@ Run everything from an environment with the repo requirements plus `pyarrow`
 | `bgn_gam/` | BGN with a 2-state regime multiplying the prices of risk, pushed to multipliers 0.2/3.5 near the closed-form frontier (REPORT §13, §19d) | `g0235` | `bgn_gam/run_g0235.sh` |
 | `kp_vy/` | KP14 with a priced OU volatility factor y and three firm types with exposure e^{beta y}, gamma_v = 1.8 and beta in {0.02, 0.07, 0.14} (REPORT §19, §19d) | `vyx` | `kp_vy/run_vyx.sh` |
 | `gs_bx/` | GS21 (2-regime, exact-kernel re-solve) with five exposure types beta in {1, 2.5, 4, 5.5, 7} (REPORT §19) | `bx7` | solves: `gs_bx/run_gs_bx7_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=bx7`) |
-| `gs_bx/` | GS21 single type with a linear-in-x, clipped price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1) -- the reconstruction of REPORT §13g's gamma(x) economy, spec `var-gs_bx-g28-v2` | `g28` | solve: `gs_bx/run_g28_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=g28`) |
-| `bgn_gam/` | **the BGN baseline as published**: gmult [1, 1], the regime inert; spec `var-bgn_gam-bgnbase-v1` (A1, 2026-09-14) | `bgnbase` | solve: `rebuild_jstar_gam.py` on the Mac (table committed); panel: `run_seeds_slurm.sh` (`SEED_SPEC=bgnbase`) |
-| `kp_vy/` | **the KP14 baseline as published** (r = 0.05): one type at beta 0, no priced state; spec `var-kp_vy-kpbase-v1` | `kpbase` | solve: `build_vy_tables.py kpbase` on the Mac (tables committed); panel: `SEED_SPEC=kpbase` |
-| `gs_bx/` | **the GS21 baseline as published** at the corrected Table I: one type, gmreg [1, 1]; spec `var-gs_bx-gsbase-v1` | `gsbase` | solve: `gs_bx/run_gsbase_slurm.sh`; panel: `SEED_SPEC=gsbase` |
+| `gs_bx/` | GS21 single type with a linear-in-x, clipped price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1) -- the reconstruction of REPORT §13g's gamma(x) economy, spec `var-gs_bx-g28-v3` | `g28` | solve: `gs_bx/run_g28_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=g28`) |
+| `bgn_gam/` | **the BGN baseline as published**: gmult [1, 1], the regime inert; spec `var-bgn_gam-bgnbase-v2` (A1, 2026-09-14) | `bgnbase` | solve: `rebuild_jstar_gam.py` on the Mac (table committed); panel: `run_seeds_slurm.sh` (`SEED_SPEC=bgnbase`) |
+| `kp_vy/` | **the KP14 baseline as published** (r = 0.05): one type at beta 0, no priced state; spec `var-kp_vy-kpbase-v2` | `kpbase` | solve: `build_vy_tables.py kpbase` on the Mac (tables committed); panel: `SEED_SPEC=kpbase` |
+| `gs_bx/` | **the GS21 baseline as published** at the corrected Table I: one type, gmreg [1, 1]; spec `var-gs_bx-gsbase-v2` | `gsbase` | solve: `gs_bx/run_gsbase_slurm.sh`; panel: `SEED_SPEC=gsbase` |
 
 **Results live in [`docs/RESULTS.md`](../docs/RESULTS.md)** -- every economy, what differs from
 its model's baseline in economic terms, and its ten-seed numbers, organised by model and by the
 path that produced it. The numbers come from `results/economy_table.csv`
-(`python aggregate_seeds.py --flagship`), and a test keeps the two in step. The population
+(`python aggregate_seeds.py`), and a test keeps the two in step. The population
 table that used to sit here quoted `results/grid_summary.csv`, a single-seed legacy table
 whose KP and GS rows describe economies the current code no longer builds; it is history, not
 results, and the decomposition "realized gap = room x capture" it was read through does not
@@ -133,7 +133,7 @@ From the repo root:
 ```bash
 python variants/fetch_solves.py --all                        # what am I missing?
 python variants/fetch_solves.py --all --from "<that folder>" # get it, verified
-python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "<that folder>"
+python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "<that folder>"
 ```
 
 It reads each spec's `expected_solves`, resolves them through the manifests, copies
@@ -195,5 +195,5 @@ regenerates both), and `results/logs/`.
 | `common/oracle.py` | feature bases (FMR raw, linear-in-ranks, +-rf interactions, poly2, decile/pair bins, RFF) and the two-pass population evaluation |
 | `common/dkkm_functions.py`, `common/fama_functions.py` | RFF+ridge and Fama-French / Fama-MacBeth estimators with rolling `WINDOW` and conditioning columns `RF_COLS` |
 | `unconditional_sr.py` | exact unconditional Sharpe ratio of each estimated portfolio from the true conditional moments |
-| `aggregate_seeds.py` | THE results table: one row per seeded run in `results/seed_table.csv`, one row per (model, tag, N, T, window) with mean/sd/se across seeds in `results/economy_table.csv`; every row carries spec_id, solve ids and prov tags. `--flagship` narrows the printout to N=500/T=500 |
+| `aggregate_seeds.py` | THE results table: one row per seeded run in `results/seed_table.csv`, one row per (model, tag, N, T, window) with mean/sd/se across seeds in `results/economy_table.csv`; every row carries spec_id, solve ids and prov tags. Refuses to write the canonical table if any row is off the measurement protocol (`common/protocol.py`) |
 | `REPORT.md` | the full narrative, sections 1-19d, including the 21 economies that were removed |

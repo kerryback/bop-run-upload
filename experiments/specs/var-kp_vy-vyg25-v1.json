@@ -1,112 +1,113 @@
 {
-  "schema_version": 1,
-  "spec_id": "var-kp_vy-vyg25-v1",
-  "title": "KP14 vyx with the price of the priced state's risk raised from 1.8 to 2.5",
-  "question": "Does more Sharpe outside the market widen a genuine complexity gap?",
-  "notes": "K4 (docs/RESULTS.md, KP14 proposals). IDENTICAL to var-kp_vy-vyx-v2 except gamma_v, the price of the priced state's risk, 1.8 -> 2.5. Its own tables under prefix vyg25.\n\nWHY: vyx is the one economy where DKKM leaves the market (finding 8). The Sharpe carried by the state's shock scales with its price, and that Sharpe is the component the equal-weighted market does not span, so this turns the dial finding 8 identifies. vy -> vyx raised gamma_v 1.2 -> 1.8 and the gap rose with the room (legacy levels are a different economy; the direction survives).\n\nPREDICTION (2026-09-13): evaluation-window room +0.45 to +0.50 (vyx +0.3606); SR_max and the non-market Sharpe up about 40%; DKKM's winning penalty still the smallest on the grid; gap +0.15 to +0.20 (vyx +0.1046). FALSIFIED IF the gap is below +0.12. Same kappa grid as vyx, so the gap is comparable.\n\nCAVEAT: type premia approach 40% a year; report the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.\n\nFEASIBILITY, checked 2026-09-13 from parameters_kp14 itself: smallest growth-option discount rho_ty +0.0329 (vyx +0.0212), smallest value discount const_ty +0.2469, A0 finite and positive. (The same check showed K5's signed exposures infeasible: rho_ty -0.149 at beta = -0.06.)\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving -- build_vy_tables.py prints it before the G stage. The integ id depends on the G tables' digests, so it was read after building the G stage (7 s) in a throwaway git worktree whose registry was then discarded, and before any integ table existed; the same path first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2. The G solve ran on macOS; if a cluster rebuild canonicalises to different digests the integ id moves, and variants/run_solve_slurm.sh then fails before any seed starts. This spec is committed BEFORE the solve runs on Sol.\n\nCORRECTION, 2026-09-13, the same afternoon. Two sentences above claim more than was shown. (1) The vyx reproduction did not test a fresh G build: vyx's G tables are tracked in git, so the worktree read them and never re-solved G. (2) The integ stage does not hash CANONICALISED G tables: solstamp.artifact_digests hashes their raw file bytes, and only parameters are quantised to 8 significant digits. The hazard then fired as named: Sol job 63188594 rebuilt G with the same G id f41d052f1f960c4c but different trailing digits, and printed integ a2cc8d99c1bc474b; it was cancelled at 11 minutes, before any seed could start. The G tables built on the Mac, from which the integ id 8d1308e8f21723f8 was precommitted, were shipped to Sol byte-identical with their manifest, and Sol job 63188972 builds only the integ stage from them. The first attempt's files are kept in /data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/. docs/RUNS.md records both chains.",
-  "lineage": {
-    "parent_spec": "var-kp_vy-vyx-v2",
-    "supersedes": null,
-    "changes": [
-      "gamma_v 1.8 -> 2.5",
-      "KP_VY_PREFIX vyx -> vyg25 (its own tables)",
-      "estimation.fair_linear added"
-    ]
-  },
-  "engine": "oracle",
-  "model": "kp_vy",
-  "method": {
-    "kp_interpolation": "linear",
-    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
-    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
-    "zero_book_in_sdf_solve": true
-  },
-  "panel": {
-    "N": 500,
-    "T": 500,
-    "burnin": 200
-  },
-  "seeds": {
-    "base": 0,
-    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
-  },
-  "params": {
-    "type_share": [
-      0.34,
-      0.33,
-      0.33
-    ],
-    "type_bv": [
-      0.02,
-      0.07,
-      0.14
-    ],
-    "gamma_v": 2.5,
-    "bv_comp": 1.2
-  },
-  "param_env": "KP_PARAM_OVERRIDES",
-  "env": {
-    "KP_VY_PREFIX": "vyg25"
-  },
-  "solve": {
-    "stages": [
-      {
-        "name": "vy_tables",
-        "producer": "variants/kp_vy/build_vy_tables.py",
-        "param_env": "KP_PARAM_OVERRIDES",
-        "params": {
-          "type_share": [
+    "schema_version": 1,
+    "spec_id": "var-kp_vy-vyg25-v1",
+    "title": "KP14 vyx with the price of the priced state's risk raised from 1.8 to 2.5",
+    "question": "Does more Sharpe outside the market widen a genuine complexity gap?",
+    "notes": "K4 (docs/RESULTS.md, KP14 proposals). IDENTICAL to var-kp_vy-vyx-v2 except gamma_v, the price of the priced state's risk, 1.8 -> 2.5. Its own tables under prefix vyg25.\n\nWHY: vyx is the one economy where DKKM leaves the market (finding 8). The Sharpe carried by the state's shock scales with its price, and that Sharpe is the component the equal-weighted market does not span, so this turns the dial finding 8 identifies. vy -> vyx raised gamma_v 1.2 -> 1.8 and the gap rose with the room (legacy levels are a different economy; the direction survives).\n\nPREDICTION (2026-09-13): evaluation-window room +0.45 to +0.50 (vyx +0.3606); SR_max and the non-market Sharpe up about 40%; DKKM's winning penalty still the smallest on the grid; gap +0.15 to +0.20 (vyx +0.1046). FALSIFIED IF the gap is below +0.12. Same kappa grid as vyx, so the gap is comparable.\n\nCAVEAT: type premia approach 40% a year; report the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.\n\nFEASIBILITY, checked 2026-09-13 from parameters_kp14 itself: smallest growth-option discount rho_ty +0.0329 (vyx +0.0212), smallest value discount const_ty +0.2469, A0 finite and positive. (The same check showed K5's signed exposures infeasible: rho_ty -0.149 at beta = -0.06.)\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving -- build_vy_tables.py prints it before the G stage. The integ id depends on the G tables' digests, so it was read after building the G stage (7 s) in a throwaway git worktree whose registry was then discarded, and before any integ table existed; the same path first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2. The G solve ran on macOS; if a cluster rebuild canonicalises to different digests the integ id moves, and variants/run_solve_slurm.sh then fails before any seed starts. This spec is committed BEFORE the solve runs on Sol.\n\nCORRECTION, 2026-09-13, the same afternoon. Two sentences above claim more than was shown. (1) The vyx reproduction did not test a fresh G build: vyx's G tables are tracked in git, so the worktree read them and never re-solved G. (2) The integ stage does not hash CANONICALISED G tables: solstamp.artifact_digests hashes their raw file bytes, and only parameters are quantised to 8 significant digits. The hazard then fired as named: Sol job 63188594 rebuilt G with the same G id f41d052f1f960c4c but different trailing digits, and printed integ a2cc8d99c1bc474b; it was cancelled at 11 minutes, before any seed could start. The G tables built on the Mac, from which the integ id 8d1308e8f21723f8 was precommitted, were shipped to Sol byte-identical with their manifest, and Sol job 63188972 builds only the integ stage from them. The first attempt's files are kept in /data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/. docs/RUNS.md records both chains.",
+    "lineage": {
+        "parent_spec": "var-kp_vy-vyx-v2",
+        "supersedes": null,
+        "changes": [
+            "gamma_v 1.8 -> 2.5",
+            "KP_VY_PREFIX vyx -> vyg25 (its own tables)",
+            "estimation.fair_linear added"
+        ],
+        "superseded_by": "var-kp_vy-vyg25-v2"
+    },
+    "engine": "oracle",
+    "model": "kp_vy",
+    "method": {
+        "kp_interpolation": "linear",
+        "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+        "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+        "zero_book_in_sdf_solve": true
+    },
+    "panel": {
+        "N": 500,
+        "T": 500,
+        "burnin": 200
+    },
+    "seeds": {
+        "base": 0,
+        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+    },
+    "params": {
+        "type_share": [
             0.34,
             0.33,
             0.33
-          ],
-          "type_bv": [
+        ],
+        "type_bv": [
             0.02,
             0.07,
             0.14
-          ],
-          "gamma_v": 2.5,
-          "bv_comp": 1.2
-        },
-        "args": {
-          "prefix": "vyg25"
-        },
-        "type_index": null
-      }
-    ]
-  },
-  "estimation": {
-    "chars": [
-      "size",
-      "bm",
-      "agr",
-      "roe",
-      "mom"
-    ],
-    "window": 360,
-    "levels": true,
-    "include_mkt": true,
-    "kappas": [
-      0.001,
-      0.01,
-      0.1,
-      1
-    ],
-    "fair_linear": true
-  },
-  "provenance": {
-    "source_script": null,
-    "source_script_note": "proposed 2026-09-13 as K4 in docs/RESULTS.md",
-    "runner": "variants/run_seeds_slurm.sh",
-    "runner_note": "SEED_SPEC=vyg25",
-    "solve_runner": "variants/run_solve_slurm.sh",
-    "verified_by": "tests/test_specs_match_shell.py"
-  },
-  "spec_hash": "c53522f750ba93cdcb3955d77b252a813b667516a1b7a6e67464c9a038a9f15d",
-  "expected_solves": {
-    "G": "f41d052f1f960c4c",
-    "integ": "8d1308e8f21723f8"
-  },
-  "precommitted": true,
-  "solves_pending": "G and integ precommitted 2026-09-13; to be built by variants/run_solve_slurm.sh on Sol after this spec is committed"
+        ],
+        "gamma_v": 2.5,
+        "bv_comp": 1.2
+    },
+    "param_env": "KP_PARAM_OVERRIDES",
+    "env": {
+        "KP_VY_PREFIX": "vyg25"
+    },
+    "solve": {
+        "stages": [
+            {
+                "name": "vy_tables",
+                "producer": "variants/kp_vy/build_vy_tables.py",
+                "param_env": "KP_PARAM_OVERRIDES",
+                "params": {
+                    "type_share": [
+                        0.34,
+                        0.33,
+                        0.33
+                    ],
+                    "type_bv": [
+                        0.02,
+                        0.07,
+                        0.14
+                    ],
+                    "gamma_v": 2.5,
+                    "bv_comp": 1.2
+                },
+                "args": {
+                    "prefix": "vyg25"
+                },
+                "type_index": null
+            }
+        ]
+    },
+    "estimation": {
+        "chars": [
+            "size",
+            "bm",
+            "agr",
+            "roe",
+            "mom"
+        ],
+        "window": 360,
+        "levels": true,
+        "include_mkt": true,
+        "kappas": [
+            0.001,
+            0.01,
+            0.1,
+            1
+        ],
+        "fair_linear": true
+    },
+    "provenance": {
+        "source_script": null,
+        "source_script_note": "proposed 2026-09-13 as K4 in docs/RESULTS.md",
+        "runner": "variants/run_seeds_slurm.sh",
+        "runner_note": "SEED_SPEC=vyg25",
+        "solve_runner": "variants/run_solve_slurm.sh",
+        "verified_by": "tests/test_specs_match_shell.py"
+    },
+    "spec_hash": "c53522f750ba93cdcb3955d77b252a813b667516a1b7a6e67464c9a038a9f15d",
+    "expected_solves": {
+        "G": "f41d052f1f960c4c",
+        "integ": "8d1308e8f21723f8"
+    },
+    "precommitted": true,
+    "solves_pending": "G and integ precommitted 2026-09-13; to be built by variants/run_solve_slurm.sh on Sol after this spec is committed"
 }

@@ -3809,3 +3809,107 @@ the unified headers, and pins every cell: seeds, SR_max, FMR, best linear and DK
 against the economy table, the market and fair gap against the E1 table, room, both FMR percentages
 (ratios of means) and t.
 
+
+## §62. One measurement protocol for every economy (2026-09-15)
+
+**Seth's request.** "We have too many things moving between economies." The baselines as published, and
+results for different parameterizations -- read broadly, including different priced-factor processes,
+as KP explores -- but the number of firms, the number of initial periods, the number of evaluated
+periods and the numerical precision choices must stay the same across all of them: numerical choices
+must not obscure the differences that economic choices bring. Legacy results that do not adhere are
+not to be retained or referenced.
+
+**What was actually moving.** Audited every spec, every registry manifest and both `run_*.py` scripts.
+Three things were already uniform and needed nothing: N = 500; the evaluated-month count, which is
+`T - 15 - window` and came to 125 for every spec including the one at T = 860; and solve-side
+precision, which is identical across every economy of a given model (KP14 `NY` 21 with a byte-identical
+`Qy`; GS21 `xnum` 161, `znum` 200, `bnum` 20, `tol` 1e-6; BGN 100-node Gauss-Laguerre and Gauss-Hermite,
+J\* `tol` 3e-4 to 161 points in all six tables). Four things were not:
+
+1. **Burn-in.** `bgn_gam/parameters.py` 300, `kp_vy/parameters_kp14.py` 400, `gs_bx/gs_sim_bx.py` 300 --
+   while twelve of nineteen specs DECLARED 200. The 200 is `config.py:28-30`, the legacy `main.py`
+   pipeline's value, copied from the wrong tree. Nothing read the spec field: `run_oracle.py` imports
+   `burnin` from whatever its model module says and never receives one. `test_specs_match_shell.py`
+   checked `panel.N`, `panel.T` and `estimation.window` and never `panel.burnin`.
+2. **The ridge grid**, set per `case` branch of `run_seeds_slurm.sh`: four values for bgn_gam and kp_vy,
+   eight for gs_bx, five including 1e-4 for vyxT860. DKKM's Sharpe is a MAX over that grid and the floor
+   won in 29 of 30 KP14 Path 1 seeds, so the reported number was censored at a point that differed by
+   economy -- a quarter of vyxT860's +0.1875 gap was the extra decade (RESULTS.md's own measurement:
+   +0.049 of DKKM Sharpe, winning in all ten seeds).
+3. **The sample**: vyxT860 at T 860 and window 720.
+4. **The conditioning columns**: the three baselines narrowed `--rf_cols` to the state their paper has,
+   so baseline and parameterization differed in their feature bases as well as their economics.
+
+**Decisions Seth made.** One wide grid `[1e-5 … 10]` for every economy, re-measured rather than
+harmonised down (harmonising down would have left KP14 censored at the floor). T 500 / window 360 kept,
+`vyxT860` retired rather than re-run -- its economy IS vyx's. One burn-in, 400, the longest of the three,
+with everything re-run. `g0235d` promoted from a one-seed screen to ten seeds, which retires the SCREEN
+tier. Legacy content deleted outright, mechanism prose included.
+
+**What changed.**
+- `variants/common/protocol.py`: N, T, BURNIN, WINDOW, EVAL_TRIM, EVAL_MONTHS, SEEDS, KAPPAS, RFF, NMAT,
+  WINSOR, RF_COLS. `burnin` stays a plain literal in the three model modules rather than importing from
+  here, because those files' raw bytes are digested into solve ids and because `gs_sim_bx.py` applies
+  `GS_SIM_OVERRIDES` by `globals().update()` over its own module scope. The literals are PINNED to
+  BURNIN by a test instead -- the loop is closed by a check, which is what was missing, not by an import.
+- `run_seeds_slurm.sh`: the 14 per-case `KAPPAS=` lines, the three `RF_COLS=` lines and the whole
+  `vyxT860` case are gone; N, T, WINDOW and KAPPAS are set once outside the case block. A new guard
+  REFUSES an off-protocol run (`SEED_N`/`SEED_T`/`SEED_WINDOW`) unless it names its own
+  `BOP_RESULTS_DIR` -- that is how the smoke, bigN, scal\* and bscal\* probes came to sit in
+  `economy_table.csv` beside the real economies.
+- Thirteen protocol-v2 specs (`-v2`, `-v3`, `-v4`), each its parent's parameters with burn-in 400, the
+  shared grid, no `rf_cols`, `fair_linear` declared, and a registered prediction with a falsification
+  clause. VERSION BUMPS, not edits: a spec's content is hashed into `spec_hash` and named by every
+  result sidecar, so editing one in place would make the existing sidecars claim a spec that had
+  changed underneath them. Parents marked `lineage.superseded_by`; `var-kp_vy-vyxT860-v1` marked
+  `lineage.retired` with the reasoning.
+- `tests/test_protocol_is_uniform.py`: twelve checks -- protocol.py's own consistency, each model's
+  burn-in literal, the seed array's sample and grid and their being set exactly once, the off-protocol
+  guard, every live spec's panel and estimation block, the retirement, and the uniformity of solve
+  precision within each model read off the manifests.
+- `aggregate_seeds.py`: `--flagship` deleted and replaced by a refusal. It existed to filter the table
+  down to rows that could be compared; there is nothing left to filter, and hiding an off-protocol row
+  is how one came to be published beside rows it was not comparable to.
+- `test_results_md_matches_table.py`: now pins EVERY unified-column table in RESULTS.md, not just the
+  two under one heading, and a row appearing in two tables must agree with the CSV in both. The
+  headline, baselines, ladder and finding-8 tables were carrying the same quantities unchecked.
+
+**The solve-id consequence, which had to be paid in the right order.** `burnin` sits inside the
+parameter namespace the BGN J\* manifests hash, so moving it 300 -> 400 re-keyed all six even though
+`vasicek.py` never reads it. `solve_impact.py --worktree` named exactly those six and nothing else
+(KP14's burn-in was already 400; GS21's solves come from `gs_solve_reg.py`, not `gs_sim_bx.py`). The six
+new ids were computed WITHOUT solving -- replicating the producer's snapshot in a scratch script -- and
+written into the specs with `solves_pending: ["jstar"]` so that the specs commit BEFORE the manifests
+and `test_precommitment_is_real.py` classifies them precommitted rather than retrofitted. All six
+rebuilt tables are byte-identical to the committed ones, which is the proof that burn-in does not enter
+the solve.
+
+**What is deleted.** 110 result files: the `bscal100/200/300/500`, `scal`, `scaln500`, `scalT500n100`,
+`scalT500n200`, `bigN` and `smoke` probes (N 60 to 500, T 80 to 200, windows 20/36/50) and all 70
+`vyxT860` files. RESULTS.md goes from 942 lines to 355: the legacy baseline table, `kp_vy/vy`, KP14
+Paths 2-4, `g0520`/`g0330`, BGN Paths 2-4, GS21's `gamma(x) nonlin`, the legacy bx ladder, GS21 Path 3,
+the three "legacy rows are/aren't the same economy" caveats, the status-label section, the
+superseded-and-retired section and superseded findings 1, 2, 3 and 7. Surviving findings keep their
+numbers (8, 4, 5, 6, 9) because specs and this file cite them by number.
+
+**What is honest about the current numbers.** They were all measured before the protocol, so RESULTS.md
+carries a "Status: every number below predates the protocol" section naming the two respects in which
+they diverge and what the campaign replaces. It goes when the campaign lands. Two consequences are
+stated there rather than buried: the KP14 Path 1 rows are lower bounds, and the baselines are on
+narrowed bases.
+
+**Deferred deliberately.** Folding `ew` and `fair_gap` into `economy_table.csv` and deleting
+`variants/results_e1/` waits for the campaign. Doing it now would mean writing an E1 fallback path in
+order to delete it; after the campaign every economy is "own run" and the fold is a subtraction.
+Likewise the SCREEN tier cannot go until `g0235d` has its ten seeds. Both are listed in RUNS.md under
+"Reading the outcome".
+
+**Campaign.** 130 seed-jobs, roughly 650 node-hours, ordered baselines -> KP14 -> GS21 -> the BGN
+ladder last because memory follows calm spells (g0235r peaked 77.0 GiB and 24.5 h for one seed). The
+wider grid costs about 1.75x the old estimator stage for BGN and KP14. Not yet submitted; the
+pre-submission order and the per-economy requests are in RUNS.md, campaign 2026-09-15.
+
+**The gate that is not a test.** For each economy the winning penalty must be INTERIOR -- neither 1e-5
+nor 10 -- in at least 8 of 10 seeds. If 1e-5 wins, DKKM is still censored and the grid needs another
+decade before any new economy is run. A test cannot assert this, because it is a property of results
+that do not exist yet; RUNS.md makes it the first thing read off the campaign.

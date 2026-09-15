@@ -27,24 +27,33 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(ROOT, "experiments", "specs")
 
 # The spec each economy currently runs under. When one is superseded, update this.
+#
+# Every entry moved up one version on 2026-09-15, when the measurement protocol landed
+# (variants/common/protocol.py). Those bumps change no economy: each new spec is its
+# parent's parameters with burn-in 400, the shared ridge grid and no rf_cols narrowing.
+# The specs were bumped rather than edited in place because a spec's content is hashed
+# into spec_hash and named by every result sidecar -- editing one would make the existing
+# sidecars claim a spec that had changed underneath them.
+#
+# kp_vy/vyxT860 left this table rather than moving up: its economy IS vyx's, and it
+# differed only in T, the window and the ridge grid. See its spec's lineage.retired.
 CURRENT = {
-    "g0235": "var-bgn_gam-g0235-v2",
-    "vyx": "var-kp_vy-vyx-v2",
-    "bx7": "var-gs_bx-bx7-v3",
-    "g28": "var-gs_bx-g28-v2",
+    "g0235": "var-bgn_gam-g0235-v3",
+    "vyx": "var-kp_vy-vyx-v3",
+    "bx7": "var-gs_bx-bx7-v4",
+    "g28": "var-gs_bx-g28-v3",
     # proposed 2026-09-10 (docs/RESULTS.md); B1's three persistence points and G1
-    "g0235f": "var-bgn_gam-g0235f-v1",
-    "g0235s": "var-bgn_gam-g0235s-v1",
-    "g0235r": "var-bgn_gam-g0235r-v1",
-    "gx7": "var-gs_bx-gx7-v1",
-    # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4, X3, B4
-    "vyg25": "var-kp_vy-vyg25-v1",
-    "vyxT860": "var-kp_vy-vyxT860-v1",
-    "g0235d": "var-bgn_gam-g0235d-v1",
+    "g0235f": "var-bgn_gam-g0235f-v2",
+    "g0235s": "var-bgn_gam-g0235s-v2",
+    "g0235r": "var-bgn_gam-g0235r-v2",
+    "gx7": "var-gs_bx-gx7-v2",
+    # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4 and B4
+    "vyg25": "var-kp_vy-vyg25-v2",
+    "g0235d": "var-bgn_gam-g0235d-v2",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
-    "bgnbase": "var-bgn_gam-bgnbase-v1",
-    "kpbase": "var-kp_vy-kpbase-v1",
-    "gsbase": "var-gs_bx-gsbase-v1",
+    "bgnbase": "var-bgn_gam-bgnbase-v2",
+    "kpbase": "var-kp_vy-kpbase-v2",
+    "gsbase": "var-gs_bx-gsbase-v2",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"
 
@@ -123,7 +132,7 @@ def test_bgn_g0235_estimator_flags_match():
     txt = source_script(spec)
     assert f"--window {spec['estimation']['window']}" in txt
     assert "--levels" in txt and "--include_mkt" in txt
-    kap = re.search(r"--kappas\s+([\d.,]+)", txt).group(1)
+    kap = re.search(r"--kappas\s+(\S+)", txt).group(1)
     assert [float(x) for x in kap.split(",")] == spec["estimation"]["kappas"]
     n = int(re.search(r"--N\s+(\d+)", txt).group(1))
     t = int(re.search(r"--T\s+(\d+)", txt).group(1))
@@ -145,7 +154,7 @@ def test_kp_vyx_prefix_matches():
 def test_kp_vyx_estimator_flags_match():
     spec = load_spec(CURRENT["vyx"])
     txt = source_script(spec)
-    kap = re.search(r"--kappas\s+([\d.,]+)", txt).group(1)
+    kap = re.search(r"--kappas\s+(\S+)", txt).group(1)
     assert [float(x) for x in kap.split(",")] == spec["estimation"]["kappas"]
     n = int(re.search(r"--N\s+(\d+)", txt).group(1))
     t = int(re.search(r"--T\s+(\d+)", txt).group(1))
@@ -268,12 +277,24 @@ def test_seed_array_cases_match_the_specs_they_name():
         for k, v in (spec.get("env") or {}).items():
             assert c["env"].get(k) == str(v), (
                 f"{name}: {k} = {c['env'].get(k)!r} but {c['SPEC']} says {v!r}")
-        assert c["KAPPAS"], f"{name}: no KAPPAS= (the estimator grid must come from the spec)"
-        assert [float(x) for x in c["KAPPAS"].split(",")] == spec["estimation"]["kappas"], (
-            f"{name}: KAPPAS {c['KAPPAS']} but {c['SPEC']} says {spec['estimation']['kappas']}")
-        # The sample is part of the economy's definition -- X3 differs from vyx in nothing else --
-        # so the panel length and window a branch runs must be the spec's.
+        # The ridge grid is NOT per case any more. Until 2026-09-15 each branch carried its
+        # own KAPPAS= line and three different grids reached the estimators; DKKM's Sharpe is
+        # a max over that grid, so the rows were not comparable. There is now one assignment
+        # outside the case block, and it must equal EVERY spec's -- which is the property the
+        # per-case version could not express. A branch that reintroduces its own is refused.
+        assert c["KAPPAS"] is None, (
+            f"{name}: sets its own KAPPAS={c['KAPPAS']}. The ridge grid is the protocol's "
+            f"(variants/common/protocol.py) and is set once, outside the case block.")
         txt = read_script(SEED_ARRAY)
+        grid = re.search(r"(?m)^KAPPAS=(\S+)$", txt).group(1)
+        assert [float(x) for x in grid.split(",")] == spec["estimation"]["kappas"], (
+            f"{name}: the array runs KAPPAS {grid} but {c['SPEC']} says "
+            f"{spec['estimation']['kappas']}")
+        # The sample is the protocol's too, and no branch may override it.
+        assert c["SEED_T"] is None and c["SEED_WINDOW"] is None, (
+            f"{name}: pins SEED_T={c['SEED_T']} / SEED_WINDOW={c['SEED_WINDOW']}. The sample "
+            f"is the protocol's; an economy that wants another one is a numerical experiment, "
+            f"not another economy (kp_vy/vyxT860, retired 2026-09-15).")
         t_def = int(re.search(r"T=\$\{SEED_T:-(\d+)\}", txt).group(1))
         w_def = int(re.search(r"WINDOW=\$\{SEED_WINDOW:-(\d+)\}", txt).group(1))
         assert (c["SEED_T"] or t_def) == spec["panel"]["T"], (
