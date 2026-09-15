@@ -901,3 +901,6 @@ worth less than a moderate gap in one a referee will accept.
    what differs from the baseline in economic terms first and what the result decided against the
    prediction. Move its proposal into the route log. `tests/test_results_md_matches_table.py` fails
    until the table row is added.
+6. Push, then pull the shared checkout on the cluster with `bash variants/cluster_pull.sh`, never a
+   plain `git pull`: the cluster still holds its own untracked copies of the files just committed
+   (`docs/RUNS.md`, "Where output goes").
