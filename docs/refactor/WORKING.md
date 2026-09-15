@@ -3571,3 +3571,59 @@ BGN's regime path is finished, and RESULTS.md closes B2 and B3 with it.
 
 DKKM left the market by more than any BGN ten-seed mean, and plain linrank followed all of it. The spec's reason
 for a small fair gap held more strongly than predicted.
+
+## §56. The baselines become first-class economies (2026-09-14)
+
+**Seth's rule.** RESULTS.md was restructured the same day around the winning route (KP14 Path 1) with a
+"Baselines: the anchor" section quoting the three pre-refactor baseline rows, two of which (KP14 at the
+mislabelled arrival rate, GS21 at the old Table I) describe economies the current code no longer builds,
+all three single seeds, none against the fair benchmark. Seth: unacceptable; the baseline as the paper
+describes it must be computable by the same pipeline as the proposals that widen the gap. This section
+is that fix; A1 in `docs/NEXTUP.md`.
+
+**What was built.** Three specs, one per model, each the root every path departs from:
+`var-bgn_gam-bgnbase-v1` (gmult [1, 1], own J* `Jstar_bgnbase.csv`), `var-kp_vy-kpbase-v1` (one type at
+beta 0, gamma_v 0, bv_comp 0, prefix `kpbase`; r stays 0.05, the repository's standing departure from the
+paper, so the baseline is the parent of vyx), `var-gs_bx-gsbase-v1` (one type, `gs_solve_reg.py` at gmreg
+[1, 1], soldir `sol_gsbase`). Ids precommitted without solving: bgn and gs through `_scratch/precommit_id.sh`
+(jstar `c6287d53674cc1ef`, sol_gsbase `c6ae2d52428a7ce5`); kp through a new `_scratch/precommit_kp.sh`,
+which builds the G stage in a throwaway `git worktree` and kills the build at the integ id line, so the
+chained id is computed from real G bytes and no manifest reaches the real registry (G `7bc1f92a225c01b6`,
+integ `f299747cd77fc4a1`; the same path first reproduced vyx's G and integ ids). Specs committed in
+`3fcfe56` before any solve; `SEED_SPEC` cases `bgnbase`, `kpbase`, `gsbase`; `variants/gs_bx/run_gsbase_slurm.sh`
+(fails on an id mismatch, so the afterok seed array cannot start on another economy); README rows;
+`CURRENT` and the case parser in `tests/test_specs_match_shell.py`, with the g28 solve-script test
+generalised to gsbase.
+
+**`--rf_cols`.** Every economy exports its full conditioning set into the panel (bgn_gam and gs_bx:
+`rf_stand` and the regime `gam_stand`; kp_vy: the state y as `rf_stand`), and the oracle's and the
+estimators' bases interact all of it. A baseline at unit multipliers carries an unpriced Markov chain, and
+kpbase a state nothing loads on: noise columns, doubling the linear-rf basis. `run_oracle.py` and
+`run_estimators.py` gain `--rf_cols` (a subset, or `none`), passed by the seed array as `RF_COLS`, pinned
+by the spec's `estimation.rf_cols`, recorded in the oracle summary and the run record; the estimators
+refuse a panel whose oracle used a different list. Defaults unchanged: bgnbase keeps the rate, gsbase the
+productivity state, kpbase nothing. A/B smoke of the old and new runners on identical tiny panels is in
+`_scratch/smoke/` (result recorded below when it finishes).
+
+**Built and checked on the Mac** (`a5b5673`): Jstar_bgnbase's J0 and J1 agree to 3e-13 and span 23.3 to
+156.6, the unit-multiplier range of the legacy `Jstar_gam.csv`; the 21 kpbase integral tables are identical
+across y nodes to 4e-12 and differ by 40% from vyx's beta 0.02 type; every manifest's `recorded_at` is
+after the spec commit, and `tests/test_precommitment_is_real.py` passes.
+
+**Launched on Sol** at `a5b5673`, both queues empty at the pull: gsbase solve `63257244` -> seeds `63257245`
+(afterok); bgnbase seeds `63257246`; kpbase seeds `63257247`. Ledger `docs/RUNS.md`; watcher
+`_scratch/watch_baselines.sh` -> `_scratch/BASELINE_STATUS.md`.
+
+**Registered predictions** (in each spec): fair gap within 0.005 of zero in all three; BGN all-month room
++0.030 to +0.045; KP14 evaluation-window room below +0.010; GS21 below +0.003; a fair gap above +0.01
+anywhere falsifies the no-gap reading of that baseline.
+
+**Open when the jobs land.** Copy the GS manifest back and commit it; publish `sol_gsbase`; switch the
+gsbase `SOLVE_HINT` to the fetch form and clear its `solves_pending`; pull the result files; aggregate; add
+the three rows to RESULTS.md's current-results table and grade the predictions in the anchor section.
+
+**Two small things seen.** `build_vy_tables.py`'s `_report_prior` on a NEW prefix matches every manifest
+vacuously (`_find_by_artifacts([])`) and prints a parameter diff against an unrelated BGN manifest;
+cosmetic, K4 saw the same. And `ssh phoenix` fails host-key verification under BatchMode: the known alias
+is `phx` (`sjpruitt@phx.asu.edu`), which the campaign watcher used.
+

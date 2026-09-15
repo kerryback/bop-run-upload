@@ -21,6 +21,57 @@ updated when jobs end; between updates, `_scratch/watch_campaign.sh` polls both 
 
 ---
 
+## Campaign 2026-09-14 -- the baselines (A1), commit `a5b5673`
+
+Each paper's economy as published, run through the pipeline exactly as every path that departs from
+it (`docs/RESULTS.md`, "Baselines: the anchor"; `docs/NEXTUP.md`, A1). Specs precommitted in `3fcfe56`;
+the BGN and KP14 solves built on the Mac and committed in `a5b5673`; the GS21 solve runs on Sol. Every
+job runs from the shared checkout at `a5b5673`, pulled with both queues empty. Each case narrows the
+conditioning columns to the state its paper has (`RF_COLS`, passed as `--rf_cols` to both stages).
+
+### Solves built before submission
+
+| stage | spec | id (precommitted, reproduced) | built | artifact | time |
+|---|---|---|---|---|---|
+| jstar | `var-bgn_gam-bgnbase-v1` | `c6287d53674cc1ef` | Mac | `variants/bgn_gam/Jstar_bgnbase.csv`, committed | 491 s |
+| G | `var-kp_vy-kpbase-v1` | `7bc1f92a225c01b6` | Mac | `variants/kp_vy/G_kpbase0.csv`, committed | 1 s |
+| integ | `var-kp_vy-kpbase-v1` | `f299747cd77fc4a1` | Mac | 21 `variants/kp_vy/integ_kpbase0_*.npz`, committed | 344 s |
+
+The kp integ id hashes the G table's raw bytes, so both stages were built on the Mac and shipped through
+git rather than rebuilt on Sol (the K4 hazard below). Checks before commit: the BGN table's two regime
+columns coincide to 3e-13 at unit multipliers; the 21 KP14 integral tables are identical across the state
+nodes to 4e-12, so the economy does not depend on y; every manifest's `recorded_at` is after the spec commit.
+
+### Jobs
+
+| experiment | SEED_SPEC / spec | cluster | job | partition and request | waits on | writes to | status |
+|---|---|---|---|---|---|---|---|
+| GS21 baseline solve | `var-gs_bx-gsbase-v1` via `variants/gs_bx/run_gsbase_slurm.sh` | Sol | `63257244` | public, 4 cpu, 8G, 1 d | -- | `variants/gs_bx/sol_gsbase/solution.npz` (untracked, about 100 MB), `experiments/registry/c6ae2d52428a7ce5.json` | PENDING at submission (Priority) |
+| GS21 baseline seeds 0-9 | `gsbase` | Sol | `63257245` | public, 8 cpu, 64G, 2 d | afterok `63257244` | `variants/results/gs_bx_*_gsbase_*` | PENDING (Dependency) |
+| BGN baseline seeds 0-9 | `bgnbase` | Sol | `63257246` | public, 8 cpu, 64G, 2 d | -- | `variants/results/bgn_gam_*_bgnbase_*` | PENDING at submission |
+| KP14 baseline seeds 0-9 | `kpbase` | Sol | `63257247` | public, 8 cpu, 64G, 2 d | -- | `variants/results/kp_vy_*_kpbase_*` | PENDING at submission |
+
+Expected: BGN seeds about 3 h each at well under g0235's memory (the unit-multiplier J* range is a third
+of g0235's); KP14 seeds about 3 h at about 30 GiB; the GS solve 3.5 to 6 h, then its seeds about 3 h.
+`_scratch/watch_baselines.sh` polls Sol every ten minutes and writes `_scratch/BASELINE_STATUS.md`.
+
+### Reading the outcome
+
+- The GS solve ends `SOLVE OK: sol_gsbase=c6ae2d52428a7ce5` or `SOLVE MISMATCH` in
+  `outslurm/gs_gsbase.log`; on a mismatch `63257245` stays `DependencyNeverSatisfied` and the id must be
+  chased before anything else. Its manifest is written into the shared checkout's registry and must be
+  copied back to the laptop and committed, as K4's integ manifest was; `solution.npz` stays on `/data`
+  (publish it with `variants/fetch_solves.py --publish` for the fetch hint).
+- When the GS solve lands, switch the `gsbase` case's `SOLVE_HINT` in `variants/run_seeds_slurm.sh` to the
+  fetch form and clear `solves_pending` in its spec; `tests/test_specs_match_shell.py` enforces the pairing.
+- Results: copy the oracle, sidecar, time-series and estimator files (not panels or moments) to the
+  laptop, `python variants/aggregate_seeds.py --flagship`, `python variants/fair_gap.py`, and add the three
+  rows to RESULTS.md's current-results table; `tests/test_results_md_matches_table.py` fails until they are
+  there. Grade each spec's registered prediction in the anchor section.
+- No `git pull` of the shared checkout until all four jobs have finished.
+
+---
+
 ## Campaign 2026-09-13 -- commit `fef5802`
 
 The proposals ranked in `docs/RESULTS.md` after cross-cutting finding 8. Every job below runs from
