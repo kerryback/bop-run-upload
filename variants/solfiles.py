@@ -248,6 +248,43 @@ def cmd_gc(args):
     return 0
 
 
+def cmd_supersede(args):
+    """Mark a manifest that is no longer the live solve for its tag.
+
+    DISTINCT FROM RETIRE, and the distinction is load-bearing. A RETIRED id can never be
+    reached again -- the canonicaliser that produced it has been fixed, so the same
+    parameters now hash elsewhere. A SUPERSEDED id is still perfectly reachable: re-run
+    the producer on those parameters and you get it back. It simply is not what the tag
+    means any more.
+
+    Why it needs its own flag. runstamp.live_solves returns every live id under a tag, and
+    run_is_current requires a run's ids to equal that set exactly. Two manifests for the
+    same STAGE under one tag therefore make every run look STALE. That happened on
+    2026-09-15: the burn-in change re-keyed all six BGN jstar ids without changing a byte
+    of their tables. Retiring the old ones would have fixed live_solves and broken
+    tests/test_expected_solves_are_live_manifests, which refuses a spec pinning a RETIRED
+    id -- and the superseded v1/v2 BGN specs pin those ids as the truthful record of what
+    produced their results.
+    """
+    import json
+    m = solstamp.lookup(args.solve_id)
+    if m is None:
+        print(f"no manifest {args.solve_id}")
+        return 1
+    if solstamp.lookup(args.by) is None:
+        print(f"refusing: --by {args.by} is in no manifest, so the tag would have no live solve")
+        return 1
+    if m.get("superseded_by") and not args.force:
+        print(f"{args.solve_id} is already superseded by {m['superseded_by']['solve_id']}")
+        return 0
+    m["superseded_by"] = {"solve_id": args.by, "reason": args.reason, "on": args.on}
+    with open(solstamp.manifest_path(args.solve_id), "w") as f:
+        json.dump(m, f, indent=2, sort_keys=True)
+        f.write("\n")
+    print(f"superseded {args.solve_id} ({m.get('model')}, "
+          f"{', '.join(m.get('tags', [])) or '-'}) by {args.by}: {args.reason}")
+
+
 def cmd_retire(args):
     """Mark a manifest whose solve_id can never be recomputed.
 
@@ -309,6 +346,15 @@ def main():
     p.add_argument("--include-small", action="store_true",
                    help="also list solves small enough to keep in git")
     p.set_defaults(fn=cmd_gc)
+
+    p = sub.add_parser("supersede", help="mark a solve_id that is no longer the live solve for its tag")
+    p.add_argument("solve_id")
+    p.add_argument("--by", required=True, dest="by",
+                   help="the solve_id that is now live for the same tag and stage")
+    p.add_argument("--reason", required=True)
+    p.add_argument("--on", default=None)
+    p.add_argument("--force", action="store_true", help="overwrite an existing supersession")
+    p.set_defaults(fn=cmd_supersede)
 
     p = sub.add_parser("retire", help="mark a solve_id that can never be recomputed")
     p.add_argument("solve_id")

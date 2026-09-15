@@ -93,7 +93,5 @@
         "jstar": "b5e8f58b4e80c255"
     },
     "precommitted": true,
-    "solves_pending": [
-        "jstar"
-    ]
+    "solves_pending": null
 }

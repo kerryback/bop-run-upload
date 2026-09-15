@@ -123,6 +123,11 @@
   },
   "spec_ids": [],
   "stage": null,
+  "superseded_by": {
+    "on": "2026-09-15",
+    "reason": "the measurement protocol moved bgn_gam's simulation burn-in from 300 to 400 months (variants/common/protocol.py), which re-keyed every BGN jstar solve_id because burnin sits in the parameter namespace the manifest hashes. The TABLE cannot depend on it -- vasicek.py never reads burnin, and five of the six rebuilt tables are byte-identical to these -- so this id is still perfectly reachable by setting burnin back to 300, which is why it is superseded rather than retired. The superseded v1/v2 BGN specs still pin it as the record of what produced their results.",
+    "solve_id": "1c6ebd86233c30b3"
+  },
   "tags": [
     "Jstar_g0235r"
   ],

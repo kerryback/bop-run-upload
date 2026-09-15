@@ -90,8 +90,6 @@
         "jstar": "510d48d43c4763cb"
     },
     "precommitted": true,
-    "solves_pending": [
-        "jstar"
-    ],
+    "solves_pending": null,
     "spec_hash": "92ca72011a80f34b7c77527829ee2e331576827960938a0194a8151c2402f413"
 }

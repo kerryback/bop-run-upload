@@ -35,12 +35,35 @@ print("\n".join(out))
 EOF
 )
 
+LOG="$ROOT/_scratch/protocol/rebuild_all_jstar.log"
+mkdir -p "$(dirname "$LOG")"
+: > "$LOG"
+echo "full output -> $LOG"
+
+rc=0
 echo "$SPECS" | while IFS=$'\t' read -r spec want params; do
   [ -n "$spec" ] || continue
   echo "=== $spec  (expecting jstar $want)"
-  BGN_PARAM_OVERRIDES="$params" $PY -W ignore rebuild_jstar_gam.py 2>&1 | grep -E "solstamp|Jstar_gam iter|building" || true
+  { echo "=== $spec  (expecting jstar $want)"; } >> "$LOG"
+  BGN_PARAM_OVERRIDES="$params" $PY -W ignore rebuild_jstar_gam.py 2>&1 | tee -a "$LOG" \
+    | grep -E "solve_id|recorded|^done|building" || true
+  # The id the producer actually computed must be the one the spec precommitted. Checking here
+  # rather than by eye: six ids, and the whole point of precommitting them is that a mismatch
+  # stops the campaign instead of quietly redefining the economy.
+  got=$(grep -oE "solve_id=[0-9a-f]{16}" "$LOG" | tail -1 | cut -d= -f2)
+  if [ "$got" = "$want" ]; then
+    echo "    ID OK: $got"
+  else
+    echo "    *** ID MISMATCH: precommitted $want, produced ${got:-<none>} ***"
+    echo "MISMATCH $spec $want $got" >> "$LOG.mismatch"
+  fi
 done
 
 echo
-echo "Now check every printed solve_id against the spec's expected_solves, clear solves_pending in"
-echo "the six specs, and commit the tables and manifests -- AFTER the commit that pinned the ids."
+if [ -f "$LOG.mismatch" ]; then
+  echo "AT LEAST ONE ID DID NOT REPRODUCE -- do not commit, chase the id first:"
+  cat "$LOG.mismatch"
+  exit 1
+fi
+echo "Every id reproduced. Next: clear solves_pending in the six specs, then commit the tables and"
+echo "manifests -- in a LATER commit than the one that pinned the ids."
