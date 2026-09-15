@@ -100,6 +100,6 @@
     "integ": "f299747cd77fc4a1"
   },
   "precommitted": true,
-  "solves_pending": "G and integ precommitted 2026-09-14; to be built on the Mac after this spec is committed",
+  "solves_pending": null,
   "spec_hash": "b56db24cd3e6f01b834efc1468422979663ae26902ed0e379dc74584548ca035"
 }
