@@ -29,31 +29,43 @@ E1 = os.path.join(ROOT, "variants", "results_e1", "fair_gap_economy_table.csv")
 
 
 def _md_rows():
+    """Every `model/tag` row of the tables under "Current results", read by COLUMN HEADER, not position:
+    RESULTS.md adds columns (2026-09-15: room all % of lin, fair gap % of fair lin), and a positional
+    parser silently reads the wrong cell when one moves."""
     txt = open(MD).read()
     start = txt.index("## Current results")
     end = txt.index("\n## ", start + 5)
     block = txt[start:end]
-    rows = {}
+
+    def num(c):
+        mm = re.match(r"^([+-]?\d+\.\d+)", c or "")
+        return float(mm.group(1)) if mm else None
+
+    def pct(c):
+        mm = re.match(r"^([+-]?\d+\.\d+)%", c or "")
+        return float(mm.group(1)) if mm else None
+
+    rows, header = {}, None
     for line in block.splitlines():
-        m = re.match(r"^\|\s*([a-z_]+)/([A-Za-z0-9]+)\s*\|", line)
-        if not m:
+        if not line.startswith("|"):
+            header = None
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        # economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin |
-        # t | DKKM | best linear | SR_max eval
-        def num(c):
-            mm = re.match(r"^([+-]?\d+\.\d+)", c)
-            return float(mm.group(1)) if mm else None
-
-        def pct(c):
-            mm = re.match(r"^([+-]?\d+\.\d+)%", c)
-            return float(mm.group(1)) if mm else None
-        rows[(m.group(1), m.group(2))] = dict(spec=cells[1], n=int(cells[2]), room_all=num(cells[3]),
-                                             room_eval=num(cells[4]), room_pct=pct(cells[5]),
-                                             gap=num(cells[6]), gap_pct=pct(cells[7]), t=num(cells[8]),
-                                             dkkm=num(cells[9]), lin=num(cells[10]), sr_max_eval=num(cells[11]),
-                                             fair_gap=num(cells[12]) if len(cells) > 12 else None)
-    assert rows, "no economy rows parsed from the 'Current results' table"
+        if cells and cells[0] == "economy":
+            header = cells
+            continue
+        m = re.match(r"^([a-z_]+)/([A-Za-z0-9]+)$", cells[0])
+        if not (m and header):
+            continue
+        assert len(cells) == len(header), f"{cells[0]}: {len(cells)} cells under a {len(header)}-column header"
+        c = dict(zip(header, cells))
+        rows[(m.group(1), m.group(2))] = dict(
+            spec=c["spec"], n=int(c["n"]), room_all=num(c["room all"]), room_all_pct=pct(c.get("room all % of lin")),
+            room_eval=num(c["room eval"]), room_pct=pct(c["room eval % of lin"]),
+            gap=num(c["gap"]), gap_pct=pct(c["gap % of lin"]), t=num(c["t"]),
+            dkkm=num(c["DKKM"]), lin=num(c["best linear"]), sr_max_eval=num(c["SR_max eval"]),
+            fair_gap=num(c.get("fair gap")), fair_gap_pct=pct(c.get("fair gap % of fair lin")))
+    assert rows, "no economy rows parsed from the 'Current results' tables"
     return rows
 
 
@@ -102,6 +114,7 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
                   ("lin", row["lin"], c["lin_mean"], 5.1e-5),
                   ("sr_max_eval", row["sr_max_eval"], c["sr_max_eval_mean"], 5.1e-5),
                   # ratio of means, in percent -- NOT the mean of the per-seed ratios
+                  ("room_all_pct", row["room_all_pct"], c["room_all_over_lin"], 0.051),
                   ("room_pct", row["room_pct"], c["room_eval_over_lin"], 0.051),
                   ("gap_pct", row["gap_pct"], c["gap_over_lin"], 0.051)]
         if row["room_eval"] is not None or not pd.isna(c["room_eval_mean"]):
@@ -132,6 +145,10 @@ def test_the_fair_gap_column_matches_the_e1_table():
             bad.append(f"{key[0]}/{key[1]}: no row in {os.path.relpath(E1, ROOT)}")
         elif row["fair_gap"] is None or abs(row["fair_gap"] - e[key]["fair_gap"]) > 5.1e-5:
             bad.append(f"{key[0]}/{key[1]} fair gap: RESULTS.md {row['fair_gap']!r} vs {e[key]['fair_gap']!r}")
+        elif row["fair_gap_pct"] is None or abs(row["fair_gap_pct"] - e[key]["fair_gap_over_fair_lin"]) > 0.051:
+            # the fair gap over the fair linear Sharpe, a ratio of means in percent
+            bad.append(f"{key[0]}/{key[1]} fair gap % of fair lin: RESULTS.md {row['fair_gap_pct']!r} "
+                       f"vs {e[key]['fair_gap_over_fair_lin']!r}")
     assert not bad, "RESULTS.md fair-gap column is stale:\n  " + "\n  ".join(bad)
 
 

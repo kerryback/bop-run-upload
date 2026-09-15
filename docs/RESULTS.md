@@ -20,11 +20,11 @@ methods themselves beat the equal-weighted market by 0.28 to 0.33 and DKKM beats
 their models' routes the fair gap is between -0.0025 and +0.0025, and in the three models as published
 it is between -0.0024 and +0.0012 (the anchor, below).
 
-| economy | what it is | window | gap | fair gap | t | DKKM | best linear | EW market | SR_max eval | room eval | gap / room |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyxT860 | vyx on an 860-month panel, a 720-month window, penalty grid down to 1e-4 | 720 | +0.1875 (0.0393) | +0.1872 | 54.6 | 0.8452 | 0.6577 | 0.3577 | 1.2294 | +0.3864 | 0.49 |
-| kp_vy/vyg25 | vyx with the price of the state's risk raised from 1.8 to 2.5 | 360 | +0.1450 (0.0193) | +0.1450 | 39.2 | 0.9450 | 0.8000 | 0.4694 | 1.3887 | +0.4108 | 0.35 |
-| kp_vy/vyx | the parent economy | 360 | +0.1046 (0.0155) | +0.1046 | 30.2 | 0.7475 | 0.6428 | 0.3675 | 1.1778 | +0.3606 | 0.29 |
+| economy | what it is | window | gap | gap % of lin | fair gap | fair gap % of fair lin | t | DKKM | best linear | EW market | SR_max eval | room eval | room eval % of lin | gap / room |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyxT860 | vyx on an 860-month panel, a 720-month window, penalty grid down to 1e-4 | 720 | +0.1875 (0.0393) | 28.5% | +0.1872 | 28.5% | 54.6 | 0.8452 | 0.6577 | 0.3577 | 1.2294 | +0.3864 | 58.8% | 0.49 |
+| kp_vy/vyg25 | vyx with the price of the state's risk raised from 1.8 to 2.5 | 360 | +0.1450 (0.0193) | 18.1% | +0.1450 | 18.1% | 39.2 | 0.9450 | 0.8000 | 0.4694 | 1.3887 | +0.4108 | 51.4% | 0.35 |
+| kp_vy/vyx | the parent economy | 360 | +0.1046 (0.0155) | 16.3% | +0.1046 | 16.3% | 30.2 | 0.7475 | 0.6428 | 0.3675 | 1.1778 | +0.3606 | 56.1% | 0.29 |
 
 Mean (sd) over ten seeds, N=500 firms, 125 evaluation months scored on the true conditional moments.
 The two window-360 rows also appear, with every other current economy, in "Current results" below.
@@ -83,11 +83,11 @@ The three models as published, before any path was built on them, run through th
 exactly as every path that departs from them: a spec with precommitted solve ids, ten seeds, the fair
 benchmark. Every "what the route added" statement in this file is a difference against these rows.
 
-| model | spec | what it is | room all | room eval | gap | fair gap | fair gap t | DKKM | best linear | EW market | market / SR_max | SR_max eval |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN | var-bgn_gam-bgnbase-v1 | one priced market shock at sigma_z 0.4 (gmult [1, 1]), project betas from a translated exponential, Vasicek rate; Table I, 11 of 11 | +0.0251 (0.0054) | +0.0225 (0.0052) | +0.0066 (0.0099) | +0.0012 (0.0071) | 0.5 | 0.2214 | 0.2148 | 0.1405 | 0.50 | 0.2805 |
-| KP14 | var-kp_vy-kpbase-v1 | constant prices of risk gamma_x 0.69 and gamma_z -0.35, one firm type, no priced state, mean arrival rate 1; Table II, 17 of 18 (r 0.05) | +0.0040 (0.0008) | +0.0044 (0.0011) | +0.0053 (0.0076) | -0.0024 (0.0046) | -1.6 | 0.2073 | 0.2020 | 0.0797 | 0.35 | 0.2292 |
-| GS21 | var-gs_bx-gsbase-v1 | constant price of risk gamma_x 0.5 on productivity (gmreg [1, 1]), one firm type, the corrected Table I | +0.0014 (0.0001) | +0.0012 (0.0001) | +0.0125 (0.0120) | -0.0022 (0.0014) | -5.0 | 0.2908 | 0.2782 | 0.2838 | 0.95 | 0.2980 |
+| model | spec | what it is | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | fair gap t | DKKM | best linear | fair linear | EW market | market / SR_max | SR_max eval |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | var-bgn_gam-bgnbase-v1 | one priced market shock at sigma_z 0.4 (gmult [1, 1]), project betas from a translated exponential, Vasicek rate; Table I, 11 of 11 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | +0.0012 (0.0071) | 0.5% | 0.5 | 0.2214 | 0.2148 | 0.2202 | 0.1405 | 0.50 | 0.2805 |
+| KP14 | var-kp_vy-kpbase-v1 | constant prices of risk gamma_x 0.69 and gamma_z -0.35, one firm type, no priced state, mean arrival rate 1; Table II, 17 of 18 (r 0.05) | +0.0040 (0.0008) | 2.0% | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | -0.0024 (0.0046) | -1.1% | -1.6 | 0.2073 | 0.2020 | 0.2097 | 0.0797 | 0.35 | 0.2292 |
+| GS21 | var-gs_bx-gsbase-v1 | constant price of risk gamma_x 0.5 on productivity (gmreg [1, 1]), one firm type, the corrected Table I | +0.0014 (0.0001) | 0.5% | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | -0.0022 (0.0014) | -0.7% | -5.0 | 0.2908 | 0.2782 | 0.2930 | 0.2838 | 0.95 | 0.2980 |
 
 Mean (sd) over ten seeds, N=500, T=500, 360-month window, 125 evaluation months scored on the true
 conditional moments. EW market is the equal-weighted market's Sharpe on the true moments; market /
@@ -120,20 +120,20 @@ What the anchor says:
 
 | baseline | quantity | predicted | ten seeds | verdict |
 |---|---|---|---|---|
-| BGN | all-month room | +0.030 to +0.045 | +0.0251 (se 0.0017) | wrong, low |
+| BGN | all-month room | +0.030 to +0.045 | +0.0251 (se 0.0017; 11.7% of lin) | wrong, low |
 | BGN | SR_max, evaluation window | 0.25 to 0.35 | 0.2805 | right |
-| BGN | measured gap | +0.000 to +0.015 | +0.0066 | right |
-| BGN | fair gap, and its winner | within 0.005 of zero; mkt_est or linrank_m the best fair linear method in most seeds | +0.0012; linrank_m in 7 of 10 | right |
-| KP14 | evaluation-window room | below +0.010 | +0.0044 | right |
+| BGN | measured gap | +0.000 to +0.015 | +0.0066 (3.1% of lin) | right |
+| BGN | fair gap, and its winner | within 0.005 of zero; mkt_est or linrank_m the best fair linear method in most seeds | +0.0012 (0.5% of fair lin); linrank_m in 7 of 10 | right |
+| KP14 | evaluation-window room | below +0.010 | +0.0044 (2.2% of lin) | right |
 | KP14 | SR_max, evaluation window | 0.15 to 0.35 | 0.2292 | right |
-| KP14 | measured gap | within 0.015 of zero | +0.0053 | right |
-| KP14 | fair gap | within 0.005 of zero | -0.0024 | right |
-| GS21 | evaluation-window room | below +0.003 | +0.0012 | right |
+| KP14 | measured gap | within 0.015 of zero | +0.0053 (2.6% of lin) | right |
+| KP14 | fair gap | within 0.005 of zero | -0.0024 (-1.1% of fair lin) | right |
+| GS21 | evaluation-window room | below +0.003 | +0.0012 (0.4% of lin) | right |
 | GS21 | market share of SR_max | above 90% | 95% | right |
 | GS21 | SR_max, evaluation window | 0.25 to 0.45 | 0.2980 | right |
-| GS21 | measured gap | +0.00 to +0.03 | +0.0125 | right |
-| GS21 | fair gap | within 0.005 of zero | -0.0022 | right |
-| all three | no-gap reading falsified if a fair gap exceeds +0.01 | | largest +0.0012 | not falsified |
+| GS21 | measured gap | +0.00 to +0.03 | +0.0125 (4.5% of lin) | right |
+| GS21 | fair gap | within 0.005 of zero | -0.0022 (-0.7% of fair lin) | right |
+| all three | no-gap reading falsified if a fair gap exceeds +0.01 | | largest +0.0012 (0.5% of fair lin) | not falsified |
 
 BGN's predicted room was built on the legacy row's +0.0365, which is one draw: it sits 2.1 sd above the
 ten-seed mean. Seed 0 of bgnbase is that draw. It reproduces the legacy row's SR_max (0.2926), nonlinear
@@ -161,11 +161,11 @@ summary and run record; the estimators refuse a panel whose oracle used a differ
 **What the legacy rows said.** The pre-refactor grid ran each baseline once
 (`23f9380:variants/results/grid_summary.csv`; narrative `variants/REPORT.md` §14):
 
-| model | SR_max, all months | room, all months | best linear | DKKM | gap | t | the economy the current code builds? |
-|---|---|---|---|---|---|---|---|
-| BGN | 0.2926 | +0.0365 | 0.2334 | 0.2393 | +0.0059 | 14.0 | yes |
-| KP14 | 0.2396 | +0.0037 | 0.1969 | 0.2005 | +0.0036 | -8.5 | no: mean arrival rate 1.72, not 1 |
-| GS21 | 0.4012 | +0.0010 | 0.3825 | 0.3988 | +0.0163 | 21.8 | no: rho_x, delta and kappa_e differ |
+| model | SR_max, all months | room, all months | room % of lin | best linear | DKKM | gap | gap % of lin | t | the economy the current code builds? |
+|---|---|---|---|---|---|---|---|---|---|
+| BGN | 0.2926 | +0.0365 | 15.6% | 0.2334 | 0.2393 | +0.0059 | 2.5% | 14.0 | yes |
+| KP14 | 0.2396 | +0.0037 | 1.9% | 0.1969 | 0.2005 | +0.0036 | 1.8% | -8.5 | no: mean arrival rate 1.72, not 1 |
+| GS21 | 0.4012 | +0.0010 | 0.3% | 0.3825 | 0.3988 | +0.0163 | 4.2% | 21.8 | no: rho_x, delta and kappa_e differ |
 
 Single seeds, no fair benchmark. Their directions survived the corrections: no gap anywhere, room only
 in BGN. The BGN row is reproduced by bgnbase's seed 0. The KP14 and GS21 rows are not, as the
@@ -191,7 +191,10 @@ worth. Ten seeds per economy; every figure is mean (sd across seeds) unless the 
   feature basis reaches with ONE fixed coefficient vector, minus the best a linear-in-ranks basis
   reaches the same way, both from the true moments. Over all 485 panel months, and over the 125
   evaluation months. Only the second is commensurable with `gap`; the two differ by up to 23%.
-- **room eval % of lin** -- `room eval` over the linear Sharpe attained, in percent.
+- **room all % of lin**, **room eval % of lin** -- the room over the Sharpe the best linear method
+  attained (`best linear`), in percent. Every gap and room in this file's tables carries this
+  percentage beside it: a headroom of +0.02 means something different against a linear Sharpe of 0.80
+  than against one of 0.09.
 - **gap** -- the Sharpe of the winning random-feature estimator (DKKM: `rff`, `rff_ens`, `rff_lev`,
   `rff_lev_ens`, best feature count and best penalty) minus the best linear method (`linrank`,
   `linlev`, Fama-MacBeth `fm`, Fama-French `ff`). **Outside KP14 this measures the linear methods
@@ -208,6 +211,9 @@ worth. Ten seeds per economy; every figure is mean (sd across seeds) unless the 
   `linrank_m` and `linlev_m` (the market a separate unpenalised column, penalties two decades past the
   DKKM grid) and `mkt_est` (the market alone, its weight estimated as DKKM's is). From
   `variants/results_e1/fair_gap_economy_table.csv`, produced by `variants/fair_gap.py`.
+- **fair gap % of fair lin** -- `fair gap` over the Sharpe the best of those seven linear methods
+  attained (`fair linear` where a table shows it), in percent: the fair gap measured against its own
+  linear benchmark. Negative where a linear method given the market beats DKKM.
 
 ### Two cautions
 
@@ -256,25 +262,25 @@ the end collects them.
 All twelve CURRENT economies at N=500, T=500, window 360. Mean (sd) over ten seeds. The three
 baselines come first, as the anchor.
 
-| economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | 10 | +0.0251 (0.0054) | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | 15.9 | 0.2214 | 0.2148 | 0.2805 | +0.0012 (0.0071) |
-| kp_vy/kpbase | var-kp_vy-kpbase-v1 | 10 | +0.0040 (0.0008) | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | 17.6 | 0.2073 | 0.2020 | 0.2292 | -0.0024 (0.0046) |
-| gs_bx/gsbase | var-gs_bx-gsbase-v1 | 10 | +0.0014 (0.0001) | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | 25.2 | 0.2908 | 0.2782 | 0.2980 | -0.0022 (0.0014) |
+| economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | 10 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | 15.9 | 0.2214 | 0.2148 | 0.2805 | +0.0012 (0.0071) | 0.5% |
+| kp_vy/kpbase | var-kp_vy-kpbase-v1 | 10 | +0.0040 (0.0008) | 2.0% | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | 17.6 | 0.2073 | 0.2020 | 0.2292 | -0.0024 (0.0046) | -1.1% |
+| gs_bx/gsbase | var-gs_bx-gsbase-v1 | 10 | +0.0014 (0.0001) | 0.5% | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | 25.2 | 0.2908 | 0.2782 | 0.2980 | -0.0022 (0.0014) | -0.7% |
 
 The nine route economies, ranked by fair gap:
 
-| economy | spec | n | room all | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyg25 | var-kp_vy-vyg25-v1 | 10 | +0.3993 (0.0425) | +0.4108 (0.0446) | 51.4% | +0.1450 (0.0193) | 18.1% | 39.2 | 0.9450 | 0.8000 | 1.3887 | +0.1450 (0.0193) |
-| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 | +0.1046 (0.0154) |
-| bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 | +0.0025 (0.0029) |
-| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 | +0.0012 (0.0034) |
-| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 | +0.0006 (0.0009) |
-| gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 | +0.0001 (0.0006) |
-| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 | -0.0009 (0.0028) |
-| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 | -0.0022 (0.0023) |
-| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 | -0.0025 (0.0069) |
+| economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyg25 | var-kp_vy-vyg25-v1 | 10 | +0.3993 (0.0425) | 49.9% | +0.4108 (0.0446) | 51.4% | +0.1450 (0.0193) | 18.1% | 39.2 | 0.9450 | 0.8000 | 1.3887 | +0.1450 (0.0193) | 18.1% |
+| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | 54.3% | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 | +0.1046 (0.0154) | 16.3% |
+| bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | 30.7% | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 | +0.0025 (0.0029) | 1.9% |
+| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | 44.5% | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 | +0.0012 (0.0034) | 2.0% |
+| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | 22.0% | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 | +0.0006 (0.0009) | 0.5% |
+| gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | 0.5% | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 | +0.0001 (0.0006) | 0.0% |
+| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | 3.0% | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 | -0.0009 (0.0028) | -0.3% |
+| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | 0.0% | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 | -0.0022 (0.0023) | -0.7% |
+| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | 39.5% | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 | -0.0025 (0.0069) | -7.2% |
 
 **Read the last column, not the gap column, outside KP14.** In the seven BGN and GS route rows the winning
 DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market (finding 8); the
@@ -327,12 +333,12 @@ path's finding survives.
 
 The one route that produced a complexity gap. Its ladder, in the order it was climbed:
 
-| economy | gamma_v | window | grid floor | room eval | gap | fair gap | DKKM / its ceiling | status |
-|---|---|---|---|---|---|---|---|---|
-| kp_vy/vy | 1.2 | 360 | 0.001 | +0.278 (all-month) | +0.0289 | -- | about 10% of the room | LEGACY, single seed, pre-fix economy |
-| kp_vy/vyx | 1.8 | 360 | 0.001 | +0.3606 | +0.1046 | +0.1046 | 74% | CURRENT |
-| kp_vy/vyg25 | 2.5 | 360 | 0.001 | +0.4108 | +0.1450 | +0.1450 | 78% | CURRENT |
-| kp_vy/vyxT860 | 1.8 | 720 | 0.0001 | +0.3864 | +0.1875 | +0.1872 | 81% | CURRENT at T=860 |
+| economy | gamma_v | window | grid floor | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM / its ceiling | status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vy | 1.2 | 360 | 0.001 | +0.278 (all-month) | 51.3% (all-month) | +0.0289 | 5.3% | -- | -- | about 10% of the room | LEGACY, single seed, pre-fix economy |
+| kp_vy/vyx | 1.8 | 360 | 0.001 | +0.3606 | 56.1% | +0.1046 | 16.3% | +0.1046 | 16.3% | 74% | CURRENT |
+| kp_vy/vyg25 | 2.5 | 360 | 0.001 | +0.4108 | 51.4% | +0.1450 | 18.1% | +0.1450 | 18.1% | 78% | CURRENT |
+| kp_vy/vyxT860 | 1.8 | 720 | 0.0001 | +0.3864 | 58.8% | +0.1875 | 28.5% | +0.1872 | 28.5% | 81% | CURRENT at T=860 |
 
 The linear methods sit at 99% to 100% of their own ceiling on every row; DKKM's winning penalty is
 the smallest offered in 9, 10 and 10 seeds of ten.
@@ -380,11 +386,11 @@ higher price created, 78% of its nonlinear ceiling against 74%, while the linear
 
 | | vyx | predicted | vyg25 | verdict |
 |---|---|---|---|---|
-| room, evaluation window | +0.3606 | +0.45 to +0.50 | +0.4108 | wrong, low |
+| room, evaluation window | +0.3606 (56.1% of lin) | +0.45 to +0.50 | +0.4108 (51.4% of lin) | wrong, low |
 | SR_max, evaluation window | 1.1778 | up about 40% | 1.3887, up 18% | wrong, low |
 | non-market Sharpe | 1.1178 | up about 40% | 1.3064, up 17% | wrong, low |
 | DKKM's winning penalty | smallest on the grid in 9 of 10 | still the smallest | smallest in 10 of 10 | right |
-| gap | +0.1046 | +0.15 to +0.20; falsified below +0.12 | +0.1450 | below the range by 0.005; not falsified |
+| gap | +0.1046 (16.3% of lin) | +0.15 to +0.20; falsified below +0.12 | +0.1450 (18.1% of lin) | below the range by 0.005; not falsified |
 
 The last decade of penalty, 0.01 to 0.001, still added 0.046 of Sharpe, so this economy is as
 shrinkage-bound as vyx. Distance from a calibration: mean expected return 22.9% a year,
@@ -413,8 +419,8 @@ of it and leaves the linear methods where they are.
 |---|---|---|---|---|
 | DKKM | 0.7475 | +0.03 to +0.08; falsified below +0.02 | 0.8452, +0.0977 (se 0.0244) | wrong, high; not falsified |
 | best linear | 0.6428 | within +0.01 | 0.6577, +0.0149 (se 0.0159) | outside the band, not distinguishable from it |
-| gap | +0.1046 | +0.13 to +0.17 | +0.1875 | wrong, high |
-| room, evaluation window | +0.3606 | unchanged within seed noise | +0.3864, +0.0258 (se 0.0206) | right |
+| gap | +0.1046 (16.3% of lin) | +0.13 to +0.17 | +0.1875 (28.5% of lin) | wrong, high |
+| room, evaluation window | +0.3606 (56.1% of lin) | unchanged within seed noise | +0.3864 (58.8% of lin), +0.0258 (se 0.0206) | right |
 
 **The window and the grid, separated.** On vyx's grid (penalties 0.001 and up) DKKM reaches 0.7958
 and the gap +0.1382: the window alone lands inside both predicted ranges. The 1e-4 penalty adds a
@@ -532,14 +538,14 @@ market and only 0.011 above the linear methods, which followed most of it; the s
 seed (B4) put DKKM 0.081 above the market and plain `linrank` followed all of it. The spec's rule ends
 the path on the miss.
 
-| economy | switch probabilities per month, calm to stress / stress to calm | stress share | room eval | gap | fair gap | DKKM - market | market - best linear |
-|---|---|---|---|---|---|---|---|
-| bgnbase, the baseline | inert: gmult [1, 1] | -- | +0.0225 | +0.0066 | +0.0012 | +0.0809 | -0.0743 |
-| g0235f | 1/12, 2/12 (fast) | 1/3 | +0.0350 | +0.0211 | +0.0025 | +0.0116 | +0.0094 |
-| g0235 | 0.25/12, 0.50/12 | 1/3 | +0.0176 | +0.0227 | +0.0006 | +0.0020 | +0.0206 |
-| g0235s | 0.05/12, 0.10/12 (slow) | 1/3 | +0.0119 | +0.0180 | +0.0012 | +0.0100 | +0.0080 |
-| g0235r | 0.05/12, 0.45/12 (rare) | 1/10 | +0.0026 | +0.0209 | -0.0025 | -0.0154 | +0.0363 |
-| g0235d, SCREEN | 0.50/12, 0.25/12 (stress-dominant) | 2/3 | +0.0186 | +0.0004 | +0.0004 | +0.0812 | -0.0808 |
+| economy | switch probabilities per month, calm to stress / stress to calm | stress share | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM - market | market - best linear |
+|---|---|---|---|---|---|---|---|---|---|---|
+| bgnbase, the baseline | inert: gmult [1, 1] | -- | +0.0225 | 10.5% | +0.0066 | 3.1% | +0.0012 | 0.5% | +0.0809 | -0.0743 |
+| g0235f | 1/12, 2/12 (fast) | 1/3 | +0.0350 | 31.4% | +0.0211 | 18.9% | +0.0025 | 1.9% | +0.0116 | +0.0094 |
+| g0235 | 0.25/12, 0.50/12 | 1/3 | +0.0176 | 20.6% | +0.0227 | 26.5% | +0.0006 | 0.5% | +0.0020 | +0.0206 |
+| g0235s | 0.05/12, 0.10/12 (slow) | 1/3 | +0.0119 | 27.2% | +0.0180 | 41.3% | +0.0012 | 2.0% | +0.0100 | +0.0080 |
+| g0235r | 0.05/12, 0.45/12 (rare) | 1/10 | +0.0026 | 24.3% | +0.0209 | 192.1% | -0.0025 | -7.2% | -0.0154 | +0.0363 |
+| g0235d, SCREEN | 0.50/12, 0.25/12 (stress-dominant) | 2/3 | +0.0186 | 12.6% | +0.0004 | 0.3% | +0.0004 | 0.3% | +0.0812 | -0.0808 |
 
 #### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), fair gap +0.0006, t 33.4
 
@@ -596,10 +602,10 @@ least 0.30.
 
 | | predicted | seed 0 |
 |---|---|---|
-| room, evaluation window | above +0.04 (gate +0.05) | +0.0186 |
+| room, evaluation window | above +0.04 (gate +0.05) | +0.0186 (12.6% of lin) |
 | non-market Sharpe | 0.2 to 0.3 (gate 0.30) | 0.1541 |
 | DKKM minus the equal-weighted market | +0.03 to +0.06 | +0.0812 |
-| fair gap | +0.005 to +0.015 | +0.0004 |
+| fair gap | +0.005 to +0.015 | +0.0004 (0.3% of fair lin) |
 
 DKKM (0.1484) left the market by more than any BGN ten-seed mean does, and plain `linrank`, whose
 market column is penalised, reached 0.1480. The spec's own reason for a small fair gap, a
@@ -770,19 +776,19 @@ kept. Finding 8 reorganised the file and comes first.
    winning portfolio is barely off that point. Splitting each gap exactly into what DKKM adds over the
    market and what the market has over the best linear method:
 
-   | economy | SR_max eval | EW market | market / SR_max | DKKM - market | market - best linear | gap | fair gap (E1) | registered bound |
-   |---|---|---|---|---|---|---|---|---|
-   | kp_vy/vyx | 1.1778 | 0.3675 | 0.31 | +0.3800 | -0.2753 | +0.1046 | +0.1046 | at least +0.08: PASS |
-   | bgn_gam/g0235 | 0.1461 | 0.1061 | 0.73 | +0.0020 | +0.0206 | +0.0227 | +0.0006 | at most +0.003: PASS |
-   | bgn_gam/g0235f | 0.2043 | 0.1209 | 0.59 | +0.0116 | +0.0094 | +0.0211 | +0.0025 | at most +0.008: PASS |
-   | bgn_gam/g0235s | 0.0946 | 0.0516 | 0.55 | +0.0100 | +0.0080 | +0.0180 | +0.0012 | at most +0.008: PASS |
-   | bgn_gam/g0235r | 0.0559 | 0.0472 | 0.84 | -0.0154 | +0.0363 | +0.0209 | -0.0025 | at most +0.004: PASS |
-   | gs_bx/g28 | 0.3087 | 0.2944 | 0.95 | +0.0032 | +0.0251 | +0.0283 | -0.0022 | at most +0.006: PASS |
-   | gs_bx/gx7 | 0.4473 | 0.4385 | 0.98 | +0.0007 | +0.0222 | +0.0229 | +0.0001 | at most +0.004: PASS |
-   | gs_bx/bx7 | 0.3121 | 0.2926 | 0.94 | +0.0038 | +0.0039 | +0.0078 | -0.0009 | at most +0.006: PASS |
-   | bgn_gam/bgnbase, baseline | 0.2805 | 0.1405 | 0.50 | +0.0809 | -0.0743 | +0.0066 | +0.0012 | within 0.005 of zero: PASS |
-   | kp_vy/kpbase, baseline | 0.2292 | 0.0797 | 0.35 | +0.1277 | -0.1223 | +0.0053 | -0.0024 | within 0.005 of zero: PASS |
-   | gs_bx/gsbase, baseline | 0.2980 | 0.2838 | 0.95 | +0.0069 | +0.0056 | +0.0125 | -0.0022 | within 0.005 of zero: PASS |
+   | economy | SR_max eval | EW market | market / SR_max | DKKM - market | market - best linear | gap | gap % of lin | fair gap (E1) | fair gap % of fair lin | registered bound |
+   |---|---|---|---|---|---|---|---|---|---|---|
+   | kp_vy/vyx | 1.1778 | 0.3675 | 0.31 | +0.3800 | -0.2753 | +0.1046 | 16.3% | +0.1046 | 16.3% | at least +0.08: PASS |
+   | bgn_gam/g0235 | 0.1461 | 0.1061 | 0.73 | +0.0020 | +0.0206 | +0.0227 | 26.5% | +0.0006 | 0.5% | at most +0.003: PASS |
+   | bgn_gam/g0235f | 0.2043 | 0.1209 | 0.59 | +0.0116 | +0.0094 | +0.0211 | 18.9% | +0.0025 | 1.9% | at most +0.008: PASS |
+   | bgn_gam/g0235s | 0.0946 | 0.0516 | 0.55 | +0.0100 | +0.0080 | +0.0180 | 41.3% | +0.0012 | 2.0% | at most +0.008: PASS |
+   | bgn_gam/g0235r | 0.0559 | 0.0472 | 0.84 | -0.0154 | +0.0363 | +0.0209 | 192.1% | -0.0025 | -7.2% | at most +0.004: PASS |
+   | gs_bx/g28 | 0.3087 | 0.2944 | 0.95 | +0.0032 | +0.0251 | +0.0283 | 10.5% | -0.0022 | -0.7% | at most +0.006: PASS |
+   | gs_bx/gx7 | 0.4473 | 0.4385 | 0.98 | +0.0007 | +0.0222 | +0.0229 | 5.5% | +0.0001 | 0.0% | at most +0.004: PASS |
+   | gs_bx/bx7 | 0.3121 | 0.2926 | 0.94 | +0.0038 | +0.0039 | +0.0078 | 2.7% | -0.0009 | -0.3% | at most +0.006: PASS |
+   | bgn_gam/bgnbase, baseline | 0.2805 | 0.1405 | 0.50 | +0.0809 | -0.0743 | +0.0066 | 3.1% | +0.0012 | 0.5% | within 0.005 of zero: PASS |
+   | kp_vy/kpbase, baseline | 0.2292 | 0.0797 | 0.35 | +0.1277 | -0.1223 | +0.0053 | 2.6% | -0.0024 | -1.1% | within 0.005 of zero: PASS |
+   | gs_bx/gsbase, baseline | 0.2980 | 0.2838 | 0.95 | +0.0069 | +0.0056 | +0.0125 | 4.5% | -0.0022 | -0.7% | within 0.005 of zero: PASS |
 
    For the eight route rows the bound was DKKM's winning Sharpe minus its Sharpe at the largest penalty, plus 0.003 for
    incomplete shrinkage; it says nothing for vyx, whose largest penalty does not reach the market; the three baseline rows carry their specs' own
@@ -846,13 +852,13 @@ exceeding room: correcting the month sample moved gap/room the wrong way, WORKIN
 
 | proposal | what it decided | predicted | outcome |
 |---|---|---|---|
-| A1 the three baselines under the current code | whether any model as published has a complexity gap, and what every route is measured against | fair gap within 0.005 of zero in all three; falsified above +0.01 | DONE 2026-09-15: +0.0012, -0.0024, -0.0022; twelve of thirteen graded predictions right, BGN's room low |
-| E1 fair linear benchmark | whether the BGN and GS gaps exist | fair gap within the registered bounds; vyx at least +0.08 | DONE 2026-09-13: every bound held; fair gap at most +0.0025 outside vyx |
-| K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | DONE 2026-09-14: gap +0.1450, room +0.41; below the range, not falsified |
-| X3 vyx at T=860, window 720 | whether DKKM's shortfall is data | gap +0.13 to +0.17, room unchanged | DONE 2026-09-14: gap +0.1875; the 1e-4 penalty wins every seed |
-| B4 stress-dominant BGN | whether BGN has non-market Sharpe to find | room above +0.04, fair gap +0.005 to +0.015 | DONE 2026-09-14: screen missed both gates; fair gap +0.0004; regime path closed |
-| B1 persistence ladder | whether spell length moves the gap at fixed room | room unchanged | DONE 2026-09-13: room moved 13x, fair gap did not |
-| G1 gamma(x) times exposure types | whether exposure heterogeneity adds anything in GS | gap above g28's, or retire | DONE 2026-09-11: negative fired, path retired |
+| A1 the three baselines under the current code | whether any model as published has a complexity gap, and what every route is measured against | fair gap within 0.005 of zero in all three; falsified above +0.01 | DONE 2026-09-15: +0.0012, -0.0024, -0.0022 (0.5%, -1.1%, -0.7% of the fair linear Sharpe); twelve of thirteen graded predictions right, BGN's room low |
+| E1 fair linear benchmark | whether the BGN and GS gaps exist | fair gap within the registered bounds; vyx at least +0.08 | DONE 2026-09-13: every bound held; fair gap at most +0.0025 outside vyx, at most 2.0% of the fair linear Sharpe; vyx +0.1046 (16.3%) |
+| K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | DONE 2026-09-14: gap +0.1450 (18.1% of lin), room +0.41 (51.4% of lin); below the range, not falsified |
+| X3 vyx at T=860, window 720 | whether DKKM's shortfall is data | gap +0.13 to +0.17, room unchanged | DONE 2026-09-14: gap +0.1875 (28.5% of lin); the 1e-4 penalty wins every seed |
+| B4 stress-dominant BGN | whether BGN has non-market Sharpe to find | room above +0.04, fair gap +0.005 to +0.015 | DONE 2026-09-14: screen missed both gates; fair gap +0.0004 (0.3% of fair lin); regime path closed |
+| B1 persistence ladder | whether spell length moves the gap at fixed room | room unchanged | DONE 2026-09-13: room moved 13x in Sharpe, 20.6% to 31.4% of lin; fair gap stayed between -7.2% and 2.0% of fair lin |
+| G1 gamma(x) times exposure types | whether exposure heterogeneity adds anything in GS | gap above g28's, or retire | DONE 2026-09-11: negative fired (gap 5.5% of lin against g28's 10.5%), path retired |
 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | OPEN |
 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | OPEN |
 | G3 default-channel probe | whether GS has any non-market Sharpe | proceed only if the market is below 85% of SR_max | OPEN, 20 min |
