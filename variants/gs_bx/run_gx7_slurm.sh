@@ -7,7 +7,7 @@
 #SBATCH -p general
 #SBATCH -o outslurm/gx7.%A.%a.log
 #
-# The four NEW solves of var-gs_bx-gx7-v1: gamma(x) (slope 0.28, no regime) at exposure
+# The four NEW solves of var-gs_bx-gx7-v2: gamma(x) (slope 0.28, no regime) at exposure
 # types gs_bx = 2.5, 4.0, 5.5, 7.0.  The FIFTH member of that ladder, gs_bx = 1.0, is
 # sol_g28 (8b584c38614695ac) and is NOT re-solved: beta = 1 with this slope IS the g28
 # economy, verified by recomputing its id from these parameters.
@@ -50,7 +50,7 @@ export OMP_NUM_THREADS=$NT OPENBLAS_NUM_THREADS=$NT MKL_NUM_THREADS=$NT VECLIB_M
 LOG="$REPO/outslurm/gx7.detail.$OUTDIR.log"
 echo "=== gx7 task $i  $OUTDIR  gs_bx=$b  on $(hostname)  $(date '+%F %T')  threads=$NT ===" | tee "$LOG"
 echo "    overrides: $OV" | tee -a "$LOG"
-echo "    expecting solve_id $EXPECT (precommitted, see var-gs_bx-gx7-v1)" | tee -a "$LOG"
+echo "    expecting solve_id $EXPECT (precommitted, see var-gs_bx-gx7-v2)" | tee -a "$LOG"
 S=$(date +%s)
 GS_PARAM_OVERRIDES="$OV" python -W ignore gs_solve_gam.py 161 1e-6 "$OUTDIR" 2>&1 | tee -a "$LOG"
 RC=${PIPESTATUS[0]}

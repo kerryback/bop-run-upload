@@ -7,7 +7,7 @@
 #SBATCH -o outslurm/gs_gsbase.log
 #
 # The GS21 BASELINE: ONE solve of the regime solver at unit multipliers, gmreg [1, 1], one
-# exposure type -- the economy every GS path departs from (spec var-gs_bx-gsbase-v1, A1 in
+# exposure type -- the economy every GS path departs from (spec var-gs_bx-gsbase-v2, A1 in
 # docs/NEXTUP.md). Expected solve_id c6ae2d52428a7ce5, precommitted on 2026-09-14 from these
 # parameters and the current source without solving.
 #
@@ -46,7 +46,7 @@ LOG="$REPO/outslurm/gs_gsbase.detail.log"
 
 echo "=== gsbase START $(date '+%F %T') on $(hostname) threads=$NT commit $(git -C "$REPO" rev-parse --short HEAD) ===" | tee "$LOG"
 echo "    overrides: $OV" | tee -a "$LOG"
-echo "    expecting solve_id $EXPECT (precommitted, see var-gs_bx-gsbase-v1)" | tee -a "$LOG"
+echo "    expecting solve_id $EXPECT (precommitted, see var-gs_bx-gsbase-v2)" | tee -a "$LOG"
 
 # GS_SOLVE_FORCE deliberately unset: the solver exits early on a content-addressed cache hit.
 S=$(date +%s)

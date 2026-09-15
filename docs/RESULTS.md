@@ -1,61 +1,126 @@
 # Experimental results
 
-The record of every economy run through the oracle-and-estimator pipeline: what each was built to test,
-what it produced, and what it decided. Last updated 2026-09-15, when the three models as published (A1)
-landed at ten seeds under the current code; the K4, X3 and B4 campaign and E1's fair re-scoring landed
-the two days before. Every table uses the columns defined in "Reading the tables" below. The
-current-results tables are checked against `variants/results/economy_table.csv` and
-`variants/results_e1/fair_gap_economy_table.csv` by `tests/test_results_md_matches_table.py`, so this
-file cannot fall behind the numbers without the suite saying so. Where each job ran: `docs/RUNS.md`.
-What to run next, and why: `docs/NEXTUP.md`.
+Every economy run through the oracle-and-estimator pipeline: what it was built to test, what it
+produced, and what it decided. One measurement protocol governs all of them, stated once below, so
+that the only thing separating two rows of a table is the economy. Last restructured 2026-09-15, when
+the protocol landed and everything that did not adhere to it was deleted rather than kept as
+"legacy".
+
+The tables here are checked cell by cell against `variants/results/economy_table.csv`
+(`variants/aggregate_seeds.py`) and `variants/results_e1/fair_gap_economy_table.csv`
+(`variants/fair_gap.py`) by `tests/test_results_md_matches_table.py` -- every table that uses the
+column set below, not just one section -- so this file cannot fall behind the numbers without the
+suite saying so. Where each job ran: `docs/RUNS.md`. What to run next, and why: `docs/NEXTUP.md`.
+
+## The measurement protocol
+
+Results differ along two axes and only one of them is interesting. An economy differs from another
+economy in its **parameters** and its **driving forces** -- a price of risk, a regime, a priced
+factor, a set of exposure types. It must not differ in how many firms were simulated, how long the
+burn-in was, how many months were evaluated, or how fine any grid was. Those choices are fixed here,
+once, for every economy in this file:
+
+| quantity | value | where |
+|---|---|---|
+| firms, N | 500 | `variants/common/protocol.py` |
+| retained months, T | 500 | same |
+| burn-in | 400 months, all three models | same; the literals live in each model's parameter module |
+| estimation and evaluation window | 360 months | same |
+| **evaluated months** | **125** = T - 15 - window | derived, never set: `run_oracle.py` keeps T - 15 months and the rolling estimator consumes `window` more |
+| seeds | 0-9, every economy | same |
+| ridge-penalty grid | `1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10` | same |
+| random-feature counts | 36, 360, 3600, over 2 independent draws | same |
+| bandwidth grid | `np.arange(0.5, 1.1, 0.1)`, 7 values | same |
+| conditioning columns | the model's **full** set, every economy including the baselines | same |
+| benchmark | `--fair_linear --include_mkt --levels`, no winsorisation | each spec's `estimation` block |
+
+Solve-side precision cannot be shared -- the three papers have different solvers -- so what is
+required of it is that it be identical across every economy of a given model. It is, and every
+manifest in `experiments/registry/` records it:
+
+| model | solve precision, identical across its economies |
+|---|---|
+| KP14 (`kp_vy`) | 21 y-nodes at `y_max` 3.5 with a byte-identical transition matrix; the G stage a direct sparse solve on a 1000-point epsilon grid, gated at a relative residual of 1e-6 and achieving about 1e-12; CIR integrals by adaptive quadrature at `epsrel` 1e-6 with the density's mass verified to 1e-8 |
+| GS21 (`gs_bx`) | value-function iteration on a 161-point x grid, 200-point z grid, 20-point debt grid, exact-Gaussian Tauchen at +-4 sd, fixed-point `tol` 1e-6, 161-node quadrature for the default-smoothing shock |
+| BGN (`bgn_gam`) | 100-node Gauss-Laguerre for the project-beta integral and 100-node Gauss-Hermite for the rate shock; the J* table by adaptive bisection to `tol` 3e-4, converging to 161 grid points in all six |
+
+`tests/test_protocol_is_uniform.py` pins every one of these claims: each model's burn-in literal, the
+seed array's sample and grid, every live spec's `panel` and `estimation` block, and the uniformity of
+solve precision within each model. It exists because none of it was checked before, and all four of
+the panel-side choices had drifted -- burn-in sat at 300 / 400 / 300 while twelve of nineteen specs
+declared 200 (`config.py`'s value, from the legacy `main.py` tree); the ridge grid was set per `case`
+branch of the seed array, so four values reached KP14 and BGN, eight reached GS21, and five reached
+one KP14 economy; that economy also ran T=860 and a 720-month window; and the three baselines
+narrowed their feature bases to the state their own paper has.
+
+**Two things that decision costs, stated plainly.** Widening the ridge grid is not free in
+interpretation: DKKM's reported Sharpe is a **maximum over that grid**, so a grid whose edge wins
+reports the grid rather than the economy. The grid is now wide on both sides so the argmax can be
+interior, and that it *is* interior is checked per economy, not assumed. And giving the baselines
+their model's full conditioning set hands each one a column its paper's model does not drive -- an
+inert regime for BGN and GS21, a state no firm loads on for KP14. That is a noise column, and it
+costs the baseline some estimation precision. It is the price of baseline and parameterization being
+measured the same way, which is the only reading under which "what the route added" is a difference
+in the economy alone.
+
+**Retired with the protocol.** `kp_vy/vyxT860` is gone, not re-run. Its economy *is* `kp_vy/vyx` --
+the same parameters and the same solves -- and it differed only in T, the window and the ridge grid.
+Reporting it beside `vyx` made a sample length look like an economic finding, and it did: a quarter
+of its +0.1875 gap was the extra penalty decade its siblings never saw. The question it asked,
+whether DKKM's shortfall from its own ceiling is data, is now asked on protocol, because the shared
+wide grid removes the censoring that reading rested on. Its spec records the retirement in
+`lineage.retired`.
 
 ## Reading the tables
 
-**The protocol.** Each estimator is fit on a 360-month rolling window of simulated data (720 for X3),
-and the portfolio it produces is scored against the economy's TRUE conditional moments, month by month,
-over the 125 evaluation months of a 500-month panel (860 for X3) of 500 firms. An estimator is never
-judged on its own realized returns, only on what its weights were worth. Ten seeds per economy; every
-figure is mean (sd across seeds) unless the entry says otherwise.
+**The protocol.** Each estimator is fit on a 360-month rolling window of simulated data, and the
+portfolio it produces is scored against the economy's TRUE conditional moments, month by month, over
+the 125 evaluation months of a 500-month panel of 500 firms. An estimator is never judged on its own
+realized returns, only on what its weights were worth. Ten seeds per economy; every figure is mean
+(sd across seeds) unless the entry says otherwise.
 
 **Units.** Every Sharpe ratio in this file is monthly, not annualised. In each evaluation month a
-portfolio's Sharpe is its conditional expected excess return divided by its conditional volatility, both
-from the economy's true moments. A table reports the mean over the evaluation months, then the mean over
-seeds. A difference of two Sharpe ratios is in the same units. A percentage is the ratio of two ten-seed
-means, times 100.
+portfolio's Sharpe is its conditional expected excess return divided by its conditional volatility,
+both from the economy's true moments. A table reports the mean over the evaluation months, then the
+mean over seeds. A difference of two Sharpe ratios is in the same units. A percentage is the ratio of
+two ten-seed means, times 100.
 
 **The columns of every economy table.** Each table of economy results in this file has these fourteen
-columns, in this order. A cell reads "--" where the quantity was not measured, as in the legacy rows.
+columns, in this order. A cell reads "--" where the quantity was not measured.
 
-- **economy** -- the model directory and run tag, `model/tag`, sometimes followed by what sets the economy
-  apart on its path.
+- **economy** -- the model directory and run tag, `model/tag`, sometimes followed by what sets the
+  economy apart.
 - **seeds** -- how many independently simulated panels the row averages.
-- **SR_max** -- the largest conditional Sharpe any portfolio of the firms could attain, sqrt(mu' Sigma^-1
-  mu), averaged over the evaluation months. An upper bound on every other Sharpe in the row.
+- **SR_max** -- the largest conditional Sharpe any portfolio of the firms could attain, sqrt(mu'
+  Sigma^-1 mu), averaged over the evaluation months. An upper bound on every other Sharpe in the row.
 - **EW market SR** -- the Sharpe of the equal-weighted market portfolio.
 - **FMR SR** -- the Sharpe of the rolling Fama-MacBeth regression portfolio. The benchmark of both
   percentage columns.
 - **best linear SR** -- in each seed, the Sharpe of the best of four linear methods: Fama-MacBeth,
-  Fama-French, and ridge regression on rank-standardised characteristics with and without level features.
-- **DKKM SR** -- in each seed, the Sharpe of the best random-feature ridge estimator, over 36, 360 and 3600
-  features, the penalty grid, and its four variants.
-- **DKKM - FMR** -- DKKM SR minus FMR SR. An absolute difference in Sharpe units; the standard deviation
-  across seeds is in parentheses.
+  Fama-French, and ridge regression on rank-standardised characteristics with and without level
+  features.
+- **DKKM SR** -- in each seed, the Sharpe of the best random-feature ridge estimator, over 36, 360 and
+  3600 features, the penalty grid, and its four variants.
+- **DKKM - FMR** -- DKKM SR minus FMR SR. An absolute difference in Sharpe units; the standard
+  deviation across seeds is in parentheses.
 - **(DKKM - FMR) / FMR** -- [(DKKM SR) - (FMR SR)] / (FMR SR), in percent. How much DKKM improves on
-  Fama-MacBeth, relative to what Fama-MacBeth achieves. Where Fama-MacBeth's Sharpe is near zero, as in
-  the slow and rare BGN regime economies (g0235s, g0235r), this is very large and says nothing about DKKM.
-- **DKKM - best linear** -- DKKM SR minus best linear SR. Absolute, sd in parentheses. The "gap" in this
-  file's prose.
-- **DKKM - best fair linear** -- DKKM SR minus the Sharpe of the best of seven linear methods: the four
-  above, the two ridge methods given the equal-weighted market as a separate unpenalised column as DKKM
-  has it, and the market alone with its weight estimated. Absolute, sd in parentheses. The "fair gap" in
-  the prose, and the complexity gap outside KP14 (finding 8).
+  Fama-MacBeth, relative to what Fama-MacBeth achieves. Where Fama-MacBeth's Sharpe is near zero, as
+  in the slow and rare BGN regime economies (g0235s, g0235r), this is very large and says nothing
+  about DKKM.
+- **DKKM - best linear** -- DKKM SR minus best linear SR. Absolute, sd in parentheses. The "gap" in
+  this file's prose.
+- **DKKM - best fair linear** -- DKKM SR minus the Sharpe of the best of seven linear methods: the
+  four above, the two ridge methods given the equal-weighted market as a separate unpenalised column
+  as DKKM has it, and the market alone with its weight estimated. Absolute, sd in parentheses. The
+  "fair gap" in the prose, and the complexity gap outside KP14 (finding 8).
 - **room** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe a
-  nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear basis
-  reaches the same way, both computed from the true moments. No estimation involved. Absolute, sd in
-  parentheses. Legacy rows report it over all panel months.
-- **room / FMR** -- (room) / (FMR SR), in percent: the headroom relative to what Fama-MacBeth achieves.
-- **t, DKKM vs FMR** -- the largest paired t-statistic, across the evaluation months, of any random-feature
-  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds.
+  nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. No estimation involved. Absolute,
+  sd in parentheses.
+- **room / FMR** -- (room) / (FMR SR), in percent: the headroom relative to what Fama-MacBeth
+  achieves.
+- **t, DKKM vs FMR** -- the largest paired t-statistic, across the evaluation months, of any
+  random-feature estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds.
 
 **The columns of every prediction table.**
 
@@ -65,96 +130,45 @@ columns, in this order. A cell reads "--" where the quantity was not measured, a
 - **predicted** -- the range written into the spec before the run, in the quantity's own units.
 - **result** -- the measured value; se is its standard error across seeds. After a room or a gap, its
   percentage of FMR SR.
-- **verdict** -- right, or wrong with the direction; and whether a falsification line or a gate was crossed.
-
-The two descriptive tables, how each baseline is produced and the route log, have their columns named in
-words.
+- **verdict** -- right, or wrong with the direction; and whether a falsification line or a gate was
+  crossed.
 
 **Two cautions.**
 
 1. **Room is not a ceiling on the gap and not a screen for it.** The gap exceeds the room in every
-   BGN and GS economy, because there it is the market shortfall; in KP14 it is 29% to 49% of the room.
-   Ranking candidates by room does not rank them by gap.
-2. **Every percentage is a RATIO OF MEANS, not a mean of per-seed ratios.** In g0235, (DKKM - FMR) / FMR
-   is 94.2% as the ratio of the ten-seed means and 110.3% (sd 71.0) as the mean of per-seed ratios,
-   because Fama-MacBeth's Sharpe has sd 0.0208 on a mean of 0.0557. In g0235r and g0235s it is below
-   zero in some seeds, where a per-seed ratio has no meaning at all. Both versions live in
+   BGN and GS economy, because there it is the market shortfall; in KP14 it is 29% (vyx) and 35%
+   (vyg25) of the room. Ranking candidates by room does not rank them by gap.
+2. **Every percentage is a RATIO OF MEANS, not a mean of per-seed ratios.** In g0235, (DKKM - FMR) /
+   FMR is 94.2% as the ratio of the ten-seed means and 110.3% (sd 71.0) as the mean of per-seed
+   ratios, because Fama-MacBeth's Sharpe has sd 0.0208 on a mean of 0.0557. In g0235r and g0235s it
+   is below zero in some seeds, where a per-seed ratio has no meaning at all. Both versions live in
    `economy_table.csv` (`gap_fm_over_fm`, `gap_fm_pct_fm_mean`).
 
-## The answer so far
+## Status: every number below predates the protocol
 
-**A complexity gap exists in one family of economies, and only there.** In Kogan and Papanikolaou (2014)
-with a priced, mean-reverting aggregate state that heterogeneous firm types load on (KP14 Path 1), the
-random-feature ridge estimator of Didisheim, Kelly, Kozak and Malamud (DKKM) beats the best linear
-method by +0.10 to +0.19 of Sharpe, and Fama-MacBeth by 17% to 30% of Fama-MacBeth's own Sharpe, at t of
-30 to 55, in every seed of every economy on the path. The gap survives the fair benchmark of finding 8
-unchanged, because on this path the linear methods themselves beat the equal-weighted market by 0.28 to
-0.33 and DKKM beats them by a further 0.10 to 0.19. In the seven Berk, Green and Naik (1999) and Gomes
-and Schmid (2021) economies built on their models' routes the fair gap is between -0.0025 and +0.0025,
-and in the three models as published it is between -0.0024 and +0.0012 (the anchor, below).
+The protocol landed 2026-09-15. The numbers in this file were measured before it, and they do not
+adhere to it in two respects: BGN's panels burned in 300 months and GS21's 300 against the protocol's
+400, and the ridge grid was `1e-3 … 1` for BGN and KP14 and `1e-3 … 10` for GS21 rather than the
+shared `1e-5 … 10`. The campaign that brings all thirteen economies onto the protocol is
+`docs/RUNS.md`, campaign 2026-09-15; every row here is replaced by it.
 
-| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyxT860: vyx on T=860, window 720, penalty floor 1e-4 | 10 | 1.2294 | 0.3577 | 0.6518 | 0.6577 | 0.8452 | +0.1935 (0.0417) | 29.7% | +0.1875 (0.0393) | +0.1872 (0.0393) | +0.3864 (0.0519) | 59.3% | 54.6 |
-| kp_vy/vyg25: vyx with gamma_v 2.5 | 10 | 1.3887 | 0.4694 | 0.7911 | 0.8000 | 0.9450 | +0.1540 (0.0189) | 19.5% | +0.1450 (0.0193) | +0.1450 (0.0193) | +0.4108 (0.0446) | 51.9% | 39.2 |
-| kp_vy/vyx: the parent economy | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
+Two consequences worth knowing before quoting anything below:
 
-Ten seeds each, N=500 firms, 125 evaluation months; columns as defined in "Reading the tables".
-The two window-360 rows also appear, with every other current economy, in "Current results" below.
+- **The KP14 Path 1 rows are lower bounds.** In `vyx` the winning penalty was the smallest on its
+  grid in 9 of 10 seeds and in `vyg25` in 10 of 10, so DKKM's Sharpe there is censored. `vyx`'s
+  measured gains per penalty decade at this window were 0.154, 0.100 and then 0.035, so the two
+  decades the protocol adds below the old floor should raise DKKM, and the gap with it.
+- **The baselines are measured on narrowed feature bases.** They saw only the state their paper has;
+  the parameterizations saw the full set. So "what the route added" currently carries one protocol
+  difference alongside the economic one, which is the difference the protocol removes.
 
-**Why this route works.** Three things are true of it at once, and of no other economy in the
-repository. First, firms differ in their exposure to a priced shock: three types load their cash
-flows on the state y as exp(beta_f y), with beta 0.02 / 0.07 / 0.14, and y's innovations carry a
-price of risk gamma_v. Second, the state bends that exposure map rather than shifting it: y is a
-mean-reverting Ornstein-Uhlenbeck process, so the value of an exp(beta y) cash-flow stream depends on
-where y is, and a compensation term keeps firm value from revealing the type monotonically at y = 0.
-Third, every level in the economy is stationary, so raw characteristics do not trend with the state
-and a rolling regression on raw levels cannot condition on it for free (the failure of KP14 Path 3 and
-BGN Path 2). The result is a large population room, +0.36 to +0.41 over the evaluation months, that
-only a nonlinear basis can reach, and an equal-weighted market that reaches only 29% to 34% of the
-attainable Sharpe. Neither half is enough alone, and the baselines show it. The KP14 baseline's market
-also carries only 35% of the attainable Sharpe, but with one firm type its room is +0.0044 and the
-linear methods take what the market leaves (fair gap -0.0024). The BGN baseline has native room,
-+0.0225, and a market at 50%, and its fair gap is +0.0012: room of two hundredths is not enough. Every
-BGN and GS route economy pushed the market to 55% to 98% of the attainable Sharpe.
+`bgn_gam/g0235d` also has one seed rather than ten, reported under its own SCREEN heading; the
+campaign gives it the protocol's ten.
 
-**Why it widened, twice, in the 2026-09-13 campaign.** The linear methods sit at 99% to 100% of
-their population ceiling in every KP14 economy; DKKM sits at 74% of its in vyx, and its winning ridge
-penalty is the smallest on the grid in nine seeds of ten. So the gap is bounded by DKKM's estimation
-shortfall, and two dials that raise DKKM's signal-to-noise each widened it. K4 raised the price of the
-state's risk from 1.8 to 2.5: the cross-section of expected returns spread out, the gap rose 39% on
-14% more room, and DKKM reached 78% of its ceiling. X3 kept the economy and doubled the estimation
-window, with one more decade of penalty: the window alone took the gap to +0.138, the 1e-4 penalty
-to +0.1875, DKKM reached 81% of its ceiling, and the smallest penalty won in every seed. Neither dial
-is exhausted: in all three economies the bottom of the penalty grid still binds.
+## The three models as published
 
-**What the gap is not.** It is not the market portfolio, which DKKM appends to its features
-unpenalised: here the market has Sharpe 0.36 to 0.47 against an attainable 1.18 to 1.39, the linear
-methods beat it by 0.28 to 0.33, and E1's benchmark, which gives them the market exactly as DKKM has
-it, leaves the gap within 0.0003 of itself. It is also not a calibration. The oracle's mean expected
-return is 18.2% a year with a cross-sectional sd of 7.7% in vyx, and 22.9% and 10.6% in vyg25; these
-economies locate where the mechanism is, not where a referee would accept it. Every proposal that
-turns a dial up reports the annualised premia beside the gap.
-
-**Why nothing else worked.** Outside this path every measured gap on a BGN or GS route was the
-equal-weighted market against linear methods that were not given it on the same terms (finding 8). DKKM carries the market
-unpenalised; `linrank` and `linlev` penalise it with everything else, Fama-French holds a different
-market, Fama-MacBeth none. In 54 of the 70 BGN and GS seeds DKKM's most-shrunk portfolio IS the
-market to within 0.001 of Sharpe, and its winning portfolio is barely off that point. E1 re-scored all
-80 saved panels with the linear methods given the market unpenalised: every fair gap outside vyx came
-in under the bound registered before the run, at most +0.0025 and negative in three economies. That
-closed BGN's regime path (four persistence points moved room by a factor of thirteen and never moved
-the fair gap; the stress-dominant screen B4 then missed both of its gates) and retired GS21's exposure
-path (gx7's pre-registered negative fired). The baselines below say why those two models had nowhere
-to go. GS21 as published has no room (+0.0012) and a market at 95% of the attainable Sharpe. BGN as
-published has room (+0.0225) and a market at only 50%, yet a fair gap of +0.0012; its regime path added
-no room except at the fastest switching point, and pushed the market's share up.
-
-## Baselines: the anchor
-
-The three models as published, before any path was built on them, run through the current pipeline
-exactly as every path that departs from them: a spec with precommitted solve ids, ten seeds, the fair
-benchmark. Every "what the route added" statement in this file is a difference against these rows.
+Each paper's economy, before any parameterization was built on it. Every "what the parameterization
+added" statement in this file is a difference against these rows.
 
 | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -162,134 +176,36 @@ benchmark. Every "what the route added" statement in this file is a difference a
 | kp_vy/kpbase: KP14 as published | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
 | gs_bx/gsbase: GS21 as published | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
 
-Ten seeds each, N=500, T=500, 360-month window; columns as defined in "Reading the tables". The
-same rows are pinned in "Current results"; what each economy is in the code, and its spec, is below.
-
 What the anchor says:
 
 - **No model as published has a complexity gap.** The fair gaps are +0.0012, -0.0024 and -0.0022. In
-  GS21 a linear method given the market beats DKKM in all ten seeds (t -5.0); in KP14 in seven; in BGN
-  DKKM is ahead in six seeds by amounts that average +0.0012. The measured gaps, +0.005 to +0.013, go
-  once the linear methods hold the market as DKKM does.
-- **The winning route added +0.107 of fair gap to the KP14 baseline.** vyx's fair gap is +0.1046
-  against kpbase's -0.0024, vyg25's +0.1450, and vyxT860's +0.1872 on its longer sample. It also added
-  the room it runs on: +0.3606 over the evaluation months in vyx against +0.0044.
-- **The other two models' routes added nothing.** BGN's best fair gap, g0235f's +0.0025, is +0.0013
-  above its baseline's; GS21's best, gx7's +0.0001, is +0.0023 above its baseline's -0.0022, and g28
-  equals the baseline. All are within a quarter of a hundredth of Sharpe of zero.
-- **BGN's regime path did not add room either.** The baseline's evaluation-window room is +0.0225; the
-  four ten-seed regime points span +0.0026 to +0.0350, and only the fastest-switching one exceeds it.
-  What the regime did was raise the market's share of the attainable Sharpe from 50% to between 55% and
-  84%, and put DKKM on the market (finding 8).
+  GS21 a linear method given the market beats DKKM in all ten seeds (t -5.0); in KP14 in seven; in
+  BGN DKKM is ahead in six seeds by amounts that average +0.0012. The measured gaps, +0.005 to
+  +0.013, go once the linear methods hold the market as DKKM does.
 - **DKKM leaves the market wherever the market leaves Sharpe, and the linear methods follow it.** In
-  the BGN and KP14 baselines the market carries 50% and 35% of the attainable Sharpe; DKKM is 0.081 and
-  0.128 above it, the best linear method 0.074 and 0.122 above it, and in no seed of either does DKKM's
-  most-shrunk portfolio equal the market. In GS21, where the market carries 95%, it does in six seeds of
-  ten, as in g28. Non-market Sharpe of 0.21 to 0.24 without nonlinear room gives no gap.
-
-**The registered predictions, graded.** Each spec wrote its prediction before its solve ran.
-
-| economy | quantity | reference | predicted | result | verdict |
-|---|---|---|---|---|---|
-| bgn_gam/bgnbase | room, all months | -- | +0.030 to +0.045 | +0.0251 (se 0.0017); room / FMR 12.5% | wrong, low |
-| bgn_gam/bgnbase | SR_max | -- | 0.25 to 0.35 | 0.2805 | right |
-| bgn_gam/bgnbase | DKKM - best linear | -- | +0.000 to +0.015 | +0.0066; (DKKM - FMR) / FMR 10.2% | right |
-| bgn_gam/bgnbase | DKKM - best fair linear, and the best fair linear method | -- | within 0.005 of zero; mkt_est or linrank_m in most seeds | +0.0012; linrank_m in 7 of 10 | right |
-| kp_vy/kpbase | room | -- | below +0.010 | +0.0044; room / FMR 2.3% | right |
-| kp_vy/kpbase | SR_max | -- | 0.15 to 0.35 | 0.2292 | right |
-| kp_vy/kpbase | DKKM - best linear | -- | within 0.015 of zero | +0.0053; (DKKM - FMR) / FMR 7.4% | right |
-| kp_vy/kpbase | DKKM - best fair linear | -- | within 0.005 of zero | -0.0024 | right |
-| gs_bx/gsbase | room | -- | below +0.003 | +0.0012; room / FMR 0.5% | right |
-| gs_bx/gsbase | EW market SR / SR_max | -- | above 90% | 95% | right |
-| gs_bx/gsbase | SR_max | -- | 0.25 to 0.45 | 0.2980 | right |
-| gs_bx/gsbase | DKKM - best linear | -- | +0.00 to +0.03 | +0.0125; (DKKM - FMR) / FMR 6.6% | right |
-| gs_bx/gsbase | DKKM - best fair linear | -- | within 0.005 of zero | -0.0022 | right |
-| all three | DKKM - best fair linear above +0.01 falsifies the no-gap reading | -- | -- | largest +0.0012 | not falsified |
-
-BGN's predicted room was built on the legacy row's +0.0365, which is one draw: it sits 2.1 sd above the
-ten-seed mean. Seed 0 of bgnbase is that draw. It reproduces the legacy row's SR_max (0.2926), nonlinear
-ceiling (0.2712), Fama-MacBeth (0.2198), Fama-French (0.2202), best linear (0.2334) and gap (+0.0059) to
-the displayed digit, DKKM within 0.0001, and the linear ceiling and room within 0.0004: the current
-pipeline, with the rate as the only conditioning column, is the legacy BGN protocol.
+  the BGN and KP14 baselines the market carries 50% and 35% of the attainable Sharpe; DKKM is 0.081
+  and 0.128 above it, the best linear method 0.074 and 0.122 above it, and in no seed of either does
+  DKKM's most-shrunk portfolio equal the market. In GS21, where the market carries 95%, it does in
+  six seeds of ten, as in g28. Non-market Sharpe of 0.21 to 0.24 without nonlinear room gives no gap.
+- **Room alone is not enough and a low market share alone is not enough.** BGN as published has room,
+  +0.0225, and a market at only 50%, and a fair gap of +0.0012. KP14 as published has a market at
+  35% and room of +0.0044. Only an economy with both -- KP14 Path 1's +0.36 of room and a market at
+  29% -- produces a gap.
 
 **How each baseline is produced.**
 
-| economy | spec | what it is in the code | conditioning columns | solve |
-|---|---|---|---|---|
-| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision (REPORT.md §13e) | the rate only | jstar `c6287d53674cc1ef`, Mac, 491 s, table committed |
-| kp_vy/kpbase | var-kp_vy-kpbase-v1 | `kp_vy` with one type at beta 0, gamma_v 0, bv_comp 0: nothing depends on the state y (the 21 integral tables agree across y to 4e-12); r = 0.05 as in every KP14 path, the paper's 0.025 being the one standing departure | none | G `7bc1f92a225c01b6` and integ `f299747cd77fc4a1`, Mac, 6 min, tables committed |
-| gs_bx/gsbase | var-gs_bx-gsbase-v1 | `gs_bx` with one type under the regime solver at gmreg [1, 1]: gamma_x 0.5 in both regimes | the productivity state only | sol_gsbase `c6ae2d52428a7ce5`, Sol, 5.6 h, tolerance exit at sweep 3024, published |
+| economy | spec | what it is in the code | solve |
+|---|---|---|---|
+| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v2 | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision. Table I: 11 of 11 parameters match | jstar, Mac, about 8 min, table committed |
+| kp_vy/kpbase | var-kp_vy-kpbase-v2 | `kp_vy` with one type at beta 0, gamma_v 0, bv_comp 0: nothing depends on the state y (the 21 integral tables agree across y to 4e-12); r = 0.05 as in every KP14 economy here, the paper's 0.025 being the one standing departure. Table II: 17 of 18 match | G and integ, Mac, 6 min, tables committed |
+| gs_bx/gsbase | var-gs_bx-gsbase-v2 | `gs_bx` with one type under the regime solver at gmreg [1, 1]: gamma_x 0.5 in both regimes, the paper's general-equilibrium kernel replaced by that stand-in | sol_gsbase, Sol, 5.6 h, published content-addressed |
 
-Every id was precommitted before its solve ran and reproduced exactly; all 30 seeds are CURRENT for
-their spec's solves, with the spec, environment and column checks verified in every sidecar. The
-conditioning columns are the one protocol difference from the route economies. Every economy exports
-the regime indicator (BGN, GS) or the state y (KP14) into its panel, and the route economies' bases see
-the full set; a baseline drops the column its paper's model does not have, rather than interacting an
-unpriced Markov chain or an unloaded state into every basis (`--rf_cols`, recorded in each oracle
-summary and run record; the estimators refuse a panel whose oracle used a different list). Jobs:
-`docs/RUNS.md`, campaign 2026-09-15.
+## Parameterizations
 
-**What the legacy rows said.** The pre-refactor grid ran each baseline once
-(`23f9380:variants/results/grid_summary.csv`; narrative `variants/REPORT.md` §14):
-
-| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN baseline, legacy: the same economy | 1 | 0.2926 | -- | 0.2198 | 0.2334 | 0.2393 | +0.0195 | 8.9% | +0.0059 | -- | +0.0365 (all months) | 16.6% | 14.0 |
-| KP14 baseline, legacy: mean arrival rate 1.72, a different economy | 1 | 0.2396 | -- | 0.2052 | 0.1969 | 0.2005 | -0.0047 | -2.3% | +0.0036 | -- | +0.0037 (all months) | 1.8% | -8.5 |
-| GS21 baseline, legacy: the old Table I, a different economy | 1 | 0.4012 | -- | 0.3785 | 0.3825 | 0.3988 | +0.0203 | 5.4% | +0.0163 | -- | +0.0010 (all months) | 0.3% | 21.8 |
-
-Single seeds, no fair benchmark. Their directions survived the corrections: no gap anywhere, room only
-in BGN. The BGN row is reproduced by bgnbase's seed 0. The KP14 and GS21 rows are not, as the
-corrections predict: seed 0 of gsbase has SR_max 0.3020 against the legacy 0.4012, and seed 0 of kpbase
-0.2289 against 0.2396. Those two legacy rows describe different economies.
-
-## Labels, provenance and ordering
-
-### Status labels
-
-- **CURRENT** -- ten seeds at N=500, T=500, window 360, under a spec that pins the solve ids the run
-  must consume; every result file carries the spec id, the solve ids and a provenance tag naming the
-  commit. X3, at T=860 and window 720, meets the standard at its own sample size and stays out of the
-  ranked table, whose rows share one.
-- **SCREEN** -- one seed, run under a spec whose other seeds start only if it clears a gate written
-  into the spec first. Reported under its own `-- SCREEN` heading and never ranked (finding 4).
-- **LEGACY, single seed** -- an economy of the pre-refactor grid, run once by code that is gone or
-  since corrected. Quoted for the path it documents, never for a ranking: cross-seed sd of a gap runs
-  15% to 63% of its mean. The grid's tables were deleted 2026-09-10 (WORKING.md §50) and are
-  recoverable at `23f9380`; the narrative is `variants/REPORT.md`.
-- **SUPERSEDED** -- an economy the current code no longer builds, kept as the record behind a
-  published number.
-
-Whether a model's legacy rows describe the economy the code still builds: yes for BGN, no for KP14
-(arrival rate) and no for GS21 (Table I), as the anchor section says.
-
-### Provenance of every current number
-
-`experiments/specs/<spec>.json` names the parameters and `expected_solves`;
-`experiments/registry/<solve_id>.json` records what each solve was built from;
-`variants/results/<model>_oracle_<tag>_s<seed>.json` and
-`<model>_estimators_<tag>_s<seed>_w<window>_summary.csv` carry the per-seed numbers, with `.prov.json`
-sidecars naming the commit. `variants/aggregate_seeds.py` produces the tables.
-
-### Ordering
-
-Model sections run KP14, BGN, GS21: by best fair gap, the quantity the project is after. Within a
-model, paths run by their best fair gap, then by best legacy gap for paths with no current economy.
-Each model section ends with the status of the parameterizations proposed for it; the route log near
-the end collects them.
-
-## Current results
-
-All twelve CURRENT economies at N=500, T=500, window 360, in the columns defined in "Reading the
-tables". The three baselines come first, as the anchor.
-
-| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| bgn_gam/bgnbase | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
-| kp_vy/kpbase | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
-| gs_bx/gsbase | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
-
-The nine route economies, ranked by DKKM - best fair linear:
+The nine ten-seed economies built on those three, ranked by DKKM - best fair linear;
+`bgn_gam/g0235d`, which has one seed, is reported below rather than ranked among them. Each differs from its
+model's baseline in parameters or driving forces only; nothing in the columns below differs in how it
+was measured.
 
 | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -303,549 +219,76 @@ The nine route economies, ranked by DKKM - best fair linear:
 | gs_bx/g28 | 10 | 0.3087 | 0.2944 | 0.2518 | 0.2692 | 0.2975 | +0.0457 (0.0221) | 18.2% | +0.0283 (0.0136) | -0.0022 (0.0023) | +0.0004 (0.0003) | 0.2% | 24.6 |
 | bgn_gam/g0235r | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
 
-**Outside KP14, read DKKM - best fair linear, not DKKM - best linear or DKKM - FMR.** In the seven BGN and GS route rows the winning
-DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market (finding 8); the
-fair gap is what remains once the linear methods are given that market as DKKM has it, and it is at
-most +0.0025 and negative in three rows, each inside the bound registered before E1 ran. The two KP14
-rows scored the fair methods in their own runs; their linear methods beat the market by 0.28 and
-0.33, so their fair gap is their gap. The three baselines scored the fair methods in their own runs
-too. In the BGN and KP14 baselines the linear methods beat the market, by 0.074 and 0.122; in GS21's
-they fall 0.006 below it, as in g28. Among the route rows, ranked by DKKM - best linear the order would be vyg25, vyx, g28, gx7, g0235,
-g0235f, g0235r, g0235s, bx7. Ranked by (DKKM - FMR) / FMR it would be led by g0235r at
-9,675.8% and g0235s at 325.7%, where Fama-MacBeth's mean Sharpe is 0.0003 and 0.0145: a
-percentage of a Sharpe near zero says nothing about DKKM.
+**What differs from the baseline, in economic terms.**
 
-Not in the table: **X3**, vyx's economy on an 860-month panel with a 720-month window (gap +0.1875,
-fair +0.1872; KP14 Path 1), and **B4's one-seed screen** g0235d, which missed its gates (fair gap
-+0.0004; BGN Path 1).
+| economy | model | what differs |
+|---|---|---|
+| kp_vy/vyx | KP14 | A new aggregate state y: stationary Ornstein-Uhlenbeck, mean reversion kappa_y 0.35, unit stationary sd, innovations priced at gamma_v 1.8. Three firm types in shares 0.34 / 0.33 / 0.33 load project cash flows on it as exp(beta_f y), beta 0.02 / 0.07 / 0.14, with a compensation term bv_comp 1.2 so that at y = 0 value does not reveal the type monotonically |
+| kp_vy/vyg25 | KP14 | vyx with one parameter changed: gamma_v 1.8 to 2.5, the price of the state's risk |
+| bgn_gam/g0235 | BGN | A two-state Markov regime multiplies the price of the market shock, gmult [0.2, 3.5], at the closed-form bound 1/(2 x 0.137) = 3.65; switches unpriced at 0.25/12 and 0.50/12, stress one third of months |
+| bgn_gam/g0235f | BGN | g0235 with both switch probabilities times four: calm spells 12 months, stress 6, about forty switches per window; stationary stress share unchanged |
+| bgn_gam/g0235s | BGN | g0235 with both times 0.2: calm spells 240 months, stress 120, about two switches per window |
+| bgn_gam/g0235r | BGN | Calm-to-stress 0.05/12 and stress-to-calm 0.45/12: stress in 10% of months, in spells of about 27 months. A different economy from g0235, not the same one at another speed -- the mix moves too |
+| bgn_gam/g0235d | BGN | g0235's multipliers with the switch probabilities swapped: stress occupies two thirds of months, in 48-month spells |
+| gs_bx/g28 | GS21 | A countercyclical price of risk, gamma(x) = clip(0.5 - 0.28 x / sd(x), 0.05, 1.0): the baseline 0.5 at mean productivity, toward 0.05 in booms and 1.0 in busts |
+| gs_bx/gx7 | GS21 | g28's gamma(x) crossed with five firm types in equal shares loading on the state as exp(beta_f x + z), beta 1 / 2.5 / 4 / 5.5 / 7 |
+| gs_bx/bx7 | GS21 | The same five-type ladder under a two-state regime on the price of risk, gmreg [0.6, 3.0], switches 0.25/12 and 0.50/12, no level compensation |
 
-Regenerate with `python variants/aggregate_seeds.py --flagship` (also writes the per-seed
-`variants/results/seed_table.csv`); EW market SR and DKKM - best fair linear with `python variants/fair_gap.py`.
+**Read DKKM - best fair linear, not DKKM - best linear or DKKM - FMR.** In the seven BGN and GS rows
+the winning DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market
+(finding 8); the fair gap is what remains once the linear methods are given that market as DKKM has
+it, and it is at most +0.0025 and negative in three rows. The two KP14 rows' linear methods beat the
+market by 0.28 and 0.33, so their fair gap is their gap. Ranked by DKKM - best linear the order would
+be vyg25, vyx, g28, gx7, g0235, g0235f, g0235r, g0235s, bx7. Ranked by (DKKM - FMR) / FMR it would be
+led by g0235r at 9,675.8% and g0235s at 325.7%, where Fama-MacBeth's mean Sharpe is 0.0003 and
+0.0145: a percentage of a Sharpe near zero says nothing about DKKM.
 
----
-
-## KP14 -- Kogan and Papanikolaou (2014)
-
-### Baseline
-
-A firm is a collection of live projects plus the growth opportunities it expects. Projects arrive to
-firm f at a rate lambda_f that switches between a high regime (lambda_H = 2.35) and a low one
-(lambda_L set so the mean arrival rate is exactly 1; entry intensities mu_H = 0.075 into the high
-state and mu_L = 0.16 into the low). Output depends on firm profitability eps_f (theta_eps 0.35,
-sigma_eps 0.2), project-level u (theta_u 0.5, sigma_u 1.5), aggregate productivity z (mu_z 0.005,
-sigma_z 0.035) and the investment-specific technology state x (mu_x 0.01, sigma_x 0.13); alpha 0.85,
-depreciation 0.1. The pricing kernel is exogenous with CONSTANT prices of risk gamma_x = 0.69 and
-gamma_z = -0.35; r = 0.05 (the paper's 0.025, a deliberate departure). Table II: 17 of 18 parameters
-match, r the exception.
-
-Expected returns are affine in a single firm variable, the share of value in growth options, so the
-cross-section is one-directional and no state-dependent price of risk can create curvature by scaling
-alone. That is the finding behind every inert path below.
-
-**Under the current code, at ten seeds** (`kp_vy/kpbase`; the anchor section): evaluation-window room
-+0.0044 and fair gap -0.0024. The market carries 35% of the attainable Sharpe of 0.2292; the linear
-methods beat it by 0.122 and DKKM by 0.128, and a linear method given the market beats DKKM in seven
-seeds of ten.
-
-**Legacy rows are a different economy.** Until 2026-09-04 the regime probability was read with the
-wrong label and the mean arrival rate simulated was 1.72 (`docs/kp14_regime_labels.md`). Legacy KP14
-levels, the baseline row included, are not citable for the current code; the direction of each
-path's finding survives.
-
-### Path 1 -- a priced, mean-reverting aggregate state with heterogeneous firm exposure: vy, vyx, then a higher price and a longer sample
-
-The one route that produced a complexity gap. Its ladder, in the order it was climbed:
+### bgn_gam/g0235d -- SCREEN, one seed
 
 | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vy: gamma_v 1.2, top beta 0.12; LEGACY, pre-fix | 1 | 0.9609 | -- | 0.5449 | 0.5417 | 0.5707 | +0.0258 | 4.7% | +0.0289 | -- | +0.2783 (all months) | 51.1% | 5.2 |
-| kp_vy/vyx: gamma_v 1.8, window 360 | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
-| kp_vy/vyg25: gamma_v 2.5, window 360 | 10 | 1.3887 | 0.4694 | 0.7911 | 0.8000 | 0.9450 | +0.1540 (0.0189) | 19.5% | +0.1450 (0.0193) | +0.1450 (0.0193) | +0.4108 (0.0446) | 51.9% | 39.2 |
-| kp_vy/vyxT860: gamma_v 1.8, window 720, penalty floor 1e-4 | 10 | 1.2294 | 0.3577 | 0.6518 | 0.6577 | 0.8452 | +0.1935 (0.0417) | 29.7% | +0.1875 (0.0393) | +0.1872 (0.0393) | +0.3864 (0.0519) | 59.3% | 54.6 |
-
-The linear methods sit at 99% to 100% of their own ceiling on every row; DKKM's winning penalty is
-the smallest offered in 9, 10 and 10 seeds of ten. DKKM reaches 74%, 78% and 81% of its own
-nonlinear ceiling on the three current rows. The vy row is one legacy seed, its room over all panel
-months.
-
-#### kp_vy/vyx -- CURRENT, gap +0.1046 (sd 0.0155), t 30.2
-
-**What differs from the baseline.** A new aggregate state y: stationary Ornstein-Uhlenbeck,
-mean-reversion kappa_y = 0.35, unit stationary sd, innovations priced at gamma_v = 1.8. Three firm
-types in shares 0.34 / 0.33 / 0.33 load project cash flows on it as exp(beta_f y), beta = 0.02 / 0.07
-/ 0.14. Because y is priced each type earns a premium in its beta; because y mean-reverts, the VALUE
-of an exp(beta y) stream depends on where y is, so the map from type to observable characteristics is
-bent by the state rather than shifted. A compensation term (bv_comp = 1.2) rescales each type's
-cash-flow level so that at y = 0 value does not reveal the type monotonically. Every level stays
-stationary, which is what keeps rolling Fama-MacBeth from conditioning on the state through trending
-levels (Path 3's failure).
-
-**Why it was tried.** REPORT.md §18-§19's design rule: a harvestable gap needs heterogeneous
-firm-level exposures, a state that bends them nonlinearly, and the bending confined to rank and
-interaction space. vy was the first KP14 economy to satisfy all three; vyx pushed its two free knobs
-(gamma_v 1.2 to 1.8, top beta 0.12 to 0.14) toward premium-side extremity.
-
-**Result.** DKKM 0.7475 against best linear 0.6428 (linrank); SR_max 1.1778 over the evaluation
-months, so DKKM reaches 63% of the attainable and 74% of its own nonlinear ceiling. The
-mis-normalised arrival rate did not change this economy's numbers: the v1 spec published room +0.3496
-and gap +0.1009 from one seed, the corrected economy at ten seeds gives +0.3491 and +0.1046
-(WORKING.md §37).
-
-**Provenance.** Spec `var-kp_vy-vyx-v2`; solves `f7be27e39d2b530f` (the G function) and
-`84e195172f091cd2` (the type-by-state integrals); `SEED_SPEC=vyx`; peak 30.6 GiB.
-
-#### kp_vy/vyg25 -- CURRENT, gap +0.1450 (sd 0.0193), t 39.2
-
-**What differs from vyx.** One parameter: gamma_v from 1.8 to 2.5, with its own G and integral
-tables under prefix `vyg25`. Proposal K4.
-
-**Why it was tried.** vyx is the one economy where DKKM leaves the market, and the Sharpe the market
-does not span there is carried by the state's shock, whose Sharpe scales with its price. vy to vyx had
-raised gamma_v from 1.2 to 1.8 and the gap rose with the room.
-
-**Result: the largest window-360 gap in the repository, just below its predicted range and not
-falsified.** DKKM 0.9450, best linear 0.8000, market 0.4694. Against vyx the gap rose +0.0404 (se
-0.0078), or 39%, on room that rose 14% and SR_max that rose 18%; DKKM captured more of what the
-higher price created, 78% of its nonlinear ceiling against 74%, while the linear methods stayed at
-100% of theirs.
-
-| economy | quantity | reference | predicted | result | verdict |
-|---|---|---|---|---|---|
-| kp_vy/vyg25 | room | vyx +0.3606; room / FMR 56.4% | +0.45 to +0.50 | +0.4108; room / FMR 51.9% | wrong, low |
-| kp_vy/vyg25 | SR_max | vyx 1.1778 | up about 40% | 1.3887, up 18% | wrong, low |
-| kp_vy/vyg25 | non-market Sharpe, sqrt(SR_max^2 - EW market SR^2) | vyx 1.1178 | up about 40% | 1.3064, up 17% | wrong, low |
-| kp_vy/vyg25 | DKKM's winning penalty | vyx: smallest on the grid in 9 of 10 | still the smallest | smallest in 10 of 10 | right |
-| kp_vy/vyg25 | DKKM - best linear | vyx +0.1046; (DKKM - FMR) / FMR 17.0% | +0.15 to +0.20; falsified below +0.12 | +0.1450; (DKKM - FMR) / FMR 19.5% | below the range by 0.005; not falsified |
-
-The last decade of penalty, 0.01 to 0.001, still added 0.046 of Sharpe, so this economy is as
-shrinkage-bound as vyx. Distance from a calibration: mean expected return 22.9% a year,
-cross-sectional sd 10.6% (vyx 18.2%, 7.7%).
-
-**Provenance.** Spec `var-kp_vy-vyg25-v1` (`precommitted: true`); solves `f41d052f1f960c4c` (G,
-built on the Mac and shipped to Sol byte-identical) and `8d1308e8f21723f8` (integrals, Sol
-`63188972`), both the precommitted ids, after a first Sol attempt failed its integral id because the
-chained id hashes the upstream G tables' raw bytes (`docs/RUNS.md`); ten seeds on Sol array
-`63188973` at `fef5802`, peak 29.2 GiB, longest 7.6 h.
-
-#### kp_vy/vyxT860 -- CURRENT at T=860, window 720: gap +0.1875 (sd 0.0393), t 54.6
-
-**What differs from vyx.** Nothing in the economy: the same parameters and solves, simulated for 860
-months and estimated on a 720-month window, so the evaluation months again number 125. The ridge grid
-gains 1e-4 below vyx's smallest penalty. Its own tag, because result files are named by model, tag and
-seed only. Proposal X3.
-
-**Why it was tried.** If DKKM's shortfall from its ceiling in vyx is data, a longer window closes part
-of it and leaves the linear methods where they are.
-
-**Result: the shortfall is data, and more of it than predicted.** DKKM 0.8452 against 0.7475; linear
-0.6577 against 0.6428; room unchanged within seed noise.
-
-| economy | quantity | reference | predicted | result | verdict |
-|---|---|---|---|---|---|
-| kp_vy/vyxT860 | DKKM SR | vyx 0.7475 | +0.03 to +0.08; falsified below +0.02 | 0.8452, +0.0977 (se 0.0244) | wrong, high; not falsified |
-| kp_vy/vyxT860 | best linear SR | vyx 0.6428 | within +0.01 | 0.6577, +0.0149 (se 0.0159) | outside the band, not distinguishable from it |
-| kp_vy/vyxT860 | DKKM - best linear | vyx +0.1046; (DKKM - FMR) / FMR 17.0% | +0.13 to +0.17 | +0.1875; (DKKM - FMR) / FMR 29.7% | wrong, high |
-| kp_vy/vyxT860 | room | vyx +0.3606; room / FMR 56.4% | unchanged within seed noise | +0.3864, +0.0258 (se 0.0206); room / FMR 59.3% | right |
-
-**The window and the grid, separated.** On vyx's grid (penalties 0.001 and up) DKKM reaches 0.7958
-and the gap +0.1382: the window alone lands inside both predicted ranges. The 1e-4 penalty adds a
-further 0.0494 of DKKM Sharpe and wins in all ten seeds. The spec had argued the extension alone was
-worth little, from vyx's flattening gains per decade of penalty at window 360 (0.154, 0.100, 0.035);
-at window 720 the decades give 0.157, 0.116, 0.073 and then 0.049. The longer window is what makes a
-smaller penalty pay, and the bottom of the grid still binds. The winning feature count moved down to
-360 in eight seeds (vyx: 3600 in six). The market's role is unchanged, 29% of SR_max with the linear
-methods 0.30 above it. The ceilings are measured over different calendar months of a longer
-simulation (SR_max 1.2294 against 1.1778), so level comparisons carry that difference.
-
-**Provenance.** Spec `var-kp_vy-vyxT860-v1`, reusing vyx's solves (`reused_solves`); ten seeds on
-Sol array `63188596` at `fef5802`, peak 56.9 GiB, longest 6.0 h.
-
-#### kp_vy/vy -- LEGACY, single seed, gap +0.0289, t 5.2
-
-gamma_v = 1.2 and beta = 0.02 / 0.06 / 0.12. Room +0.278, the first significant DKKM win in KP14
-after five state-dependent-price designs, but capture near 10% and limited by T: the best realized fit
-was at 360 features, not 3600. REPORT.md §19a. Pre-fix economy.
-
-### Paths 2 to 4 -- the inert routes that led to Path 1
-
-All LEGACY single-seed rows, all pre-fix, none with room above +0.019.
-
-- **Path 2, state-dependent prices of risk on the baseline cross-section, four ways** (room below
-  +0.004 in each). A two-state regime multiplying both prices by 0.5 / 2.0 (`kp_gam`, gap +0.0067);
-  a continuous state y with a common logistic multiplier 0.5 to 2.5 (`kp_gamy`, +0.0074); the
-  multiplier on gamma_x only, so the premium direction rotates 3.5x across the state (+0.0022); an
-  uneven regime on gamma_x alone (+0.0185, all of it regime timing through the exported regime
-  feature). Why inert: with premia affine in the firm variable within each state, the conditional
-  premium is spanned by a linear basis with a state interaction, and a common multiplier gives mu_t =
-  g(y_t) mu-bar, a constant cross-sectional direction. "KP's cross-section is irreducibly
-  one-directional" (REPORT.md §13c-d, §17b, §17d, §17f).
-- **Path 3, exposure types crossed with the regime** (`kp_bx`, room +0.0187, gap +0.0016). Cash flows
-  load on the technology state as x^{beta_f}, beta in {1.0, 1.8, 3.0}, with a calm-state value
-  compensation of 1.2. The first genuine room in KP14, and rolling Fama-MacBeth on raw levels
-  harvested it (FMR 0.181 against DKKM 0.177) because x^{beta_f} makes raw characteristics co-move
-  with the state. This failure produced the third design clause, stationary levels, and Path 1.
-  REPORT.md §18.
-- **Path 4, crash risk** (`kpd_al`, room +0.0058, gap -0.0064). Type-specific disaster probabilities,
-  a priced kill intensity, a compensating output multiplier; the rank-linear method came out ahead.
-  "Crash risk per se does not create a DKKM gap" (§12b).
-
-### Proposals -- KP14
-
-- **K4, gamma_v 2.5 -- DONE** (vyg25). Gap +0.1450; room, SR_max and the non-market Sharpe rose 14%
-  to 18% against a predicted 25% to 40%; the winning penalty stayed at the grid bottom in every seed.
-- **X3, vyx at T=860, window 720, grid to 1e-4 -- DONE** (vyxT860). DKKM +0.0977 and gap +0.1875,
-  both above their predicted ranges; the linear methods +0.0149; room unchanged. The window alone gives
-  +0.1382 and the 1e-4 penalty the rest, winning in every seed.
-- **K5, signed exposures -- WITHDRAWN: the economy does not exist.** Type loadings (-0.06, +0.04,
-  +0.14) were to leave the market carrying little of the state's risk. The G solve discounts growth
-  options at rho_ty, which is -0.149 at the top of the state grid for a loading of -0.06 and -0.076
-  even at y = 0; a negative discount removes the G operator's dissipation. The most negative loading
-  with rho_ty positive everywhere is about -0.005, no exposure at all.
-- **K1, a continuum of exposures -- OPEN.** Fifteen types on a grid over [0, 0.14], shares right-skewed
-  so most firms sit low: less of the state's Sharpe spanned by the market, and a smooth exposure map
-  for random features. Prediction: room and gap up modestly, less confidently than K4, since the
-  three-type structure was never shown to be what the linear methods exploit. About 7.5 h of
-  integrals, then 30 h of seeds.
-- **K3, persistence of the priced state -- OPEN.** kappa_y 0.35 to 0.15 and to 0.70. Slower reversion
-  bends values more but gives a window fewer independent cycles; with X3's finding that DKKM is
-  data-limited, the gap should FALL at 0.15 and hold or rise at 0.70. Two solves of about 90 min, then
-  two 30 h arrays.
-- **K2, a rare extreme type -- OPEN, low priority.** Shares (0.45, 0.45, 0.10), top loading 0.14 to
-  0.20; the discount check applies.
-
-Ranked, with the case for each, in `docs/NEXTUP.md`.
-
----
-
-## BGN -- Berk, Green and Naik (1999)
-
-### Baseline
-
-A firm is a collection of live projects, each a real option exercised when its present value crossed
-a threshold. Projects carry a market-shock loading beta_s from a translated exponential (scale 0.137),
-an idiosyncratic cash-flow volatility, and a cash-flow level around C-bar = -3.7; new projects arrive
-and are exercised optimally against a threshold J*(r) that depends on the short rate, which is Vasicek
-(monthly persistence 0.95, mean 0.006236, innovation sd 0.002). The pricing kernel is lognormal with
-ONE priced shock, the market shock, at price sigma_z = 0.4, correlated -0.175 with the rate
-innovation. Expected returns are exactly affine in book-to-price and 1/price with rate-dependent
-coefficients. Table I: 11 of 11 parameters match.
-
-The project-beta distribution is the only native source of firm-level exposure heterogeneity in any
-of the three models, which is why BGN has room as published and KP14 does not.
-
-**Under the current code, at ten seeds** (`bgn_gam/bgnbase`; the anchor section): evaluation-window room
-+0.0225 and fair gap +0.0012. The market carries 50% of the attainable Sharpe of 0.2805; DKKM beats it
-by 0.081 and the best linear method by 0.074. linrank_m, the market given as DKKM has it, is the best
-fair linear method in seven seeds, and DKKM finishes ahead of the fair benchmark in six by an average
-of +0.0012.
-
-**Legacy rows are the same economy.** The calibration survived every audit unchanged, and the current
-code reproduced the legacy g0235 row to the displayed digit on a different machine (WORKING.md §39).
-
-### Path 1 -- a two-state regime on the price of the market shock: CLOSED 2026-09-14
-
-A two-state Markov regime (calm, stress) multiplies the price of the market shock, sigma_z x gmult[s];
-switches are unpriced; the exercise threshold J* is re-solved per economy; the regime and the rate are
-exported as conditioning features. A project's value decomposes onto two regime bases, so the two
-regimes apply two DIFFERENT monotone transforms of the same project beta: curvature in the map from
-beta to the premium within a regime, which a common scaling of the price of risk cannot produce. The
-path ran gmult = [0.5, 2.0] and [0.3, 3.0] (legacy), then [0.2, 3.5] at the closed-form bound
-1/(2 x 0.137) = 3.65, then a persistence ladder on that point, then a stress-dominant screen.
-
-What it decided: the regime added neither room nor gap to the economy as published. The baseline
-already has evaluation-window room of +0.0225 and a fair gap of +0.0012. Across the four ten-seed regime
-points room ranged from +0.0026 to +0.0350, a factor of thirteen, and only the fastest point exceeded
-the baseline's. The measured gap stayed between +0.018 and +0.023 throughout, because the regime put
-DKKM on the equal-weighted market and the linear methods fell below it (finding 8); in the baseline
-both sit well above the market. The fair gap is +0.0025 or less at every point. The one
-seed with both a lot of room and a lot of non-market Sharpe (g0235s seed 2) put DKKM 0.116 above the
-market and only 0.011 above the linear methods, which followed most of it; the screen built on that
-seed (B4) put DKKM 0.081 above the market and plain `linrank` followed all of it. The spec's rule ends
-the path on the miss.
-
-| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| bgn_gam/bgnbase: no regime (gmult [1, 1]) | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
-| bgn_gam/g0235f: switches 1/12 and 2/12 a month; stress 1/3 | 10 | 0.2043 | 0.1209 | 0.0847 | 0.1115 | 0.1325 | +0.0479 (0.0320) | 56.5% | +0.0211 (0.0154) | +0.0025 (0.0029) | +0.0350 (0.0188) | 41.3% | 16.6 |
-| bgn_gam/g0235: switches 0.25/12 and 0.50/12; stress 1/3 | 10 | 0.1461 | 0.1061 | 0.0557 | 0.0855 | 0.1081 | +0.0525 (0.0342) | 94.2% | +0.0227 (0.0084) | +0.0006 (0.0009) | +0.0176 (0.0119) | 31.7% | 33.4 |
-| bgn_gam/g0235s: switches 0.05/12 and 0.10/12; stress 1/3 | 10 | 0.0946 | 0.0516 | 0.0145 | 0.0436 | 0.0616 | +0.0472 (0.0271) | 325.7% | +0.0180 (0.0127) | +0.0012 (0.0034) | +0.0119 (0.0267) | 82.0% | 43.8 |
-| bgn_gam/g0235r: switches 0.05/12 and 0.45/12; stress 1/10 | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
-| bgn_gam/g0235d: switches 0.50/12 and 0.25/12; stress 2/3; SCREEN, one seed | 1 | 0.1812 | 0.0672 | 0.1307 | 0.1480 | 0.1484 | +0.0177 | 13.5% | +0.0004 | +0.0004 | +0.0186 | 14.2% | 8.1 |
-
-#### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), fair gap +0.0006, t 33.4
-
-gmult = [0.2, 3.5], switches 0.25/12 and 0.50/12. DKKM 0.1081 against linrank 0.0855; Fama-MacBeth
-collapses to 0.067 and the level-linear method to 0.034 because regime shifts move raw levels. The
-published single-seed row (room +0.0233, gap +0.0297) is reproduced exactly by seed 0 and sits 0.8 sd
-above the ten-seed mean. Through finding 8: DKKM is the market's 0.1061 plus 0.0020, and the gap is
-the linear methods' 0.0206 shortfall below that market. Spec `var-bgn_gam-g0235-v2`; solve
-`be222462dd017b2c` (`Jstar_g0235.csv`); `SEED_SPEC=g0235`; 15.7 to 38.9 GiB on Sol.
-
-#### bgn_gam/g0235f -- CURRENT, gap +0.0211 (sd 0.0154), fair gap +0.0025, t 16.6
-
-Both switch probabilities times four (calm spells 12 months, stress 6; about forty switches per
-window); the stationary stress share unchanged at one third. Proposal B1's fast point. The
-pre-registered prediction failed on both halves: room was to be unchanged and the proportional gap to
-rise; room nearly doubled (+0.0176 to +0.0350) and the proportional gap fell (26.5% to 18.9%). Room
-moved because switching speed enters the SOLVE: how long a firm expects cheap risk changes which
-projects it takes, and the J* table (value range 37 to 345 against g0235's 57 to 483) said so before a
-seed ran. Lesson: when a parameter enters the solve, check whether the solved table moved before
-assuming the cross-section did not. Spec `var-bgn_gam-g0235f-v1`; solve `8662d7c1079f4b41`; Phoenix
-array `21564268`, 3.0 to 3.3 h per seed.
-
-#### bgn_gam/g0235s -- CURRENT, gap +0.0180 (sd 0.0127), fair gap +0.0012, t 43.8
-
-Both switch probabilities times 0.2 (calm spells 240 months, stress 120; about two switches per
-window). B1's slow point. Predicted: room unchanged, gap falling toward or below room; the gap stayed
-above the evaluation-window room in nine of ten seeds. The evaluation window is one draw of a slow
-regime path: six of ten seeds have no stress month in it, one (seed 2) has 74%, and every level
-statistic follows that occupancy (stress share correlates 0.98 with SR_max, 0.99 with DKKM, 0.97 with
-room) while the gap does not (-0.11). Spec `var-bgn_gam-g0235s-v1`; solve `05ad848ab3779695`; seeds
-0, 2, 5 to 9 on Phoenix `21564269` at `c3d60c8`, seeds 1, 3, 4 on Sol `63033314` at `1fb6f44` after
-the 64 GiB cap killed them on Phoenix (no Python differs between the commits).
-
-#### bgn_gam/g0235r -- CURRENT, gap +0.0209 (sd 0.0166), fair gap -0.0025, t 80.0
-
-Calm-to-stress 0.05/12 and stress-to-calm 0.45/12: stress in 10% of months, in spells of about 27
-months between calm spells of 240. A different economy from g0235, not the same one at another speed.
-Predicted: room falls (it did, to +0.0026) and the gap falls further (it did not: +0.0209). The 192%
-proportional gap is a denominator: the best linear Sharpe averages 0.0109 and is below zero in four
-seeds, in months where the market earns 0.047. DKKM itself is 0.015 BELOW the market: in seeds 0, 5,
-6 and 7 its market weight turns negative in part of the evaluation months, against a true premium
-that is positive in every one of them. Spec `var-bgn_gam-g0235r-v1`; solve `0c624174cf4b26fa`; six
-seeds on Phoenix highmem `21564312`, four on Sol `63033315`. Seed 3's oracle ran at `c3d60c8` and its
-estimators at `1fb6f44`, because the shared checkout was pulled while that 24.5-hour task sat between
-stages: harmless here, a hazard in general.
-
-#### bgn_gam/g0235d -- SCREEN, one seed: missed both gates, fair gap +0.0004
-
-The switch probabilities swapped (0.50/12 calm-to-stress, 0.25/12 stress-to-calm), so stress occupies
-two thirds of months in 48-month spells. Proposal B4, built on the one BGN seed with a lot of
-non-market Sharpe (g0235s seed 2, stressed in 84% of its months). Seeds 1 to 9 were gated on
-evaluation-window room of at least +0.05 AND the oracle's non-market Sharpe (`sr_orth_eval`) of at
-least 0.30.
-
-| economy | quantity | reference | predicted | result | verdict |
-|---|---|---|---|---|---|
-| bgn_gam/g0235d | room (gate +0.05) | -- | above +0.04 | +0.0186; room / FMR 14.2% | wrong, low; gate missed |
-| bgn_gam/g0235d | non-market Sharpe, the oracle's month-by-month figure (gate 0.30) | -- | 0.2 to 0.3 | 0.1541 | wrong, low; gate missed |
-| bgn_gam/g0235d | DKKM SR - EW market SR | -- | +0.03 to +0.06 | +0.0812 | wrong, high |
-| bgn_gam/g0235d | DKKM - best fair linear | -- | +0.005 to +0.015 | +0.0004 | wrong, low |
-
-DKKM (0.1484) left the market by more than any BGN ten-seed mean does, and plain `linrank`, whose
-market column is penalised, reached 0.1480. The spec's own reason for a small fair gap, a
-within-regime premium close to affine in book-to-price and 1/price, held more strongly than it
-predicted. Spec `var-bgn_gam-g0235d-v1` (`precommitted: true`); solve `e136e8b440bce761`, reproduced
-by Phoenix `21571505`; seed 0 on Phoenix `21571506` at `fef5802`, 15.6 GiB, 2.5 h.
-
-#### g0520 and g0330 -- LEGACY, single seed
-
-gmult = [0.5, 2.0] (room +0.0214, gap +0.0219, t 21.5) and [0.3, 3.0] (room +0.0254, gap +0.0240,
-t 31.7). Room saturated near +0.021 to +0.025 while the gap rose with the spread, because the
-widening damaged the raw-level methods (FMR 0.105, FF 0.132 at [0.3, 3.0]) faster than it added
-room. REPORT.md §13f-h, §16.
-
-#### Two things the ladder established besides finding 8
-
-- **Memory follows calm spells.** Longer calm spells price risk cheaply for longer, so firms accept
-  more projects and the panel arrays grow. The J* value scale orders exactly as memory does (g0235f 37
-  to 345, g0235 57 to 483, g0235s 148 to 1262, g0235r 390 to 2041; peak memory 22, 39, 74 and 77 GiB),
-  and within an economy the longest calm spell in a seed's panel ranks with its peak memory at
-  Spearman +0.84 (g0235s) and +0.80 (g0235r). The panels that never enter stress are the heaviest and
-  slowest (g0235r seed 3: 77.0 GiB, 24.5 h). All ten g0235r seeds and three g0235s seeds were first
-  killed at a 64 GiB cap.
-- **Partial means were biased toward the early seeds.** The late seeds were the calm-heavy ones; an
-  early-seed snapshot overstated g0235r's gap by 22% and g0235s's room by 25%. Holding the partial
-  means out of the table was right.
-
-### Paths 2 to 4 -- LEGACY, single seed, same economy family
-
-- **Path 2, a continuous price of risk in the rate, gamma(r)** (`bgn_gamr`, room +0.0934, gap +0.0060,
-  t -2.7). A logistic multiplier 0.5 to 3.0 on the market-shock price as a function of the short rate.
-  The largest room of the whole project, and rolling Fama-MacBeth harvests it (FMR 0.470 against DKKM
-  0.464), because raw levels co-move with r and a rolling raw-level regression conditions on the rate
-  for free. REPORT.md §17c.
-- **Path 3, crash risk with firm types** (`bgn_dis`, room +0.0658, gap +0.0053, t 8.9). A disaster
-  indicator in the kernel (p = 3%, kappa = 2.5), three firm types whose projects die in a disaster
-  with probability 0 / 0.15 / 0.30, a value compensation 1.3 so exposed firms look like growth firms.
-  Three quarters of the room captured. §9, §14.
-- **Path 4, the oracle-only exploration** (parameter sweeps, tail shapes, size-dependent volatility,
-  firm types, a U-shaped rate-shock correlation). Nothing above +0.008 of room except the two paths
-  above. §3-§8.
-
-### Proposals -- BGN: none open
-
-- **B1, regime persistence -- DONE.** Four points; room moved by a factor of thirteen and the fair gap
-  never left +0.0025.
-- **B4, a stress-dominant regime -- DONE, the screen missed both gates**, and the spec's rule closes the
-  regime path.
-- **B2, along the frontier (a thinner beta tail admitting gmult up to 5) and B3, a live interest rate
-  under the regime -- CLOSED by B4.** Both sat on the path B4 closed; B3's own prediction was already
-  that its screen would miss, because the rate shock is priced at almost nothing (beta_zr = -0.00014).
-
-A BGN economy earns estimator time only with room of at least +0.05 AND a non-market Sharpe of at
-least 0.30 on a one-seed oracle screen (two points, vyx and g0235s seed 2: a heuristic). No proposed
-BGN economy is predicted to reach it.
-
----
-
-## GS21 -- Gomes and Schmid (2021)
-
-### Baseline
-
-A firm holds capital and one-period debt, produces from an aggregate productivity state x (quarterly
-persistence 0.95, innovation sd 0.012) and an idiosyncratic state z (0.90, 0.16), pays maintenance
-delta = 0.02 per quarter, taxes at 0.2, and chooses investment, borrowing and default each period;
-equity issuance costs 0.025, debt issuance 0.004, lenders recover 0.4, default is smoothed by a shock of
-sd 5. The pricing kernel is exogenous, exp(-r - gamma^2/2 - gamma eps_x), with a CONSTANT price of
-risk gamma_x = 0.5 and r = 0.10 a year: the paper's general-equilibrium kernel with its countercyclical
-price of risk is replaced by this stand-in, which Path 1 puts back. Value-function iteration on a
-161-point x grid, about 3.5 h a solve.
-
-With a constant price of risk every feature basis reaches the same population ceiling: GS21 has no
-learnable nonlinear cross-section, and its gaps come from somewhere else.
-
-**Under the current code, at ten seeds** (`gs_bx/gsbase`; the anchor section): evaluation-window room
-+0.0012 and fair gap -0.0022, t -5.0. The market carries 95% of the attainable Sharpe of 0.2980, and a
-linear method given it beats DKKM in all ten seeds: g28's shape without gamma(x).
-
-**Legacy rows are a different economy.** Until 2026-09-06 the solver ran with rho_x = 0.96^(1/3),
-delta per month, and kappa_e = 0; levels are not citable, mechanism findings survive.
-
-### Path 1 -- a countercyclical price of risk gamma(x), alone and crossed with exposure types
-
-#### gs_bx/g28 -- CURRENT, gap +0.0283 (sd 0.0136), fair gap -0.0022, t 24.6
-
-gamma(x) = clip(0.5 - 0.28 x / sd(x), 0.05, 1.0): the baseline 0.5 at mean productivity, toward 0.05
-in booms and 1.0 in busts. A RECONSTRUCTION from the formula in REPORT.md §13g, verified to reproduce
-the regime solver byte-for-byte at slope zero. The spec's question: can a gap open with ZERO nonlinear
-room? The measured gap said yes (room +0.0004, gap +0.0283, once the second-largest in this file) and
-finding 8 said what it was: the market reaches 95% of SR_max here, DKKM is 0.0032 above it and the
-linear methods 0.0251 below. Under the fair benchmark a linear method given the market beats DKKM in
-nine seeds of ten (t -3.0). Seed 0 alone had read +0.0119. Spec `var-gs_bx-g28-v2`; solve
-`8b584c38614695ac` (`gs_solve_gam.py`, 5.9 h on Phoenix); `SEED_SPEC=g28`.
-
-#### gs_bx/gx7 -- CURRENT, gap +0.0229 (sd 0.0102), fair gap +0.0001, t 15.0
-
-Five firm types in equal shares loading on the state as exp(beta_f x + z), beta = 1 / 2.5 / 4 / 5.5 /
-7, under g28's gamma(x): the design rule that produced vyx, with GS21's own state. Proposal G1. **The
-pre-registered negative fired**: if the gap did not beat g28's, exposure heterogeneity contributes
-nothing in GS even when the state prices it, and the path retires. Gap +0.0229 against +0.0283; room
-+0.0053. The exposure ladder mostly raised what the LINEAR methods reach (attainable Sharpe 0.3087 to
-0.4473, the linear methods from 87% to 93% of it): a beta ladder is close to a linear sort on the
-characteristics that reveal it. The four new solve ids were committed before the solves ran and each
-came back exactly. Spec `var-gs_bx-gx7-v1`; solves `8b584c38614695ac` (reused), `a145001bf661632e`,
-`bcc4e59f41f4a040`, `9bc863211011b5d9`, `89546b0b36dfd2d0`; Phoenix arrays `21564271` (solves) and
-`21564272` (seeds).
-
-#### gamma(x) nonlin -- LEGACY, single seed, gap +0.0406, t 14.1
-
-A logistic gamma(x) from 0.10 to 1.20; room -0.0005. "GS's flat cross-section is immune however
-nonlinear the state-dependence" (REPORT.md §17e). Old calibration, no code.
-
-### Path 2 -- exposure types under a price-of-risk regime: bx7, RETIRED 2026-09-11
-
-#### gs_bx/bx7 -- CURRENT, gap +0.0078 (sd 0.0049), fair gap -0.0009, t 16.0
-
-The five-type ladder above under a two-state regime on the price of risk, gmreg = [0.6, 3.0] (0.3 calm,
-1.5 stress), switches 0.25/12 and 0.50/12; no level compensation, because the earlier 0.15 (beta - 1)
-shift was up to 3.3 times the exposure swing it accompanied and made the cross-section "a size sort
-wearing a beta label". Room +0.0086 all-month, +0.0066 evaluation window; the market reaches 94% of
-SR_max. Retired because gx7 gave these types the strongest state they could have and the gap fell.
-Spec `var-gs_bx-bx7-v3`; five solves `63fa7ebbc2db49ea` (beta 1), `649bb384300faadf`,
-`a3bb50b66287307c`, `645262a8e72d944c`, `0818d7153d5708cc`; `SEED_SPEC=bx7`.
-
-**The legacy ladder** (single seed, old calibration): round 1 uncompensated (room +0.0039, gap
-+0.0040), round 2 compensated (+0.0064, +0.0022), bx7 v1 with the level shift (+0.0182, +0.0013), and
-bx9 with beta to 9 and the regime to [0.5, 4.0] (room +0.0540, gap -0.0007): the room tripled and the
-gap vanished, REPORT.md §19d's capture frontier.
-
-### Path 3 -- regime only, and crash risk: LEGACY, single seed, old calibration
-
-The two-state regime alone (room +0.0001, gap +0.0187: regime timing; the default channel never
-fires, zero realized defaults even at a stressed price of 1.5, because firms delever and the
-smoothing shock flattens the kink; §17g) and disasters destroying capital with the coupon unchanged
-(`dis_rebase`, room +0.0065, gap +0.0086; §13g).
-
-### Proposals -- GS21
-
-Finding 8 is decisive here. In the baseline and all three route economies the market reaches 94% to 98% of SR_max, so there
-is almost no Sharpe outside it for any method to find. GS21 prices one shock every firm loads on in
-the same direction, and nothing in the gamma(x) or exposure-type families changes that: they move the
-market's Sharpe, not the part it misses.
-
-- **G1, gamma(x) times exposure types -- DONE; the negative fired** (gx7). G2, its control, dropped.
-- **G3, wake the default channel -- the only GS proposal left.** Equity near default is a convex claim
-  on the same shock, so its loading rises as the state worsens: heterogeneous, state-dependent
-  exposures the market does not replicate. Levers: sigma_z 0.16 to 0.25, or the tax advantage of debt
-  0.2 to 0.3. Probe first, oracle only at N=200, T=200 (about 20 min); proceed only if defaults reach
-  half a percent a year AND the market falls below 85% of SR_max.
-- **G4, a wider gamma(x), and G5, re-verifying the capture frontier -- DROPPED.** G4 raises the
-  market's Sharpe and the linear shortfall, not anything a complexity method learns; G5 served the
-  retired path.
-
----
-
-## Cross-cutting findings
-
-Numbered as they were found; the numbers are referenced from specs and from WORKING.md, so they are
-kept. Finding 8 reorganised the file and comes first.
+| bgn_gam/g0235d | 1 | 0.1812 | 0.0672 | 0.1307 | 0.1480 | 0.1484 | +0.0177 | 13.5% | +0.0004 | +0.0004 | +0.0186 | 14.2% | 8.1 |
+
+The one economy above that has not had ten seeds. It ran as a pre-registered screen whose gates were
+evaluation-window room of at least +0.05 AND non-market Sharpe of at least 0.30; it missed both
+(+0.0186 and 0.1541), which closed BGN's regime path under the spec's own rule. Its one seed put DKKM
+0.081 above the market -- more than any BGN ten-seed mean -- with plain `linrank`, whose market column
+is penalised, following to within 0.0004. A single seed ranks nothing (finding 4), which is why this
+row sits under its own heading. The campaign gives it ten.
+
+## Findings
+
+Numbered as they were found; the numbers are cited from specs and from
+`docs/refactor/WORKING.md`, so they are kept even where the gaps show that a superseded reading was
+deleted.
 
 8. **Outside KP14 Path 1, the measured gap is the market portfolio against linear methods not given
    it on the same terms.** DKKM appends the equal-weighted market to its random features UNPENALISED
    (`--include_mkt`, as in the paper). `linrank` and `linlev` carry the same market as their constant
-   column but penalise it with everything else (in g28 linrank's Sharpe goes from 0.256 unpenalised to
-   0.065 at the smallest penalty on the grid); Fama-French carries a value-weighted market; Fama-MacBeth
-   none. At its largest penalty DKKM collapses onto the market: in 54 of 70 BGN and GS seeds its Sharpe
-   there equals the market's to within 0.001, identically across 36, 360 and 3600 features, and its
-   winning portfolio is barely off that point. Splitting each gap exactly into what DKKM adds over the
-   market and what the market has over the best linear method:
-
-   | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
-   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-   | kp_vy/vyx | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
-   | bgn_gam/g0235 | 10 | 0.1461 | 0.1061 | 0.0557 | 0.0855 | 0.1081 | +0.0525 (0.0342) | 94.2% | +0.0227 (0.0084) | +0.0006 (0.0009) | +0.0176 (0.0119) | 31.7% | 33.4 |
-   | bgn_gam/g0235f | 10 | 0.2043 | 0.1209 | 0.0847 | 0.1115 | 0.1325 | +0.0479 (0.0320) | 56.5% | +0.0211 (0.0154) | +0.0025 (0.0029) | +0.0350 (0.0188) | 41.3% | 16.6 |
-   | bgn_gam/g0235s | 10 | 0.0946 | 0.0516 | 0.0145 | 0.0436 | 0.0616 | +0.0472 (0.0271) | 325.7% | +0.0180 (0.0127) | +0.0012 (0.0034) | +0.0119 (0.0267) | 82.0% | 43.8 |
-   | bgn_gam/g0235r | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
-   | gs_bx/g28 | 10 | 0.3087 | 0.2944 | 0.2518 | 0.2692 | 0.2975 | +0.0457 (0.0221) | 18.2% | +0.0283 (0.0136) | -0.0022 (0.0023) | +0.0004 (0.0003) | 0.2% | 24.6 |
-   | gs_bx/gx7 | 10 | 0.4473 | 0.4385 | 0.3738 | 0.4163 | 0.4393 | +0.0655 (0.0396) | 17.5% | +0.0229 (0.0102) | +0.0001 (0.0006) | +0.0053 (0.0044) | 1.4% | 15.0 |
-   | gs_bx/bx7 | 10 | 0.3121 | 0.2926 | 0.2741 | 0.2887 | 0.2964 | +0.0223 (0.0160) | 8.1% | +0.0078 (0.0049) | -0.0009 (0.0028) | +0.0066 (0.0041) | 2.4% | 16.0 |
-   | bgn_gam/bgnbase, baseline | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
-   | kp_vy/kpbase, baseline | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
-   | gs_bx/gsbase, baseline | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
-
-   The split reads off the Sharpe columns: DKKM SR minus EW market SR is what DKKM adds over the market, and
-   EW market SR minus best linear SR is what the market has over the best linear method. Registered bounds on
-   DKKM - best fair linear, all met: vyx at least +0.08; g0235 at most +0.003; g0235f and g0235s at most
-   +0.008; g0235r and gx7 at most +0.004; g28 and bx7 at most +0.006; each baseline within 0.005 of zero.
-
-   For the eight route rows the bound was DKKM's winning Sharpe minus its Sharpe at the largest penalty, plus 0.003 for
-   incomplete shrinkage; it says nothing for vyx, whose largest penalty does not reach the market; the three baseline rows carry their specs' own
-   predictions, and their market columns come from their own runs' fair methods. E1
-   re-scored all 80 saved panels with `linrank_m`, `linlev_m` and `mkt_est`, reproducing the original
-   four methods to 3e-9. In g0235r the always-long market (0.047) beats every estimator, DKKM
-   included; it is reported but kept out of the benchmark because it assumes the premium's sign.
+   column but penalise it with everything else (in g28 linrank's Sharpe goes from 0.256 unpenalised
+   to 0.065 at the smallest penalty on the grid); Fama-French carries a value-weighted market;
+   Fama-MacBeth none. At its largest penalty DKKM collapses onto the market: in 54 of 70 BGN and GS
+   seeds its Sharpe there equals the market's to within 0.001, identically across 36, 360 and 3600
+   features, and its winning portfolio is barely off that point. The split reads off the Sharpe
+   columns of any table above: DKKM SR minus EW market SR is what DKKM adds over the market, and EW
+   market SR minus best linear SR is what the market has over the best linear method.
 
    **When does DKKM leave the market?** When there is Sharpe the market does not span, as a LEVEL:
-   the per-seed non-market Sharpe sqrt(SR_max^2 - SR_ew^2) ranks with DKKM's margin over the market at
-   Spearman +0.76 across the 80 seeds (+0.65 without vyx); its share of SR_max does not (+0.06). Over
-   the 70 BGN and GS seeds, seeds with non-market Sharpe up to 0.05 put DKKM 0.008 below the market,
-   0.10 to 0.20 put it 0.005 above, the two above 0.30 put it 0.089 above; vyx's ten, at 1.12, put it
-   0.38 above. The 2026-09-13 campaign extended both halves: vyg25 and vyxT860 widened a gap the fair
-   benchmark leaves within 0.0003 of itself, and g0235d put DKKM 0.081 above the market with `linrank`
-   following to within 0.0004. The baselines add two points between the route seeds and vyx: non-market
-   Sharpe of 0.24 (BGN) and 0.21 (KP14) put DKKM 0.081 and 0.128 above the market and the linear methods
-   0.074 and 0.122 above it, for fair gaps of +0.0012 and -0.0024. Leaving the market is necessary for a
-   complexity gap and not sufficient: those two baselines have evaluation-window room of +0.0225 and
-   +0.0044, against vyx's +0.3606. Evidence: `variants/score_market.py`,
-   `variants/market_decomposition.py`, `variants/results/market_sr.csv`; WORKING.md §53.
+   the per-seed non-market Sharpe sqrt(SR_max^2 - SR_ew^2) ranks with DKKM's margin over the market
+   at Spearman +0.76 across the 80 seeds (+0.65 without vyx); its share of SR_max does not (+0.06).
+   Over the 70 BGN and GS seeds, seeds with non-market Sharpe up to 0.05 put DKKM 0.008 below the
+   market, 0.10 to 0.20 put it 0.005 above, the two above 0.30 put it 0.089 above; vyx's ten, at
+   1.12, put it 0.38 above. Leaving the market is necessary for a complexity gap and not sufficient:
+   the BGN and KP14 baselines have non-market Sharpe of 0.24 and 0.21 and evaluation-window room of
+   +0.0225 and +0.0044, against vyx's +0.3606. Evidence: `variants/score_market.py`,
+   `variants/market_decomposition.py`, `variants/results/market_sr.csv`.
 
 4. **Single seeds mislead.** g28's seed 0 gave +0.0119 against a ten-seed +0.0283; bx7's seed 0 put
    its evaluation-window room above its all-month room and ten seeds reversed it; vyx's seed 0 read
    "stronger than published" and ten seeds read "unchanged". Cross-seed sd of the gap is 15% of the
    mean for vyx, 37% for g0235, 48% for g28, 63% for bx7. No ranking below the top of a single-seed
-   table means anything, which is why screens are never ranked.
+   table means anything, which is why the protocol's seed count is ten for every economy and why
+   g0235d is not ranked.
 
 5. **Absolute and proportional gaps rank the economies differently**, and the proportional ordering
    is the one finding 8 broke: it put g0235r first at 192% on a linear Sharpe of 0.011. The
@@ -853,90 +296,64 @@ kept. Finding 8 reorganised the file and comes first.
    ranking in this file is by fair gap.
 
 6. **Pre-registration record.** Of the eleven specs run with written predictions, the two
-   pre-registered decisions fired as written (gx7's negative; B4's gate), and E1's eight bounds and the
-   three baselines' no-gap predictions all held. The level predictions mostly missed on the routes and
-   mostly held on the baselines: g0235f's on both halves, g0235s's and g0235r's on their second, K4's
-   three level predictions low, X3's two high and BGN's baseline room low, none falsified. The lessons, each learned once: when a parameter enters the
-   SOLVE, check whether the solved table moved before assuming the cross-section did not (g0235f);
-   decompose a gap against the market before explaining it (finding 8); and a gain-per-decade
-   extrapolation at one window does not carry to another (X3); and a range built on one legacy seed
-   inherits that seed's draw (the BGN baseline's room).
+   pre-registered decisions fired as written (gx7's negative; g0235d's gate), and E1's eight bounds
+   and the three baselines' no-gap predictions all held. The level predictions mostly missed on the
+   parameterizations and mostly held on the baselines: g0235f's on both halves, g0235s's and
+   g0235r's on their second, vyg25's three level predictions low, BGN's baseline room low, none
+   falsified. The lessons, each learned once: when a parameter enters the SOLVE, check whether the
+   solved table moved before assuming the cross-section did not (g0235f); decompose a gap against the
+   market before explaining it (finding 8); a range built on one legacy seed inherits that seed's
+   draw (the BGN baseline's room); and a gain-per-decade extrapolation at one window does not carry
+   to another -- which is now a protocol matter rather than an experiment, since every economy
+   shares one window and one grid.
 
-9. **Where the gap is genuine, it is bounded by DKKM's estimation shortfall, and two dials reduce
-   it.** In all three Path 1 economies the linear methods reach 99% to 100% of their population
-   ceiling and DKKM 74% to 81% of its, with the smallest penalty on the grid winning in 29 of 30
-   seeds. Raising the price of the state's risk (K4) raised DKKM's share of its ceiling from 74% to
-   78% and the gap by 39%; doubling the window with one more decade of penalty (X3) raised the share
-   to 81% and the gap by 79%, with the window alone worth about 40% of that and the penalty the rest.
-   Both leave the grid bottom binding.
+9. **Where the gap is genuine, it is bounded by DKKM's estimation shortfall.** In both KP14 Path 1
+   economies the linear methods reach 99% to 100% of their population ceiling and DKKM 74% and 78% of
+   its, with the smallest penalty on the grid winning in 19 of 20 seeds. Raising the price of the
+   state's risk from 1.8 to 2.5 raised DKKM's share of its ceiling from 74% to 78% and the gap by
+   39%. That the grid floor bound at all is what the protocol's wider grid is for: until the argmax
+   is interior, the reported DKKM Sharpe is a statement about the grid.
 
-Superseded readings, kept so their numbers stay findable: **1** (room does not screen for the gap;
-true, and outside KP14 because the gap was the market shortfall), **2** (gap = room x capture with
-capture at most one is wrong; gap/room was 1.20 in g0235 and undefined in g28, which finding 8
-explains), **3** (the different-month confound was real, measured, and not the explanation for gap
-exceeding room: correcting the month sample moved gap/room the wrong way, WORKING.md §49), and **7**
-(the eight gaps are one mechanism in seven economies and a second in vyx: the first draft of finding
-8).
+## Open proposals
 
-## The route log: every proposal, and what became of it
+| proposal | what it would decide | status |
+|---|---|---|
+| K6, gamma_v 1.2 with vyx's exposures | whether a defensible calibration shows a gap: the price ladder's low end, E[mu] about 14% a year against vyx's 18.2% and vyg25's 22.9% | OPEN, and now the leading candidate: the referee-facing number |
+| K1, a continuum of exposures | fifteen types over [0, 0.14], shares right-skewed. A smooth exposure map suits random features and lowers the market's average exposure | OPEN, about 7.5 h of integrals then 30 h of seeds |
+| K3, persistence of the priced state | kappa_y 0.15 and 0.70. Informative about mechanism, not about the size of the gap: slower reversion bends values more but gives a window fewer cycles | OPEN, two solves of about 90 min |
+| K2, a rare extreme type | shares (0.45, 0.45, 0.10), top loading 0.14 to 0.20 | OPEN, low priority; the discount check that withdrew K5 applies |
+| G3, the GS21 default-channel probe | whether GS21 has any non-market Sharpe: equity near default is a convex claim on the same shock, so its loading rises as the state worsens | OPEN, 20 min, oracle only. Its gate needs an evaluation-window room clause of at least +0.05 as well as a market share below 85% -- KP14's baseline meets the market clause at 35% and has no gap |
 
-| proposal | what it decided | predicted | outcome |
-|---|---|---|---|
-| A1 the three baselines under the current code | whether any model as published has a complexity gap, and what every route is measured against | fair gap within 0.005 of zero in all three; falsified above +0.01 | DONE 2026-09-15: DKKM - best fair linear +0.0012, -0.0024, -0.0022; (DKKM - FMR) / FMR 10.2%, 7.4%, 6.6%; twelve of thirteen graded predictions right, BGN's room low |
-| E1 fair linear benchmark | whether the BGN and GS gaps exist | fair gap within the registered bounds; vyx at least +0.08 | DONE 2026-09-13: every bound held; DKKM - best fair linear at most +0.0025 outside vyx; vyx +0.1046 |
-| K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | DONE 2026-09-14: DKKM - best linear +0.1450, (DKKM - FMR) / FMR 19.5%; room +0.41, room / FMR 51.9%; below the range, not falsified |
-| X3 vyx at T=860, window 720 | whether DKKM's shortfall is data | gap +0.13 to +0.17, room unchanged | DONE 2026-09-14: DKKM - best linear +0.1875, (DKKM - FMR) / FMR 29.7%; the 1e-4 penalty wins every seed |
-| B4 stress-dominant BGN | whether BGN has non-market Sharpe to find | room above +0.04, fair gap +0.005 to +0.015 | DONE 2026-09-14: screen missed both gates; DKKM - best fair linear +0.0004; regime path closed |
-| B1 persistence ladder | whether spell length moves the gap at fixed room | room unchanged | DONE 2026-09-13: room moved 13x; DKKM - best fair linear stayed between -0.0025 and +0.0025 |
-| G1 gamma(x) times exposure types | whether exposure heterogeneity adds anything in GS | gap above g28's, or retire | DONE 2026-09-11: negative fired (DKKM - best linear +0.0229 against g28's +0.0283; (DKKM - FMR) / FMR 17.5% against 18.2%), path retired |
-| K1 continuum of exposures | smooth exposure maps | room and gap up modestly | OPEN |
-| K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | OPEN |
-| G3 default-channel probe | whether GS has any non-market Sharpe | proceed only if the market is below 85% of SR_max | OPEN, 20 min |
-| K2 rare extreme type | bounded rank premia | -- | OPEN, low priority |
-| K5 signed exposures | -- | -- | WITHDRAWN: infeasible, rho_ty negative |
-| B2 along the frontier, B3 live rate | -- | -- | CLOSED by B4 |
-| X1 window ladder on g0235 | gap over room | -- | RETIRED: answered by finding 8 |
-| X2 more seeds for g28 and bx7 | -- | -- | MOOT: E1 says those gaps do not exist |
-| G4 wider gamma(x), G5 capture frontier | -- | -- | DROPPED |
-
-The next experiment, with its prediction and the case for it over the open items above:
-`docs/NEXTUP.md`.
-
-**On pushing further.** Every proposal that turns a dial up reports the annualised premia the oracle
-prints (E[mu] and its cross-sectional sd are in every oracle JSON) beside the gap, so a reader can see
-when an economy has left the empirically defensible range. The largest gap in a laboratory economy is
-worth less than a moderate gap in one a referee will accept.
-
-## Superseded and retired
-
-- `var-kp_vy-vyx-v1`: the vyx parameters under the mis-normalised arrival rate. Its published row is
-  the vyx line of the pre-refactor grid; do not quote for v2.
-- `var-gs_bx-bx7-v1` and `-v2`: old calibration and the level-shift ladder; v2 was superseded before
-  it ran. Retired manifest `a8ef7a2522eda19d` is the pre-kappa_e `sol_reg`.
-- `var-gs_bx-g28-v1`: the v2 economy; its precommitted solve id was invalidated by a comment-only
-  edit to the solver source.
-- The pre-refactor tables (`grid_summary.csv`, `oracle_summary.csv`, `summary_grid.xlsx`) and the
-  unseeded run files beside them were deleted on 2026-09-10 (WORKING.md §50); recoverable at
-  `23f9380`. For every economy still in use the ten-seed measurement dominates the single-seed one.
+Closed, with what closed them: BGN's regime path (five ten-seed points and a screen moved room by a
+factor of thirteen and never moved the fair gap past +0.0025); GS21's exposure path (gx7's
+pre-registered negative fired); K5, signed exposures (the economy does not exist -- the G solve
+discounts growth options at rho_ty, which goes negative for a loading of -0.06, and a negative
+discount removes the operator's dissipation); the window and penalty ladders (absorbed into the
+protocol, which fixes both for every economy).
 
 ## Adding an experiment
 
 1. Write `experiments/specs/var-<model>-<tag>-v1.json`: title, question, the parameter override,
    `env`, `estimation`, a written prediction with a falsification clause, and `expected_solves`
-   computed WITHOUT solving. Say in economic terms what differs from the baseline.
-2. Solve with the model's producer (`rebuild_jstar_gam.py`, `build_vy_tables.py`, `gs_solve_reg.py`
-   / `gs_solve_gam.py`); confirm the registry id matches the spec; publish with
+   computed WITHOUT solving. Say in economic terms what differs from the baseline. The `panel` and
+   `estimation` blocks are the protocol's -- `tests/test_protocol_is_uniform.py` refuses any other
+   sample, window, ridge grid or conditioning-column list. **A new economy is a parameter override
+   and nothing else.** If what you want to change is the sample, the window or the grid, you are
+   proposing a change to the protocol, which changes every row in this file and is not an experiment.
+2. Solve with the model's producer (`rebuild_jstar_gam.py`, `build_vy_tables.py`, `gs_solve_reg.py` /
+   `gs_solve_gam.py`); confirm the registry id matches the spec; publish with
    `variants/fetch_solves.py --publish`. A chained stage's id hashes its upstream tables' raw bytes,
    so build the chain on one platform or ship the upstream tables byte-identical (`docs/RUNS.md`).
 3. Add a `SEED_SPEC` case to `variants/run_seeds_slurm.sh` (`tests/test_specs_match_shell.py` pins it
-   to the spec). A new sample size needs its own tag: result files are named by model, tag and seed
-   only.
-4. Run ONE seed at N=500, T=500 and read `sacct` before sizing an array. Then seeds 1-9.
-5. `python variants/aggregate_seeds.py --flagship` and `python variants/fair_gap.py`; commit the
-   result files and the tables; add the economy here, to the current table and under its path, with
-   what differs from the baseline in economic terms first and what the result decided against the
-   prediction. Move its proposal into the route log. `tests/test_results_md_matches_table.py` fails
-   until the table row is added.
+   to the spec). The case carries the economy's parameters and nothing else: no `KAPPAS`, no
+   `RF_COLS`, no `SEED_T`.
+4. Run ONE seed and read `sacct` before sizing an array. Then seeds 1-9. Ten seeds or the economy
+   does not go in a ranked table.
+5. `python variants/aggregate_seeds.py` and `python variants/fair_gap.py`; commit the result files
+   and the tables; add the economy here with what differs from the baseline in economic terms first
+   and what the result decided against the prediction. Report the winning penalty and feature count
+   per seed: if the penalty grid's edge won, the DKKM number is censored and says less than it looks.
+   `tests/test_results_md_matches_table.py` fails until the row is added.
 6. Push, then pull the shared checkout on the cluster with `bash variants/cluster_pull.sh`, never a
    plain `git pull`: the cluster still holds its own untracked copies of the files just committed
    (`docs/RUNS.md`, "Where output goes").

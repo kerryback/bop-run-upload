@@ -23,23 +23,25 @@
 #     sbatch --export=ALL,SEED_SPEC=g28   variants/run_seeds_slurm.sh
 #     sbatch --export=ALL,SEED_SPEC=bx7   variants/run_seeds_slurm.sh
 #
-#   Proposed economies added 2026-09-10 (docs/RESULTS.md, "Proposed next, ranked"):
+#   Proposed economies added 2026-09-10 (docs/RESULTS.md, "Open proposals"):
 #     g0235f g0235s g0235r   BGN regime-gamma at 4x faster / 5x slower / rare-and-short
 #     gx7                    GS gamma(x) crossed with the five exposure types
 #
-#   Proposed 2026-09-13 (docs/RESULTS.md finding 8, "Proposed next, ranked"):
+#   Proposed 2026-09-13 (docs/RESULTS.md finding 8, "Open proposals"):
 #     vyg25    K4  vyx with gamma_v 2.5 (its own tables, prefix vyg25)
-#     vyxT860  X3  the vyx economy at T=860 / window 720 (vyx's solves; its OWN TAG, because every
-#                  result file is named by model, tag and seed only)
-#     g0235d   B4  g0235 stressed two thirds of the time -- seed 0 is a screen, run it alone first
+#     g0235d   B4  g0235 stressed two thirds of the time
+#
+#   vyxT860 (X3) was removed 2026-09-15: its economy IS vyx's, and it differed only in T, the
+#   window and the ridge grid -- numerical choices, which the protocol now fixes for everyone.
 #
 #   The three BASELINES, added 2026-09-14 (A1, docs/NEXTUP.md; docs/RESULTS.md "Baselines: the
 #   anchor"): each paper's economy as published, run through the same pipeline as every path that
-#   departs from it. They narrow the conditioning columns (RF_COLS, passed as --rf_cols) to the
-#   state the paper's model has, so an inert regime or an unloaded state is not fed to the bases:
-#     bgnbase  A1  bgn_gam at gmult [1,1] (rate only)
-#     kpbase   A1  kp_vy with one type at beta 0, no priced state (no conditioning column)
-#     gsbase   A1  gs_bx one type at gmreg [1,1] (productivity state only)
+#   departs from it -- including, since 2026-09-15, the same conditioning columns. A baseline
+#   used to narrow them (RF_COLS) to the state its paper has, which made baseline and
+#   parameterization differ in their feature bases as well as their economics:
+#     bgnbase  A1  bgn_gam at gmult [1,1], the regime inert
+#     kpbase   A1  kp_vy with one type at beta 0, no priced state
+#     gsbase   A1  gs_bx one type at gmreg [1,1], the regime inert
 #
 #   SEED_STAGE=linear (E1) re-scores a SAVED panel's linear methods, plus the fair ones, reading
 #   panel/moments/oracle from BOP_INPUTS_DIR (default results/) and writing to BOP_RESULTS_DIR,
@@ -205,12 +207,11 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vyxT860 | g0235d | bgnbase | kpbase | gsbase) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | g0235d | bgnbase | kpbase | gsbase) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
-    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v2; SOLVE_TAG=vyx
-    KAPPAS=0.001,0.01,0.1,1
+    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v3; SOLVE_TAG=vyx
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
@@ -228,8 +229,7 @@ case "$SEED_SPEC" in
     # 62876077 aborted in 44 s on 2026-09-08 with "no live solve recorded" while
     # be222462dd017b2c sat in the registry the whole time. Failing closed and cheap is
     # the right direction for this check, but it was asking the wrong question.
-    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v2; SOLVE_TAG=Jstar_g0235
-    KAPPAS=0.001,0.01,0.1,1
+    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v3; SOLVE_TAG=Jstar_g0235
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
@@ -241,9 +241,8 @@ case "$SEED_SPEC" in
     # Stationary stress share held at EXACTLY 1/3, as g0235 has it, so this is the same
     # economy at a different speed -- which is what makes it a clean test of the
     # rolling-window mechanism behind gap > room (WORKING.md §40, §49).
-    MODEL=bgn_gam; TAG=g0235f; SPEC=var-bgn_gam-g0235f-v1; SOLVE_TAG=Jstar_g0235f
+    MODEL=bgn_gam; TAG=g0235f; SPEC=var-bgn_gam-g0235f-v2; SOLVE_TAG=Jstar_g0235f
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.08333333333333333, "p10": 0.16666666666666666, "jstar_gam_file": "Jstar_g0235f.csv"}'
-    KAPPAS=0.001,0.01,0.1,1
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
   g0235s)
@@ -253,9 +252,8 @@ case "$SEED_SPEC" in
     # 5x SLOWER: calm 240mo, stress 120mo, ~2 switches inside a 360-month window.
     # Stationary stress share also held at 1/3. Paired with g0235f as a 20x speed ladder:
     # if the gap is flat across it, the rolling-window explanation is refuted.
-    MODEL=bgn_gam; TAG=g0235s; SPEC=var-bgn_gam-g0235s-v1; SOLVE_TAG=Jstar_g0235s
+    MODEL=bgn_gam; TAG=g0235s; SPEC=var-bgn_gam-g0235s-v2; SOLVE_TAG=Jstar_g0235s
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.008333333333333333, "jstar_gam_file": "Jstar_g0235s.csv"}'
-    KAPPAS=0.001,0.01,0.1,1
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
   g0235r)
@@ -266,9 +264,8 @@ case "$SEED_SPEC" in
     # This one moves the stationary MIX as well as the speed, so it is a different
     # economy rather than a different speed. It is the crash-like shape, and the question
     # is whether a window holding ~36 stress months can still learn the interaction.
-    MODEL=bgn_gam; TAG=g0235r; SPEC=var-bgn_gam-g0235r-v1; SOLVE_TAG=Jstar_g0235r
+    MODEL=bgn_gam; TAG=g0235r; SPEC=var-bgn_gam-g0235r-v2; SOLVE_TAG=Jstar_g0235r
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.0375, "jstar_gam_file": "Jstar_g0235r.csv"}'
-    KAPPAS=0.001,0.01,0.1,1
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
   bx7)
@@ -279,13 +276,12 @@ case "$SEED_SPEC" in
     # simulator reads GS_BX_* for which types exist; the solutions carry their own gs_bx
     # and gs_sim_bx.py refuses a ladder that disagrees with them. GS_SIM_OVERRIDES stays
     # UNSET (WORKING.md §42). The kappa grid is the spec's eight values.
-    MODEL=gs_bx; TAG=bx7; SPEC=var-gs_bx-bx7-v3; SOLVE_TAG=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
+    MODEL=gs_bx; TAG=bx7; SPEC=var-gs_bx-bx7-v4; SOLVE_TAG=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
     export GS_BX_SOLDIRS=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
     export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
     export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
     unset GS_SIM_OVERRIDES
-    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   gx7)
     # G1: gamma(x) crossed with the five exposure types (docs/RESULTS.md). Type f's
@@ -294,16 +290,15 @@ case "$SEED_SPEC" in
     # map, which is the rule that produced vyx, here with GS21's own state.
     # FIVE solve tags, and the first of them is sol_g28 REUSED: beta = 1 at this slope
     # is the g28 economy, so only four solves are new (run_gx7_slurm.sh).
-    MODEL=gs_bx; TAG=gx7; SPEC=var-gs_bx-gx7-v1
+    MODEL=gs_bx; TAG=gx7; SPEC=var-gs_bx-gx7-v2
     SOLVE_TAG=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
     export GS_BX_SOLDIRS=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
     export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
     export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
     unset GS_SIM_OVERRIDES
-    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
     # Built 2026-09-10 on Phoenix, every id matching its precommitment, and published. So the
     # hint is FETCH: remaking them is four ~5 h solves (run_gx7_slurm.sh, if ever needed).
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7-v1 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   g28)
     # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of
@@ -313,87 +308,71 @@ case "$SEED_SPEC" in
     # takes its structural parameters out of solution.npz; the three GS_BX_* variables are
     # its only statement of which types exist, and GS_SIM_OVERRIDES must stay UNSET --
     # run_oracle.py refuses an undeclared value there (WORKING.md §42).
-    MODEL=gs_bx; TAG=g28; SPEC=var-gs_bx-g28-v2; SOLVE_TAG=sol_g28
+    MODEL=gs_bx; TAG=g28; SPEC=var-gs_bx-g28-v3; SOLVE_TAG=sol_g28
     export GS_BX_SOLDIRS=sol_g28
     export GS_BX_BETAS=1.0
     export GS_BX_SHARES=1.0
     unset GS_SIM_OVERRIDES
-    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
     # The solve exists and is published content-addressed; 3-6 h to remake, seconds to
     # fetch. The hint says fetch, never re-solve.
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   vyg25)
     # K4: vyx with the price of the state's risk raised from 1.8 to 2.5 -- the dial finding 8
     # says matters, since the Sharpe the state's shock carries is the part the market misses.
     # Its own tables under prefix vyg25, built by variants/run_solve_slurm.sh from the spec.
-    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v1; SOLVE_TAG=vyg25
-    KAPPAS=0.001,0.01,0.1,1
+    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v2; SOLVE_TAG=vyg25
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyg25
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v1 variants/run_solve_slurm.sh'
-    ;;
-  vyxT860)
-    # X3: the vyx ECONOMY -- same parameters, same solves -- on a longer sample, T=860 with a
-    # 720-month window, so the same 125 evaluation months. Its own TAG: under TAG=vyx this would
-    # overwrite vyx's panels, moments and oracle files. Ridge grid extended down to 1e-4.
-    MODEL=kp_vy; TAG=vyxT860; SPEC=var-kp_vy-vyxT860-v1; SOLVE_TAG=vyx
-    KAPPAS=0.0001,0.001,0.01,0.1,1
-    : "${SEED_T:=860}"; : "${SEED_WINDOW:=720}"
-    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
-    export KP_VY_PREFIX=vyx
-    SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v2 variants/run_solve_slurm.sh'
     ;;
   g0235d)
     # B4: g0235's multipliers with the switch probabilities SWAPPED, so stress is two thirds of
     # months (48-month stress spells, 24-month calm). Seed 0 is a SCREEN: seeds 1-9 only if its
     # evaluation-window room >= +0.05 and non-market Sharpe >= 0.30 (the spec's notes).
-    MODEL=bgn_gam; TAG=g0235d; SPEC=var-bgn_gam-g0235d-v1; SOLVE_TAG=Jstar_g0235d
+    MODEL=bgn_gam; TAG=g0235d; SPEC=var-bgn_gam-g0235d-v2; SOLVE_TAG=Jstar_g0235d
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.041666666666666664, "p10": 0.020833333333333332, "jstar_gam_file": "Jstar_g0235d.csv"}'
-    KAPPAS=0.001,0.01,0.1,1
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v1 variants/run_solve_slurm.sh'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v2 variants/run_solve_slurm.sh'
     ;;
   bgnbase)
     # A1: the BGN baseline as published -- gmult [1, 1], so both regimes price the market shock
-    # at sigma_z 0.4 and the regime is inert (docs/RESULTS.md, "Baselines: the anchor"). Its own
-    # J* table (the solve's tag is the file name). RF_COLS keeps only the rate: the regime
-    # indicator gam_stand is an unpriced Markov chain here and the paper has no regime.
-    MODEL=bgn_gam; TAG=bgnbase; SPEC=var-bgn_gam-bgnbase-v1; SOLVE_TAG=Jstar_bgnbase
-    KAPPAS=0.001,0.01,0.1,1
-    RF_COLS=rf_stand
+    # at sigma_z 0.4 and the regime is inert (docs/RESULTS.md, "The three models as published"). Its own
+    # J* table (the solve's tag is the file name). Until 2026-09-15 this case narrowed the
+    # bases to the rate alone; it now sees the full set, gam_stand included, as every
+    # economy does -- an inert regime is a noise column, and paying for it is the price of
+    # baseline and parameterization being scored the same way.
+    MODEL=bgn_gam; TAG=bgnbase; SPEC=var-bgn_gam-bgnbase-v2; SOLVE_TAG=Jstar_bgnbase
     export BGN_PARAM_OVERRIDES='{"gmult":[1.0,1.0],"jstar_gam_file":"Jstar_bgnbase.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min; the table is committed'
     ;;
   kpbase)
     # A1: the KP14 baseline as published (r = 0.05, the repository's standing departure) -- one
     # firm type at beta 0, no priced state (gamma_v 0), no compensation. The y process is still
-    # simulated and exported; nothing loads on it, so RF_COLS=none keeps it out of the bases.
-    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v1; SOLVE_TAG=kpbase
-    KAPPAS=0.001,0.01,0.1,1
-    RF_COLS=none
+    # simulated and exported, and nothing loads on it -- its 21 integral tables agree across y
+    # to 4e-12. The bases see it anyway, as they do in vyx: a column no firm loads on is noise,
+    # and withholding it from the baseline alone would make the baseline a different protocol.
+    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v2; SOLVE_TAG=kpbase
     export KP_PARAM_OVERRIDES='{"type_share":[1.0],"type_bv":[0.0],"gamma_v":0.0,"bv_comp":0.0}'
     export KP_VY_PREFIX=kpbase
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=kpbase KP_PARAM_OVERRIDES=<the blob above> python build_vy_tables.py kpbase   # the tables are committed'
     ;;
   gsbase)
     # A1: the GS21 baseline as published at the corrected Table I -- one type, the regime solver
-    # at gmreg [1, 1] so gamma_s = gamma_x 0.5 in both regimes and the regime is inert. RF_COLS
-    # keeps only the productivity state x. The solve is hours (run_gsbase_slurm.sh, chained
-    # afterok); the hint is FETCH, as for every GS economy.
-    MODEL=gs_bx; TAG=gsbase; SPEC=var-gs_bx-gsbase-v1; SOLVE_TAG=sol_gsbase
+    # at gmreg [1, 1] so gamma_s = gamma_x 0.5 in both regimes and the regime is inert. The
+    # bases see the full set, gam_stand included, as every economy's do. The solve is hours
+    # (run_gsbase_slurm.sh, chained afterok); the hint is FETCH, as for every GS economy.
+    MODEL=gs_bx; TAG=gsbase; SPEC=var-gs_bx-gsbase-v2; SOLVE_TAG=sol_gsbase
     export GS_BX_SOLDIRS=sol_gsbase
     export GS_BX_BETAS=1.0
     export GS_BX_SHARES=1.0
     unset GS_SIM_OVERRIDES
-    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
-    RF_COLS=rf_stand
     # Built on Sol 2026-09-15 (job 63257244: tolerance exit at sweep 3024, the precommitted id) and
     # published content-addressed, so the hint is FETCH. Remaking it is one 5.6 h solve
     # (run_gsbase_slurm.sh).
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v1 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vyxT860, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
@@ -401,14 +380,45 @@ esac
 # what drifted between run_gs_bx7.sh and its spec. It is the parameters, not the seed,
 # that define the economy, so every task in an array exports the same ones.
 
+# ---- THE MEASUREMENT PROTOCOL ---------------------------------------------------------
+# These four are the same for EVERY economy, so they are set once here rather than per
+# case. variants/common/protocol.py defines them and tests/test_protocol_is_uniform.py
+# pins these literals to it and to every spec's panel/estimation block, so the three
+# copies cannot drift apart. They drifted before: each case carried its own KAPPAS= line,
+# three different ridge grids reached the estimators, and DKKM's Sharpe -- a max over that
+# grid, censored at its floor in 29 of 30 KP14 Path 1 seeds -- was not comparable across
+# rows. docs/RESULTS.md, "The measurement protocol", says what each value is for.
+#
+# The grid is wide on BOTH sides so the argmax CAN be interior. That it IS interior is a
+# check on each economy's results, not a property of the grid (docs/RESULTS.md).
 N=${SEED_N:-500}
 T=${SEED_T:-500}
 WINDOW=${SEED_WINDOW:-360}
+KAPPAS=1e-05,0.0001,0.001,0.01,0.1,1.0,10.0
 
-# Conditioning columns for the feature bases, when a case narrows them (the baselines: an inert
-# regime or an unloaded state is a noise column). Unset means the model's full set, which every
-# economy before 2026-09-14 ran with; the spec's estimation.rf_cols pins each case's value. The
-# same list goes to BOTH stages, and run_estimators.py refuses a panel whose oracle used another.
+# An off-protocol run is a smoke test and may not be reported, so it may not write where
+# the reported results live. SEED_N/SEED_T/SEED_WINDOW stay available for one -- they are
+# how the scaling probes were measured -- but such a run must name its own
+# BOP_RESULTS_DIR. Without this guard, probes at N=60/T=80/window=20 landed in
+# variants/results and were aggregated into economy_table.csv beside the real economies
+# (the smoke, bigN, scal* and bscal* rows, removed 2026-09-15).
+if [ "$N" != 500 ] || [ "$T" != 500 ] || [ "$WINDOW" != 360 ]; then
+  if [ -z "${BOP_RESULTS_DIR:-}" ]; then
+    echo "REFUSED: N=$N T=$T window=$WINDOW departs from the protocol (500/500/360)." >&2
+    echo "  An off-protocol run may not write into the reported results. Point it" >&2
+    echo "  elsewhere, e.g. BOP_RESULTS_DIR=/data/\$USER/probe." >&2
+    exit 2
+  fi
+  echo "WARNING: off-protocol run (N=$N T=$T window=$WINDOW) -> $BOP_RESULTS_DIR;" \
+       "not reportable (variants/common/protocol.py)" >&2
+fi
+
+# Conditioning columns for the feature bases. NO case narrows them: every economy runs the
+# model's full set, which is what leaving RF_COLS unset means. The plumbing stays because
+# run_oracle.py --rf_cols is still the way to ask the question, and because the list is
+# recorded in every summary and run record -- run_estimators.py refuses a panel whose oracle
+# used a different one. A case that sets it would be off protocol and is refused by
+# tests/test_protocol_is_uniform.py.
 RF_ARGS=()
 [ -n "${RF_COLS:-}" ] && RF_ARGS=(--rf_cols "$RF_COLS")
 

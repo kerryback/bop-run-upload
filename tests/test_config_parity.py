@@ -41,11 +41,19 @@ KP14 = {"theta_eps": "KP14_THETA_EPS", "sigma_eps": "KP14_SIGMA_EPS",
 
 # Deliberate divergences. Key -> reason. A bare name is rejected by the test itself.
 WHITELIST = {
-    ("kp_vy", "burnin"): "variant simulates its own panels and wants a longer burn-in "
-                         "(400) than the main pipeline's KP14_BURNIN (200); affects no solve",
-    ("bgn_gam", "burnin"): "same reason as kp_vy: the variant burns in 300 months "
-                           "against the main pipeline's BGN_BURNIN of 200; simulation "
-                           "only, enters no solve",
+    ("kp_vy", "burnin"): "the variants pipeline burns in 400 months -- the measurement "
+                         "protocol's BURNIN (variants/common/protocol.py), shared by all "
+                         "three models -- against the main pipeline's KP14_BURNIN of 200. "
+                         "Two trees, two burn-ins, deliberately: main.py produces nothing "
+                         "that is reported. Within variants/ the value is uniform and is "
+                         "pinned by tests/test_protocol_is_uniform.py; simulation only, "
+                         "enters no solve",
+    ("bgn_gam", "burnin"): "same reason as kp_vy: variants/ runs the protocol's 400 against "
+                           "the main pipeline's BGN_BURNIN of 200. It was 300 here until "
+                           "2026-09-15, which made BGN's panels a different measurement "
+                           "from KP14's for no stated reason; simulation only, enters no "
+                           "solve, though burnin does sit in the params the BGN J* manifests "
+                           "hash, so moving it re-keyed six solve ids",
     # rho_x and sigma_x are no longer divergent -- the variant now carries config's
     # 0.96 quarterly. Kept out of the whitelist deliberately so the test CHECKS them.
     ("gs_bx", "xnum"): "grid size is a cost decision, not an economic parameter: the "

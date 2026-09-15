@@ -96,7 +96,7 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
                 f"simulated together. Re-solve the ladder with one parameter set.")
 
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
-burnin = 300
+burnin = 400          # the protocol's BURNIN (common/protocol.py)
 alpha_e = 0.2
 reg_seed = 909
 chars = ["size", "bm", "agr", "roe", "mom", "lev"]

@@ -14,9 +14,9 @@ walks spec -> manifests -> artifacts, copies what is missing, and verifies what 
 copied. Nothing new had to be built to make sharing work.
 
 usage:
-    python variants/fetch_solves.py --spec var-gs_bx-bx7-v3 --from "/path/to/publish"
+    python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "/path/to/publish"
     python variants/fetch_solves.py --all --from "/path/to/publish"
-    python variants/fetch_solves.py --spec var-gs_bx-bx7-v3            # check only
+    python variants/fetch_solves.py --spec var-gs_bx-bx7-v4            # check only
     python variants/fetch_solves.py --all --publish "/path/to/publish" # push, don't pull
 
 The publish layout is content-addressed, mirroring the registry:
@@ -57,7 +57,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--spec", help="spec_id, e.g. var-gs_bx-bx7-v3")
+    g.add_argument("--spec", help="spec_id, e.g. var-gs_bx-bx7-v4")
     g.add_argument("--all", action="store_true", help="every live (non-superseded) spec")
     ap.add_argument("--from", dest="src", help="publish folder to copy artifacts FROM")
     ap.add_argument("--publish", help="publish folder to copy artifacts INTO")

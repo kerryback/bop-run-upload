@@ -1,0 +1,94 @@
+{
+    "schema_version": 1,
+    "spec_id": "var-bgn_gam-g0235-v3",
+    "title": "BGN with a 2-state regime multiplying the prices of risk, pushed near the closed-form frontier",
+    "question": "Does an extreme regime-gamma economy open enough room for a nonlinear SDF method to beat FMR/FFC?",
+    "notes": "Current runnable spec for the g0235 economy. gmult max 3.5 sits just under the closed-form frontier 1/(2*scale) = 3.6548 asserted at variants/bgn_gam/sdf_compute.py:46.\n\nOn v1's published figures: because this economy is unchanged and its J* table is byte-identical, the ABSOLUTE figures (room +0.0233, gap_RFF-lin +0.0297, t 29.1) still describe this economy. The RANK (4 of 24) does NOT carry over -- it is a statement about the other 23 specs, and kp_vy and gs_bx both changed economies on 2026-09-04 and 2026-09-06. Quote the levels, not the ranking, until the grid is regenerated.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: the parent's SR_max 0.1461, EW market 0.1061, FMR 0.0557,\nbest linear 0.0855, DKKM 0.1081, gap +0.0227, fair gap +0.0006, room +0.0176.\n(a) room and SR_max unchanged within seed noise: neither burn-in nor the grid touches a\npopulation quantity, and rf_cols was already the full set.\n(b) DKKM rises 0.000 to 0.010 on the added decades; the fair gap stays at or below +0.005,\nsince finding 8 says this gap is the market and the fair benchmark holds the market too.\n(c) the winning penalty is interior in at least 8 of 10 seeds. FALSIFIED as an\noff-protocol artifact if the fair gap exceeds +0.02.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).",
+    "lineage": {
+        "parent_spec": "var-bgn_gam-g0235-v2",
+        "supersedes": "var-bgn_gam-g0235-v2",
+        "changes": [
+            "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
+            "panel.burnin 300 -> 400 (common/protocol.py BURNIN, all three models)",
+            "estimation.kappas [0.001, 0.01, 0.1, 1] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
+            "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has",
+            "estimation.fair_linear added: declared, not changed -- the seed array already passes --fair_linear on every full run"
+        ]
+    },
+    "engine": "oracle",
+    "model": "bgn_gam",
+    "method": {
+        "kp_regime_labels": "n/a",
+        "zero_book_in_sdf_solve": true
+    },
+    "panel": {
+        "N": 500,
+        "T": 500,
+        "burnin": 400
+    },
+    "seeds": {
+        "base": 0,
+        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+    },
+    "params": {
+        "gmult": [
+            0.2,
+            3.5
+        ],
+        "jstar_gam_file": "Jstar_g0235.csv"
+    },
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "solve": {
+        "stages": [
+            {
+                "name": "jstar",
+                "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+                "param_env": "BGN_PARAM_OVERRIDES",
+                "params": {
+                    "gmult": [
+                        0.2,
+                        3.5
+                    ],
+                    "jstar_gam_file": "Jstar_g0235.csv"
+                },
+                "args": {},
+                "type_index": null
+            }
+        ]
+    },
+    "estimation": {
+        "chars": [
+            "size",
+            "bm",
+            "agr",
+            "roe",
+            "mom"
+        ],
+        "window": 360,
+        "levels": true,
+        "include_mkt": true,
+        "kappas": [
+            1e-05,
+            0.0001,
+            0.001,
+            0.01,
+            0.1,
+            1.0,
+            10.0
+        ],
+        "fair_linear": true
+    },
+    "provenance": {
+        "source_script": "variants/bgn_gam/run_g0235.sh",
+        "transcribed": "2026-09-04",
+        "verified_by": "tests/test_specs_match_shell.py"
+    },
+    "spec_hash": "5d87e6f3ff0736567f0eccaff1f06220c0f96e26b31cb6204bef1a0d404e6031",
+    "expected_solves": {
+        "jstar": "2d462ae0f4463f03"
+    },
+    "precommitted": true,
+    "solves_pending": [
+        "jstar"
+    ]
+}

@@ -44,10 +44,19 @@ Definitions (variants/common/oracle.py evaluate_bases; run_estimators.py):
               the low-denominator seeds dominate the first. The printed table and RESULTS.md
               quote the RATIO OF MEANS, for the same reason §40 gives for gap/room.
 
+ON PROTOCOL. Reading the canonical results directory, every row must be at the measurement
+protocol's N, T and window (variants/common/protocol.py), and this refuses to write a table
+that mixes samples. It did mix them: scaling and smoke probes at N=60 to 500, T=80 to 200 and
+windows 20/36/50 sat in economy_table.csv beside the real economies, and the one economy at
+T=860 sat beside the twelve at T=500, so `--flagship` existed to filter the table down to the
+rows that could be compared. The filter is gone because there is nothing to filter: an
+off-protocol run must write to its own BOP_RESULTS_DIR (run_seeds_slurm.sh refuses otherwise),
+and aggregating such a directory warns instead of refusing.
+
 usage:
-  python variants/aggregate_seeds.py                 # every (model, tag, N, T, window)
-  python variants/aggregate_seeds.py --flagship      # N=500, T=500 only
-  python variants/aggregate_seeds.py --out DIR       # default: variants/results
+  python variants/aggregate_seeds.py                 # the canonical directory; every row on protocol
+  python variants/aggregate_seeds.py --results DIR   # e.g. an off-protocol probe directory
+  python variants/aggregate_seeds.py --out DIR       # default: the results dir
 writes {out}/seed_table.csv and {out}/economy_table.csv and prints the economy table.
 """
 import argparse
@@ -55,9 +64,13 @@ import glob
 import json
 import os
 import re
+import sys
 
 import numpy as np
 import pandas as pd
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "common"))
+import protocol
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RFF = ("rff", "rff_ens", "rff_lev", "rff_lev_ens")
@@ -211,21 +224,40 @@ def render(econ):
     return "\n".join(lines)
 
 
+def off_protocol(econ):
+    """Rows whose sample is not the protocol's, as `model/tag N=.. T=.. w=..` strings."""
+    bad = []
+    for _, r in econ.iterrows():
+        w = None if pd.isna(r["window"]) else int(r["window"])
+        if (r["N"], r["T"], w) != (protocol.N, protocol.T, protocol.WINDOW):
+            bad.append(f"{r['model']}/{r['tag']} N={r['N']} T={r['T']} w={w}")
+    return bad
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--results", default=os.path.join(HERE, "results"))
     ap.add_argument("--out", default=None, help="default: the results dir")
-    ap.add_argument("--flagship", action="store_true", help="keep only N=500, T=500")
     a = ap.parse_args(argv)
     seeds = seed_rows(a.results)
     econ = economy_table(seeds)
-    # The CSVs are always the COMPLETE set, so the tracked tables do not depend on which
-    # flag the last person ran; --flagship narrows only what is printed.
+    off = off_protocol(econ)
+    canonical = os.path.realpath(a.results) == os.path.realpath(os.path.join(HERE, "results"))
+    if off and canonical:
+        raise SystemExit(
+            "REFUSED: the canonical results directory holds rows off the measurement "
+            "protocol (N=%d T=%d window=%d):\n  %s\n"
+            "Rows measured on different samples are not comparable, and a table that mixes "
+            "them invites exactly the comparison it should prevent. An off-protocol run "
+            "belongs in its own BOP_RESULTS_DIR." % (
+                protocol.N, protocol.T, protocol.WINDOW, "\n  ".join(off)))
+    if off:
+        print("WARNING: off protocol, not reportable:\n  " + "\n  ".join(off) + "\n",
+              file=sys.stderr)
     out = a.out or a.results
     seeds.to_csv(os.path.join(out, "seed_table.csv"), index=False)
     econ.to_csv(os.path.join(out, "economy_table.csv"), index=False)
-    shown = econ[(econ["N"] == 500) & (econ["T"] == 500)] if a.flagship else econ   # NOT econ.T: transpose
-    print(render(shown))
+    print(render(econ))
     print(f"\nwrote {os.path.join(out, 'seed_table.csv')} ({len(seeds)} rows) and economy_table.csv ({len(econ)} rows)")
     return 0
 

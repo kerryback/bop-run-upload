@@ -1,95 +1,96 @@
 {
-  "schema_version": 1,
-  "spec_id": "var-bgn_gam-g0235d-v1",
-  "title": "BGN regime-gamma at g0235's multipliers, stressed two thirds of the time",
-  "question": "Can BGN produce a gap over linear methods that are given the market on equal terms?",
-  "notes": "B4 (docs/RESULTS.md, BGN proposals). IDENTICAL to var-bgn_gam-g0235-v2 except the two switch probabilities, SWAPPED: calm-to-stress 0.25/12 -> 0.50/12 and stress-to-calm 0.50/12 -> 0.25/12. The stationary stress share is two thirds instead of one third, in stress spells averaging 48 months between 24-month calm spells. gmult stays [0.2, 3.5]; the J* table is re-solved because p01/p10 enter it through Preg.\n\nWHY: finding 8 says DKKM leaves the market only where the Sharpe the market does not span is large. Within g0235s a seed's evaluation-window stress share correlates 0.97-0.99 with its SR_max, room and DKKM, and the only BGN seed with a large non-market Sharpe (g0235s seed 2, 0.40) was stressed in 84% of its months.\n\nPREDICTION (2026-09-13): evaluation-window room above +0.04; non-market Sharpe sqrt(SR_max^2 - SR_ew^2) 0.2 to 0.3; DKKM 0.03 to 0.06 above the EW market; and a FAIR gap -- best DKKM minus the best linear method including those given the market unpenalised (linrank_m, linlev_m, mkt_est) -- of only +0.005 to +0.015, because BGN's within-regime premium is close to affine in book-to-price and 1/price.\n\nSCREEN: seed 0 runs first. Seeds 1-9 run only if seed 0's evaluation-window room is at least +0.05 AND its evaluation-window non-market Sharpe (oracle sr_orth_eval) at least 0.30. If the screen misses, BGN's regime path is finished.\n\nPRECOMMITMENT: the jstar id below was computed from these parameters and the current source WITHOUT solving, via _scratch/precommit_id.sh, whose path was re-validated the same minute by recomputing g0235f's 8662d7c1079f4b41. This spec is committed BEFORE variants/run_solve_slurm.sh builds the table, so git can certify the order.",
-  "lineage": {
-    "parent_spec": "var-bgn_gam-g0235-v2",
-    "supersedes": null,
-    "changes": [
-      "p01 0.020833333333333332 -> 0.041666666666666664; p10 0.041666666666666664 -> 0.020833333333333332 (swapped)",
-      "jstar_gam_file Jstar_g0235d.csv",
-      "estimation.fair_linear added",
-      "gmult and every other parameter unchanged"
-    ]
-  },
-  "engine": "oracle",
-  "model": "bgn_gam",
-  "method": {
-    "kp_regime_labels": "n/a",
-    "zero_book_in_sdf_solve": true
-  },
-  "panel": {
-    "N": 500,
-    "T": 500,
-    "burnin": 300
-  },
-  "seeds": {
-    "base": 0,
-    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
-  },
-  "params": {
-    "gmult": [
-      0.2,
-      3.5
-    ],
-    "p01": 0.041666666666666664,
-    "p10": 0.020833333333333332,
-    "jstar_gam_file": "Jstar_g0235d.csv"
-  },
-  "param_env": "BGN_PARAM_OVERRIDES",
-  "solve": {
-    "stages": [
-      {
-        "name": "jstar",
-        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
-        "param_env": "BGN_PARAM_OVERRIDES",
-        "params": {
-          "gmult": [
+    "schema_version": 1,
+    "spec_id": "var-bgn_gam-g0235d-v1",
+    "title": "BGN regime-gamma at g0235's multipliers, stressed two thirds of the time",
+    "question": "Can BGN produce a gap over linear methods that are given the market on equal terms?",
+    "notes": "B4 (docs/RESULTS.md, BGN proposals). IDENTICAL to var-bgn_gam-g0235-v2 except the two switch probabilities, SWAPPED: calm-to-stress 0.25/12 -> 0.50/12 and stress-to-calm 0.50/12 -> 0.25/12. The stationary stress share is two thirds instead of one third, in stress spells averaging 48 months between 24-month calm spells. gmult stays [0.2, 3.5]; the J* table is re-solved because p01/p10 enter it through Preg.\n\nWHY: finding 8 says DKKM leaves the market only where the Sharpe the market does not span is large. Within g0235s a seed's evaluation-window stress share correlates 0.97-0.99 with its SR_max, room and DKKM, and the only BGN seed with a large non-market Sharpe (g0235s seed 2, 0.40) was stressed in 84% of its months.\n\nPREDICTION (2026-09-13): evaluation-window room above +0.04; non-market Sharpe sqrt(SR_max^2 - SR_ew^2) 0.2 to 0.3; DKKM 0.03 to 0.06 above the EW market; and a FAIR gap -- best DKKM minus the best linear method including those given the market unpenalised (linrank_m, linlev_m, mkt_est) -- of only +0.005 to +0.015, because BGN's within-regime premium is close to affine in book-to-price and 1/price.\n\nSCREEN: seed 0 runs first. Seeds 1-9 run only if seed 0's evaluation-window room is at least +0.05 AND its evaluation-window non-market Sharpe (oracle sr_orth_eval) at least 0.30. If the screen misses, BGN's regime path is finished.\n\nPRECOMMITMENT: the jstar id below was computed from these parameters and the current source WITHOUT solving, via _scratch/precommit_id.sh, whose path was re-validated the same minute by recomputing g0235f's 8662d7c1079f4b41. This spec is committed BEFORE variants/run_solve_slurm.sh builds the table, so git can certify the order.",
+    "lineage": {
+        "parent_spec": "var-bgn_gam-g0235-v2",
+        "supersedes": null,
+        "changes": [
+            "p01 0.020833333333333332 -> 0.041666666666666664; p10 0.041666666666666664 -> 0.020833333333333332 (swapped)",
+            "jstar_gam_file Jstar_g0235d.csv",
+            "estimation.fair_linear added",
+            "gmult and every other parameter unchanged"
+        ],
+        "superseded_by": "var-bgn_gam-g0235d-v2"
+    },
+    "engine": "oracle",
+    "model": "bgn_gam",
+    "method": {
+        "kp_regime_labels": "n/a",
+        "zero_book_in_sdf_solve": true
+    },
+    "panel": {
+        "N": 500,
+        "T": 500,
+        "burnin": 300
+    },
+    "seeds": {
+        "base": 0,
+        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+    },
+    "params": {
+        "gmult": [
             0.2,
             3.5
-          ],
-          "p01": 0.041666666666666664,
-          "p10": 0.020833333333333332,
-          "jstar_gam_file": "Jstar_g0235d.csv"
-        },
-        "args": {},
-        "type_index": null
-      }
-    ]
-  },
-  "estimation": {
-    "chars": [
-      "size",
-      "bm",
-      "agr",
-      "roe",
-      "mom"
-    ],
-    "window": 360,
-    "levels": true,
-    "include_mkt": true,
-    "kappas": [
-      0.001,
-      0.01,
-      0.1,
-      1
-    ],
-    "fair_linear": true
-  },
-  "provenance": {
-    "source_script": null,
-    "source_script_note": "proposed 2026-09-13 as B4 in docs/RESULTS.md",
-    "runner": "variants/run_seeds_slurm.sh",
-    "runner_note": "SEED_SPEC=g0235d; seed 0 is the screen",
-    "solve_runner": "variants/run_solve_slurm.sh",
-    "verified_by": "tests/test_specs_match_shell.py"
-  },
-  "spec_hash": "d36c1a540270e6a0376222e5cd243def8a12c2886a980d86485bf3f84e51cf44",
-  "expected_solves": {
-    "jstar": "e136e8b440bce761"
-  },
-  "precommitted": true,
-  "solves_pending": "jstar precommitted 2026-09-13; to be built by variants/run_solve_slurm.sh after this spec is committed"
+        ],
+        "p01": 0.041666666666666664,
+        "p10": 0.020833333333333332,
+        "jstar_gam_file": "Jstar_g0235d.csv"
+    },
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "solve": {
+        "stages": [
+            {
+                "name": "jstar",
+                "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+                "param_env": "BGN_PARAM_OVERRIDES",
+                "params": {
+                    "gmult": [
+                        0.2,
+                        3.5
+                    ],
+                    "p01": 0.041666666666666664,
+                    "p10": 0.020833333333333332,
+                    "jstar_gam_file": "Jstar_g0235d.csv"
+                },
+                "args": {},
+                "type_index": null
+            }
+        ]
+    },
+    "estimation": {
+        "chars": [
+            "size",
+            "bm",
+            "agr",
+            "roe",
+            "mom"
+        ],
+        "window": 360,
+        "levels": true,
+        "include_mkt": true,
+        "kappas": [
+            0.001,
+            0.01,
+            0.1,
+            1
+        ],
+        "fair_linear": true
+    },
+    "provenance": {
+        "source_script": null,
+        "source_script_note": "proposed 2026-09-13 as B4 in docs/RESULTS.md",
+        "runner": "variants/run_seeds_slurm.sh",
+        "runner_note": "SEED_SPEC=g0235d; seed 0 is the screen",
+        "solve_runner": "variants/run_solve_slurm.sh",
+        "verified_by": "tests/test_specs_match_shell.py"
+    },
+    "spec_hash": "d36c1a540270e6a0376222e5cd243def8a12c2886a980d86485bf3f84e51cf44",
+    "expected_solves": {
+        "jstar": "e136e8b440bce761"
+    },
+    "precommitted": true,
+    "solves_pending": "jstar precommitted 2026-09-13; to be built by variants/run_solve_slurm.sh after this spec is committed"
 }

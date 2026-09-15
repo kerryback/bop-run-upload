@@ -10,8 +10,8 @@
 # spec precommitted. Chain the spec's seed array on it with --dependency=afterok:<this job>,
 # so the array can only start on the economy its spec names.
 #
-#     sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v1   variants/run_solve_slurm.sh
-#     sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v1 variants/run_solve_slurm.sh
+#     sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v2   variants/run_solve_slurm.sh
+#     sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v2 variants/run_solve_slurm.sh
 #
 # The parameters are READ from experiments/specs/<SOLVE_SPEC>.json, never restated here: a
 # second copy of an economy's parameters is what drifted before (tests/test_specs_match_shell.py
@@ -22,7 +22,7 @@
 # Submit from the REPO ROOT. Both producers record their manifest in experiments/registry and
 # their tables beside themselves, which is where the seed array's precondition looks.
 set -euo pipefail
-: "${SOLVE_SPEC:?set SOLVE_SPEC=<spec id>, e.g. sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v1 ...}"
+: "${SOLVE_SPEC:?set SOLVE_SPEC=<spec id>, e.g. sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v2 ...}"
 
 CONDA_ENV=${CONDA_ENV:-bop}
 module load mamba/latest
