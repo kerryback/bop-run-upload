@@ -3602,8 +3602,12 @@ kpbase a state nothing loads on: noise columns, doubling the linear-rf basis. `r
 `run_estimators.py` gain `--rf_cols` (a subset, or `none`), passed by the seed array as `RF_COLS`, pinned
 by the spec's `estimation.rf_cols`, recorded in the oracle summary and the run record; the estimators
 refuse a panel whose oracle used a different list. Defaults unchanged: bgnbase keeps the rate, gsbase the
-productivity state, kpbase nothing. A/B smoke of the old and new runners on identical tiny panels is in
-`_scratch/smoke/` (result recorded below when it finishes).
+productivity state, kpbase nothing. A/B smoke of the old and new runners on identical tiny panels (`_scratch/smoke/`, kp_vy vyx at
+N=60, T=80, window 36): the oracle time series agree to 0.0 and the summaries differ only as NaN
+against NaN; the estimators' 2,900 rows and 76 summary rows agree to 0.0 on every numeric column. The
+narrowed paths run end to end (kp_vy with no conditioning column; bgn_gam with the rate only), both
+stages record `rf_cols`, and the guard refuses an estimator run whose list differs from the panel's
+oracle (exit 1 with the message naming the list to pass).
 
 **Built and checked on the Mac** (`a5b5673`): Jstar_bgnbase's J0 and J1 agree to 3e-13 and span 23.3 to
 156.6, the unit-multiplier range of the legacy `Jstar_gam.csv`; the 21 kpbase integral tables are identical
