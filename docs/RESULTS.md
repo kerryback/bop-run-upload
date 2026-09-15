@@ -20,6 +20,43 @@ methods themselves beat the equal-weighted market by 0.28 to 0.33 and DKKM beats
 their models' routes the fair gap is between -0.0025 and +0.0025, and in the three models as published
 it is between -0.0024 and +0.0012 (the anchor, below).
 
+**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
+seeds. Differences are in the same Sharpe units. Every column headed "% of" is relative: that row's
+figure divided by the named linear Sharpe, as a percentage. In parentheses, the standard deviation
+across the ten seeds.
+
+- **economy** -- the model directory and run tag.
+- **window** -- the months of data each estimator is fit on.
+- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+  absolute difference in Sharpe units.
+- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
+  rank-linear ridge with and without level features given the equal-weighted market as a separate
+  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
+  difference in Sharpe units, and the complexity gap outside KP14.
+- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
+  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests DKKM against
+  Fama-MacBeth only, not against the best linear method.
+- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
+  A level.
+- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
+  on rank-standardised characteristics with and without level features. A level, and the denominator of
+  every % of lin column.
+- **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
+- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
+  evaluation months. An upper bound on every other Sharpe in the row.
+- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
+  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
+  units; no estimation involved.
+- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
+- **gap / room** -- the gap divided by room eval, a plain ratio. Below 1, the estimator gained less over
+  the linear methods than the fixed-coefficient headroom.
+
 | economy | what it is | window | gap | gap % of lin | fair gap | fair gap % of fair lin | t | DKKM | best linear | EW market | SR_max eval | room eval | room eval % of lin | gap / room |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | kp_vy/vyxT860 | vyx on an 860-month panel, a 720-month window, penalty grid down to 1e-4 | 720 | +0.1875 (0.0393) | 28.5% | +0.1872 | 28.5% | 54.6 | 0.8452 | 0.6577 | 0.3577 | 1.2294 | +0.3864 | 58.8% | 0.49 |
@@ -83,6 +120,45 @@ The three models as published, before any path was built on them, run through th
 exactly as every path that departs from them: a spec with precommitted solve ids, ten seeds, the fair
 benchmark. Every "what the route added" statement in this file is a difference against these rows.
 
+**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
+seeds. Differences are in the same Sharpe units; columns headed "% of" are relative, that row's figure
+divided by the named linear Sharpe. In parentheses, the standard deviation across the ten seeds.
+
+- **spec** -- the file in `experiments/specs/` that defines the economy.
+- **what it is** -- the economy in words.
+- **room all** -- the same headroom computed over all panel months rather than the evaluation months.
+  Absolute.
+- **room all % of lin** -- room all as a percentage of the best linear method's Sharpe. Relative.
+- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
+  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
+  units; no estimation involved.
+- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
+- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+  absolute difference in Sharpe units.
+- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
+  rank-linear ridge with and without level features given the equal-weighted market as a separate
+  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
+  difference in Sharpe units, and the complexity gap outside KP14.
+- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+- **fair gap t** -- the fair gap's mean across the ten seeds divided by its standard error across seeds.
+- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
+  A level.
+- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
+  on rank-standardised characteristics with and without level features. A level, and the denominator of
+  every % of lin column.
+- **fair linear** -- the Sharpe of the best of the seven fair linear methods. A level, and the
+  denominator of fair gap % of fair lin.
+- **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
+- **market / SR_max** -- the EW market's Sharpe divided by SR_max eval, a ratio of the two means: the
+  share of the attainable Sharpe the market alone reaches.
+- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
+  evaluation months. An upper bound on every other Sharpe in the row.
+
 | model | spec | what it is | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | fair gap t | DKKM | best linear | fair linear | EW market | market / SR_max | SR_max eval |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | BGN | var-bgn_gam-bgnbase-v1 | one priced market shock at sigma_z 0.4 (gmult [1, 1]), project betas from a translated exponential, Vasicek rate; Table I, 11 of 11 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | +0.0012 (0.0071) | 0.5% | 0.5 | 0.2214 | 0.2148 | 0.2202 | 0.1405 | 0.50 | 0.2805 |
@@ -118,6 +194,16 @@ What the anchor says:
 
 **The registered predictions, graded.** Each spec wrote its prediction before its solve ran.
 
+**How to read this table.** Rooms, gaps and SR_max are monthly Sharpe values, defined as in the table
+above.
+
+- **quantity** -- the statistic the spec predicted.
+- **predicted** -- the range written into the spec before its solve ran. Absolute Sharpe units.
+- **ten seeds** -- the ten-seed mean. For a room or a gap, the same figure as a percentage of the best
+  linear method's Sharpe follows in parentheses; for a fair gap, as a percentage of the best fair linear
+  method's Sharpe. se is the standard error of the mean across seeds.
+- **verdict** -- right if the result fell in the predicted range; otherwise wrong, with the direction.
+
 | baseline | quantity | predicted | ten seeds | verdict |
 |---|---|---|---|---|
 | BGN | all-month room | +0.030 to +0.045 | +0.0251 (se 0.0017; 11.7% of lin) | wrong, low |
@@ -143,6 +229,16 @@ pipeline, with the rate as the only conditioning column, is the legacy BGN proto
 
 **How each baseline is produced.**
 
+**How to read this table.** One row per baseline economy; no measurements.
+
+- **economy** -- the model directory and run tag.
+- **what it is in the code** -- the settings that make the model directory reproduce the published
+  economy.
+- **conditioning columns** -- the aggregate-state variables fed to the feature bases and the random
+  features, alongside the firm characteristics.
+- **solve** -- the precommitted solve ids, where and how long each was built, and where the artifact
+  lives.
+
 | economy | what it is in the code | conditioning columns | solve |
 |---|---|---|---|
 | bgn_gam/bgnbase | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision (REPORT.md §13e) | the rate only | jstar `c6287d53674cc1ef`, Mac, 491 s, table committed |
@@ -160,6 +256,24 @@ summary and run record; the estimators refuse a panel whose oracle used a differ
 
 **What the legacy rows said.** The pre-refactor grid ran each baseline once
 (`23f9380:variants/results/grid_summary.csv`; narrative `variants/REPORT.md` §14):
+
+**How to read this table.** One seed each, from the pre-refactor grid. Sharpe ratios are monthly, as
+above, but SR_max and room are averaged over all panel months rather than the evaluation months, so they
+are not comparable with room eval. There is no fair benchmark.
+
+- **SR_max, all months** -- the maximum attainable conditional Sharpe, averaged over all panel months. A
+  level.
+- **room, all months** -- the fixed-coefficient nonlinear headroom over all panel months. An absolute
+  difference in Sharpe units.
+- **room % of lin** -- that room as a percentage of the run's best linear Sharpe. Relative.
+- **best linear** -- the Sharpe of the best linear method in that run. A level, and the denominator of
+  both % columns.
+- **DKKM** -- the Sharpe of the random-feature estimator, averaged over its random draws. A level.
+- **gap** -- DKKM minus best linear. Absolute.
+- **gap % of lin** -- the gap as a percentage of best linear. Relative.
+- **t** -- the paired t-statistic of DKKM against Fama-MacBeth across the evaluation months, one seed.
+- **the economy the current code builds?** -- whether the row describes the economy the current code
+  builds.
 
 | model | SR_max, all months | room, all months | room % of lin | best linear | DKKM | gap | gap % of lin | t | the economy the current code builds? |
 |---|---|---|---|---|---|---|---|---|---|
@@ -202,9 +316,12 @@ worth. Ten seeds per economy; every figure is mean (sd across seeds) unless the 
 - **gap % of lin** -- `gap` over the linear Sharpe attained. Reorders the economies (finding 5) and
   misleads once the market is accounted for: g0235r's 192% is a linear Sharpe of 0.011 in months where
   the market earns 0.047.
-- **t** -- the paired t-statistic of DKKM against Fama-MacBeth across evaluation months, averaged
-  over seeds.
-- **DKKM**, **best linear** -- the two Sharpes whose difference is `gap`.
+- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
+  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests against Fama-MacBeth
+  only, not against the best linear method.
+- **DKKM**, **best linear** -- the two Sharpes whose difference is `gap`. Every Sharpe in this file is
+  monthly, not annualised: a portfolio's one-month conditional Sharpe on the true moments, averaged over
+  the evaluation months and then over seeds.
 - **SR_max eval** -- the oracle's maximum attainable conditional Sharpe over the evaluation months, a
   bound on every estimator by Cauchy-Schwarz. It holds on all eighty runs.
 - **fair gap (E1)** -- DKKM minus the best of seven linear methods, the original four plus
@@ -262,13 +379,51 @@ the end collects them.
 All twelve CURRENT economies at N=500, T=500, window 360. Mean (sd) over ten seeds. The three
 baselines come first, as the anchor.
 
+**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over the n
+seeds. Differences are in the same Sharpe units; columns headed "% of" are relative, that row's figure
+divided by the named linear Sharpe, a ratio of the ten-seed means. In parentheses, the standard
+deviation across seeds. These columns apply to both tables below.
+
+- **economy** -- the model directory and run tag.
+- **spec** -- the file in `experiments/specs/` that defines the economy.
+- **n** -- the number of seeds.
+- **room all** -- the same headroom computed over all panel months rather than the evaluation months.
+  Absolute.
+- **room all % of lin** -- room all as a percentage of the best linear method's Sharpe. Relative.
+- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
+  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
+  units; no estimation involved.
+- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
+- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+  absolute difference in Sharpe units.
+- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
+  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests DKKM against
+  Fama-MacBeth only, not against the best linear method.
+- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
+  A level.
+- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
+  on rank-standardised characteristics with and without level features. A level, and the denominator of
+  every % of lin column.
+- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
+  evaluation months. An upper bound on every other Sharpe in the row.
+- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
+  rank-linear ridge with and without level features given the equal-weighted market as a separate
+  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
+  difference in Sharpe units, and the complexity gap outside KP14.
+- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+
 | economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | 10 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | 15.9 | 0.2214 | 0.2148 | 0.2805 | +0.0012 (0.0071) | 0.5% |
 | kp_vy/kpbase | var-kp_vy-kpbase-v1 | 10 | +0.0040 (0.0008) | 2.0% | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | 17.6 | 0.2073 | 0.2020 | 0.2292 | -0.0024 (0.0046) | -1.1% |
 | gs_bx/gsbase | var-gs_bx-gsbase-v1 | 10 | +0.0014 (0.0001) | 0.5% | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | 25.2 | 0.2908 | 0.2782 | 0.2980 | -0.0022 (0.0014) | -0.7% |
 
-The nine route economies, ranked by fair gap:
+The nine route economies, ranked by fair gap, in the same columns:
 
 | economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -333,6 +488,34 @@ path's finding survives.
 
 The one route that produced a complexity gap. Its ladder, in the order it was climbed:
 
+**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
+seeds, except the legacy vy row, which is one seed. Differences are in Sharpe units; columns headed "%
+of" are relative to the named linear Sharpe.
+
+- **gamma_v** -- the price of risk on the aggregate state y's shock.
+- **window** -- the months of data each estimator is fit on.
+- **grid floor** -- the smallest ridge penalty on DKKM's grid.
+- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
+  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
+  units; no estimation involved.
+- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
+- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+  absolute difference in Sharpe units.
+- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
+  rank-linear ridge with and without level features given the equal-weighted market as a separate
+  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
+  difference in Sharpe units, and the complexity gap outside KP14.
+- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+- **DKKM / its ceiling** -- DKKM's Sharpe as a percentage of the nonlinear ceiling over the evaluation
+  months, the best fixed-coefficient nonlinear Sharpe: how much of the population's nonlinear Sharpe the
+  estimator reached. For vy, the share of the room captured.
+- **status** -- CURRENT (ten seeds, current code) or LEGACY.
+
 | economy | gamma_v | window | grid floor | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM / its ceiling | status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | kp_vy/vy | 1.2 | 360 | 0.001 | +0.278 (all-month) | 51.3% (all-month) | +0.0289 | 5.3% | -- | -- | about 10% of the room | LEGACY, single seed, pre-fix economy |
@@ -384,6 +567,20 @@ falsified.** DKKM 0.9450, best linear 0.8000, market 0.4694. Against vyx the gap
 higher price created, 78% of its nonlinear ceiling against 74%, while the linear methods stayed at
 100% of theirs.
 
+**How to read this table.** Each row compares vyx, the prediction and vyg25 on one quantity.
+
+- **rows** -- the quantities the spec predicted. Rooms, gaps, Sharpes and SR_max are monthly Sharpe
+  values.
+- **vyx** -- the parent economy's ten-seed mean. For a room or a gap, the percentage of the best linear
+  method's Sharpe follows in parentheses.
+- **predicted** -- the range written into the spec before it ran. Absolute Sharpe units unless stated as
+  a percentage change.
+- **vyg25** -- the ten-seed result, with the same percentage for rooms and gaps. "up 18%" is the
+  relative change from vyx. Non-market Sharpe is the Sharpe the equal-weighted market does not span,
+  sqrt(SR_max^2 - EW^2).
+- **verdict** -- whether the result fell in the predicted range, and whether the spec's falsification
+  line was crossed.
+
 | | vyx | predicted | vyg25 | verdict |
 |---|---|---|---|---|
 | room, evaluation window | +0.3606 (56.1% of lin) | +0.45 to +0.50 | +0.4108 (51.4% of lin) | wrong, low |
@@ -414,6 +611,20 @@ of it and leaves the linear methods where they are.
 
 **Result: the shortfall is data, and more of it than predicted.** DKKM 0.8452 against 0.7475; linear
 0.6577 against 0.6428; room unchanged within seed noise.
+
+**How to read this table.** Each row compares vyx, the prediction and vyxT860 on one quantity.
+
+- **rows** -- the quantities the spec predicted. Rooms, gaps, Sharpes and SR_max are monthly Sharpe
+  values.
+- **vyx** -- the parent economy's ten-seed mean. For a room or a gap, the percentage of the best linear
+  method's Sharpe follows in parentheses.
+- **predicted** -- the range written into the spec before it ran. Absolute Sharpe units unless stated as
+  a percentage change.
+- **vyxT860** -- the ten-seed result, with the same percentage for rooms and gaps. A signed figure after
+  the level is the change from vyx; se is the standard error of that change, from the two economies'
+  seed standard deviations.
+- **verdict** -- whether the result fell in the predicted range, and whether the spec's falsification
+  line was crossed.
 
 | | vyx | predicted | vyxT860 | verdict |
 |---|---|---|---|---|
@@ -538,6 +749,33 @@ market and only 0.011 above the linear methods, which followed most of it; the s
 seed (B4) put DKKM 0.081 above the market and plain `linrank` followed all of it. The spec's rule ends
 the path on the miss.
 
+**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
+seeds, except g0235d, which is one seed. Differences are in Sharpe units; columns headed "% of" are
+relative to the named linear Sharpe.
+
+- **switch probabilities per month** -- the monthly probability of moving from calm to stress, and from
+  stress to calm.
+- **stress share** -- the long-run share of months spent in the stress regime.
+- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
+  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
+  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
+  units; no estimation involved.
+- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
+- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+  absolute difference in Sharpe units.
+- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
+  rank-linear ridge with and without level features given the equal-weighted market as a separate
+  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
+  difference in Sharpe units, and the complexity gap outside KP14.
+- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+- **DKKM - market** -- DKKM's Sharpe minus the equal-weighted market's. Absolute.
+- **market - best linear** -- the equal-weighted market's Sharpe minus the best linear method's.
+  Absolute. With DKKM - market, it sums to the gap.
+
 | economy | switch probabilities per month, calm to stress / stress to calm | stress share | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM - market | market - best linear |
 |---|---|---|---|---|---|---|---|---|---|---|
 | bgnbase, the baseline | inert: gmult [1, 1] | -- | +0.0225 | 10.5% | +0.0066 | 3.1% | +0.0012 | 0.5% | +0.0809 | -0.0743 |
@@ -599,6 +837,16 @@ two thirds of months in 48-month spells. Proposal B4, built on the one BGN seed 
 non-market Sharpe (g0235s seed 2, stressed in 84% of its months). Seeds 1 to 9 were gated on
 evaluation-window room of at least +0.05 AND the oracle's non-market Sharpe (`sr_orth_eval`) of at
 least 0.30.
+
+**How to read this table.** One seed, run as a screen. Rooms, gaps and Sharpes are monthly Sharpe
+values.
+
+- **rows** -- the quantities the spec predicted, and the two gates seeds 1 to 9 had to clear.
+- **predicted** -- the range written into the spec before seed 0 ran, with the gate in parentheses.
+  Absolute Sharpe units.
+- **seed 0** -- the result. For the room, its percentage of the best linear method's Sharpe follows in
+  parentheses; for the fair gap, its percentage of the best fair linear method's Sharpe. Non-market
+  Sharpe is the oracle's month-by-month Sharpe outside the equal-weighted market.
 
 | | predicted | seed 0 |
 |---|---|---|
@@ -776,6 +1024,32 @@ kept. Finding 8 reorganised the file and comes first.
    winning portfolio is barely off that point. Splitting each gap exactly into what DKKM adds over the
    market and what the market has over the best linear method:
 
+   **How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
+   conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
+   seeds. Differences are in Sharpe units; columns headed "% of" are relative to the named linear
+   Sharpe.
+
+   - **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
+     evaluation months. An upper bound on every other Sharpe in the row.
+   - **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
+   - **market / SR_max** -- the EW market's Sharpe divided by SR_max eval, a ratio of means: the share
+     of the attainable Sharpe the market alone reaches.
+   - **DKKM - market** -- DKKM's Sharpe minus the equal-weighted market's. Absolute.
+   - **market - best linear** -- the market's Sharpe minus the best linear method's. Absolute. The two
+     differences sum to the gap.
+   - **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
+     Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
+     absolute difference in Sharpe units.
+   - **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
+   - **fair gap (E1)** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap,
+     plus rank-linear ridge with and without level features given the equal-weighted market as a
+     separate unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An
+     absolute difference in Sharpe units, and the complexity gap outside KP14.
+   - **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
+     linear methods. Relative. Negative where a linear method given the market beats DKKM.
+   - **registered bound** -- for the route rows, the bound on the fair gap written before E1 ran; for
+     the baselines, the spec's own prediction. PASS if the fair gap met it.
+
    | economy | SR_max eval | EW market | market / SR_max | DKKM - market | market - best linear | gap | gap % of lin | fair gap (E1) | fair gap % of fair lin | registered bound |
    |---|---|---|---|---|---|---|---|---|---|---|
    | kp_vy/vyx | 1.1778 | 0.3675 | 0.31 | +0.3800 | -0.2753 | +0.1046 | 16.3% | +0.1046 | 16.3% | at least +0.08: PASS |
@@ -849,6 +1123,15 @@ exceeding room: correcting the month sample moved gap/room the wrong way, WORKIN
 8).
 
 ## The route log: every proposal, and what became of it
+
+**How to read this table.** One row per proposal, done or open.
+
+- **proposal** -- its label and a short name. K for KP14, B for BGN, G for GS21, X for sample and
+  window, E and A for benchmarks and baselines.
+- **what it decided** -- the question the experiment answers.
+- **predicted** -- the prediction written before it ran, in monthly Sharpe units.
+- **outcome** -- the date and the result. A gap or room is followed by its percentage of the best linear
+  method's Sharpe; a fair gap by its percentage of the best fair linear method's Sharpe.
 
 | proposal | what it decided | predicted | outcome |
 |---|---|---|---|

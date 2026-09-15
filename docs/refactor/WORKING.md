@@ -3745,3 +3745,31 @@ instead of position (a positional parser reads the wrong cell when a column is a
 `fair_gap_over_fair_lin`. Checked by mutation on a temporary copy: a stale room percentage for vyx and a
 sign-flipped fair-gap percentage for kpbase both fail by name. 244 pass.
 
+## §60. Every RESULTS.md table carries a key to its columns (2026-09-15)
+
+**Seth's point.** The first table did not say its measures are relative, so it was hard to read: a reader
+could not tell a Sharpe level from a difference in Sharpe from a percentage, or what a percentage was of.
+
+**What was added.** A "How to read this table" key directly above each of the 14 tables (the two pinned
+current-results tables share one, and the second's lead-in says so). Each key opens with the units and
+what the parentheses hold, then says for every column whether it is a level, an absolute difference in
+Sharpe units, a percentage of a named linear Sharpe, or a ratio, and gives its denominator.
+
+**Facts checked in the code before writing them down.**
+- Every Sharpe is monthly, not annualised: `run_estimators.evaluate` scores each month as
+  w'mu / sqrt(w'Sigma w) on the true moments, the summary averages over the evaluation months, and the
+  economy table averages the per-seed best over seeds. `oracle.evaluate_bases` scores the fixed-coefficient
+  ceilings behind room the same way (`cond_sr_mean`); SR_max eval is the mean of the monthly
+  sqrt(mu' Sigma^-1 mu).
+- `t` in the pinned tables is the LARGEST `t_vs_fm` over all random-feature rows (any P, any penalty), not
+  the winning estimator's, averaged over seeds. RESULTS.md's own column list called it "the paired
+  t-statistic of DKKM against Fama-MacBeth"; corrected there too.
+- `fair gap t` in the anchor table is across seeds: mean / (sd / sqrt(n)) in `fair_gap.py`.
+- `DKKM / its ceiling` is DKKM over the evaluation-window nonlinear ceiling (74%, 78%, 81% for vyx, vyg25,
+  vyxT860, recomputed from seed_table.csv; linear methods 99-100% of theirs).
+- `gap / room` is a plain ratio of means over room eval; `market / SR_max` a ratio of means.
+
+**Two fixes after reading the first key back.** The fair gap's definition said "the four above" where the
+four linear methods were defined further down, or in tables with no best-linear column not at all; the gap
+and fair-gap definitions now name their methods. Key lines were rewrapped to the file's width.
+
