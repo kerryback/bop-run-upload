@@ -103,16 +103,29 @@ What the anchor says:
   +0.004.** BGN's best route moved its measured gap from +0.006 to +0.023 and its fair gap to +0.0006;
   GS21's from +0.016 to +0.028, fair -0.0022.
 
-**What the anchor lacks.** Ten seeds, the current code, and the fair benchmark. The BGN row is the
-economy the current code builds, so its single-seed levels are citable (WORKING.md §39 reproduced
-the neighbouring g0235 row to the displayed digit). The KP14 row was simulated with the growth-option
-arrival regime mislabelled (mean arrival rate 1.72 instead of 1, fixed 2026-09-04), and the GS21 row
-with three Table I parameters wrong (fixed 2026-09-06); their levels describe different economies from
-the ones the paths below are compared with, and only the direction of each finding survives. Each
-baseline is one solve from a current-code run: `bgn_gam` at gmult = [1, 1] reproduces the baseline BGN
-economy to machine precision (REPORT.md §13e), `kp_vy` with `type_bv = [0]` reduces to the unit KP14
-economy (`variants/kp_vy/parameters_kp14.py`), and the GS21 regime solver at unit multipliers is the
-constant-gamma baseline (one solve of 3.5 to 6 h). `docs/NEXTUP.md` carries this as the anchor run.
+**How the anchor is being re-measured (A1, launched 2026-09-14).** The legacy rows are single seeds,
+and two of them describe economies the current code no longer builds: the KP14 row was simulated with the
+growth-option arrival regime mislabelled (mean arrival rate 1.72 instead of 1, fixed 2026-09-04) and the
+GS21 row with three Table I parameters wrong (fixed 2026-09-06). Each baseline is now a first-class
+economy of the pipeline, with its own spec, a precommitted solve, a `SEED_SPEC` case, and ten seeds scored
+with the fair benchmark, exactly as every path that departs from it:
+
+| economy | spec | what it is | conditioning columns | solve |
+|---|---|---|---|---|
+| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision (REPORT.md §13e) | the rate only | jstar `c6287d53674cc1ef`, built on the Mac, table committed |
+| kp_vy/kpbase | var-kp_vy-kpbase-v1 | `kp_vy` with one type at beta 0, gamma_v 0, bv_comp 0: constant prices of risk at the corrected arrival rate; r = 0.05 as in every KP14 path (the paper's 0.025 is the one standing departure) | none | G `7bc1f92a225c01b6`, integ `f299747cd77fc4a1`, built on the Mac, tables committed |
+| gs_bx/gsbase | var-gs_bx-gsbase-v1 | `gs_bx` with one type under the regime solver at gmreg [1, 1]: gamma_x 0.5 in both regimes, the corrected Table I | the productivity state only | sol_gsbase `c6ae2d52428a7ce5`, Sol |
+
+The conditioning columns are the one protocol difference from the rows above them. Every economy exports
+the regime indicator (BGN, GS) or the state y (KP14) into its panel, and the bases of every current row see
+the full set; a baseline drops the column its paper's model does not have, rather than interacting an
+unpriced Markov chain or an unloaded state into every basis (`--rf_cols`, recorded in each oracle summary
+and run record; the estimators refuse a panel whose oracle used a different list). Predictions registered
+in each spec before it ran: fair gap within 0.005 of zero in all three; BGN's all-month room +0.030 to
++0.045, KP14's evaluation-window room below +0.010, GS21's below +0.003. A fair gap above +0.01 in any of
+them would mean an unmodified model already carries a complexity gap, and every "what the route added"
+statement here is mis-anchored. Where the jobs ran: `docs/RUNS.md`. The three rows join the
+current-results table when their ten seeds land.
 
 ## How to read this
 

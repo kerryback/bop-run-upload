@@ -118,17 +118,18 @@ count per seed; the oracle's E[mu] beside the gap.
    which is exactly why it is cheap to settle. Queue it on Phoenix `htc` beside X4; it competes with
    nothing.
 
-## Owed to the record, not an experiment: A1, the anchor under current code
+## A1, the anchor under current code -- LAUNCHED 2026-09-14
 
-RESULTS.md now presents the three baselines as the anchor, and two of the three rows describe
-economies the current code no longer builds (KP14's arrival rate, GS21's Table I), all three are single
-seeds, and none was scored against the fair benchmark. Ten seeds of each with `--fair_linear`:
-`bgn_gam` at gmult [1, 1] (a 15-minute J* solve; reproduces the baseline to machine precision),
-`kp_vy` with `type_bv` [0] (one type of integrals, about 30 min), and the GS21 regime solver at unit
-multipliers (one solve of 3.5 to 6 h). About 90 node-hours of seeds. Prediction: fair gap within 0.003
-of zero in all three; BGN's room +0.036 reproduced; KP14's room below +0.005 at the corrected arrival
-rate; GS21's room at zero. Worth running on Phoenix while X4 occupies Sol, because every "what the
-route added" sentence in RESULTS.md is measured against these rows.
+RESULTS.md presents the three baselines as the anchor, and two of the three legacy rows described
+economies the current code no longer builds. Each baseline is now a first-class economy: specs
+`var-bgn_gam-bgnbase-v1`, `var-kp_vy-kpbase-v1` and `var-gs_bx-gsbase-v1`, solve ids precommitted
+before any solve ran, `SEED_SPEC` cases `bgnbase`, `kpbase`, `gsbase`, ten seeds each with the fair
+benchmark, and the conditioning columns narrowed to the state each paper has (`--rf_cols`). The BGN
+and KP14 solves were built on the Mac and committed; the GS21 solve runs on Sol with its seed array
+chained behind it. Registered predictions: fair gap within 0.005 of zero in all three; room +0.030 to
++0.045 (BGN, all-month), below +0.010 (KP14) and below +0.003 (GS21); falsified as no-gap baselines if
+any fair gap exceeds +0.01. Jobs: `docs/RUNS.md`. When they land, RESULTS.md's anchor table gains
+ten-seed rows beside the legacy ones and every "what the route added" sentence is re-read against them.
 
 ## Not worth running
 
