@@ -217,6 +217,47 @@ def live_solves(model, tag):
                    and want & set(m.get("tags") or [])})
 
 
+def run_matches_protocol(run_json):
+    """True when `run_json` was produced at the measurement protocol's estimation settings.
+
+    WHY THIS EXISTS, and it cost a campaign restart to learn. run_is_current keys the seed
+    checkpoint on the SOLVE, on the premise that "re-solving the economy invalidates every
+    seed at once". The 2026-09-15 protocol change broke that premise from a direction the
+    checkpoint could not see: it changed the ridge grid, the burn-in and the conditioning
+    columns while leaving KP14's and GS21's solve ids untouched. So all seventy of their
+    seeds looked current, and seventy tasks exited in three seconds each with "already
+    complete and current for the recorded solve" against pre-protocol results.
+
+    A solve is not the only thing a result depends on. This adds the estimation half, read
+    from the run record the estimators write: the ridge grid, the window, the fair
+    benchmark and the winsorisation. A seed whose record predates a protocol change is not
+    current, whatever its solve says.
+    """
+    import json as _json
+    sys.path.insert(0, _HERE)
+    import protocol
+    if not os.path.exists(run_json):
+        return False, "no run record"
+    try:
+        with open(run_json) as f:
+            rec = _json.load(f)
+    except (OSError, ValueError) as e:
+        return False, f"unreadable run record ({e})"
+    bad = []
+    got_k = [float(k) for k in (rec.get("kappas") or [])]
+    if got_k != list(protocol.KAPPAS):
+        bad.append(f"kappas {got_k} != protocol {list(protocol.KAPPAS)}")
+    if rec.get("window") != protocol.WINDOW:
+        bad.append(f"window {rec.get('window')!r} != protocol {protocol.WINDOW}")
+    if not rec.get("fair_linear"):
+        bad.append("fair_linear not recorded; the protocol scores the fair benchmark in-run")
+    if (rec.get("winsor") or 0.0) != protocol.WINSOR:
+        bad.append(f"winsor {rec.get('winsor')!r} != protocol {protocol.WINSOR}")
+    if bad:
+        return False, "off protocol: " + "; ".join(bad)
+    return True, "on protocol"
+
+
 def run_is_current(run_json, model, tag):
     """True when `run_json` was produced from the solves currently live for model+tag.
 
@@ -242,7 +283,12 @@ def run_is_current(run_json, model, tag):
         return False, "run record names no solve_id"
     if got != want:
         return False, f"built from {', '.join(got)}; registry now has {', '.join(want) or 'nothing'}"
-    return True, f"current for {', '.join(want)}"
+    # The solve is necessary and not sufficient: a protocol change can invalidate every seed
+    # without moving a single solve_id. See run_matches_protocol.
+    ok, why = run_matches_protocol(run_json)
+    if not ok:
+        return False, why
+    return True, f"current for {', '.join(want)}, on protocol"
 
 
 def _main(argv):
