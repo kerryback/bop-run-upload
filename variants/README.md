@@ -26,6 +26,9 @@ Run everything from an environment with the repo requirements plus `pyarrow`
 | `kp_vy/` | KP14 with a priced OU volatility factor y and three firm types with exposure e^{beta y}, gamma_v = 1.8 and beta in {0.02, 0.07, 0.14} (REPORT §19, §19d) | `vyx` | `kp_vy/run_vyx.sh` |
 | `gs_bx/` | GS21 (2-regime, exact-kernel re-solve) with five exposure types beta in {1, 2.5, 4, 5.5, 7} (REPORT §19) | `bx7` | solves: `gs_bx/run_gs_bx7_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=bx7`) |
 | `gs_bx/` | GS21 single type with a linear-in-x, clipped price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1) -- the reconstruction of REPORT §13g's gamma(x) economy, spec `var-gs_bx-g28-v2` | `g28` | solve: `gs_bx/run_g28_slurm.sh`; panel: `run_seeds_slurm.sh` (`SEED_SPEC=g28`) |
+| `bgn_gam/` | **the BGN baseline as published**: gmult [1, 1], the regime inert; spec `var-bgn_gam-bgnbase-v1` (A1, 2026-09-14) | `bgnbase` | solve: `rebuild_jstar_gam.py` on the Mac (table committed); panel: `run_seeds_slurm.sh` (`SEED_SPEC=bgnbase`) |
+| `kp_vy/` | **the KP14 baseline as published** (r = 0.05): one type at beta 0, no priced state; spec `var-kp_vy-kpbase-v1` | `kpbase` | solve: `build_vy_tables.py kpbase` on the Mac (tables committed); panel: `SEED_SPEC=kpbase` |
+| `gs_bx/` | **the GS21 baseline as published** at the corrected Table I: one type, gmreg [1, 1]; spec `var-gs_bx-gsbase-v1` | `gsbase` | solve: `gs_bx/run_gsbase_slurm.sh`; panel: `SEED_SPEC=gsbase` |
 
 **Results live in [`docs/RESULTS.md`](../docs/RESULTS.md)** -- every economy, what differs from
 its model's baseline in economic terms, and its ten-seed numbers, organised by model and by the

@@ -22,6 +22,13 @@ ap.add_argument("--tag", type=str, default="baseline")
 ap.add_argument("--rff", type=str, default="36,360,3600")
 ap.add_argument("--nmat", type=int, default=2, help="independent RFF draws")
 ap.add_argument("--no_rf", action="store_true", help="BGN: do not feed the interest rate to the feature bases")
+ap.add_argument("--rf_cols", type=str, default=None,
+                help="which of the panel's conditioning columns the feature bases see, comma-separated "
+                     "(bgn_gam and gs_bx export rf_stand and gam_stand, kp_vy exports rf_stand); "
+                     "'none' for no conditioning column. Default: the model's full set. The BASELINE "
+                     "economies use this to drop a state the paper's model does not have -- an inert "
+                     "regime at unit multipliers, or the KP14 state y that no firm loads on -- so that "
+                     "a noise column is not interacted into every basis. Recorded in the summary as rf_cols.")
 ap.add_argument("--save_panel", action="store_true")
 ap.add_argument("--levels", action="store_true", help="add fixed-stats level features (and rffL bases)")
 ap.add_argument("--spec", type=str, default=None,
@@ -179,8 +186,22 @@ panel = panel.loc[nans[~nans].index]
 months = panel.index.unique("month")
 months = months[(months >= burnin + 14) & (months <= T + burnin - 2)]
 d = len(chars)
-n_rf = 2 if args.model in ("bgn_gam", "gs_bx") else 1
-use_rf = not args.no_rf   # all three economies expose conditioning variables
+# Which conditioning columns the bases see. Every economy exports its full set into the panel
+# (bgn_gam and gs_bx: the standardised rate/productivity state and the regime; kp_vy: the priced
+# state y); --rf_cols narrows that for a run whose economy does not use one of them, and the
+# choice travels in the oracle summary as `rf_cols` so a re-scoring can reproduce it.
+_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"]}
+rf_cols = list(_RF_ALL[args.model])
+if args.rf_cols is not None:
+    rf_cols = [] if args.rf_cols.strip().lower() in ("", "none") else [c.strip() for c in args.rf_cols.split(",") if c.strip()]
+    _bad = [c for c in rf_cols if c not in _RF_ALL[args.model]]
+    if _bad:
+        raise SystemExit(f"--rf_cols names {_bad}, which {args.model} does not export (it has {_RF_ALL[args.model]})")
+if args.no_rf:
+    rf_cols = []
+n_rf = len(rf_cols)
+use_rf = n_rf > 0
+print(f"[features] conditioning columns fed to the bases: {rf_cols or 'none'}", flush=True)
 
 # ---- collect true conditional moments (N x N per month) -------------------------------------------
 months_data, rows = [], []
@@ -191,8 +212,7 @@ for k, month in enumerate(months):
     mu = rp[keep]; Sigma = cond_var[np.ix_(keep, keep)]
     X_raw = data[chars].to_numpy()
     md = {"month": month, "mu": mu, "Sigma": Sigma, "X_raw": X_raw, "X_rank": rank_standardize(X_raw),
-          "rf": ((np.array([data.rf_stand.iloc[0], data.gam_stand.iloc[0]]) if args.model in ("bgn_gam", "gs_bx")
-                  else float(data.rf_stand.iloc[0])) if use_rf else None), "w_true": w_true[keep], "keep": keep}
+          "rf": (np.array([float(data[c].iloc[0]) for c in rf_cols]) if use_rf else None), "w_true": w_true[keep], "keep": keep}
     months_data.append(md)
     rows.append({"month": month, "n": len(keep), "sr_max": max_sr(mu, Sigma), "sr_max_code": sr_max_code,
                  "rf": float(np.atleast_1d(md["rf"])[0]) if md["rf"] is not None else None, "mean_mu": mu.mean(), "sd_mu": mu.std(),
@@ -274,7 +294,7 @@ def agg_rff(res):
     return agg
 agg = agg_rff(res)
 
-summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "overrides": os.environ.get(ov_env, "{}"),
+summary = {"model": args.model, "tag": args.tag, "N": N, "T": T, "seed": args.seed, "rf_cols": list(rf_cols), "overrides": os.environ.get(ov_env, "{}"),
            "solves": solves, "aggregate_seeds": _agg, "spec_id": args.spec,
            "eval_window": args.eval_window, "eval_months": _n_eval,
            "months": len(ts), "sr_max_mean": float(ts.sr_max.mean()), "sr_max_code": float(ts.sr_max_code.mean()),
