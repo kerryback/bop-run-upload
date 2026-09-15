@@ -3773,3 +3773,39 @@ Sharpe units, a percentage of a named linear Sharpe, or a ratio, and gives its d
 four linear methods were defined further down, or in tables with no best-linear column not at all; the gap
 and fair-gap definitions now name their methods. Key lines were rewrapped to the file's width.
 
+## §61. RESULTS.md: one column guide at the top, one column set, gap and room relative to Fama-MacBeth (2026-09-15)
+
+**Seth's request.** The per-table keys still left the tables hard to read. Explain every column once at
+the top; give every table the same columns; and report gap and room relative to what the linear method
+FMR achieves: [(best DKKM SR) - (best FMR SR)] / (best FMR SR).
+
+**What changed.**
+- A "Reading the tables" section at the top: the protocol, units (every Sharpe monthly), the fourteen
+  columns of every economy table with their formulas, the six columns of every prediction table, and the
+  two cautions. The 13 per-table keys are gone; "How to read this" keeps only labels, provenance and ordering.
+- Every economy table (answer, anchor, legacy anchor, both current-results tables, KP14 ladder, BGN
+  ladder, finding 8) uses: economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR |
+  DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR |
+  t, DKKM vs FMR. Headers state the formula. Path-specific settings (gamma_v, window, switch probabilities)
+  moved into the economy cell; finding 8's registered bounds into a line under its table, its split read
+  off the Sharpe columns. Every prediction table uses economy | quantity | reference | predicted | result |
+  verdict. The baseline-production table gained the spec id.
+- The "% of lin" and "% of fair lin" percentages (§59) are replaced by percentages of FMR SR: that was the
+  denominator Seth meant.
+
+**FMR in the pipeline.** `aggregate_seeds.py` now records Fama-MacBeth's Sharpe per seed (`fm`, one row
+per summary, no penalty grid), `gap_fm = dkkm - fm`, per-seed percentages, and the ratios of means
+`gap_fm_over_fm`, `room_eval_over_fm`, `room_all_over_fm`. Regenerated: every pre-existing column of
+economy_table.csv and seed_table.csv is bit-identical; only columns were added.
+
+**Where FMR's Sharpe is near zero the percentage explodes, and the file says so.** Ten-seed means:
+g0235r FMR 0.0003 (seeds down to -0.0094) gives (DKKM - FMR) / FMR 9,675.8%; g0235s 0.0145 (to -0.0144)
+gives 325.7%; g0235 0.0557 gives 94.2%. In KP14 the FMR-based figures are close to the best-linear ones
+(vyx 17.0% against 16.3%); in BGN and GS they are two to four times larger, because FMR is the weakest
+linear method there. FMR is the best linear method in only 1 to 3 seeds of ten on most economies (5 in gsbase).
+
+**Test.** `tests/test_results_md_matches_table.py` requires the Current results tables to carry exactly
+the unified headers, and pins every cell: seeds, SR_max, FMR, best linear and DKKM Sharpes, both gaps
+against the economy table, the market and fair gap against the E1 table, room, both FMR percentages
+(ratios of means) and t.
+

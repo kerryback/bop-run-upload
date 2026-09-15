@@ -1,69 +1,105 @@
 # Experimental results
 
-The record of every economy run through the oracle-and-estimator pipeline: what each was built to
-test, what it produced, and what it decided. Last updated 2026-09-15, when the three models as published (A1) landed at ten seeds under the
-current code; the K4, X3 and B4 campaign and E1's fair re-scoring landed the two days before. The current-results
-table is checked against `variants/results/economy_table.csv` and
+The record of every economy run through the oracle-and-estimator pipeline: what each was built to test,
+what it produced, and what it decided. Last updated 2026-09-15, when the three models as published (A1)
+landed at ten seeds under the current code; the K4, X3 and B4 campaign and E1's fair re-scoring landed
+the two days before. Every table uses the columns defined in "Reading the tables" below. The
+current-results tables are checked against `variants/results/economy_table.csv` and
 `variants/results_e1/fair_gap_economy_table.csv` by `tests/test_results_md_matches_table.py`, so this
 file cannot fall behind the numbers without the suite saying so. Where each job ran: `docs/RUNS.md`.
 What to run next, and why: `docs/NEXTUP.md`.
 
+## Reading the tables
+
+**The protocol.** Each estimator is fit on a 360-month rolling window of simulated data (720 for X3),
+and the portfolio it produces is scored against the economy's TRUE conditional moments, month by month,
+over the 125 evaluation months of a 500-month panel (860 for X3) of 500 firms. An estimator is never
+judged on its own realized returns, only on what its weights were worth. Ten seeds per economy; every
+figure is mean (sd across seeds) unless the entry says otherwise.
+
+**Units.** Every Sharpe ratio in this file is monthly, not annualised. In each evaluation month a
+portfolio's Sharpe is its conditional expected excess return divided by its conditional volatility, both
+from the economy's true moments. A table reports the mean over the evaluation months, then the mean over
+seeds. A difference of two Sharpe ratios is in the same units. A percentage is the ratio of two ten-seed
+means, times 100.
+
+**The columns of every economy table.** Each table of economy results in this file has these fourteen
+columns, in this order. A cell reads "--" where the quantity was not measured, as in the legacy rows.
+
+- **economy** -- the model directory and run tag, `model/tag`, sometimes followed by what sets the economy
+  apart on its path.
+- **seeds** -- how many independently simulated panels the row averages.
+- **SR_max** -- the largest conditional Sharpe any portfolio of the firms could attain, sqrt(mu' Sigma^-1
+  mu), averaged over the evaluation months. An upper bound on every other Sharpe in the row.
+- **EW market SR** -- the Sharpe of the equal-weighted market portfolio.
+- **FMR SR** -- the Sharpe of the rolling Fama-MacBeth regression portfolio. The benchmark of both
+  percentage columns.
+- **best linear SR** -- in each seed, the Sharpe of the best of four linear methods: Fama-MacBeth,
+  Fama-French, and ridge regression on rank-standardised characteristics with and without level features.
+- **DKKM SR** -- in each seed, the Sharpe of the best random-feature ridge estimator, over 36, 360 and 3600
+  features, the penalty grid, and its four variants.
+- **DKKM - FMR** -- DKKM SR minus FMR SR. An absolute difference in Sharpe units; the standard deviation
+  across seeds is in parentheses.
+- **(DKKM - FMR) / FMR** -- [(DKKM SR) - (FMR SR)] / (FMR SR), in percent. How much DKKM improves on
+  Fama-MacBeth, relative to what Fama-MacBeth achieves. Where Fama-MacBeth's Sharpe is near zero, as in
+  the slow and rare BGN regime economies (g0235s, g0235r), this is very large and says nothing about DKKM.
+- **DKKM - best linear** -- DKKM SR minus best linear SR. Absolute, sd in parentheses. The "gap" in this
+  file's prose.
+- **DKKM - best fair linear** -- DKKM SR minus the Sharpe of the best of seven linear methods: the four
+  above, the two ridge methods given the equal-weighted market as a separate unpenalised column as DKKM
+  has it, and the market alone with its weight estimated. Absolute, sd in parentheses. The "fair gap" in
+  the prose, and the complexity gap outside KP14 (finding 8).
+- **room** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe a
+  nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear basis
+  reaches the same way, both computed from the true moments. No estimation involved. Absolute, sd in
+  parentheses. Legacy rows report it over all panel months.
+- **room / FMR** -- (room) / (FMR SR), in percent: the headroom relative to what Fama-MacBeth achieves.
+- **t, DKKM vs FMR** -- the largest paired t-statistic, across the evaluation months, of any random-feature
+  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds.
+
+**The columns of every prediction table.**
+
+- **economy** -- the economy the spec made the prediction for.
+- **quantity** -- what was predicted, named as in the economy tables where it is one of their columns.
+- **reference** -- the parent economy's value the prediction started from, or "--".
+- **predicted** -- the range written into the spec before the run, in the quantity's own units.
+- **result** -- the measured value; se is its standard error across seeds. After a room or a gap, its
+  percentage of FMR SR.
+- **verdict** -- right, or wrong with the direction; and whether a falsification line or a gate was crossed.
+
+The two descriptive tables, how each baseline is produced and the route log, have their columns named in
+words.
+
+**Two cautions.**
+
+1. **Room is not a ceiling on the gap and not a screen for it.** The gap exceeds the room in every
+   BGN and GS economy, because there it is the market shortfall; in KP14 it is 29% to 49% of the room.
+   Ranking candidates by room does not rank them by gap.
+2. **Every percentage is a RATIO OF MEANS, not a mean of per-seed ratios.** In g0235, (DKKM - FMR) / FMR
+   is 94.2% as the ratio of the ten-seed means and 110.3% (sd 71.0) as the mean of per-seed ratios,
+   because Fama-MacBeth's Sharpe has sd 0.0208 on a mean of 0.0557. In g0235r and g0235s it is below
+   zero in some seeds, where a per-seed ratio has no meaning at all. Both versions live in
+   `economy_table.csv` (`gap_fm_over_fm`, `gap_fm_pct_fm_mean`).
+
 ## The answer so far
 
-**A complexity gap exists in one family of economies, and only there.** In Kogan and Papanikolaou
-(2014) with a priced, mean-reverting aggregate state that heterogeneous firm types load on (KP14
-Path 1), the random-feature ridge estimator of Didisheim, Kelly, Kozak and Malamud (DKKM) beats the
-best linear method by +0.10 to +0.19 of Sharpe, at t of 30 to 55, in every seed of every economy on
-the path. The gap survives the fair benchmark of finding 8 unchanged, because on this path the linear
-methods themselves beat the equal-weighted market by 0.28 to 0.33 and DKKM beats them by a further
-0.10 to 0.19. In the seven Berk, Green and Naik (1999) and Gomes and Schmid (2021) economies built on
-their models' routes the fair gap is between -0.0025 and +0.0025, and in the three models as published
-it is between -0.0024 and +0.0012 (the anchor, below).
+**A complexity gap exists in one family of economies, and only there.** In Kogan and Papanikolaou (2014)
+with a priced, mean-reverting aggregate state that heterogeneous firm types load on (KP14 Path 1), the
+random-feature ridge estimator of Didisheim, Kelly, Kozak and Malamud (DKKM) beats the best linear
+method by +0.10 to +0.19 of Sharpe, and Fama-MacBeth by 17% to 30% of Fama-MacBeth's own Sharpe, at t of
+30 to 55, in every seed of every economy on the path. The gap survives the fair benchmark of finding 8
+unchanged, because on this path the linear methods themselves beat the equal-weighted market by 0.28 to
+0.33 and DKKM beats them by a further 0.10 to 0.19. In the seven Berk, Green and Naik (1999) and Gomes
+and Schmid (2021) economies built on their models' routes the fair gap is between -0.0025 and +0.0025,
+and in the three models as published it is between -0.0024 and +0.0012 (the anchor, below).
 
-**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
-seeds. Differences are in the same Sharpe units. Every column headed "% of" is relative: that row's
-figure divided by the named linear Sharpe, as a percentage. In parentheses, the standard deviation
-across the ten seeds.
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyxT860: vyx on T=860, window 720, penalty floor 1e-4 | 10 | 1.2294 | 0.3577 | 0.6518 | 0.6577 | 0.8452 | +0.1935 (0.0417) | 29.7% | +0.1875 (0.0393) | +0.1872 (0.0393) | +0.3864 (0.0519) | 59.3% | 54.6 |
+| kp_vy/vyg25: vyx with gamma_v 2.5 | 10 | 1.3887 | 0.4694 | 0.7911 | 0.8000 | 0.9450 | +0.1540 (0.0189) | 19.5% | +0.1450 (0.0193) | +0.1450 (0.0193) | +0.4108 (0.0446) | 51.9% | 39.2 |
+| kp_vy/vyx: the parent economy | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
 
-- **economy** -- the model directory and run tag.
-- **window** -- the months of data each estimator is fit on.
-- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-  absolute difference in Sharpe units.
-- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
-  rank-linear ridge with and without level features given the equal-weighted market as a separate
-  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
-  difference in Sharpe units, and the complexity gap outside KP14.
-- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-  linear methods. Relative. Negative where a linear method given the market beats DKKM.
-- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
-  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests DKKM against
-  Fama-MacBeth only, not against the best linear method.
-- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
-  A level.
-- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
-  on rank-standardised characteristics with and without level features. A level, and the denominator of
-  every % of lin column.
-- **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
-- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
-  evaluation months. An upper bound on every other Sharpe in the row.
-- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
-  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
-  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
-  units; no estimation involved.
-- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
-- **gap / room** -- the gap divided by room eval, a plain ratio. Below 1, the estimator gained less over
-  the linear methods than the fixed-coefficient headroom.
-
-| economy | what it is | window | gap | gap % of lin | fair gap | fair gap % of fair lin | t | DKKM | best linear | EW market | SR_max eval | room eval | room eval % of lin | gap / room |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyxT860 | vyx on an 860-month panel, a 720-month window, penalty grid down to 1e-4 | 720 | +0.1875 (0.0393) | 28.5% | +0.1872 | 28.5% | 54.6 | 0.8452 | 0.6577 | 0.3577 | 1.2294 | +0.3864 | 58.8% | 0.49 |
-| kp_vy/vyg25 | vyx with the price of the state's risk raised from 1.8 to 2.5 | 360 | +0.1450 (0.0193) | 18.1% | +0.1450 | 18.1% | 39.2 | 0.9450 | 0.8000 | 0.4694 | 1.3887 | +0.4108 | 51.4% | 0.35 |
-| kp_vy/vyx | the parent economy | 360 | +0.1046 (0.0155) | 16.3% | +0.1046 | 16.3% | 30.2 | 0.7475 | 0.6428 | 0.3675 | 1.1778 | +0.3606 | 56.1% | 0.29 |
-
-Mean (sd) over ten seeds, N=500 firms, 125 evaluation months scored on the true conditional moments.
+Ten seeds each, N=500 firms, 125 evaluation months; columns as defined in "Reading the tables".
 The two window-360 rows also appear, with every other current economy, in "Current results" below.
 
 **Why this route works.** Three things are true of it at once, and of no other economy in the
@@ -120,55 +156,14 @@ The three models as published, before any path was built on them, run through th
 exactly as every path that departs from them: a spec with precommitted solve ids, ten seeds, the fair
 benchmark. Every "what the route added" statement in this file is a difference against these rows.
 
-**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
-seeds. Differences are in the same Sharpe units; columns headed "% of" are relative, that row's figure
-divided by the named linear Sharpe. In parentheses, the standard deviation across the ten seeds.
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/bgnbase: BGN as published | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
+| kp_vy/kpbase: KP14 as published | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
+| gs_bx/gsbase: GS21 as published | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
 
-- **spec** -- the file in `experiments/specs/` that defines the economy.
-- **what it is** -- the economy in words.
-- **room all** -- the same headroom computed over all panel months rather than the evaluation months.
-  Absolute.
-- **room all % of lin** -- room all as a percentage of the best linear method's Sharpe. Relative.
-- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
-  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
-  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
-  units; no estimation involved.
-- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
-- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-  absolute difference in Sharpe units.
-- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
-  rank-linear ridge with and without level features given the equal-weighted market as a separate
-  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
-  difference in Sharpe units, and the complexity gap outside KP14.
-- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-  linear methods. Relative. Negative where a linear method given the market beats DKKM.
-- **fair gap t** -- the fair gap's mean across the ten seeds divided by its standard error across seeds.
-- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
-  A level.
-- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
-  on rank-standardised characteristics with and without level features. A level, and the denominator of
-  every % of lin column.
-- **fair linear** -- the Sharpe of the best of the seven fair linear methods. A level, and the
-  denominator of fair gap % of fair lin.
-- **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
-- **market / SR_max** -- the EW market's Sharpe divided by SR_max eval, a ratio of the two means: the
-  share of the attainable Sharpe the market alone reaches.
-- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
-  evaluation months. An upper bound on every other Sharpe in the row.
-
-| model | spec | what it is | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | fair gap t | DKKM | best linear | fair linear | EW market | market / SR_max | SR_max eval |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN | var-bgn_gam-bgnbase-v1 | one priced market shock at sigma_z 0.4 (gmult [1, 1]), project betas from a translated exponential, Vasicek rate; Table I, 11 of 11 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | +0.0012 (0.0071) | 0.5% | 0.5 | 0.2214 | 0.2148 | 0.2202 | 0.1405 | 0.50 | 0.2805 |
-| KP14 | var-kp_vy-kpbase-v1 | constant prices of risk gamma_x 0.69 and gamma_z -0.35, one firm type, no priced state, mean arrival rate 1; Table II, 17 of 18 (r 0.05) | +0.0040 (0.0008) | 2.0% | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | -0.0024 (0.0046) | -1.1% | -1.6 | 0.2073 | 0.2020 | 0.2097 | 0.0797 | 0.35 | 0.2292 |
-| GS21 | var-gs_bx-gsbase-v1 | constant price of risk gamma_x 0.5 on productivity (gmreg [1, 1]), one firm type, the corrected Table I | +0.0014 (0.0001) | 0.5% | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | -0.0022 (0.0014) | -0.7% | -5.0 | 0.2908 | 0.2782 | 0.2930 | 0.2838 | 0.95 | 0.2980 |
-
-Mean (sd) over ten seeds, N=500, T=500, 360-month window, 125 evaluation months scored on the true
-conditional moments. EW market is the equal-weighted market's Sharpe on the true moments; market /
-SR_max is a ratio of means. The same rows, with the percentage columns and t against Fama-MacBeth, are
-pinned in "Current results".
+Ten seeds each, N=500, T=500, 360-month window; columns as defined in "Reading the tables". The
+same rows are pinned in "Current results"; what each economy is in the code, and its spec, is below.
 
 What the anchor says:
 
@@ -194,32 +189,22 @@ What the anchor says:
 
 **The registered predictions, graded.** Each spec wrote its prediction before its solve ran.
 
-**How to read this table.** Rooms, gaps and SR_max are monthly Sharpe values, defined as in the table
-above.
-
-- **quantity** -- the statistic the spec predicted.
-- **predicted** -- the range written into the spec before its solve ran. Absolute Sharpe units.
-- **ten seeds** -- the ten-seed mean. For a room or a gap, the same figure as a percentage of the best
-  linear method's Sharpe follows in parentheses; for a fair gap, as a percentage of the best fair linear
-  method's Sharpe. se is the standard error of the mean across seeds.
-- **verdict** -- right if the result fell in the predicted range; otherwise wrong, with the direction.
-
-| baseline | quantity | predicted | ten seeds | verdict |
-|---|---|---|---|---|
-| BGN | all-month room | +0.030 to +0.045 | +0.0251 (se 0.0017; 11.7% of lin) | wrong, low |
-| BGN | SR_max, evaluation window | 0.25 to 0.35 | 0.2805 | right |
-| BGN | measured gap | +0.000 to +0.015 | +0.0066 (3.1% of lin) | right |
-| BGN | fair gap, and its winner | within 0.005 of zero; mkt_est or linrank_m the best fair linear method in most seeds | +0.0012 (0.5% of fair lin); linrank_m in 7 of 10 | right |
-| KP14 | evaluation-window room | below +0.010 | +0.0044 (2.2% of lin) | right |
-| KP14 | SR_max, evaluation window | 0.15 to 0.35 | 0.2292 | right |
-| KP14 | measured gap | within 0.015 of zero | +0.0053 (2.6% of lin) | right |
-| KP14 | fair gap | within 0.005 of zero | -0.0024 (-1.1% of fair lin) | right |
-| GS21 | evaluation-window room | below +0.003 | +0.0012 (0.4% of lin) | right |
-| GS21 | market share of SR_max | above 90% | 95% | right |
-| GS21 | SR_max, evaluation window | 0.25 to 0.45 | 0.2980 | right |
-| GS21 | measured gap | +0.00 to +0.03 | +0.0125 (4.5% of lin) | right |
-| GS21 | fair gap | within 0.005 of zero | -0.0022 (-0.7% of fair lin) | right |
-| all three | no-gap reading falsified if a fair gap exceeds +0.01 | | largest +0.0012 (0.5% of fair lin) | not falsified |
+| economy | quantity | reference | predicted | result | verdict |
+|---|---|---|---|---|---|
+| bgn_gam/bgnbase | room, all months | -- | +0.030 to +0.045 | +0.0251 (se 0.0017); room / FMR 12.5% | wrong, low |
+| bgn_gam/bgnbase | SR_max | -- | 0.25 to 0.35 | 0.2805 | right |
+| bgn_gam/bgnbase | DKKM - best linear | -- | +0.000 to +0.015 | +0.0066; (DKKM - FMR) / FMR 10.2% | right |
+| bgn_gam/bgnbase | DKKM - best fair linear, and the best fair linear method | -- | within 0.005 of zero; mkt_est or linrank_m in most seeds | +0.0012; linrank_m in 7 of 10 | right |
+| kp_vy/kpbase | room | -- | below +0.010 | +0.0044; room / FMR 2.3% | right |
+| kp_vy/kpbase | SR_max | -- | 0.15 to 0.35 | 0.2292 | right |
+| kp_vy/kpbase | DKKM - best linear | -- | within 0.015 of zero | +0.0053; (DKKM - FMR) / FMR 7.4% | right |
+| kp_vy/kpbase | DKKM - best fair linear | -- | within 0.005 of zero | -0.0024 | right |
+| gs_bx/gsbase | room | -- | below +0.003 | +0.0012; room / FMR 0.5% | right |
+| gs_bx/gsbase | EW market SR / SR_max | -- | above 90% | 95% | right |
+| gs_bx/gsbase | SR_max | -- | 0.25 to 0.45 | 0.2980 | right |
+| gs_bx/gsbase | DKKM - best linear | -- | +0.00 to +0.03 | +0.0125; (DKKM - FMR) / FMR 6.6% | right |
+| gs_bx/gsbase | DKKM - best fair linear | -- | within 0.005 of zero | -0.0022 | right |
+| all three | DKKM - best fair linear above +0.01 falsifies the no-gap reading | -- | -- | largest +0.0012 | not falsified |
 
 BGN's predicted room was built on the legacy row's +0.0365, which is one draw: it sits 2.1 sd above the
 ten-seed mean. Seed 0 of bgnbase is that draw. It reproduces the legacy row's SR_max (0.2926), nonlinear
@@ -229,21 +214,11 @@ pipeline, with the rate as the only conditioning column, is the legacy BGN proto
 
 **How each baseline is produced.**
 
-**How to read this table.** One row per baseline economy; no measurements.
-
-- **economy** -- the model directory and run tag.
-- **what it is in the code** -- the settings that make the model directory reproduce the published
-  economy.
-- **conditioning columns** -- the aggregate-state variables fed to the feature bases and the random
-  features, alongside the firm characteristics.
-- **solve** -- the precommitted solve ids, where and how long each was built, and where the artifact
-  lives.
-
-| economy | what it is in the code | conditioning columns | solve |
-|---|---|---|---|
-| bgn_gam/bgnbase | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision (REPORT.md §13e) | the rate only | jstar `c6287d53674cc1ef`, Mac, 491 s, table committed |
-| kp_vy/kpbase | `kp_vy` with one type at beta 0, gamma_v 0, bv_comp 0: nothing depends on the state y (the 21 integral tables agree across y to 4e-12); r = 0.05 as in every KP14 path, the paper's 0.025 being the one standing departure | none | G `7bc1f92a225c01b6` and integ `f299747cd77fc4a1`, Mac, 6 min, tables committed |
-| gs_bx/gsbase | `gs_bx` with one type under the regime solver at gmreg [1, 1]: gamma_x 0.5 in both regimes | the productivity state only | sol_gsbase `c6ae2d52428a7ce5`, Sol, 5.6 h, tolerance exit at sweep 3024, published |
+| economy | spec | what it is in the code | conditioning columns | solve |
+|---|---|---|---|---|
+| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | `bgn_gam` at gmult [1, 1]: both regimes price the market shock at sigma_z 0.4 and the regime is inert; reproduces the paper's economy to machine precision (REPORT.md §13e) | the rate only | jstar `c6287d53674cc1ef`, Mac, 491 s, table committed |
+| kp_vy/kpbase | var-kp_vy-kpbase-v1 | `kp_vy` with one type at beta 0, gamma_v 0, bv_comp 0: nothing depends on the state y (the 21 integral tables agree across y to 4e-12); r = 0.05 as in every KP14 path, the paper's 0.025 being the one standing departure | none | G `7bc1f92a225c01b6` and integ `f299747cd77fc4a1`, Mac, 6 min, tables committed |
+| gs_bx/gsbase | var-gs_bx-gsbase-v1 | `gs_bx` with one type under the regime solver at gmreg [1, 1]: gamma_x 0.5 in both regimes | the productivity state only | sol_gsbase `c6ae2d52428a7ce5`, Sol, 5.6 h, tolerance exit at sweep 3024, published |
 
 Every id was precommitted before its solve ran and reproduced exactly; all 30 seeds are CURRENT for
 their spec's solves, with the spec, environment and column checks verified in every sidecar. The
@@ -257,89 +232,18 @@ summary and run record; the estimators refuse a panel whose oracle used a differ
 **What the legacy rows said.** The pre-refactor grid ran each baseline once
 (`23f9380:variants/results/grid_summary.csv`; narrative `variants/REPORT.md` §14):
 
-**How to read this table.** One seed each, from the pre-refactor grid. Sharpe ratios are monthly, as
-above, but SR_max and room are averaged over all panel months rather than the evaluation months, so they
-are not comparable with room eval. There is no fair benchmark.
-
-- **SR_max, all months** -- the maximum attainable conditional Sharpe, averaged over all panel months. A
-  level.
-- **room, all months** -- the fixed-coefficient nonlinear headroom over all panel months. An absolute
-  difference in Sharpe units.
-- **room % of lin** -- that room as a percentage of the run's best linear Sharpe. Relative.
-- **best linear** -- the Sharpe of the best linear method in that run. A level, and the denominator of
-  both % columns.
-- **DKKM** -- the Sharpe of the random-feature estimator, averaged over its random draws. A level.
-- **gap** -- DKKM minus best linear. Absolute.
-- **gap % of lin** -- the gap as a percentage of best linear. Relative.
-- **t** -- the paired t-statistic of DKKM against Fama-MacBeth across the evaluation months, one seed.
-- **the economy the current code builds?** -- whether the row describes the economy the current code
-  builds.
-
-| model | SR_max, all months | room, all months | room % of lin | best linear | DKKM | gap | gap % of lin | t | the economy the current code builds? |
-|---|---|---|---|---|---|---|---|---|---|
-| BGN | 0.2926 | +0.0365 | 15.6% | 0.2334 | 0.2393 | +0.0059 | 2.5% | 14.0 | yes |
-| KP14 | 0.2396 | +0.0037 | 1.9% | 0.1969 | 0.2005 | +0.0036 | 1.8% | -8.5 | no: mean arrival rate 1.72, not 1 |
-| GS21 | 0.4012 | +0.0010 | 0.3% | 0.3825 | 0.3988 | +0.0163 | 4.2% | 21.8 | no: rho_x, delta and kappa_e differ |
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN baseline, legacy: the same economy | 1 | 0.2926 | -- | 0.2198 | 0.2334 | 0.2393 | +0.0195 | 8.9% | +0.0059 | -- | +0.0365 (all months) | 16.6% | 14.0 |
+| KP14 baseline, legacy: mean arrival rate 1.72, a different economy | 1 | 0.2396 | -- | 0.2052 | 0.1969 | 0.2005 | -0.0047 | -2.3% | +0.0036 | -- | +0.0037 (all months) | 1.8% | -8.5 |
+| GS21 baseline, legacy: the old Table I, a different economy | 1 | 0.4012 | -- | 0.3785 | 0.3825 | 0.3988 | +0.0203 | 5.4% | +0.0163 | -- | +0.0010 (all months) | 0.3% | 21.8 |
 
 Single seeds, no fair benchmark. Their directions survived the corrections: no gap anywhere, room only
 in BGN. The BGN row is reproduced by bgnbase's seed 0. The KP14 and GS21 rows are not, as the
 corrections predict: seed 0 of gsbase has SR_max 0.3020 against the legacy 0.4012, and seed 0 of kpbase
 0.2289 against 0.2396. Those two legacy rows describe different economies.
 
-## How to read this
-
-**The protocol behind every current number.** Each estimator is fit on a 360-month rolling window
-of simulated data (720 for X3), and the portfolio it produces is scored against the economy's TRUE
-conditional moments, month by month, over the 125 evaluation months of a 500-month panel (860 for X3)
-of 500 firms. An estimator is never judged on its own realized returns, only on what its weights were
-worth. Ten seeds per economy; every figure is mean (sd across seeds) unless the entry says otherwise.
-
-### The columns
-
-- **economy** -- `model/tag`: the model directory under `variants/` and the run tag naming its
-  result files.
-- **spec** -- the file in `experiments/specs/` defining the economy: parameters, estimator settings,
-  and the `expected_solves` a run must consume or abort.
-- **n** -- seeds.
-- **room all / room eval** -- the population headroom for nonlinearity: the best Sharpe a nonlinear
-  feature basis reaches with ONE fixed coefficient vector, minus the best a linear-in-ranks basis
-  reaches the same way, both from the true moments. Over all 485 panel months, and over the 125
-  evaluation months. Only the second is commensurable with `gap`; the two differ by up to 23%.
-- **room all % of lin**, **room eval % of lin** -- the room over the Sharpe the best linear method
-  attained (`best linear`), in percent. Every gap and room in this file's tables carries this
-  percentage beside it: a headroom of +0.02 means something different against a linear Sharpe of 0.80
-  than against one of 0.09.
-- **gap** -- the Sharpe of the winning random-feature estimator (DKKM: `rff`, `rff_ens`, `rff_lev`,
-  `rff_lev_ens`, best feature count and best penalty) minus the best linear method (`linrank`,
-  `linlev`, Fama-MacBeth `fm`, Fama-French `ff`). **Outside KP14 this measures the linear methods
-  against the equal-weighted market DKKM holds unpenalised; the fair gap is the complexity gap.**
-- **gap % of lin** -- `gap` over the linear Sharpe attained. Reorders the economies (finding 5) and
-  misleads once the market is accounted for: g0235r's 192% is a linear Sharpe of 0.011 in months where
-  the market earns 0.047.
-- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
-  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests against Fama-MacBeth
-  only, not against the best linear method.
-- **DKKM**, **best linear** -- the two Sharpes whose difference is `gap`. Every Sharpe in this file is
-  monthly, not annualised: a portfolio's one-month conditional Sharpe on the true moments, averaged over
-  the evaluation months and then over seeds.
-- **SR_max eval** -- the oracle's maximum attainable conditional Sharpe over the evaluation months, a
-  bound on every estimator by Cauchy-Schwarz. It holds on all eighty runs.
-- **fair gap (E1)** -- DKKM minus the best of seven linear methods, the original four plus
-  `linrank_m` and `linlev_m` (the market a separate unpenalised column, penalties two decades past the
-  DKKM grid) and `mkt_est` (the market alone, its weight estimated as DKKM's is). From
-  `variants/results_e1/fair_gap_economy_table.csv`, produced by `variants/fair_gap.py`.
-- **fair gap % of fair lin** -- `fair gap` over the Sharpe the best of those seven linear methods
-  attained (`fair linear` where a table shows it), in percent: the fair gap measured against its own
-  linear benchmark. Negative where a linear method given the market beats DKKM.
-
-### Two cautions
-
-1. **Room is not a ceiling on the gap and not a screen for it.** The gap exceeds the room in every
-   BGN and GS economy, because there it is the market shortfall; in KP14 it is 29% to 49% of the room.
-   Ranking candidates by room does not rank them by gap.
-2. **Every ratio here is a RATIO OF MEANS, not a mean of per-seed ratios.** g0235's gap reads 26.5%
-   of the linear Sharpe one way and 31.2% (sd 17.5) the other, because its denominator has sd 0.036
-   on a mean of 0.086. Both live in `economy_table.csv` (`gap_over_lin`, `gap_pct_lin_mean`).
+## Labels, provenance and ordering
 
 ### Status labels
 
@@ -376,83 +280,47 @@ the end collects them.
 
 ## Current results
 
-All twelve CURRENT economies at N=500, T=500, window 360. Mean (sd) over ten seeds. The three
-baselines come first, as the anchor.
+All twelve CURRENT economies at N=500, T=500, window 360, in the columns defined in "Reading the
+tables". The three baselines come first, as the anchor.
 
-**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over the n
-seeds. Differences are in the same Sharpe units; columns headed "% of" are relative, that row's figure
-divided by the named linear Sharpe, a ratio of the ten-seed means. In parentheses, the standard
-deviation across seeds. These columns apply to both tables below.
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/bgnbase | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
+| kp_vy/kpbase | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
+| gs_bx/gsbase | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
 
-- **economy** -- the model directory and run tag.
-- **spec** -- the file in `experiments/specs/` that defines the economy.
-- **n** -- the number of seeds.
-- **room all** -- the same headroom computed over all panel months rather than the evaluation months.
-  Absolute.
-- **room all % of lin** -- room all as a percentage of the best linear method's Sharpe. Relative.
-- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
-  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
-  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
-  units; no estimation involved.
-- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
-- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-  absolute difference in Sharpe units.
-- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-- **t** -- the largest paired t-statistic, across the evaluation months, of any random-feature
-  estimator's monthly Sharpe against Fama-MacBeth's, averaged over seeds. It tests DKKM against
-  Fama-MacBeth only, not against the best linear method.
-- **DKKM** -- the Sharpe of the winning random-feature ridge estimator, best feature count and penalty.
-  A level.
-- **best linear** -- the Sharpe of the best of four linear methods: Fama-French, Fama-MacBeth, and ridge
-  on rank-standardised characteristics with and without level features. A level, and the denominator of
-  every % of lin column.
-- **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
-  evaluation months. An upper bound on every other Sharpe in the row.
-- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
-  rank-linear ridge with and without level features given the equal-weighted market as a separate
-  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
-  difference in Sharpe units, and the complexity gap outside KP14.
-- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-  linear methods. Relative. Negative where a linear method given the market beats DKKM.
+The nine route economies, ranked by DKKM - best fair linear:
 
-| economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| bgn_gam/bgnbase | var-bgn_gam-bgnbase-v1 | 10 | +0.0251 (0.0054) | 11.7% | +0.0225 (0.0052) | 10.5% | +0.0066 (0.0099) | 3.1% | 15.9 | 0.2214 | 0.2148 | 0.2805 | +0.0012 (0.0071) | 0.5% |
-| kp_vy/kpbase | var-kp_vy-kpbase-v1 | 10 | +0.0040 (0.0008) | 2.0% | +0.0044 (0.0011) | 2.2% | +0.0053 (0.0076) | 2.6% | 17.6 | 0.2073 | 0.2020 | 0.2292 | -0.0024 (0.0046) | -1.1% |
-| gs_bx/gsbase | var-gs_bx-gsbase-v1 | 10 | +0.0014 (0.0001) | 0.5% | +0.0012 (0.0001) | 0.4% | +0.0125 (0.0120) | 4.5% | 25.2 | 0.2908 | 0.2782 | 0.2980 | -0.0022 (0.0014) | -0.7% |
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vyg25 | 10 | 1.3887 | 0.4694 | 0.7911 | 0.8000 | 0.9450 | +0.1540 (0.0189) | 19.5% | +0.1450 (0.0193) | +0.1450 (0.0193) | +0.4108 (0.0446) | 51.9% | 39.2 |
+| kp_vy/vyx | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
+| bgn_gam/g0235f | 10 | 0.2043 | 0.1209 | 0.0847 | 0.1115 | 0.1325 | +0.0479 (0.0320) | 56.5% | +0.0211 (0.0154) | +0.0025 (0.0029) | +0.0350 (0.0188) | 41.3% | 16.6 |
+| bgn_gam/g0235s | 10 | 0.0946 | 0.0516 | 0.0145 | 0.0436 | 0.0616 | +0.0472 (0.0271) | 325.7% | +0.0180 (0.0127) | +0.0012 (0.0034) | +0.0119 (0.0267) | 82.0% | 43.8 |
+| bgn_gam/g0235 | 10 | 0.1461 | 0.1061 | 0.0557 | 0.0855 | 0.1081 | +0.0525 (0.0342) | 94.2% | +0.0227 (0.0084) | +0.0006 (0.0009) | +0.0176 (0.0119) | 31.7% | 33.4 |
+| gs_bx/gx7 | 10 | 0.4473 | 0.4385 | 0.3738 | 0.4163 | 0.4393 | +0.0655 (0.0396) | 17.5% | +0.0229 (0.0102) | +0.0001 (0.0006) | +0.0053 (0.0044) | 1.4% | 15.0 |
+| gs_bx/bx7 | 10 | 0.3121 | 0.2926 | 0.2741 | 0.2887 | 0.2964 | +0.0223 (0.0160) | 8.1% | +0.0078 (0.0049) | -0.0009 (0.0028) | +0.0066 (0.0041) | 2.4% | 16.0 |
+| gs_bx/g28 | 10 | 0.3087 | 0.2944 | 0.2518 | 0.2692 | 0.2975 | +0.0457 (0.0221) | 18.2% | +0.0283 (0.0136) | -0.0022 (0.0023) | +0.0004 (0.0003) | 0.2% | 24.6 |
+| bgn_gam/g0235r | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
 
-The nine route economies, ranked by fair gap, in the same columns:
-
-| economy | spec | n | room all | room all % of lin | room eval | room eval % of lin | gap | gap % of lin | t | DKKM | best linear | SR_max eval | fair gap | fair gap % of fair lin |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vyg25 | var-kp_vy-vyg25-v1 | 10 | +0.3993 (0.0425) | 49.9% | +0.4108 (0.0446) | 51.4% | +0.1450 (0.0193) | 18.1% | 39.2 | 0.9450 | 0.8000 | 1.3887 | +0.1450 (0.0193) | 18.1% |
-| kp_vy/vyx | var-kp_vy-vyx-v2 | 10 | +0.3491 (0.0365) | 54.3% | +0.3606 (0.0394) | 56.1% | +0.1046 (0.0155) | 16.3% | 30.2 | 0.7475 | 0.6428 | 1.1778 | +0.1046 (0.0154) | 16.3% |
-| bgn_gam/g0235f | var-bgn_gam-g0235f-v1 | 10 | +0.0342 (0.0091) | 30.7% | +0.0350 (0.0188) | 31.4% | +0.0211 (0.0154) | 18.9% | 16.6 | 0.1325 | 0.1115 | 0.2043 | +0.0025 (0.0029) | 1.9% |
-| bgn_gam/g0235s | var-bgn_gam-g0235s-v1 | 10 | +0.0194 (0.0183) | 44.5% | +0.0119 (0.0267) | 27.2% | +0.0180 (0.0127) | 41.3% | 43.8 | 0.0616 | 0.0436 | 0.0946 | +0.0012 (0.0034) | 2.0% |
-| bgn_gam/g0235 | var-bgn_gam-g0235-v2 | 10 | +0.0188 (0.0065) | 22.0% | +0.0176 (0.0119) | 20.6% | +0.0227 (0.0084) | 26.5% | 33.4 | 0.1081 | 0.0855 | 0.1461 | +0.0006 (0.0009) | 0.5% |
-| gs_bx/gx7 | var-gs_bx-gx7-v1 | 10 | +0.0019 (0.0024) | 0.5% | +0.0053 (0.0044) | 1.3% | +0.0229 (0.0102) | 5.5% | 15.0 | 0.4393 | 0.4163 | 0.4473 | +0.0001 (0.0006) | 0.0% |
-| gs_bx/bx7 | var-gs_bx-bx7-v3 | 10 | +0.0086 (0.0035) | 3.0% | +0.0066 (0.0041) | 2.3% | +0.0078 (0.0049) | 2.7% | 16.0 | 0.2964 | 0.2887 | 0.3121 | -0.0009 (0.0028) | -0.3% |
-| gs_bx/g28 | var-gs_bx-g28-v2 | 10 | +0.0001 (0.0003) | 0.0% | +0.0004 (0.0003) | 0.2% | +0.0283 (0.0136) | 10.5% | 24.6 | 0.2975 | 0.2692 | 0.3087 | -0.0022 (0.0023) | -0.7% |
-| bgn_gam/g0235r | var-bgn_gam-g0235r-v1 | 10 | +0.0043 (0.0038) | 39.5% | +0.0026 (0.0020) | 24.3% | +0.0209 (0.0166) | 192.1% | 80.0 | 0.0318 | 0.0109 | 0.0559 | -0.0025 (0.0069) | -7.2% |
-
-**Read the last column, not the gap column, outside KP14.** In the seven BGN and GS route rows the winning
+**Outside KP14, read DKKM - best fair linear, not DKKM - best linear or DKKM - FMR.** In the seven BGN and GS route rows the winning
 DKKM portfolio is, to within half a hundredth of Sharpe, the equal-weighted market (finding 8); the
 fair gap is what remains once the linear methods are given that market as DKKM has it, and it is at
 most +0.0025 and negative in three rows, each inside the bound registered before E1 ran. The two KP14
 rows scored the fair methods in their own runs; their linear methods beat the market by 0.28 and
 0.33, so their fair gap is their gap. The three baselines scored the fair methods in their own runs
 too. In the BGN and KP14 baselines the linear methods beat the market, by 0.074 and 0.122; in GS21's
-they fall 0.006 below it, as in g28. Among the route rows, by measured gap the order would be vyg25, vyx, g28, gx7, g0235,
-g0235f, g0235r, g0235s, bx7; by gap as a share of the linear Sharpe, g0235r first at 192%.
+they fall 0.006 below it, as in g28. Among the route rows, ranked by DKKM - best linear the order would be vyg25, vyx, g28, gx7, g0235,
+g0235f, g0235r, g0235s, bx7. Ranked by (DKKM - FMR) / FMR it would be led by g0235r at
+9,675.8% and g0235s at 325.7%, where Fama-MacBeth's mean Sharpe is 0.0003 and 0.0145: a
+percentage of a Sharpe near zero says nothing about DKKM.
 
 Not in the table: **X3**, vyx's economy on an 860-month panel with a 720-month window (gap +0.1875,
 fair +0.1872; KP14 Path 1), and **B4's one-seed screen** g0235d, which missed its gates (fair gap
 +0.0004; BGN Path 1).
 
 Regenerate with `python variants/aggregate_seeds.py --flagship` (also writes the per-seed
-`variants/results/seed_table.csv`); the last column with `python variants/fair_gap.py`.
+`variants/results/seed_table.csv`); EW market SR and DKKM - best fair linear with `python variants/fair_gap.py`.
 
 ---
 
@@ -488,43 +356,17 @@ path's finding survives.
 
 The one route that produced a complexity gap. Its ladder, in the order it was climbed:
 
-**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
-seeds, except the legacy vy row, which is one seed. Differences are in Sharpe units; columns headed "%
-of" are relative to the named linear Sharpe.
-
-- **gamma_v** -- the price of risk on the aggregate state y's shock.
-- **window** -- the months of data each estimator is fit on.
-- **grid floor** -- the smallest ridge penalty on DKKM's grid.
-- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
-  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
-  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
-  units; no estimation involved.
-- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
-- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-  absolute difference in Sharpe units.
-- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
-  rank-linear ridge with and without level features given the equal-weighted market as a separate
-  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
-  difference in Sharpe units, and the complexity gap outside KP14.
-- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-  linear methods. Relative. Negative where a linear method given the market beats DKKM.
-- **DKKM / its ceiling** -- DKKM's Sharpe as a percentage of the nonlinear ceiling over the evaluation
-  months, the best fixed-coefficient nonlinear Sharpe: how much of the population's nonlinear Sharpe the
-  estimator reached. For vy, the share of the room captured.
-- **status** -- CURRENT (ten seeds, current code) or LEGACY.
-
-| economy | gamma_v | window | grid floor | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM / its ceiling | status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| kp_vy/vy | 1.2 | 360 | 0.001 | +0.278 (all-month) | 51.3% (all-month) | +0.0289 | 5.3% | -- | -- | about 10% of the room | LEGACY, single seed, pre-fix economy |
-| kp_vy/vyx | 1.8 | 360 | 0.001 | +0.3606 | 56.1% | +0.1046 | 16.3% | +0.1046 | 16.3% | 74% | CURRENT |
-| kp_vy/vyg25 | 2.5 | 360 | 0.001 | +0.4108 | 51.4% | +0.1450 | 18.1% | +0.1450 | 18.1% | 78% | CURRENT |
-| kp_vy/vyxT860 | 1.8 | 720 | 0.0001 | +0.3864 | 58.8% | +0.1875 | 28.5% | +0.1872 | 28.5% | 81% | CURRENT at T=860 |
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kp_vy/vy: gamma_v 1.2, top beta 0.12; LEGACY, pre-fix | 1 | 0.9609 | -- | 0.5449 | 0.5417 | 0.5707 | +0.0258 | 4.7% | +0.0289 | -- | +0.2783 (all months) | 51.1% | 5.2 |
+| kp_vy/vyx: gamma_v 1.8, window 360 | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
+| kp_vy/vyg25: gamma_v 2.5, window 360 | 10 | 1.3887 | 0.4694 | 0.7911 | 0.8000 | 0.9450 | +0.1540 (0.0189) | 19.5% | +0.1450 (0.0193) | +0.1450 (0.0193) | +0.4108 (0.0446) | 51.9% | 39.2 |
+| kp_vy/vyxT860: gamma_v 1.8, window 720, penalty floor 1e-4 | 10 | 1.2294 | 0.3577 | 0.6518 | 0.6577 | 0.8452 | +0.1935 (0.0417) | 29.7% | +0.1875 (0.0393) | +0.1872 (0.0393) | +0.3864 (0.0519) | 59.3% | 54.6 |
 
 The linear methods sit at 99% to 100% of their own ceiling on every row; DKKM's winning penalty is
-the smallest offered in 9, 10 and 10 seeds of ten.
+the smallest offered in 9, 10 and 10 seeds of ten. DKKM reaches 74%, 78% and 81% of its own
+nonlinear ceiling on the three current rows. The vy row is one legacy seed, its room over all panel
+months.
 
 #### kp_vy/vyx -- CURRENT, gap +0.1046 (sd 0.0155), t 30.2
 
@@ -567,27 +409,13 @@ falsified.** DKKM 0.9450, best linear 0.8000, market 0.4694. Against vyx the gap
 higher price created, 78% of its nonlinear ceiling against 74%, while the linear methods stayed at
 100% of theirs.
 
-**How to read this table.** Each row compares vyx, the prediction and vyg25 on one quantity.
-
-- **rows** -- the quantities the spec predicted. Rooms, gaps, Sharpes and SR_max are monthly Sharpe
-  values.
-- **vyx** -- the parent economy's ten-seed mean. For a room or a gap, the percentage of the best linear
-  method's Sharpe follows in parentheses.
-- **predicted** -- the range written into the spec before it ran. Absolute Sharpe units unless stated as
-  a percentage change.
-- **vyg25** -- the ten-seed result, with the same percentage for rooms and gaps. "up 18%" is the
-  relative change from vyx. Non-market Sharpe is the Sharpe the equal-weighted market does not span,
-  sqrt(SR_max^2 - EW^2).
-- **verdict** -- whether the result fell in the predicted range, and whether the spec's falsification
-  line was crossed.
-
-| | vyx | predicted | vyg25 | verdict |
-|---|---|---|---|---|
-| room, evaluation window | +0.3606 (56.1% of lin) | +0.45 to +0.50 | +0.4108 (51.4% of lin) | wrong, low |
-| SR_max, evaluation window | 1.1778 | up about 40% | 1.3887, up 18% | wrong, low |
-| non-market Sharpe | 1.1178 | up about 40% | 1.3064, up 17% | wrong, low |
-| DKKM's winning penalty | smallest on the grid in 9 of 10 | still the smallest | smallest in 10 of 10 | right |
-| gap | +0.1046 (16.3% of lin) | +0.15 to +0.20; falsified below +0.12 | +0.1450 (18.1% of lin) | below the range by 0.005; not falsified |
+| economy | quantity | reference | predicted | result | verdict |
+|---|---|---|---|---|---|
+| kp_vy/vyg25 | room | vyx +0.3606; room / FMR 56.4% | +0.45 to +0.50 | +0.4108; room / FMR 51.9% | wrong, low |
+| kp_vy/vyg25 | SR_max | vyx 1.1778 | up about 40% | 1.3887, up 18% | wrong, low |
+| kp_vy/vyg25 | non-market Sharpe, sqrt(SR_max^2 - EW market SR^2) | vyx 1.1178 | up about 40% | 1.3064, up 17% | wrong, low |
+| kp_vy/vyg25 | DKKM's winning penalty | vyx: smallest on the grid in 9 of 10 | still the smallest | smallest in 10 of 10 | right |
+| kp_vy/vyg25 | DKKM - best linear | vyx +0.1046; (DKKM - FMR) / FMR 17.0% | +0.15 to +0.20; falsified below +0.12 | +0.1450; (DKKM - FMR) / FMR 19.5% | below the range by 0.005; not falsified |
 
 The last decade of penalty, 0.01 to 0.001, still added 0.046 of Sharpe, so this economy is as
 shrinkage-bound as vyx. Distance from a calibration: mean expected return 22.9% a year,
@@ -612,26 +440,12 @@ of it and leaves the linear methods where they are.
 **Result: the shortfall is data, and more of it than predicted.** DKKM 0.8452 against 0.7475; linear
 0.6577 against 0.6428; room unchanged within seed noise.
 
-**How to read this table.** Each row compares vyx, the prediction and vyxT860 on one quantity.
-
-- **rows** -- the quantities the spec predicted. Rooms, gaps, Sharpes and SR_max are monthly Sharpe
-  values.
-- **vyx** -- the parent economy's ten-seed mean. For a room or a gap, the percentage of the best linear
-  method's Sharpe follows in parentheses.
-- **predicted** -- the range written into the spec before it ran. Absolute Sharpe units unless stated as
-  a percentage change.
-- **vyxT860** -- the ten-seed result, with the same percentage for rooms and gaps. A signed figure after
-  the level is the change from vyx; se is the standard error of that change, from the two economies'
-  seed standard deviations.
-- **verdict** -- whether the result fell in the predicted range, and whether the spec's falsification
-  line was crossed.
-
-| | vyx | predicted | vyxT860 | verdict |
-|---|---|---|---|---|
-| DKKM | 0.7475 | +0.03 to +0.08; falsified below +0.02 | 0.8452, +0.0977 (se 0.0244) | wrong, high; not falsified |
-| best linear | 0.6428 | within +0.01 | 0.6577, +0.0149 (se 0.0159) | outside the band, not distinguishable from it |
-| gap | +0.1046 (16.3% of lin) | +0.13 to +0.17 | +0.1875 (28.5% of lin) | wrong, high |
-| room, evaluation window | +0.3606 (56.1% of lin) | unchanged within seed noise | +0.3864 (58.8% of lin), +0.0258 (se 0.0206) | right |
+| economy | quantity | reference | predicted | result | verdict |
+|---|---|---|---|---|---|
+| kp_vy/vyxT860 | DKKM SR | vyx 0.7475 | +0.03 to +0.08; falsified below +0.02 | 0.8452, +0.0977 (se 0.0244) | wrong, high; not falsified |
+| kp_vy/vyxT860 | best linear SR | vyx 0.6428 | within +0.01 | 0.6577, +0.0149 (se 0.0159) | outside the band, not distinguishable from it |
+| kp_vy/vyxT860 | DKKM - best linear | vyx +0.1046; (DKKM - FMR) / FMR 17.0% | +0.13 to +0.17 | +0.1875; (DKKM - FMR) / FMR 29.7% | wrong, high |
+| kp_vy/vyxT860 | room | vyx +0.3606; room / FMR 56.4% | unchanged within seed noise | +0.3864, +0.0258 (se 0.0206); room / FMR 59.3% | right |
 
 **The window and the grid, separated.** On vyx's grid (penalties 0.001 and up) DKKM reaches 0.7958
 and the gap +0.1382: the window alone lands inside both predicted ranges. The 1e-4 penalty adds a
@@ -749,41 +563,14 @@ market and only 0.011 above the linear methods, which followed most of it; the s
 seed (B4) put DKKM 0.081 above the market and plain `linrank` followed all of it. The spec's rule ends
 the path on the miss.
 
-**How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
-seeds, except g0235d, which is one seed. Differences are in Sharpe units; columns headed "% of" are
-relative to the named linear Sharpe.
-
-- **switch probabilities per month** -- the monthly probability of moving from calm to stress, and from
-  stress to calm.
-- **stress share** -- the long-run share of months spent in the stress regime.
-- **room eval** -- the population headroom for nonlinearity over the evaluation months: the best Sharpe
-  a nonlinear feature basis reaches with one fixed coefficient vector, minus the best a rank-linear
-  basis reaches the same way, both computed from the true moments. An absolute difference in Sharpe
-  units; no estimation involved.
-- **room eval % of lin** -- room eval as a percentage of the best linear method's Sharpe. Relative.
-- **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-  Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-  absolute difference in Sharpe units.
-- **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-- **fair gap** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap, plus
-  rank-linear ridge with and without level features given the equal-weighted market as a separate
-  unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An absolute
-  difference in Sharpe units, and the complexity gap outside KP14.
-- **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-  linear methods. Relative. Negative where a linear method given the market beats DKKM.
-- **DKKM - market** -- DKKM's Sharpe minus the equal-weighted market's. Absolute.
-- **market - best linear** -- the equal-weighted market's Sharpe minus the best linear method's.
-  Absolute. With DKKM - market, it sums to the gap.
-
-| economy | switch probabilities per month, calm to stress / stress to calm | stress share | room eval | room eval % of lin | gap | gap % of lin | fair gap | fair gap % of fair lin | DKKM - market | market - best linear |
-|---|---|---|---|---|---|---|---|---|---|---|
-| bgnbase, the baseline | inert: gmult [1, 1] | -- | +0.0225 | 10.5% | +0.0066 | 3.1% | +0.0012 | 0.5% | +0.0809 | -0.0743 |
-| g0235f | 1/12, 2/12 (fast) | 1/3 | +0.0350 | 31.4% | +0.0211 | 18.9% | +0.0025 | 1.9% | +0.0116 | +0.0094 |
-| g0235 | 0.25/12, 0.50/12 | 1/3 | +0.0176 | 20.6% | +0.0227 | 26.5% | +0.0006 | 0.5% | +0.0020 | +0.0206 |
-| g0235s | 0.05/12, 0.10/12 (slow) | 1/3 | +0.0119 | 27.2% | +0.0180 | 41.3% | +0.0012 | 2.0% | +0.0100 | +0.0080 |
-| g0235r | 0.05/12, 0.45/12 (rare) | 1/10 | +0.0026 | 24.3% | +0.0209 | 192.1% | -0.0025 | -7.2% | -0.0154 | +0.0363 |
-| g0235d, SCREEN | 0.50/12, 0.25/12 (stress-dominant) | 2/3 | +0.0186 | 12.6% | +0.0004 | 0.3% | +0.0004 | 0.3% | +0.0812 | -0.0808 |
+| economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bgn_gam/bgnbase: no regime (gmult [1, 1]) | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
+| bgn_gam/g0235f: switches 1/12 and 2/12 a month; stress 1/3 | 10 | 0.2043 | 0.1209 | 0.0847 | 0.1115 | 0.1325 | +0.0479 (0.0320) | 56.5% | +0.0211 (0.0154) | +0.0025 (0.0029) | +0.0350 (0.0188) | 41.3% | 16.6 |
+| bgn_gam/g0235: switches 0.25/12 and 0.50/12; stress 1/3 | 10 | 0.1461 | 0.1061 | 0.0557 | 0.0855 | 0.1081 | +0.0525 (0.0342) | 94.2% | +0.0227 (0.0084) | +0.0006 (0.0009) | +0.0176 (0.0119) | 31.7% | 33.4 |
+| bgn_gam/g0235s: switches 0.05/12 and 0.10/12; stress 1/3 | 10 | 0.0946 | 0.0516 | 0.0145 | 0.0436 | 0.0616 | +0.0472 (0.0271) | 325.7% | +0.0180 (0.0127) | +0.0012 (0.0034) | +0.0119 (0.0267) | 82.0% | 43.8 |
+| bgn_gam/g0235r: switches 0.05/12 and 0.45/12; stress 1/10 | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
+| bgn_gam/g0235d: switches 0.50/12 and 0.25/12; stress 2/3; SCREEN, one seed | 1 | 0.1812 | 0.0672 | 0.1307 | 0.1480 | 0.1484 | +0.0177 | 13.5% | +0.0004 | +0.0004 | +0.0186 | 14.2% | 8.1 |
 
 #### bgn_gam/g0235 -- CURRENT, gap +0.0227 (sd 0.0084), fair gap +0.0006, t 33.4
 
@@ -838,22 +625,12 @@ non-market Sharpe (g0235s seed 2, stressed in 84% of its months). Seeds 1 to 9 w
 evaluation-window room of at least +0.05 AND the oracle's non-market Sharpe (`sr_orth_eval`) of at
 least 0.30.
 
-**How to read this table.** One seed, run as a screen. Rooms, gaps and Sharpes are monthly Sharpe
-values.
-
-- **rows** -- the quantities the spec predicted, and the two gates seeds 1 to 9 had to clear.
-- **predicted** -- the range written into the spec before seed 0 ran, with the gate in parentheses.
-  Absolute Sharpe units.
-- **seed 0** -- the result. For the room, its percentage of the best linear method's Sharpe follows in
-  parentheses; for the fair gap, its percentage of the best fair linear method's Sharpe. Non-market
-  Sharpe is the oracle's month-by-month Sharpe outside the equal-weighted market.
-
-| | predicted | seed 0 |
-|---|---|---|
-| room, evaluation window | above +0.04 (gate +0.05) | +0.0186 (12.6% of lin) |
-| non-market Sharpe | 0.2 to 0.3 (gate 0.30) | 0.1541 |
-| DKKM minus the equal-weighted market | +0.03 to +0.06 | +0.0812 |
-| fair gap | +0.005 to +0.015 | +0.0004 (0.3% of fair lin) |
+| economy | quantity | reference | predicted | result | verdict |
+|---|---|---|---|---|---|
+| bgn_gam/g0235d | room (gate +0.05) | -- | above +0.04 | +0.0186; room / FMR 14.2% | wrong, low; gate missed |
+| bgn_gam/g0235d | non-market Sharpe, the oracle's month-by-month figure (gate 0.30) | -- | 0.2 to 0.3 | 0.1541 | wrong, low; gate missed |
+| bgn_gam/g0235d | DKKM SR - EW market SR | -- | +0.03 to +0.06 | +0.0812 | wrong, high |
+| bgn_gam/g0235d | DKKM - best fair linear | -- | +0.005 to +0.015 | +0.0004 | wrong, low |
 
 DKKM (0.1484) left the market by more than any BGN ten-seed mean does, and plain `linrank`, whose
 market column is penalised, reached 0.1480. The spec's own reason for a small fair gap, a
@@ -1024,45 +801,24 @@ kept. Finding 8 reorganised the file and comes first.
    winning portfolio is barely off that point. Splitting each gap exactly into what DKKM adds over the
    market and what the market has over the best linear method:
 
-   **How to read this table.** Every Sharpe ratio is monthly, not annualised: a portfolio's one-month
-   conditional Sharpe ratio on the true moments, averaged over the evaluation months and then over ten
-   seeds. Differences are in Sharpe units; columns headed "% of" are relative to the named linear
-   Sharpe.
+   | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | kp_vy/vyx | 10 | 1.1778 | 0.3675 | 0.6389 | 0.6428 | 0.7475 | +0.1086 (0.0165) | 17.0% | +0.1046 (0.0155) | +0.1046 (0.0154) | +0.3606 (0.0394) | 56.4% | 30.2 |
+   | bgn_gam/g0235 | 10 | 0.1461 | 0.1061 | 0.0557 | 0.0855 | 0.1081 | +0.0525 (0.0342) | 94.2% | +0.0227 (0.0084) | +0.0006 (0.0009) | +0.0176 (0.0119) | 31.7% | 33.4 |
+   | bgn_gam/g0235f | 10 | 0.2043 | 0.1209 | 0.0847 | 0.1115 | 0.1325 | +0.0479 (0.0320) | 56.5% | +0.0211 (0.0154) | +0.0025 (0.0029) | +0.0350 (0.0188) | 41.3% | 16.6 |
+   | bgn_gam/g0235s | 10 | 0.0946 | 0.0516 | 0.0145 | 0.0436 | 0.0616 | +0.0472 (0.0271) | 325.7% | +0.0180 (0.0127) | +0.0012 (0.0034) | +0.0119 (0.0267) | 82.0% | 43.8 |
+   | bgn_gam/g0235r | 10 | 0.0559 | 0.0472 | 0.0003 | 0.0109 | 0.0318 | +0.0315 (0.0199) | 9,675.8% | +0.0209 (0.0166) | -0.0025 (0.0069) | +0.0026 (0.0020) | 813.4% | 80.0 |
+   | gs_bx/g28 | 10 | 0.3087 | 0.2944 | 0.2518 | 0.2692 | 0.2975 | +0.0457 (0.0221) | 18.2% | +0.0283 (0.0136) | -0.0022 (0.0023) | +0.0004 (0.0003) | 0.2% | 24.6 |
+   | gs_bx/gx7 | 10 | 0.4473 | 0.4385 | 0.3738 | 0.4163 | 0.4393 | +0.0655 (0.0396) | 17.5% | +0.0229 (0.0102) | +0.0001 (0.0006) | +0.0053 (0.0044) | 1.4% | 15.0 |
+   | gs_bx/bx7 | 10 | 0.3121 | 0.2926 | 0.2741 | 0.2887 | 0.2964 | +0.0223 (0.0160) | 8.1% | +0.0078 (0.0049) | -0.0009 (0.0028) | +0.0066 (0.0041) | 2.4% | 16.0 |
+   | bgn_gam/bgnbase, baseline | 10 | 0.2805 | 0.1405 | 0.2008 | 0.2148 | 0.2214 | +0.0206 (0.0170) | 10.2% | +0.0066 (0.0099) | +0.0012 (0.0071) | +0.0225 (0.0052) | 11.2% | 15.9 |
+   | kp_vy/kpbase, baseline | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2020 | 0.2073 | +0.0144 (0.0099) | 7.4% | +0.0053 (0.0076) | -0.0024 (0.0046) | +0.0044 (0.0011) | 2.3% | 17.6 |
+   | gs_bx/gsbase, baseline | 10 | 0.2980 | 0.2838 | 0.2728 | 0.2782 | 0.2908 | +0.0179 (0.0182) | 6.6% | +0.0125 (0.0120) | -0.0022 (0.0014) | +0.0012 (0.0001) | 0.5% | 25.2 |
 
-   - **SR_max eval** -- the maximum conditional Sharpe any portfolio could attain, averaged over the
-     evaluation months. An upper bound on every other Sharpe in the row.
-   - **EW market** -- the Sharpe of the equal-weighted market portfolio. A level.
-   - **market / SR_max** -- the EW market's Sharpe divided by SR_max eval, a ratio of means: the share
-     of the attainable Sharpe the market alone reaches.
-   - **DKKM - market** -- DKKM's Sharpe minus the equal-weighted market's. Absolute.
-   - **market - best linear** -- the market's Sharpe minus the best linear method's. Absolute. The two
-     differences sum to the gap.
-   - **gap** -- DKKM's Sharpe minus the Sharpe of the best of four linear methods: Fama-French,
-     Fama-MacBeth, and ridge on rank-standardised characteristics with and without level features. An
-     absolute difference in Sharpe units.
-   - **gap % of lin** -- the gap as a percentage of the best linear method's Sharpe. Relative.
-   - **fair gap (E1)** -- DKKM's Sharpe minus the best of seven linear methods: the four in the gap,
-     plus rank-linear ridge with and without level features given the equal-weighted market as a
-     separate unpenalised column, as DKKM has it, plus the market alone with its weight estimated. An
-     absolute difference in Sharpe units, and the complexity gap outside KP14.
-   - **fair gap % of fair lin** -- the fair gap as a percentage of the Sharpe of the best of those seven
-     linear methods. Relative. Negative where a linear method given the market beats DKKM.
-   - **registered bound** -- for the route rows, the bound on the fair gap written before E1 ran; for
-     the baselines, the spec's own prediction. PASS if the fair gap met it.
-
-   | economy | SR_max eval | EW market | market / SR_max | DKKM - market | market - best linear | gap | gap % of lin | fair gap (E1) | fair gap % of fair lin | registered bound |
-   |---|---|---|---|---|---|---|---|---|---|---|
-   | kp_vy/vyx | 1.1778 | 0.3675 | 0.31 | +0.3800 | -0.2753 | +0.1046 | 16.3% | +0.1046 | 16.3% | at least +0.08: PASS |
-   | bgn_gam/g0235 | 0.1461 | 0.1061 | 0.73 | +0.0020 | +0.0206 | +0.0227 | 26.5% | +0.0006 | 0.5% | at most +0.003: PASS |
-   | bgn_gam/g0235f | 0.2043 | 0.1209 | 0.59 | +0.0116 | +0.0094 | +0.0211 | 18.9% | +0.0025 | 1.9% | at most +0.008: PASS |
-   | bgn_gam/g0235s | 0.0946 | 0.0516 | 0.55 | +0.0100 | +0.0080 | +0.0180 | 41.3% | +0.0012 | 2.0% | at most +0.008: PASS |
-   | bgn_gam/g0235r | 0.0559 | 0.0472 | 0.84 | -0.0154 | +0.0363 | +0.0209 | 192.1% | -0.0025 | -7.2% | at most +0.004: PASS |
-   | gs_bx/g28 | 0.3087 | 0.2944 | 0.95 | +0.0032 | +0.0251 | +0.0283 | 10.5% | -0.0022 | -0.7% | at most +0.006: PASS |
-   | gs_bx/gx7 | 0.4473 | 0.4385 | 0.98 | +0.0007 | +0.0222 | +0.0229 | 5.5% | +0.0001 | 0.0% | at most +0.004: PASS |
-   | gs_bx/bx7 | 0.3121 | 0.2926 | 0.94 | +0.0038 | +0.0039 | +0.0078 | 2.7% | -0.0009 | -0.3% | at most +0.006: PASS |
-   | bgn_gam/bgnbase, baseline | 0.2805 | 0.1405 | 0.50 | +0.0809 | -0.0743 | +0.0066 | 3.1% | +0.0012 | 0.5% | within 0.005 of zero: PASS |
-   | kp_vy/kpbase, baseline | 0.2292 | 0.0797 | 0.35 | +0.1277 | -0.1223 | +0.0053 | 2.6% | -0.0024 | -1.1% | within 0.005 of zero: PASS |
-   | gs_bx/gsbase, baseline | 0.2980 | 0.2838 | 0.95 | +0.0069 | +0.0056 | +0.0125 | 4.5% | -0.0022 | -0.7% | within 0.005 of zero: PASS |
+   The split reads off the Sharpe columns: DKKM SR minus EW market SR is what DKKM adds over the market, and
+   EW market SR minus best linear SR is what the market has over the best linear method. Registered bounds on
+   DKKM - best fair linear, all met: vyx at least +0.08; g0235 at most +0.003; g0235f and g0235s at most
+   +0.008; g0235r and gx7 at most +0.004; g28 and bx7 at most +0.006; each baseline within 0.005 of zero.
 
    For the eight route rows the bound was DKKM's winning Sharpe minus its Sharpe at the largest penalty, plus 0.003 for
    incomplete shrinkage; it says nothing for vyx, whose largest penalty does not reach the market; the three baseline rows carry their specs' own
@@ -1124,24 +880,15 @@ exceeding room: correcting the month sample moved gap/room the wrong way, WORKIN
 
 ## The route log: every proposal, and what became of it
 
-**How to read this table.** One row per proposal, done or open.
-
-- **proposal** -- its label and a short name. K for KP14, B for BGN, G for GS21, X for sample and
-  window, E and A for benchmarks and baselines.
-- **what it decided** -- the question the experiment answers.
-- **predicted** -- the prediction written before it ran, in monthly Sharpe units.
-- **outcome** -- the date and the result. A gap or room is followed by its percentage of the best linear
-  method's Sharpe; a fair gap by its percentage of the best fair linear method's Sharpe.
-
 | proposal | what it decided | predicted | outcome |
 |---|---|---|---|
-| A1 the three baselines under the current code | whether any model as published has a complexity gap, and what every route is measured against | fair gap within 0.005 of zero in all three; falsified above +0.01 | DONE 2026-09-15: +0.0012, -0.0024, -0.0022 (0.5%, -1.1%, -0.7% of the fair linear Sharpe); twelve of thirteen graded predictions right, BGN's room low |
-| E1 fair linear benchmark | whether the BGN and GS gaps exist | fair gap within the registered bounds; vyx at least +0.08 | DONE 2026-09-13: every bound held; fair gap at most +0.0025 outside vyx, at most 2.0% of the fair linear Sharpe; vyx +0.1046 (16.3%) |
-| K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | DONE 2026-09-14: gap +0.1450 (18.1% of lin), room +0.41 (51.4% of lin); below the range, not falsified |
-| X3 vyx at T=860, window 720 | whether DKKM's shortfall is data | gap +0.13 to +0.17, room unchanged | DONE 2026-09-14: gap +0.1875 (28.5% of lin); the 1e-4 penalty wins every seed |
-| B4 stress-dominant BGN | whether BGN has non-market Sharpe to find | room above +0.04, fair gap +0.005 to +0.015 | DONE 2026-09-14: screen missed both gates; fair gap +0.0004 (0.3% of fair lin); regime path closed |
-| B1 persistence ladder | whether spell length moves the gap at fixed room | room unchanged | DONE 2026-09-13: room moved 13x in Sharpe, 20.6% to 31.4% of lin; fair gap stayed between -7.2% and 2.0% of fair lin |
-| G1 gamma(x) times exposure types | whether exposure heterogeneity adds anything in GS | gap above g28's, or retire | DONE 2026-09-11: negative fired (gap 5.5% of lin against g28's 10.5%), path retired |
+| A1 the three baselines under the current code | whether any model as published has a complexity gap, and what every route is measured against | fair gap within 0.005 of zero in all three; falsified above +0.01 | DONE 2026-09-15: DKKM - best fair linear +0.0012, -0.0024, -0.0022; (DKKM - FMR) / FMR 10.2%, 7.4%, 6.6%; twelve of thirteen graded predictions right, BGN's room low |
+| E1 fair linear benchmark | whether the BGN and GS gaps exist | fair gap within the registered bounds; vyx at least +0.08 | DONE 2026-09-13: every bound held; DKKM - best fair linear at most +0.0025 outside vyx; vyx +0.1046 |
+| K4 gamma_v 2.5 | whether more non-market Sharpe widens a genuine gap | room +0.45 to +0.50, gap +0.15 to +0.20 | DONE 2026-09-14: DKKM - best linear +0.1450, (DKKM - FMR) / FMR 19.5%; room +0.41, room / FMR 51.9%; below the range, not falsified |
+| X3 vyx at T=860, window 720 | whether DKKM's shortfall is data | gap +0.13 to +0.17, room unchanged | DONE 2026-09-14: DKKM - best linear +0.1875, (DKKM - FMR) / FMR 29.7%; the 1e-4 penalty wins every seed |
+| B4 stress-dominant BGN | whether BGN has non-market Sharpe to find | room above +0.04, fair gap +0.005 to +0.015 | DONE 2026-09-14: screen missed both gates; DKKM - best fair linear +0.0004; regime path closed |
+| B1 persistence ladder | whether spell length moves the gap at fixed room | room unchanged | DONE 2026-09-13: room moved 13x; DKKM - best fair linear stayed between -0.0025 and +0.0025 |
+| G1 gamma(x) times exposure types | whether exposure heterogeneity adds anything in GS | gap above g28's, or retire | DONE 2026-09-11: negative fired (DKKM - best linear +0.0229 against g28's +0.0283; (DKKM - FMR) / FMR 17.5% against 18.2%), path retired |
 | K1 continuum of exposures | smooth exposure maps | room and gap up modestly | OPEN |
 | K3 kappa_y ladder | persistence against data | gap falls at 0.15, holds or rises at 0.70 | OPEN |
 | G3 default-channel probe | whether GS has any non-market Sharpe | proceed only if the market is below 85% of SR_max | OPEN, 20 min |

@@ -1,18 +1,20 @@
-"""docs/RESULTS.md's current-results table must agree with variants/results/economy_table.csv.
+"""docs/RESULTS.md's current-results tables must agree with the tables the pipeline produces.
 
-Including the two `% of lin` columns, which are RATIOS OF MEANS (economy_table.csv's
-`room_all_over_lin` / `gap_over_lin`) and not the mean of the per-seed ratios -- those differ
-by 5 points for g0235 and live in the same CSV as `*_pct_lin_mean`. Pinning the ratio of means
-here is what stops the two definitions being mixed in the document, which is the mistake
-WORKING.md §40 records for gap/room.
+Every economy-results table in RESULTS.md shares one column set (2026-09-15), defined once in "Reading
+the tables" at the top. The two tables under "Current results" are pinned here, cell by cell, against
+variants/results/economy_table.csv (aggregate_seeds.py) and variants/results_e1/fair_gap_economy_table.csv
+(fair_gap.py): seeds, SR_max, the EW market, FMR, best linear and DKKM Sharpes, DKKM - FMR and its
+percentage of FMR, DKKM - best linear, DKKM - best fair linear, room and its percentage of FMR, and t.
 
-RESULTS.md is the ongoing, human-written record of what each economy is and what it
-produced; economy_table.csv is produced by aggregate_seeds.py from the result files. The
-numbers in the prose table are copied by hand and go stale the moment a new seed or a new
-economy lands. This pins them: every ten-seed flagship row of the CSV must appear in the table
-with the same n, room, gap and t to display precision, and the table must not list an economy
-the CSV does not have. A flagship row with fewer seeds is a screen and must instead have its
-own SCREEN heading.
+The two percentages are RATIOS OF MEANS over Fama-MacBeth's ten-seed mean Sharpe
+(`gap_fm_over_fm`, `room_eval_over_fm`), not means of per-seed ratios: FMR's Sharpe is at or below zero
+in some seeds, where a per-seed ratio is meaningless. Pinning the ratio of means stops the two being
+mixed in the document, the mistake WORKING.md §40 records for gap/room.
+
+The tables are read by COLUMN HEADER, not position, so adding or moving a column cannot make the parser
+read the wrong cell. Every ten-seed flagship row of the CSV must appear, and the tables must list no
+economy the CSV lacks. A flagship row with fewer seeds is a screen and must instead have its own SCREEN
+heading.
 
 Run with: python -m pytest tests/ -k results_md
 """
@@ -28,44 +30,42 @@ CSV = os.path.join(ROOT, "variants", "results", "economy_table.csv")
 E1 = os.path.join(ROOT, "variants", "results_e1", "fair_gap_economy_table.csv")
 
 
+COLS = {  # RESULTS.md header -> field; the unified column set of every economy-results table
+    "economy": "economy", "seeds": "n", "SR_max": "sr_max_eval", "EW market SR": "ew", "FMR SR": "fm",
+    "best linear SR": "lin", "DKKM SR": "dkkm", "DKKM - FMR": "gap_fm", "(DKKM - FMR) / FMR": "gap_fm_pct",
+    "DKKM - best linear": "gap", "DKKM - best fair linear": "fair_gap", "room": "room_eval",
+    "room / FMR": "room_pct", "t, DKKM vs FMR": "t",
+}
+
+
 def _md_rows():
-    """Every `model/tag` row of the tables under "Current results", read by COLUMN HEADER, not position:
-    RESULTS.md adds columns (2026-09-15: room all % of lin, fair gap % of fair lin), and a positional
-    parser silently reads the wrong cell when one moves."""
+    """Every `model/tag` row of the tables under "Current results", read by column header."""
     txt = open(MD).read()
     start = txt.index("## Current results")
     end = txt.index("\n## ", start + 5)
     block = txt[start:end]
 
     def num(c):
-        mm = re.match(r"^([+-]?\d+\.\d+)", c or "")
-        return float(mm.group(1)) if mm else None
+        mm = re.match(r"^([+-]?\d+(?:,\d{3})*\.\d+)", c or "")
+        return float(mm.group(1).replace(",", "")) if mm else None
 
-    def pct(c):
-        mm = re.match(r"^([+-]?\d+\.\d+)%", c or "")
-        return float(mm.group(1)) if mm else None
-
-    rows, header = {}, None
+    rows, header, tables = {}, None, 0
     for line in block.splitlines():
         if not line.startswith("|"):
             header = None
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if cells and cells[0] == "economy":
-            header = cells
+            assert cells == list(COLS), f"a Current results table does not use the unified columns: {cells}"
+            header, tables = cells, tables + 1
             continue
         m = re.match(r"^([a-z_]+)/([A-Za-z0-9]+)$", cells[0])
         if not (m and header):
             continue
         assert len(cells) == len(header), f"{cells[0]}: {len(cells)} cells under a {len(header)}-column header"
-        c = dict(zip(header, cells))
-        rows[(m.group(1), m.group(2))] = dict(
-            spec=c["spec"], n=int(c["n"]), room_all=num(c["room all"]), room_all_pct=pct(c.get("room all % of lin")),
-            room_eval=num(c["room eval"]), room_pct=pct(c["room eval % of lin"]),
-            gap=num(c["gap"]), gap_pct=pct(c["gap % of lin"]), t=num(c["t"]),
-            dkkm=num(c["DKKM"]), lin=num(c["best linear"]), sr_max_eval=num(c["SR_max eval"]),
-            fair_gap=num(c.get("fair gap")), fair_gap_pct=pct(c.get("fair gap % of fair lin")))
-    assert rows, "no economy rows parsed from the 'Current results' tables"
+        c = {COLS[h]: v for h, v in zip(header, cells)}
+        rows[(m.group(1), m.group(2))] = {k: (int(v) if k == "n" else num(v)) for k, v in c.items() if k != "economy"}
+    assert rows and tables, "no economy rows parsed from the 'Current results' tables"
     return rows
 
 
@@ -105,25 +105,21 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
     bad = []
     for key, row in md.items():
         c = csv[key]
-        checks = [("n", row["n"], int(c["n_seeds"]), 0),
-                  ("spec", row["spec"], c["spec_id"], None),
-                  ("room_all", row["room_all"], c["room_all_mean"], 5.1e-5),
-                  ("gap", row["gap"], c["gap_mean"], 5.1e-5),
-                  ("t", row["t"], c["t_mean"], 0.051),
-                  ("dkkm", row["dkkm"], c["dkkm_mean"], 5.1e-5),
-                  ("lin", row["lin"], c["lin_mean"], 5.1e-5),
-                  ("sr_max_eval", row["sr_max_eval"], c["sr_max_eval_mean"], 5.1e-5),
-                  # ratio of means, in percent -- NOT the mean of the per-seed ratios
-                  ("room_all_pct", row["room_all_pct"], c["room_all_over_lin"], 0.051),
-                  ("room_pct", row["room_pct"], c["room_eval_over_lin"], 0.051),
-                  ("gap_pct", row["gap_pct"], c["gap_over_lin"], 0.051)]
-        if row["room_eval"] is not None or not pd.isna(c["room_eval_mean"]):
-            checks.append(("room_eval", row["room_eval"], c["room_eval_mean"], 5.1e-5))
+        checks = [("seeds", row["n"], int(c["n_seeds"]), 0),
+                  ("SR_max", row["sr_max_eval"], c["sr_max_eval_mean"], 5.1e-5),
+                  ("FMR SR", row["fm"], c["fm_mean"], 5.1e-5),
+                  ("best linear SR", row["lin"], c["lin_mean"], 5.1e-5),
+                  ("DKKM SR", row["dkkm"], c["dkkm_mean"], 5.1e-5),
+                  ("DKKM - FMR", row["gap_fm"], c["gap_fm_mean"], 5.1e-5),
+                  ("DKKM - best linear", row["gap"], c["gap_mean"], 5.1e-5),
+                  ("room", row["room_eval"], c["room_eval_mean"], 5.1e-5),
+                  ("t, DKKM vs FMR", row["t"], c["t_mean"], 0.051),
+                  # ratios of means over FMR's mean Sharpe, in percent -- NOT means of per-seed ratios
+                  ("(DKKM - FMR) / FMR", row["gap_fm_pct"], c["gap_fm_over_fm"], 0.051),
+                  ("room / FMR", row["room_pct"], c["room_eval_over_fm"], 0.051)]
         for name, got, want, tol in checks:
-            if tol is None:
-                ok = got == want
-            elif got is None or (isinstance(want, float) and pd.isna(want)):
-                ok = got is None and (want is None or pd.isna(want))
+            if got is None or pd.isna(want):
+                ok = got is None and pd.isna(want)
             else:
                 ok = abs(float(got) - float(want)) <= tol
             if not ok:
@@ -131,11 +127,10 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
     assert not bad, "RESULTS.md is stale:\n  " + "\n  ".join(bad)
 
 
-def test_the_fair_gap_column_matches_the_e1_table():
-    """The last column is E1's fair gap (variants/fair_gap.py): DKKM against linear methods given the
-    equal-weighted market on DKKM's terms. Outside vyx it is the only complexity gap the table shows
-    (RESULTS.md finding 8), so it is pinned like every other cell. An economy whose own run scored the
-    fair methods (--fair_linear) will need fair_gap.py to read that run as well as results_e1/."""
+def test_the_market_and_fair_gap_columns_match_the_e1_table():
+    """EW market SR and DKKM - best fair linear come from variants/fair_gap.py: the equal-weighted market's
+    Sharpe, and DKKM against linear methods given that market on DKKM's terms. Outside KP14 the fair gap is
+    the only complexity gap the tables show (RESULTS.md finding 8), so both are pinned like every other cell."""
     md = _md_rows()
     e = pd.read_csv(E1)
     e = {(r["model"], r["tag"]): r for _, r in e.iterrows() if int(r["window"]) == 360}
@@ -143,13 +138,11 @@ def test_the_fair_gap_column_matches_the_e1_table():
     for key, row in md.items():
         if key not in e:
             bad.append(f"{key[0]}/{key[1]}: no row in {os.path.relpath(E1, ROOT)}")
-        elif row["fair_gap"] is None or abs(row["fair_gap"] - e[key]["fair_gap"]) > 5.1e-5:
-            bad.append(f"{key[0]}/{key[1]} fair gap: RESULTS.md {row['fair_gap']!r} vs {e[key]['fair_gap']!r}")
-        elif row["fair_gap_pct"] is None or abs(row["fair_gap_pct"] - e[key]["fair_gap_over_fair_lin"]) > 0.051:
-            # the fair gap over the fair linear Sharpe, a ratio of means in percent
-            bad.append(f"{key[0]}/{key[1]} fair gap % of fair lin: RESULTS.md {row['fair_gap_pct']!r} "
-                       f"vs {e[key]['fair_gap_over_fair_lin']!r}")
-    assert not bad, "RESULTS.md fair-gap column is stale:\n  " + "\n  ".join(bad)
+            continue
+        for name, field, want in [("EW market SR", "ew", e[key]["ew"]), ("DKKM - best fair linear", "fair_gap", e[key]["fair_gap"])]:
+            if row[field] is None or abs(row[field] - want) > 5.1e-5:
+                bad.append(f"{key[0]}/{key[1]} {name}: RESULTS.md {row[field]!r} vs {want!r}")
+    assert not bad, "RESULTS.md market or fair-gap column is stale:\n  " + "\n  ".join(bad)
 
 
 if __name__ == "__main__":
