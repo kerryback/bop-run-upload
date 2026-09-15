@@ -3678,3 +3678,39 @@ three rows and the necessary-not-sufficient point; finding 6 counts eleven specs
 NEXTUP.md: A1 DONE, with G3's gate flagged as too weak (the KP14 baseline meets "market below 85%" with no
 gap; add a room clause as B4 had). RUNS.md: statuses and outcome.
 
+## §58. The gated cluster pull moves into the repo (2026-09-15)
+
+**Why it was outside.** Nothing chose that. It was written in `_scratch/` on 2026-09-10 (gitignored),
+staged to Phoenix's `/tmp`, and moved to `/data/sjpruitt/cluster_pull.sh` on 2026-09-11 after login
+`/tmp` was cleaned; its only record was one line in the storage-layout memory. Seth asked why a
+repo-specific script that deletes files on the shared checkout was not in the repo. It is now
+`variants/cluster_pull.sh`, beside `run_seeds_slurm.sh` and `run_solve_slurm.sh`.
+
+**What it is for.** Jobs write outputs into the shared checkout; the laptop copies, commits and pushes
+them; the cluster then holds untracked copies of files the pull brings in as tracked, and `git pull`
+refuses to overwrite them even when identical (reproduced on a toy repo). The script clears them only
+if every one is byte-identical to origin, then fast-forwards. This is how the 12:16 pull of
+2026-09-14 got past the K4, X3 and B4 copies (their Sol mtimes are the pull's), and what I failed to
+find when I told Seth a pull would need files moved aside by hand.
+
+**Fixes made in the move.** (1) The whole body is `main`, and the last line is `main "$@"; exit $?`:
+bash reads a script as it runs, and this one updates the tree it lives in, so the file is parsed before
+the pull can rewrite it. (2) Fast-forward only: an ancestry check (exit 4, nothing touched) and
+`git merge --ff-only`, instead of a plain `git pull` that could merge. (3) Scratch lists in a private
+`mktemp -d` removed on exit, instead of fixed `/tmp/cp.*` names. A change to the script takes effect
+from the pull after the one that brings it in.
+
+**Tests.** `tests/test_cluster_pull.py`, end to end on throwaway repos: identical untracked copies
+cleared and fast-forwarded, with plain `git pull` shown to refuse first; one differing copy aborts with
+every file and HEAD untouched; a modified tracked file identical to the incoming one is restored and
+pulled; a non-fast-forward checkout aborts; up to date is a no-op; an incoming commit that rewrites the
+script with 400 lines of commands that must not run leaves the run unaffected. A structural test pins
+the three fixes. 244 pass.
+
+**On Sol** (`15877cd`, both queues empty): the old `/data` helper, in its last use, cleared 211
+untracked baseline copies, all byte-identical, and fast-forwarded to `15877cd` with nothing modified or
+untracked. The tracked helper arrived with the laptop's sha256 (`43bfe414...`) and, run in place, had
+nothing to clear. The old copies at `/data/sjpruitt/cluster_pull.sh` and `_scratch/cluster_pull.sh`
+were then deleted. RUNS.md ("Where output goes"), RESULTS.md's experiment checklist (new step 6) and
+the memory note and index name `bash variants/cluster_pull.sh`.
+
