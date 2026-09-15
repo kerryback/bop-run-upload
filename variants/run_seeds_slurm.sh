@@ -33,6 +33,14 @@
 #                  result file is named by model, tag and seed only)
 #     g0235d   B4  g0235 stressed two thirds of the time -- seed 0 is a screen, run it alone first
 #
+#   The three BASELINES, added 2026-09-14 (A1, docs/NEXTUP.md; docs/RESULTS.md "Baselines: the
+#   anchor"): each paper's economy as published, run through the same pipeline as every path that
+#   departs from it. They narrow the conditioning columns (RF_COLS, passed as --rf_cols) to the
+#   state the paper's model has, so an inert regime or an unloaded state is not fed to the bases:
+#     bgnbase  A1  bgn_gam at gmult [1,1] (rate only)
+#     kpbase   A1  kp_vy with one type at beta 0, no priced state (no conditioning column)
+#     gsbase   A1  gs_bx one type at gmreg [1,1] (productivity state only)
+#
 #   SEED_STAGE=linear (E1) re-scores a SAVED panel's linear methods, plus the fair ones, reading
 #   panel/moments/oracle from BOP_INPUTS_DIR (default results/) and writing to BOP_RESULTS_DIR,
 #   which must be a DIFFERENT directory -- the output names equal the recorded run's:
@@ -197,7 +205,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vyxT860 | g0235d) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vyxT860 | g0235d | bgnbase | kpbase | gsbase) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -345,8 +353,47 @@ case "$SEED_SPEC" in
     KAPPAS=0.001,0.01,0.1,1
     SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v1 variants/run_solve_slurm.sh'
     ;;
+  bgnbase)
+    # A1: the BGN baseline as published -- gmult [1, 1], so both regimes price the market shock
+    # at sigma_z 0.4 and the regime is inert (docs/RESULTS.md, "Baselines: the anchor"). Its own
+    # J* table (the solve's tag is the file name). RF_COLS keeps only the rate: the regime
+    # indicator gam_stand is an unpriced Markov chain here and the paper has no regime.
+    MODEL=bgn_gam; TAG=bgnbase; SPEC=var-bgn_gam-bgnbase-v1; SOLVE_TAG=Jstar_bgnbase
+    KAPPAS=0.001,0.01,0.1,1
+    RF_COLS=rf_stand
+    export BGN_PARAM_OVERRIDES='{"gmult":[1.0,1.0],"jstar_gam_file":"Jstar_bgnbase.csv"}'
+    SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min; the table is committed'
+    ;;
+  kpbase)
+    # A1: the KP14 baseline as published (r = 0.05, the repository's standing departure) -- one
+    # firm type at beta 0, no priced state (gamma_v 0), no compensation. The y process is still
+    # simulated and exported; nothing loads on it, so RF_COLS=none keeps it out of the bases.
+    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v1; SOLVE_TAG=kpbase
+    KAPPAS=0.001,0.01,0.1,1
+    RF_COLS=none
+    export KP_PARAM_OVERRIDES='{"type_share":[1.0],"type_bv":[0.0],"gamma_v":0.0,"bv_comp":0.0}'
+    export KP_VY_PREFIX=kpbase
+    SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=kpbase KP_PARAM_OVERRIDES=<the blob above> python build_vy_tables.py kpbase   # the tables are committed'
+    ;;
+  gsbase)
+    # A1: the GS21 baseline as published at the corrected Table I -- one type, the regime solver
+    # at gmreg [1, 1] so gamma_s = gamma_x 0.5 in both regimes and the regime is inert. RF_COLS
+    # keeps only the productivity state x. The solve is hours (run_gsbase_slurm.sh, chained
+    # afterok); the hint is FETCH, as for every GS economy.
+    MODEL=gs_bx; TAG=gsbase; SPEC=var-gs_bx-gsbase-v1; SOLVE_TAG=sol_gsbase
+    export GS_BX_SOLDIRS=sol_gsbase
+    export GS_BX_BETAS=1.0
+    export GS_BX_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    KAPPAS=0.001,0.01,0.03,0.1,0.3,1,3,10
+    RF_COLS=rf_stand
+    # Solves pending (2026-09-14): the hint is the job that builds them. Once the solve is
+    # published, change it to the fetch form every other GS case uses:
+    #   python variants/fetch_solves.py --spec var-gs_bx-gsbase-v1 --from "<the shared solves folder>"
+    SOLVE_HINT='cd <repo> && mkdir -p outslurm && sbatch variants/gs_bx/run_gsbase_slurm.sh   # 3.5-6 h; chain the seed array afterok'
+    ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vyxT860 or g0235d)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vyxT860, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
@@ -357,6 +404,13 @@ esac
 N=${SEED_N:-500}
 T=${SEED_T:-500}
 WINDOW=${SEED_WINDOW:-360}
+
+# Conditioning columns for the feature bases, when a case narrows them (the baselines: an inert
+# regime or an unloaded state is a noise column). Unset means the model's full set, which every
+# economy before 2026-09-14 ran with; the spec's estimation.rf_cols pins each case's value. The
+# same list goes to BOTH stages, and run_estimators.py refuses a panel whose oracle used another.
+RF_ARGS=()
+[ -n "${RF_COLS:-}" ] && RF_ARGS=(--rf_cols "$RF_COLS")
 
 # both  = oracle then estimators (the default; what every campaign run does)
 # oracle = the oracle ONLY, and without --save_panel: nothing downstream consumes the
@@ -467,7 +521,7 @@ if [ "$SEED_STAGE" = linear ]; then
   done
   python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
          --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
-         --linear_only --fair_linear --inputs_from "$INPUTS" --n_jobs "$NT" 2>&1 | tee -a "$LOG"
+         --linear_only --fair_linear --inputs_from "$INPUTS" --n_jobs "$NT" ${RF_ARGS[@]+"${RF_ARGS[@]}"} 2>&1 | tee -a "$LOG"
   E=$(date +%s)
   echo "=== seed $SEED END $(date '+%F %T') stage=linear estimators=$((E-S))s inputs=$INPUTS ===" | tee -a "$LOG"
   python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"
@@ -479,7 +533,7 @@ SAVE_PANEL=--save_panel
 # the ones the spec declares. Without it a summary could carry a spec_id for an economy
 # it did not build -- which is the failure the whole registry exists to prevent.
 python -W ignore run_oracle.py --model "$MODEL" --N "$N" --T "$T" --seed "$SEED" \
-       --tag "$TAG" --spec "$SPEC" --eval_window "$WINDOW" --levels $SAVE_PANEL 2>&1 | tee -a "$LOG"
+       --tag "$TAG" --spec "$SPEC" --eval_window "$WINDOW" --levels $SAVE_PANEL ${RF_ARGS[@]+"${RF_ARGS[@]}"} 2>&1 | tee -a "$LOG"
 MID=$(date +%s)
 echo "=== oracle done in $((MID-S))s ===" | tee -a "$LOG"
 
@@ -491,7 +545,7 @@ fi
 
 python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
        --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" --fair_linear \
-       --n_jobs "$NT" 2>&1 | tee -a "$LOG"
+       --n_jobs "$NT" ${RF_ARGS[@]+"${RF_ARGS[@]}"} 2>&1 | tee -a "$LOG"
 E=$(date +%s)
 
 echo "=== seed $SEED END $(date '+%F %T') oracle=$((MID-S))s estimators=$((E-MID))s total=$((E-S))s ===" | tee -a "$LOG"

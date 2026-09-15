@@ -41,6 +41,10 @@ CURRENT = {
     "vyg25": "var-kp_vy-vyg25-v1",
     "vyxT860": "var-kp_vy-vyxT860-v1",
     "g0235d": "var-bgn_gam-g0235d-v1",
+    # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
+    "bgnbase": "var-bgn_gam-bgnbase-v1",
+    "kpbase": "var-kp_vy-kpbase-v1",
+    "gsbase": "var-gs_bx-gsbase-v1",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"
 
@@ -90,7 +94,7 @@ def seed_array_cases():
     cases = {}
     for name, block in re.findall(r"^\s{2}(\w+)\)\s*$(.*?)^\s*;;", m.group(1), re.DOTALL | re.M):
         c = {"env": {}}
-        for k in ("MODEL", "TAG", "SPEC", "SOLVE_TAG", "KAPPAS"):
+        for k in ("MODEL", "TAG", "SPEC", "SOLVE_TAG", "KAPPAS", "RF_COLS"):
             mm = re.search(r"(?m)(?:^|[;\s])" + k + r"=([^;\s]+)", block)
             c[k] = mm.group(1) if mm else None
         for k in ("SEED_T", "SEED_WINDOW"):          # per-case sample defaults, e.g. X3's T=860 / w=720
@@ -204,7 +208,7 @@ def test_gs_bx7_ashift_ladder_is_consistent_across_the_records():
 
 def test_gs_specs_env_block_agrees_with_types():
     """GS_BX_* are the only statement the simulator gets of which types exist."""
-    for key in ("bx7", "g28"):
+    for key in ("bx7", "g28", "gsbase"):
         spec = load_spec(CURRENT[key])
         env, types = spec["env"], spec["types"]
         assert env["GS_BX_SOLDIRS"].split(",") == types["soldirs"], key
@@ -218,19 +222,27 @@ def test_gs_specs_env_block_agrees_with_types():
 # GS g28: one solve, made by run_g28_slurm.sh
 # --------------------------------------------------------------------------
 
-def test_gs_g28_solve_script_restates_its_stage():
-    spec = load_spec(CURRENT["g28"])
-    rel = spec["provenance"]["solve_script"]
-    txt = read_script(rel)
-    stages = spec["solve"]["stages"]
-    assert len(stages) == 1
-    ov = shell_json_assignments(txt, "OV")
-    assert len(ov) == 1 and ov[0] == stages[0]["params"], (ov, stages[0]["params"])
-    assert shell_scalar(txt, "OUTDIR") == stages[0]["name"] == spec["types"]["soldirs"][0]
-    m = re.search(r"gs_solve_gam\.py\s+(\d+)\s+(\S+)\s+\"?\$OUTDIR", txt)
-    assert m and int(m.group(1)) == stages[0]["args"]["xnum"]
-    assert float(m.group(2)) == stages[0]["args"]["tol"]
-    assert stages[0]["producer"].endswith("gs_solve_gam.py")
+def test_gs_single_solve_scripts_restate_their_stage():
+    """g28 (gs_solve_gam.py) and the baseline gsbase (gs_solve_reg.py): one solve each, made by
+    the SLURM script the spec's provenance names, which must restate the stage exactly."""
+    for key in ("g28", "gsbase"):
+        spec = load_spec(CURRENT[key])
+        rel = spec["provenance"]["solve_script"]
+        txt = read_script(rel)
+        stages = spec["solve"]["stages"]
+        assert len(stages) == 1, key
+        ov = shell_json_assignments(txt, "OV")
+        assert len(ov) == 1 and ov[0] == stages[0]["params"], (key, ov, stages[0]["params"])
+        assert shell_scalar(txt, "OUTDIR") == stages[0]["name"] == spec["types"]["soldirs"][0], key
+        solver = os.path.basename(stages[0]["producer"])
+        assert solver in ("gs_solve_gam.py", "gs_solve_reg.py"), (key, solver)
+        m = re.search(re.escape(solver) + r"\s+(\d+)\s+(\S+)\s+\"?\$OUTDIR", txt)
+        assert m, f"{key}: {rel} does not invoke {solver} over $OUTDIR"
+        assert int(m.group(1)) == stages[0]["args"]["xnum"], key
+        assert float(m.group(2)) == stages[0]["args"]["tol"], key
+        # the script must refuse to hand a wrong id to an afterok seed array (the gsbase and gx7 behaviour)
+        if key == "gsbase":
+            assert shell_scalar(txt, "EXPECT") == spec["expected_solves"][stages[0]["name"]], key
 
 
 # --------------------------------------------------------------------------
@@ -268,6 +280,17 @@ def test_seed_array_cases_match_the_specs_they_name():
             f"{name}: runs T={c['SEED_T'] or t_def} but {c['SPEC']} says panel T {spec['panel']['T']}")
         assert (c["SEED_WINDOW"] or w_def) == spec["estimation"]["window"], (
             f"{name}: runs window {c['SEED_WINDOW'] or w_def} but {c['SPEC']} says {spec['estimation']['window']}")
+        # The conditioning columns the bases see are part of the estimation protocol: a baseline
+        # drops the state its paper does not have (estimation.rf_cols), and the branch must pass
+        # exactly that list as RF_COLS ('none' for an empty one). A spec without the key runs the
+        # model's full set, so its branch must not narrow it.
+        want_rf = spec["estimation"].get("rf_cols")
+        if want_rf is None:
+            assert c["RF_COLS"] is None, (
+                f"{name}: narrows RF_COLS to {c['RF_COLS']!r} but {c['SPEC']} declares no estimation.rf_cols")
+        else:
+            assert c["RF_COLS"] == (",".join(want_rf) or "none"), (
+                f"{name}: RF_COLS {c['RF_COLS']!r} but {c['SPEC']} says rf_cols {want_rf}")
 
 
 def test_seed_array_passes_the_case_kappas_to_the_estimators():

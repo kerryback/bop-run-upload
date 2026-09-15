@@ -38,6 +38,11 @@ ap.add_argument("--fair_linear", action="store_true",
                      "a separate UNPENALISED column (linrank_m, linlev_m), on a penalty grid two decades past "
                      "the DKKM grid's top; the market alone with its weight estimated the same way (mkt_est); "
                      "and the always-long EW market (ew). docs/RESULTS.md cross-cutting finding 8.")
+ap.add_argument("--rf_cols", type=str, default=None,
+                help="which conditioning columns the random features see, comma-separated (bgn_gam and gs_bx: "
+                     "rf_stand and gam_stand; kp_vy: rf_stand); 'none' for no conditioning column. Default: the "
+                     "model's full set. Must be what the oracle run that saved this panel used (its summary's "
+                     "rf_cols), or the estimators are scored on a different feature set from the ceilings.")
 ap.add_argument("--inputs_from", type=str, default=None,
                 help="read the panel, moments and oracle summary from this directory; output still goes to "
                      "BOP_RESULTS_DIR (default results/)")
@@ -121,9 +126,21 @@ start, end = int(months_m.min()), int(months_m.max())
 eval_months = [m for m in range(start + args.window, end + 1) if m in midx]
 t0 = time.time()
 model_for_rff = "bgn"   # all three economies pass conditioning variables to the RFF (see common/dkkm_functions.py)
-if args.model in ("bgn_gam", "gs_bx"):
-    dkkm.RF_COLS = ["rf_stand", "gam_stand"]
+_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"]}
+dkkm.RF_COLS = list(_RF_ALL[args.model])
+if args.rf_cols is not None:
+    dkkm.RF_COLS = ([] if args.rf_cols.strip().lower() in ("", "none")
+                    else [c.strip() for c in args.rf_cols.split(",") if c.strip()])
+    _bad = [c for c in dkkm.RF_COLS if c not in _RF_ALL[args.model]]
+    if _bad:
+        raise SystemExit(f"--rf_cols names {_bad}, which {args.model} does not export (it has {_RF_ALL[args.model]})")
+if _oracle_summary and os.path.exists(_oracle_summary) and "rf_cols" in _osum and list(_osum["rf_cols"]) != list(dkkm.RF_COLS):
+    raise SystemExit(
+        f"the oracle that saved this panel fed the bases rf_cols={_osum['rf_cols']}, but this run would use "
+        f"{dkkm.RF_COLS}. Pass --rf_cols {','.join(_osum['rf_cols']) or 'none'} so the estimators and the "
+        f"population ceilings see the same feature set.")
 RFC = list(dkkm.RF_COLS)   # capture by value for closures shipped to loky workers
+print(f"[features] conditioning columns fed to the random features: {RFC or 'none'}", flush=True)
 
 # ---- factor return histories ------------------------------------------------------------------------
 ff_rets = fama.factors(fama.fama_french, panel, n_jobs=args.n_jobs, start=start, end=end, chars=chars)
@@ -336,6 +353,7 @@ json.dump({"model": args.model, "tag": args.tag, "seed": args.seed, "prov": _pta
            "spec_id": _spec_id, "oracle_eval_window": _oracle_eval_window,
            "window": args.window, "winsor": args.winsor, "kappas": kappas,
            "linear_only": args.linear_only, "fair_linear": args.fair_linear, "inputs_from": args.inputs_from,
+           "rf_cols": RFC,
            "eval_months": len(eval_months), "N": N,
            "solves": _solves,
            "panel": os.path.basename(_panel_path)},
