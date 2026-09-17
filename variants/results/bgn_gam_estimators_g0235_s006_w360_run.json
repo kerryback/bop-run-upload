@@ -2,21 +2,33 @@
  "model": "bgn_gam",
  "tag": "g0235",
  "seed": 6,
- "prov": "bgn_gam_estimators_g0235_s006_w360_summary@dd0199e+dirty",
+ "prov": "bgn_gam_estimators_g0235_s006_w360_summary@c60eee5+dirty",
+ "spec_id": "var-bgn_gam-g0235-v3",
+ "oracle_eval_window": 360,
  "window": 360,
  "winsor": 0.0,
  "kappas": [
+  1e-05,
+  0.0001,
   0.001,
   0.01,
   0.1,
-  1.0
+  1.0,
+  10.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand",
+  "gam_stand"
  ],
  "eval_months": 125,
  "N": 500,
  "solves": [
   {
    "stage": "jstar",
-   "solve_id": "be222462dd017b2c",
+   "solve_id": "2d462ae0f4463f03",
    "files": 1,
    "files_expected": 1,
    "bytes": 9333

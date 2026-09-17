@@ -24,6 +24,12 @@ Definitions (variants/common/oracle.py evaluate_bases; run_estimators.py):
               of an inequality is the month-sample confound (WORKING.md §41) made visible
   dkkm      = best sharpe over rff, rff_ens, rff_lev, rff_lev_ens (any P, any kappa)
   lin       = best sharpe over linrank, linlev, fm, ff
+  fair_lin  = best over those four PLUS linrank_m, linlev_m and mkt_est -- the market given
+              to the linear methods on DKKM's terms (finding 8). `ew` is reported beside it
+              and excluded from it: always-long assumes the premium's sign.
+  fair_gap  = dkkm - fair_lin. THE complexity gap outside KP14, and the column RESULTS.md
+              ranks by. Folded in here 2026-09-17; it used to come from variants/fair_gap.py
+              and a second table in variants/results_e1, joined on (model, tag).
   gap       = dkkm - lin
   fm        = Fama-MacBeth's sharpe (the method has one row: no penalty grid)
   gap_fm    = dkkm - fm, the gap against Fama-MacBeth alone. RESULTS.md reports gap and room as
@@ -75,6 +81,13 @@ import protocol
 HERE = os.path.dirname(os.path.abspath(__file__))
 RFF = ("rff", "rff_ens", "rff_lev", "rff_lev_ens")
 LIN = ("linrank", "linlev", "fm", "ff")
+# The FAIR benchmark: the four linear methods plus the two ridge methods given the
+# equal-weighted market as a separate unpenalised column, as --include_mkt gives it to DKKM,
+# plus the market alone with its weight estimated. `ew`, the always-long market, is reported
+# but kept OUT of the benchmark: an always-long position assumes the premium's sign, which no
+# estimator is given. docs/RESULTS.md finding 8 is why this exists -- outside KP14 the measured
+# gap is the market against methods not given it on the same terms.
+FAIR = LIN + ("linrank_m", "linlev_m", "mkt_est")
 SEEDED = re.compile(r"^(?P<model>[a-z_]+)_oracle_(?P<tag>.+)_s(?P<seed>\d{3})\.json$")
 
 
@@ -122,6 +135,7 @@ def seed_rows(results):
                              gap=np.nan, t=np.nan, room_all_pct_lin=np.nan, room_eval_pct_lin=np.nan,
                              gap_pct_lin=np.nan, fm=np.nan, gap_fm=np.nan, room_all_pct_fm=np.nan,
                              room_eval_pct_fm=np.nan, gap_fm_pct_fm=np.nan,
+                             fair_lin=np.nan, fair_gap=np.nan, ew=np.nan, fair_method=None,
                              dkkm_method=None, lin_method=None, prov_est=None))
             continue
         for e in ests:
@@ -136,6 +150,14 @@ def seed_rows(results):
             # one is meaningless; guard rather than emit a huge or signed-wrong number.
             _pct = (lambda v: 100.0 * v / _lin if _lin > 1e-6 else np.nan)
             _fm = float(best.loc["fm", "sharpe"]) if "fm" in best.index else np.nan
+            # The fair benchmark, from THIS run: every economy scores it in-run since the
+            # protocol landed (estimation.fair_linear), so there is no second directory to
+            # join against. Until 2026-09-17 these two columns came from variants/results_e1,
+            # E1's separate re-scoring of the eight economies that predated --fair_linear, and
+            # RESULTS.md had to be checked against two CSVs joined on (model, tag).
+            _fair = best.loc[[k for k in FAIR if k in best.index]].sharpe
+            _fair_lin = _fair.max() if len(_fair) else np.nan
+            _ew = float(best.loc["ew", "sharpe"]) if "ew" in best.index else np.nan
             # Per-seed percentages of fm are recorded for completeness, but fm can be at or below zero in
             # a seed, so only the RATIO OF MEANS (economy table) is quoted; see the docstring.
             _pfm = (lambda v: 100.0 * v / _fm if (not np.isnan(_fm)) and _fm > 1e-6 else np.nan)
@@ -147,6 +169,8 @@ def seed_rows(results):
                              fm=_fm, gap_fm=dk.max() - _fm,
                              room_all_pct_fm=_pfm(base["room_all"]), room_eval_pct_fm=_pfm(base["room_eval"]),
                              gap_fm_pct_fm=_pfm(dk.max() - _fm),
+                             fair_lin=_fair_lin, fair_gap=dk.max() - _fair_lin, ew=_ew,
+                             fair_method=_fair.idxmax() if len(_fair) else None,
                              dkkm_method=dk.idxmax(), lin_method=ln.idxmax(),
                              prov_est=s["prov"].iloc[0] if "prov" in s else None))
     return pd.DataFrame(rows)
@@ -164,7 +188,8 @@ def economy_table(seeds):
         rec["solves"] = solves[0] if len(solves) == 1 else ("MIXED:" + "|".join(solves) if solves else None)
         for col in ("sr_max", "sr_max_eval", "room_all", "room_eval", "dkkm", "lin", "gap", "t",
                     "room_all_pct_lin", "room_eval_pct_lin", "gap_pct_lin",
-                    "fm", "gap_fm", "room_all_pct_fm", "room_eval_pct_fm", "gap_fm_pct_fm"):
+                    "fm", "gap_fm", "room_all_pct_fm", "room_eval_pct_fm", "gap_fm_pct_fm",
+                    "fair_lin", "fair_gap", "ew"):
             v = g[col].astype(float).dropna()
             rec[f"{col}_mean"] = v.mean() if len(v) else np.nan
             rec[f"{col}_sd"] = v.std(ddof=1) if len(v) > 1 else np.nan
