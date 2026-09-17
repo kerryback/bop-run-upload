@@ -32,24 +32,32 @@ def _row(econ, model, tag, window=360):
     return r.iloc[0]
 
 
-def test_vyx_ten_seeds_match_working_37():
+def test_vyx_ten_seeds_match_the_published_row():
+    """Pinned to the protocol campaign of 2026-09-17, not to its pre-protocol predecessor.
+
+    room is a POPULATION quantity and did not move: +0.3491 (sd 0.0365) before and after, as
+    each spec predicted, because neither the burn-in nor the ridge grid touches the oracle's
+    ceilings. The gap did move, +0.1046 to +0.1251, because the wider grid let DKKM find a
+    smaller penalty -- and it is still a LOWER bound: the grid floor wins in 7 of 10 seeds
+    (variants/penalty_gate.py).
+    """
     r = _row(_flagship()[1], "kp_vy", "vyx")
     assert r["n_seeds"] == 10
     assert abs(r.room_all_mean - 0.3491) < 5e-4 and abs(r.room_all_sd - 0.0365) < 5e-4
-    assert abs(r.gap_mean - 0.1046) < 5e-4 and abs(r.gap_sd - 0.0155) < 5e-4
+    assert abs(r.gap_mean - 0.1251) < 5e-4 and abs(r.gap_sd - 0.0302) < 5e-4
 
 
-def test_g0235_ten_seeds_match_working_40():
+def test_g0235_ten_seeds_match_the_published_row():
     r = _row(_flagship()[1], "bgn_gam", "g0235")
     assert r["n_seeds"] == 10
-    assert abs(r.room_all_mean - 0.0188) < 5e-4 and abs(r.room_all_sd - 0.0065) < 5e-4
-    assert abs(r.gap_mean - 0.0227) < 5e-4 and abs(r.gap_sd - 0.0084) < 5e-4
-    assert abs(r["gap_over_room_all"] - 1.21) < 0.02, "ratio of means, not mean of ratios (1.31)"
+    assert abs(r.room_all_mean - 0.0204) < 5e-4 and abs(r.room_all_sd - 0.0061) < 5e-4
+    assert abs(r.gap_mean - 0.0243) < 5e-4 and abs(r.gap_sd - 0.0056) < 5e-4
+    assert abs(r["gap_over_room_all"] - 1.19) < 0.02, "ratio of means, not mean of ratios"
 
 
 def test_gs_seed_zero_rows_carry_eval_room_and_spec():
     seeds, econ = _flagship()
-    for tag, spec in (("g28", "var-gs_bx-g28-v2"), ("bx7", "var-gs_bx-bx7-v3")):
+    for tag, spec in (("g28", "var-gs_bx-g28-v3"), ("bx7", "var-gs_bx-bx7-v4")):
         r = _row(econ, "gs_bx", tag)
         assert r["n_seeds"] >= 1 and r["spec_id"] == spec
         assert r.room_eval_n >= 1, "gs oracles ran with --eval_window, so eval room must exist"

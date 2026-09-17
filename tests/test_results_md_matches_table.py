@@ -2,8 +2,8 @@
 
 Every economy-results table in RESULTS.md shares one column set (2026-09-15), defined once in "Reading
 the tables" at the top. EVERY such table is pinned here, cell by cell, against
-variants/results/economy_table.csv (aggregate_seeds.py) and variants/results_e1/fair_gap_economy_table.csv
-(fair_gap.py): seeds, SR_max, the EW market, FMR, best linear and DKKM Sharpes, DKKM - FMR and its
+variants/results/economy_table.csv (aggregate_seeds.py), which since 2026-09-17 carries the
+fair benchmark too: seeds, SR_max, the EW market, FMR, best linear and DKKM Sharpes, DKKM - FMR and its
 percentage of FMR, DKKM - best linear, DKKM - best fair linear, room and its percentage of FMR, and t.
 
 The two percentages are RATIOS OF MEANS over Fama-MacBeth's ten-seed mean Sharpe
@@ -13,9 +13,7 @@ mixed in the document, the mistake WORKING.md §40 records for gap/room.
 
 The tables are read by COLUMN HEADER, not position, so adding or moving a column cannot make the parser
 read the wrong cell. Every ten-seed row of the CSV must appear, and the tables must list no economy the CSV lacks.
-Every row must be on the measurement protocol (variants/common/protocol.py). A row with fewer
-than ten seeds is a screen and must instead have its own SCREEN heading -- a tier that exists
-only until bgn_gam/g0235d reaches the protocol's ten seeds.
+Every row must be on the measurement protocol (variants/common/protocol.py), at its ten seeds.
 
 Run with: python -m pytest tests/ -k results_md
 """
@@ -30,7 +28,6 @@ sys.path.insert(0, os.path.join(ROOT, "variants", "common"))
 import protocol  # noqa: E402
 MD = os.path.join(ROOT, "docs", "RESULTS.md")
 CSV = os.path.join(ROOT, "variants", "results", "economy_table.csv")
-E1 = os.path.join(ROOT, "variants", "results_e1", "fair_gap_economy_table.csv")
 
 
 COLS = {  # RESULTS.md header -> field; the unified column set of every economy-results table
@@ -41,14 +38,18 @@ COLS = {  # RESULTS.md header -> field; the unified column set of every economy-
 }
 
 
-# Tables that begin with `economy` but are not economy-results tables. Listed so an
-# unrecognised shape fails loudly rather than being skipped.
-OTHER_SHAPES = [
-    ["economy", "quantity", "reference", "predicted", "result", "verdict"],
-    ["economy", "spec", "what it is in the code", "conditioning columns", "solve"],
-    ["economy", "spec", "what it is in the code", "solve"],
-    ["economy", "model", "what differs"],
-]
+def _is_near_miss(cells):
+    """A header that is ALMOST the unified column set, which is what must fail loudly.
+
+    Several tables in this file legitimately start with `economy` and are not economy-results
+    tables: the prediction table, the baseline-production table, "what differs", the penalty
+    gate. An allowlist of their exact shapes needed editing every time one was added, and an
+    allowlist is the wrong instrument anyway -- what matters is not "is this shape known" but
+    "is this a unified table that has DRIFTED". A header sharing most of the unified column
+    names is drift; one sharing almost none is a different kind of table.
+    """
+    shared = len(set(cells) & set(COLS))
+    return shared >= max(3, len(COLS) // 2) and cells != list(COLS)
 
 
 def _md_rows():
@@ -77,16 +78,13 @@ def _md_rows():
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if cells and cells[0] == "economy":
-            # Three table shapes start with `economy`: the unified economy table, a
-            # prediction table, and the descriptive "how each baseline is produced" one.
-            # Only the first is pinned -- but an unrecognised shape is an error, so a new
-            # table cannot quietly use near-miss columns and escape the check.
             if cells == list(COLS):
                 header, tables = cells, tables + 1
             else:
-                assert cells in OTHER_SHAPES, (
-                    f"a table starting with `economy` uses columns that are neither the "
-                    f"unified set nor a known descriptive shape: {cells}")
+                # A descriptive table is fine; a DRIFTED unified table is not.
+                assert not _is_near_miss(cells), (
+                    f"a table shares most of the unified column set but is not it -- the "
+                    f"columns have drifted: {cells}\nexpected: {list(COLS)}")
                 header = None
             continue
         m = re.match(r"^([a-z_]+)/([A-Za-z0-9]+)(?::.*)?$", cells[0])
@@ -105,19 +103,21 @@ def _md_rows():
     return rows
 
 
-def _csv_rows(current=True):
-    """The economy rows, which are all on the measurement protocol by construction.
+def _csv_rows(current=None):
+    """Every economy row. All on protocol, all at the protocol's ten seeds.
 
-    This used to filter to N=500, T=500, window 360, because the CSV held rows that were not:
-    smoke and scaling probes at N=60 to 500 and windows 20/36/50, and one economy at T=860.
-    The filter is now an ASSERTION (test_the_csv_holds_nothing_off_protocol) -- silently
-    dropping an off-protocol row is how one came to be published beside the others in the
-    first place. The ten-seed split stays only while bgn_gam/g0235d has a single seed; the
-    protocol's SEEDS is 10 for every economy, and the screen tier goes when it reaches that.
+    Two filters used to live here and both are now assertions instead. The sample filter
+    (N=500, T=500, window 360) went when the off-protocol probe rows were deleted -- silently
+    dropping such a row is how one came to be published beside the others. The seed filter
+    went on 2026-09-17, when bgn_gam/g0235d got its ten seeds: it existed to keep a one-seed
+    SCREEN out of a ranked table, and there is no longer any tier but CURRENT. `current` is
+    kept as an accepted-and-ignored argument only so a stale caller fails loudly on the
+    assertion below rather than silently filtering.
     """
     e = pd.read_csv(CSV)
-    if current is not None:
-        e = e[e["n_seeds"] >= protocol.SEEDS] if current else e[e["n_seeds"] < protocol.SEEDS]
+    assert (e["n_seeds"] == protocol.SEEDS).all(), (
+        f"economy_table.csv has rows away from the protocol's {protocol.SEEDS} seeds:\n"
+        + e.loc[e["n_seeds"] != protocol.SEEDS, ["model", "tag", "n_seeds"]].to_string())
     return {(r["model"], r["tag"]): r for _, r in e.iterrows()}
 
 
@@ -133,13 +133,20 @@ def test_the_csv_holds_nothing_off_protocol():
                      + "\n  ".join(bad))
 
 
-def test_every_screen_is_reported_under_a_screen_heading():
-    """A flagship economy with fewer than ten seeds can neither vanish from the document nor be
-    ranked beside ten-seed economies: it needs its own `#### <model>/<tag> -- SCREEN` heading."""
-    txt = open(MD).read()
-    missing = [f"{m}/{t}" for (m, t) in _csv_rows(current=False)
-               if not re.search(rf"^#{{3,4}} {re.escape(m)}/{re.escape(t)} -- SCREEN", txt, re.M)]
-    assert not missing, f"economy_table.csv has screens RESULTS.md does not report under a SCREEN heading: {missing}"
+def test_no_economy_is_below_the_protocols_seed_count():
+    """There is no SCREEN tier any more.
+
+    A screen was one seed, run under a spec whose other seeds started only if it cleared a
+    gate; it was reported under its own heading and never ranked, because cross-seed sd of a
+    gap runs 15% to 63% of its mean (finding 4). The protocol sets ten seeds for every
+    economy, so fewer seeds is a numerical shortcut rather than a tier, and bgn_gam/g0235d --
+    the last screen -- got its ten on 2026-09-17. This is the assertion that keeps it that
+    way; _csv_rows carries the same check so every other test in this file inherits it.
+    """
+    e = pd.read_csv(CSV)
+    short = e.loc[e["n_seeds"] < protocol.SEEDS, ["model", "tag", "n_seeds"]]
+    assert short.empty, ("economies below the protocol's seed count:\n" + short.to_string()
+                         + "\nRun them to ten seeds; do not reintroduce a SCREEN heading.")
 
 
 def test_every_flagship_economy_in_the_csv_is_in_the_table():
@@ -183,20 +190,22 @@ def test_every_number_in_the_table_matches_the_csv_to_display_precision():
     assert not bad, "RESULTS.md is stale:\n  " + "\n  ".join(bad)
 
 
-def test_the_market_and_fair_gap_columns_match_the_e1_table():
-    """EW market SR and DKKM - best fair linear come from variants/fair_gap.py: the equal-weighted market's
-    Sharpe, and DKKM against linear methods given that market on DKKM's terms. Outside KP14 the fair gap is
-    the only complexity gap the tables show (RESULTS.md finding 8), so both are pinned like every other cell."""
-    md = _md_rows()
-    e = pd.read_csv(E1)
-    e = {(r["model"], r["tag"]): r for _, r in e.iterrows()
-         if int(r["window"]) == protocol.WINDOW}
+def test_the_market_and_fair_gap_columns_come_from_the_one_table():
+    """EW market SR and DKKM - best fair linear used to live in a SECOND table.
+
+    Until 2026-09-17 they came from variants/results_e1/fair_gap_economy_table.csv, E1's
+    separate re-scoring of the eight economies that predated --fair_linear, and this test
+    re-performed the join RESULTS.md performed by hand. Every economy now scores the fair
+    benchmark in its own run (the protocol's estimation.fair_linear), so aggregate_seeds.py
+    computes both columns and there is one canonical table. Verified bit-identical to
+    fair_gap.py's arithmetic on all thirteen economies before that script was deleted.
+    """
+    md, csv = _md_rows(), _csv_rows(current=None)
     bad = []
     for key, row in md.items():
-        if key not in e:
-            bad.append(f"{key[0]}/{key[1]}: no row in {os.path.relpath(E1, ROOT)}")
-            continue
-        for name, field, want in [("EW market SR", "ew", e[key]["ew"]), ("DKKM - best fair linear", "fair_gap", e[key]["fair_gap"])]:
+        c = csv[key]
+        for name, field, want in (("EW market SR", "ew", c["ew_mean"]),
+                                  ("DKKM - best fair linear", "fair_gap", c["fair_gap_mean"])):
             if row[field] is None or abs(row[field] - want) > 5.1e-5:
                 bad.append(f"{key[0]}/{key[1]} {name}: RESULTS.md {row[field]!r} vs {want!r}")
     assert not bad, "RESULTS.md market or fair-gap column is stale:\n  " + "\n  ".join(bad)

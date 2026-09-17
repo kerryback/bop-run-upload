@@ -2,26 +2,26 @@
  "model": "gs_bx",
  "tag": "gsbase",
  "seed": 8,
- "prov": "gs_bx_estimators_gsbase_s008_w360_summary@a5b5673+dirty",
- "spec_id": "var-gs_bx-gsbase-v1",
+ "prov": "gs_bx_estimators_gsbase_s008_w360_summary@c60eee5+dirty",
+ "spec_id": "var-gs_bx-gsbase-v2",
  "oracle_eval_window": 360,
  "window": 360,
  "winsor": 0.0,
  "kappas": [
+  1e-05,
+  0.0001,
   0.001,
   0.01,
-  0.03,
   0.1,
-  0.3,
   1.0,
-  3.0,
   10.0
  ],
  "linear_only": false,
  "fair_linear": true,
  "inputs_from": null,
  "rf_cols": [
-  "rf_stand"
+  "rf_stand",
+  "gam_stand"
  ],
  "eval_months": 125,
  "N": 500,
