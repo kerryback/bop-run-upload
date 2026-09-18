@@ -30,6 +30,14 @@ type_share = [1.0]
 type_bv = [0.0]                           # exposure betas on y
 bv_comp = 0.0                             # y=0 value compensation knob (omega analogue)
 bx_seed = 777
+# 2026-09-18: price the e^{beta_f y} claims under the RISK-NEUTRAL OU dynamics (1), or the
+# pre-fix way (0): physical generator plus a constant beta*gamma_v*sigma_y added to the
+# discount rate. The constant-rate form is exact for KP14's GBM shocks and wrong for a
+# mean-reverting state, whose cumulative Girsanov adjustment SATURATES at
+# beta*gamma_v*sigma_y/kappa_y instead of growing linearly in the horizon -- see
+# ../../docs/OU-process-question.md. 0 reproduces the pre-fix tables bit for bit and exists
+# only so they can be rebuilt for comparison. At type_bv = [0] the two coincide.
+y_risk_neutral = 1
 g_file, integ_file = 'G_func.csv', 'integ_results.npz'
 
 # Names defined before the override, so a misspelled key can be told from a real one:
@@ -125,8 +133,58 @@ def const_ty(f):
     b = type_bv[f]
     return const_base_y + b * gamma_v * sigma_y + b * kappa_y * y_grid - 0.5 * b ** 2 * sigma_y ** 2
 
+# ---- risk-neutral pricing of the y-exposed claims -------------------------------------------
+# Under the SDF  dM/M = ... - gamma_v dB_v  the state follows, under Q,
+#     dy = (-kappa_y*y - gamma_v*sigma_y) dt + sigma_y dB_v^Q.
+# The value of a type-f unit claim is W(y) = e^{b y} A(y) and solves, with rho0 = const_base_y,
+#     (rho0 + theta_c) W - L^Q W = e^{b y}.
+# Solving for W rather than A keeps the discount rate the POSITIVE rho0: the equivalent
+# equation for A carries kappa_y*y*b in its discount bracket, which turns negative far below
+# zero (y < -8.9 at b = 0.14) and would make a grid wide enough to hold the Q-measure ill-posed.
+# In W-form there is no such wall, so the solve grid below simply spans the Q-stationary
+# distribution (mean -gamma_v*sigma_y/kappa_y, sd 1) AND the table grid, finely; the table
+# grid y_grid itself -- and with it NY and every downstream table -- is unchanged.
+y_mean_Q = -gamma_v * sigma_y / kappa_y
+_ys_lo = min(-y_max, y_mean_Q) - 8.0
+_ys_hi = max(y_max, y_mean_Q) + 8.0
+_sub = 20                                              # solve nodes per table interval
+_n_lo = int(_np.ceil((-y_max - _ys_lo) / dy)); _n_hi = int(_np.ceil((_ys_hi - y_max) / dy))
+y_solve = (-y_max - _n_lo * dy) + (dy / _sub) * _np.arange((_n_lo + _n_hi) * _sub + (NY - 1) * _sub + 1)
+_i_tab = _n_lo * _sub + _sub * _np.arange(NY)          # y_solve[_i_tab] == y_grid
+assert _np.allclose(y_solve[_i_tab], y_grid, atol=1e-10)
+
+def build_generator(yv, drift):
+    """generator of dy = drift dt + sigma_y dB on the uniform grid yv, reflecting ends.
+    Central drift differences where they keep the matrix an M-matrix (|drift|*h <= sigma_y^2),
+    upwind elsewhere."""
+    n = len(yv); h = yv[1] - yv[0]
+    Q = _np.zeros((n, n)); dif = 0.5 * sigma_y ** 2 / h ** 2
+    for i in range(n):
+        up = dif if i < n - 1 else 0.0; dn = dif if i > 0 else 0.0
+        d = drift[i]
+        if abs(d) * h <= sigma_y ** 2:
+            if 0 < i < n - 1:
+                up += d / (2 * h); dn -= d / (2 * h)
+        elif d > 0 and i < n - 1:
+            up += d / h
+        elif d < 0 and i > 0:
+            dn += -d / h
+        if i < n - 1: Q[i, i + 1] = up
+        if i > 0: Q[i, i - 1] = dn
+        Q[i, i] = -(up + dn)
+    return Q
+
+_QyQ_solve = build_generator(y_solve, -kappa_y * y_solve - gamma_v * sigma_y)
+_const_base_solve = r + gamma_x * gmult_y(y_solve) * sigma_x + delta - mu_x
+_A_solve = {}                                          # (f, theta_c) -> A on y_solve, pre-compensation
+
 def _solve_coeff_ty(f, theta_c):
-    return _np.linalg.solve(_np.diag(const_ty(f) + theta_c) - Qy, _np.ones(NY))
+    if not y_risk_neutral:
+        return _np.linalg.solve(_np.diag(const_ty(f) + theta_c) - Qy, _np.ones(NY))
+    b = type_bv[f]
+    W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve, _np.exp(b * y_solve))
+    _A_solve[(f, theta_c)] = W * _np.exp(-b * y_solve)
+    return _A_solve[(f, theta_c)][_i_tab]
 A0_ty = _np.stack([_solve_coeff_ty(f, 0.0) for f in range(ntypes)])                 # (ntypes, NY)
 A1_ty = _np.stack([_solve_coeff_ty(f, theta_eps) for f in range(ntypes)])
 A2_ty = _np.stack([_solve_coeff_ty(f, theta_u) for f in range(ntypes)])
@@ -139,6 +197,11 @@ pm_tau = type_theta ** (1 / (1 - alpha))
 A0_ty = A0_ty * type_theta[:, None]; A1_ty = A1_ty * type_theta[:, None]
 A2_ty = A2_ty * type_theta[:, None]; A3_ty = A3_ty * type_theta[:, None]
 
+def coef_on_solve_grid(f):
+    """(A0, A1, A2, A3) for type f on y_solve, compensated like the tables. The G solve needs A
+    where the Q-measure lives, which is outside y_grid; _coef_at would clamp it there."""
+    return tuple(_A_solve[(f, th)] * type_theta[f] for th in (0.0, theta_eps, theta_u, theta_eps + theta_u))
+
 def _coef_at(y, f):
     y = _np.asarray(y, float)
     return (_np.interp(y, y_grid, A0_ty[f]), _np.interp(y, y_grid, A1_ty[f]),
@@ -147,6 +210,13 @@ def _coef_at(y, f):
 def A_y(ep, u, y, f):
     a0, a1, a2, a3 = _coef_at(y, f)
     return a0 + (ep - 1) * a1 + (u - 1) * a2 + (ep - 1) * (u - 1) * a3
+
+# discount of the growth-option claim with the y-terms stripped: what the H = e^{b y} G form of
+# the G equation uses under y_risk_neutral (kp14_fd_vy.py). rho_ty below is the pre-fix vector.
+def rho0_at(yv):
+    return (r + gamma_x * gmult_y(yv) * sigma_x - mu_x
+            - alpha / (1 - alpha) * (mu_z - gamma_z * sigma_z - 0.5 * sigma_z ** 2)
+            - 0.5 * (alpha / (1 - alpha)) ** 2 * sigma_z ** 2)
 
 rho_ty = _np.stack([(r + gamma_x * gm_grid * sigma_x - mu_x
                      + type_bv[f] * gamma_v * sigma_y + type_bv[f] * kappa_y * y_grid

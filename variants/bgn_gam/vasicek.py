@@ -31,7 +31,11 @@ for i in range(max_prds):
     sigma12[i+1] = kappa * (sigma12[i] + sigma2_sq[i]) + beta_zr
 
 sigma1_sq = np.concatenate(
-    ([0], np.cumsum(sigma2_sq[:-1] + sigma12[:-1] + sigma_z**2 * np.ones(max_prds)))
+    # Var(X - r) = Var(X) + Var(r) + 2*sigma12, with sigma12 = -Cov(log z, r): the covariance
+    # enters TWICE. It entered once until 2026-09-18, which halved the rate-risk premium --
+    # limiting yield spread 1.18%/yr against the 2.4% BGN (1999, p.21) report for this
+    # beta_zr, and 2.39% with the factor restored. Jstar tables depend on this line.
+    ([0], np.cumsum(sigma2_sq[:-1] + 2*sigma12[:-1] + sigma_z**2 * np.ones(max_prds)))
 )
 
 # bond price at maturity k

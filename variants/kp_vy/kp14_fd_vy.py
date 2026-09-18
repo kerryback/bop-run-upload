@@ -3,7 +3,14 @@ kp14_fd_gam.py generalized to the OU price-of-risk state y (generator Qy from pa
 Writes G_func_gamy.csv with columns G_up_y{i}, G_down_y{i} for i = 0..NY-1 (per unit lambda_bar_f).
 At g_lo == g_hi == 1 all y-columns coincide with the baseline G_up/G_down.
 
-Solved directly: (F + Q) G = -util is linear. See WORKING.md 17i."""
+Solved directly: (F + Q) G = -util is linear. See WORKING.md 17i.
+
+2026-09-18, y_risk_neutral = 1 (the default): PVGO is e^{b y} G, a claim under Q, so the solve is
+done for H = e^{b y} G under the RISK-NEUTRAL OU generator (drift -kappa_y*y - gamma_v*sigma_y),
+with the y-free discount rho0 and the flow e^{b y} * util, on a y-grid wide enough to hold the
+Q-stationary distribution; G = e^{-b y} H is then written at the y_grid table nodes only, so the
+file layout is unchanged. y_risk_neutral = 0 is the pre-fix solve, bit for bit. See
+docs/OU-process-question.md and parameters_kp14.py."""
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -11,6 +18,7 @@ import scipy.sparse.linalg as spla
 import os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parameters_kp14 import *
+from parameters_kp14 import _sub, _i_tab          # underscore names are not star-exported
 _ft = int(os.environ.get("KP_VY_TYPE", "0"))
 rho_y = rho_ty[_ft]
 
@@ -18,6 +26,29 @@ n = 1000
 max_eps, min_eps = 5.0, 0.01
 deps = (max_eps - min_eps) / (n - 1)
 eps_pts = np.linspace(min_eps, max_eps, n)
+
+_NY_TAB, _y_tab = NY, y_grid
+if y_risk_neutral:
+    # solve grid: every KP_VY_GSUB-th node of parameters' y_solve, trimmed to where the Q-measure
+    # and the table grid live. It contains y_grid exactly.
+    _gsub = int(os.environ.get("KP_VY_GSUB", "2"))           # solve nodes per table interval
+    assert _sub % _gsub == 0
+    _step = _sub // _gsub
+    _lo = min(-y_max, y_mean_Q) - 6.0; _hi = y_max + 2.5
+    _idx = np.arange(_i_tab[0] % _step, len(y_solve), _step)
+    _idx = _idx[(y_solve[_idx] >= _lo - 1e-9) & (y_solve[_idx] <= _hi + 1e-9)]
+    y_grid = y_solve[_idx]; NY = len(y_grid)
+    _tab_pos = np.searchsorted(_idx, _i_tab); assert np.array_equal(_idx[_tab_pos], _i_tab)
+    Qy = build_generator(y_grid, -kappa_y * y_grid - gamma_v * sigma_y)
+    rho_y = rho0_at(y_grid)
+    _b = type_bv[_ft]
+    _Afine = [a[_idx] for a in coef_on_solve_grid(_ft)]
+    def A_y(ep, u, yv, f):                                   # A at solve-grid nodes (not clamped)
+        i = int(np.argmin(np.abs(y_grid - yv)))
+        a0, a1, a2, a3 = (a[i] for a in _Afine)
+        return a0 + (ep - 1) * a1 + (u - 1) * a2 + (ep - 1) * (u - 1) * a3
+    print(f"risk-neutral G solve: y in [{y_grid[0]:.3f}, {y_grid[-1]:.3f}], {NY} nodes "
+          f"(table has {_NY_TAB}); Q-mean of y = {y_mean_Q:.2f}", flush=True)
 
 NS = 2 * NY                    # state j = 2*iy + (0 for lambda-H, 1 for lambda-L)
 lam_rate = np.tile([lambda_H, lambda_L], NY)
@@ -37,6 +68,8 @@ util = np.empty((n, NS))
 for j in range(NS):
     iy = j // 2
     util[:, j] = lam_rate[j] * C * A_y(eps_pts, 1.0, y_grid[iy], _ft) ** (1 / (1 - alpha))
+    if y_risk_neutral:
+        util[:, j] *= np.exp(_b * y_grid[iy])                # flow of H = e^{b y} G
 
 mu_epsF = np.maximum(-theta_eps * (eps_pts - 1), 0)
 mu_epsB = -np.maximum(theta_eps * (eps_pts - 1), 0)
@@ -92,7 +125,12 @@ print(f"solved {NS * n}x{NS * n} system directly in {time.time()-t0:.1f}s; "
       f"relative residual {rel:.2e}", flush=True)
 
 cols = {"eps": eps_pts}
-for iy in range(NY):
+if y_risk_neutral:
+    for k, iy in enumerate(_tab_pos):                        # back to G, at the table nodes only
+        cols[f"G_up_y{k}"] = G[:, 2 * iy] * np.exp(-_b * y_grid[iy])
+        cols[f"G_down_y{k}"] = G[:, 2 * iy + 1] * np.exp(-_b * y_grid[iy])
+else:
+  for iy in range(NY):
     cols[f"G_up_y{iy}"] = G[:, 2 * iy]
     cols[f"G_down_y{iy}"] = G[:, 2 * iy + 1]
 out = pd.DataFrame(cols)
