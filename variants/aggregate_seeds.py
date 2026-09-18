@@ -216,8 +216,9 @@ def economy_table(seeds):
 
 def render(econ):
     lines = ["| economy | spec | n | SR_max all | SR_max eval | room all | room eval | room % of lin | "
-             "DKKM | best lin | gap | gap % of lin | t | gap/room all | gap/room eval |",
-             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+             "DKKM | best lin | gap | gap % of lin | (DKKM-FMR)/FMR | fair gap | t | gap/room all | "
+             "gap/room eval |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
 
     def ms(r, c, sign=False):
         m, sd = r[f"{c}_mean"], r[f"{c}_sd"]
@@ -240,9 +241,13 @@ def render(econ):
         lines.append(f"| {econ_name} | {spec} | {r['n_seeds']} | {ms(r, 'sr_max')} | {ms(r, 'sr_max_eval')} | "
                      f"{ms(r, 'room_all', True)} | {ms(r, 'room_eval', True)} | {pct(r['room_all_over_lin'])} | "
                      f"{ms(r, 'dkkm')} | {ms(r, 'lin')} | {ms(r, 'gap', True)} | {pct(r['gap_over_lin'])} | "
+                     f"{pct(r['gap_fm_over_fm'])} | {ms(r, 'fair_gap', True)} | "
                      f"{ms(r, 't')} | {ratio(r['gap_over_room_all'])} | {ratio(r['gap_over_room_eval'])} |")
     lines.append("")
-    lines.append("mean (sd across seeds). gap/room and the two `% of lin` columns are RATIOS OF MEANS; "
+    lines.append("Ranked by (DKKM - FMR) / FMR, descending, as docs/RESULTS.md ranks. That column is a "
+                 "RATIO: where FMR's Sharpe is near zero it is large and says little, so read `gap` and "
+                 "the fair gap beside it. "
+                 "mean (sd across seeds). gap/room and the two `% of lin` columns are RATIOS OF MEANS; "
                  "the mean and sd of the per-seed ratios are in economy_table.csv as *_pct_lin_mean/_sd. "
                  "room_eval is NaN for oracles run before --eval_window (2026-09-09); SR_max eval is "
                  "available for every run, from the per-month series, and is the bound DKKM must respect.")
@@ -280,9 +285,13 @@ def main(argv=None):
         print("WARNING: off protocol, not reportable:\n  " + "\n  ".join(off) + "\n",
               file=sys.stderr)
     out = a.out or a.results
+    # The CSVs stay sorted by (model, tag, N, T, window): a stable order keeps their diffs
+    # readable, and every consumer keys on (model, tag) rather than row position. The PRINTED
+    # table is what a person reads, so it is ranked the way docs/RESULTS.md ranks -- by
+    # (DKKM - FMR) / FMR, descending.
     seeds.to_csv(os.path.join(out, "seed_table.csv"), index=False)
     econ.to_csv(os.path.join(out, "economy_table.csv"), index=False)
-    print(render(econ))
+    print(render(econ.sort_values("gap_fm_over_fm", ascending=False, na_position="last")))
     print(f"\nwrote {os.path.join(out, 'seed_table.csv')} ({len(seeds)} rows) and economy_table.csv ({len(econ)} rows)")
     return 0
 

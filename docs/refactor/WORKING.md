@@ -24,7 +24,7 @@ Artifacts:
 
 ## 1. Job 1 — What the variants actually do
 
-### 1.0 The research logic (from `variants/REPORT.md`)
+### 1.0 The research logic (from `archive/REPORT.md`)
 
 The whole campaign reduces to one equation, **realized gap = room × capture**.
 
@@ -3265,7 +3265,7 @@ calibration and timing probes, and the two scripts whose only purpose was those 
 (`make_excel.py`, which read `grid_summary.csv`, and `collect_results.py`, which wrote
 `oracle_summary.csv`). All recoverable at `23f9380`.
 
-**Kept:** `variants/REPORT.md`. It is the narrative of that study, explicitly historical,
+**Kept:** `archive/REPORT.md`. It is the narrative of that study, explicitly historical,
 carries the mechanism findings and rounded versions of the figures, and does not look like
 live data. `docs/RESULTS.md`'s LEGACY entries now cite it.
 
