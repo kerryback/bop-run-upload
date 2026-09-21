@@ -1,5 +1,5 @@
 #!/bin/bash
-# Submit this cluster's share of the protocol campaign (docs/RUNS.md, campaign 2026-09-15).
+# Submit this cluster's share of the protocol campaign (docs/RUNS.md, campaign 2026-09-21).
 #
 # usage:
 #   bash variants/submit_campaign.sh sol          # what Sol should run
@@ -50,23 +50,32 @@ for a in "$@"; do
 done
 
 # tag | partition | mem | walltime | measured peak at burn-in 300 -> projected at 400
+#
+# 2026-09-21, protocol v3. MEMORY IS UNCHANGED and the peaks below still stand: the ridge grid
+# is estimator-side, the panels are the same size, and BGN's corrected J* falls 14-21%, which
+# moves memory DOWNWARD (docs/RUNS.md: BGN's peak tracks the J* value scale). WALLTIME is what
+# moves. RUNS.md measures ~2.8 h of DKKM per seed at eight penalties; eleven is about +57% on
+# that stage, so every one-day row goes to two days, the two-day rows to three, and the two Sol
+# highmem rows from four days to six. scontrol cannot raise a limit after submission, so a
+# walltime kill loses the seed outright; over-requesting on an empty queue costs nothing.
+# Tighten from the first task's measured Elapsed, and record it in RUNS.md this time.
 read -r -d '' SOL_JOBS <<'EOF' || true
-g0235s|highmem|128G|4-00:00|74.0 GiB -> ~83; longest seed 24.5 h class; calm spells of 240 months
-g0235r|highmem|128G|4-00:00|77.0 GiB -> ~87; the binding job of the campaign
+g0235s|highmem|128G|6-00:00|74.0 GiB -> ~83; 24.5 h class x1.57 for the eleven-value grid; calm spells of 240 months
+g0235r|highmem|128G|6-00:00|77.0 GiB -> ~87; the binding job of the campaign
 EOF
 
 read -r -d '' PHX_JOBS <<'EOF' || true
-bgnbase|public|40G|1-00:00|15.8 GiB -> ~18
-kpbase|public|48G|1-00:00|29.2 GiB, burn-in already 400
-gsbase|public|32G|1-00:00|4.5 GiB -> ~5; GS21 panels are the lightest
-vyx|public|48G|2-00:00|30.6 GiB, burn-in already 400
-vyg25|public|48G|2-00:00|29.2 GiB; longest KP14 at 7.6 h, x1.75 for the wider grid
-g28|public|32G|1-00:00|GS21 class, ~5 GiB
-gx7|public|32G|1-00:00|GS21 class; loads five 90-100 MB solutions
-bx7|public|32G|1-00:00|GS21 class; loads five 88-100 MB solutions
-g0235|public|64G|2-00:00|38.9 GiB -> ~44
-g0235f|public|40G|1-00:00|22.0 GiB -> ~25
-g0235d|public|40G|1-00:00|15.6 GiB -> ~18; NINE NEW SEEDS, the only economy gaining any
+bgnbase|public|40G|2-00:00|15.8 GiB -> ~18
+kpbase|public|48G|2-00:00|29.2 GiB, burn-in already 400
+gsbase|public|32G|2-00:00|4.5 GiB -> ~5; GS21 panels are the lightest
+vyx|public|48G|3-00:00|30.6 GiB, burn-in already 400
+vyg25|public|48G|3-00:00|29.2 GiB; longest KP14 at 7.6 h under the v2 grid
+g28|public|32G|2-00:00|GS21 class, ~5 GiB
+gx7|public|32G|2-00:00|GS21 class; loads five 90-100 MB solutions
+bx7|public|32G|2-00:00|GS21 class; loads five 88-100 MB solutions
+g0235|public|64G|3-00:00|38.9 GiB -> ~44
+g0235f|public|40G|2-00:00|22.0 GiB -> ~25
+g0235d|public|40G|2-00:00|15.6 GiB -> ~18
 EOF
 
 case "$CLUSTER" in
