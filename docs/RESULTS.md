@@ -65,9 +65,13 @@ manifest in `experiments/registry/` records it:
 
 | model | solve precision, identical across its economies |
 |---|---|
-| KP14 (`kp_vy`) | 21 y-nodes at `y_max` 3.5 with a byte-identical transition matrix; the G stage a direct sparse solve on a 1000-point epsilon grid, gated at a relative residual of 1e-6 and achieving about 1e-12; CIR integrals by adaptive quadrature at `epsrel` 1e-6 with the density's mass verified to 1e-8 |
+| KP14 (`kp_vy`) | a 21-node `y` TABLE grid at `y_max` 3.5, unchanged; since 2026-09-21 the A and G claims are solved under the risk-neutral measure on an INTERNAL grid wide enough to hold the Q-stationary distribution (89 to 103 nodes at these prices of risk) and sampled back to the 21 table nodes, so `NY` and the table layout are the same and the transition matrix is no longer what the coefficients come from; the G stage a direct sparse solve on a 1000-point epsilon grid, gated at a relative residual of 1e-6 and achieving about 1e-12; CIR integrals by adaptive quadrature at `epsrel` 1e-6 with the density's mass verified to 1e-8 |
 | GS21 (`gs_bx`) | value-function iteration on a 161-point x grid, 200-point z grid, 20-point debt grid, exact-Gaussian Tauchen at +-4 sd, fixed-point `tol` 1e-6, 161-node quadrature for the default-smoothing shock |
 | BGN (`bgn_gam`) | 100-node Gauss-Laguerre for the project-beta integral and 100-node Gauss-Hermite for the rate shock; the J* table by adaptive bisection to `tol` 3e-4, converging to 161 grid points in all six |
+
+The internal Q-grid's span and subdivision are precision knobs that no manifest records --
+`PRECISION_KEYS["kp"]` is still `("NY", "_i0")` -- which is a gap worth closing before another KP14
+economy is added.
 
 Every claim above is pinned by `tests/test_protocol_is_uniform.py`: each model's burn-in literal, the
 seed array's sample and grid, every live spec's `panel` and `estimation` block, and the uniformity of

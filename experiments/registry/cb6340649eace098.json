@@ -1,0 +1,127 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "grid_points": 161,
+    "tol_requested": 0.0003
+  },
+  "artifacts": [
+    {
+      "bytes": 9341,
+      "path": "variants/bgn_gam/Jstar_bgnbase.csv",
+      "sha256": "0bd02bb4df54df2c3daa5b46b8aa15d9f88d9ec7886e59c2678e67c83308ab84"
+    }
+  ],
+  "committable": true,
+  "env_params": {
+    "JSTAR_TOL": "0.0003"
+  },
+  "environment": {
+    "hostname": "fin-4227130.3500.dhcp.asu.edu",
+    "machine": "arm64",
+    "numpy": "2.4.2",
+    "pandas": "3.0.0",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python": "3.11.14",
+    "scipy": "1.17.0"
+  },
+  "extra": {
+    "out": "Jstar_bgnbase.csv"
+  },
+  "inputs": {},
+  "model": "bgn_gam",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "Cbar": "-3.7",
+    "Chat": "np.float64(0.024723526470339388)",
+    "I": 1,
+    "Preg": {
+      "__array__": [
+        "0.9791666666666666",
+        "0.020833333333333332",
+        "0.041666666666666664",
+        "0.9583333333333334"
+      ],
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "_ov": {
+      "gmult": [
+        "1.0",
+        "1.0"
+      ],
+      "jstar_gam_file": "Jstar_bgnbase.csv"
+    },
+    "beta_zr": "-0.00014",
+    "burnin": 400,
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "gam_seed": 555,
+    "gamma_grid": {
+      "__array__": [
+        "0.5",
+        "0.6",
+        "0.7",
+        "0.7999999999999999",
+        "0.8999999999999999",
+        "0.9999999999999999",
+        "1.0999999999999999"
+      ],
+      "shape": [
+        7
+      ]
+    },
+    "gmult": {
+      "__array__": [
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "jstar_file": "Jstar.csv",
+    "jstar_gam_file": "Jstar_bgnbase.csv",
+    "kappa": "0.95",
+    "names": [
+      "smb",
+      "hml",
+      "cma",
+      "rmw",
+      "umd"
+    ],
+    "nchars": 5,
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "pi": "0.99",
+    "prob_calm": "0.6666666666666666",
+    "prob_in_money_targets": [
+      "0.1",
+      "0.05"
+    ],
+    "rbar": "0.006236",
+    "sigma_r": "0.002",
+    "sigma_z": "0.4",
+    "sigmaj_scale_cap": "2.0",
+    "sigmaj_size_elast": "0.0",
+    "sigmaj_width": "0.3"
+  },
+  "recorded_at": "2026-09-21T14:31:25-0700",
+  "solve_id": "cb6340649eace098",
+  "sources": {
+    "variants/bgn_gam/parameters.py": "d0a53f4f901ac8927178015b307f4eea98522475a96b5f4a022fed388676aa63",
+    "variants/bgn_gam/vasicek.py": "a9d3a6a5161d6913ec5dd08c4f96b454a740a844b341dc10dea3a3ea34af2679"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "Jstar_bgnbase"
+  ],
+  "total_bytes": 9341
+}

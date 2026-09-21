@@ -614,6 +614,11 @@
   },
   "spec_ids": [],
   "stage": "integ",
+  "superseded_by": {
+    "on": null,
+    "reason": "the pricing fix of merge 91095fb: the OU state y is now priced under Q (W = e^{by} A), which re-keys every kp_vy solve. Protocol v3.",
+    "solve_id": "c88b05407e4b377d"
+  },
   "tags": [
     "vyx"
   ],

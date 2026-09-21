@@ -95,6 +95,6 @@
     "jstar": "8130b53f477952d5"
   },
   "precommitted": true,
-  "solves_pending": "jstar precommitted 2026-09-21 from the current source WITHOUT solving; to be built on the Mac after this spec is committed",
+  "solves_pending": null,
   "reused_solves": null
 }

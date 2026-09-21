@@ -116,6 +116,6 @@
     "integ": "7562a864dacb6b3e"
   },
   "precommitted": true,
-  "solves_pending": "G and integ precommitted 2026-09-21 from the current source WITHOUT solving; to be built on the Mac after this spec is committed",
+  "solves_pending": null,
   "reused_solves": null
 }
