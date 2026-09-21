@@ -9,8 +9,11 @@ Solved directly: (F + Q) G = -util is linear. See WORKING.md 17i.
 done for H = e^{b y} G under the RISK-NEUTRAL OU generator (drift -kappa_y*y - gamma_v*sigma_y),
 with the y-free discount rho0 and the flow e^{b y} * util, on a y-grid wide enough to hold the
 Q-stationary distribution; G = e^{-b y} H is then written at the y_grid table nodes only, so the
-file layout is unchanged. y_risk_neutral = 0 is the pre-fix solve, bit for bit. See
-docs/OU-process-question.md and parameters_kp14.py."""
+file layout is unchanged. y_risk_neutral = 0 is the pre-fix solve, bit for bit. The defect this
+corrects: the pre-fix solve carried the y premium as a constant beta*gamma_v*sigma_y in the
+discount rate, KP14's eq. (11) shape, which is exact for a GBM and wrong for a mean-reverting
+state whose Girsanov adjustment saturates. See parameters_kp14.py and, for the identities,
+tests/test_risk_neutral_pricing.py."""
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp

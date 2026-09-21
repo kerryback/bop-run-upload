@@ -72,7 +72,7 @@ def test_the_solution_reproduces_the_committed_table():
     """Guards the numerics, not just the plumbing.
 
     2026-09-18: the committed G_vyx*.csv were solved with the PRE-FIX pricing of y-risk (physical
-    generator, constant premium in the discount; docs/OU-process-question.md). They are compared
+    generator, constant premium in the discount; see parameters_kp14.py). They are compared
     against y_risk_neutral=0, which therefore also proves that switch rebuilds the old tables
     bit for bit. When the vyx tables are re-solved under the default, drop the override here."""
     out, _ = _solve(1, OV[:-1] + ',"y_risk_neutral":0}')

@@ -19,7 +19,14 @@ under an OU y with a price of risk gamma_v, it compares three numbers at each y:
 
 A_exact is verified independently by Monte Carlo under Q, so the comparison does not rest on
 the algebra. A_code/A_exact is 1.000 at b = 0 (so kpbase is unaffected) and falls monotonically
-in b. See docs/kp14_y_risk_adjustment.md.
+in b.
+
+STATUS 2026-09-21: this script HARDCODES the pre-fix resolvent rather than importing the
+module, so it is unaffected by merge 91095fb and its "A_code" column now describes
+y_risk_neutral = 0, not the default. It is kept as the standalone derivation of the defect --
+closed form, Monte Carlo under Q, and the constant-rate comparison that diagnoses it. The
+DEFAULT path is verified instead by tests/test_risk_neutral_pricing.py, which asserts A
+against the same closed form.
 
 Run with: python variants/kp_vy/check_y_risk_adjustment.py
 """

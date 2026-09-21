@@ -3,53 +3,111 @@
 Rewritten 2026-09-15, when the measurement protocol landed (`docs/RESULTS.md`, "The measurement
 protocol"). One recommendation, then the ranked alternatives, then what is not worth running.
 
-## Now: re-solve and re-run what the pricing fix invalidated
+## Now: the corrected pricing and the amended grid, in one campaign
 
-Merge `91095fb` (2026-09-21) corrected two solve-level defects -- `kp_vy`'s constant-rate treatment
-of the priced OU state, and BGN's halved bond covariance (`docs/OU-process-question.md`, stated as
-identities in `tests/test_risk_neutral_pricing.py`). Nine of the thirteen economies were solved
-before it. Nothing further down this file is worth starting until these land, because every KP14 and
-BGN number a new run would be compared against moves.
+Two changes land together, and because the second is a protocol amendment **all thirteen economies
+re-run**, not just the nine the pricing fix touched.
 
-`python variants/solve_impact.py main~1 main` lists what the merge invalidated: 25 MB of cached
-artifacts across three producers, every change FUNCTIONAL rather than cosmetic.
+1. **The pricing fix**, merge `91095fb` (2026-09-21): `kp_vy`'s constant-rate treatment of the priced
+   OU state, and BGN's halved bond covariance. Specified in `variants/kp_vy/parameters_kp14.py` and
+   `variants/bgn_gam/vasicek.py`, asserted in `tests/test_risk_neutral_pricing.py`. It invalidates
+   the solves behind all three `kp_vy` and all six `bgn_gam` economies -- 25 MB of cached artifacts
+   across three producers, every change FUNCTIONAL (`python variants/solve_impact.py 91095fb^1 91095fb`).
+2. **The ridge grid widens from `1e-5 ... 10` to `1e-7 ... 1000`**, eleven values. This is the one
+   open *universal* proposal in `docs/RESULTS.md`, "Open proposals", and the gate table there shows
+   five of thirteen rows censored: `vyx` 3/10 and `vyg25` 4/10 at the floor, `gx7` 2/10, `bx7` 7/10
+   and `g0235s` 5/10 at the ceiling. It is estimator-side, so it moves every row -- including the
+   four `gs_bx` rows the pricing fix leaves alone. Doing it now costs those four economies on top of
+   the nine that must re-run regardless, instead of a second 130-job campaign later.
 
-1. **The six BGN J\* tables.** `utils_bgn/BGN_solfiles/Jstar.csv` was regenerated and stamped in the
-   merge; `variants/bgn_gam/Jstar_*.csv` were not, so `bgn_gam` is inconsistent with its own solver
-   until they are.
+### A. Documentation -- DONE 2026-09-21
 
-   **This is not a rebuild, it is a re-pin.** `vasicek.py` is a digest-bearing source for the jstar
-   stage, so all six precommitted ids move -- checked 2026-09-21 at merge `91095fb`, every one of
-   `bgnbase-v2`, `g0235-v3`, `g0235d-v2`, `g0235f-v2`, `g0235r-v2`, `g0235s-v2` mismatches. So
-   `rebuild_all_jstar.sh` will exit 1 with "do not commit, chase the id first", which is the guard
-   doing its job. The order the convention requires, and the one `g0235` v1 -> v2 followed when its
-   id moved for a far smaller reason:
+`docs/OU-process-question.md` and `docs/kp14_y_risk_adjustment.md` deleted: both prescribe a fix that
+is not the one that landed (a per-type drift `-kappa_y*y - gamma_v*sigma_y + sigma_y^2*b`, plus a
+grid widening to `y_max` ~7 and `NY` 21 -> 41 that never happened -- the `W = e^{by} A` substitution
+removes the cross term and the ill-posedness wall, so `NY` is still 21 and 63 integral tables stayed
+63). Their live content survives in `parameters_kp14.py`, `kp14_fd_vy.py` and
+`tests/test_risk_neutral_pricing.py`.
 
-   a. compute each new id without solving -- `_scratch/precommit_id.sh bgn '<params>'`, or the
-      producer's own `solve_id=` line, which prints before any expensive work;
-   b. write six new spec versions carrying them, `lineage.changes` naming the bond-covariance fix,
-      `superseded_by` set on the current six;
-   c. commit those specs;
-   d. only then `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac -- a
-      Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256 -- and
-      commit the tables and manifests in a LATER commit than the one that pinned the ids.
+In the same pass, a defect found while auditing: `parameters_kp14.py` leaked its override loop
+variables `_k`/`_v` into the module namespace, which `solstamp.param_namespace` hashes -- so the
+kp_vy solve_id **depended on the key order of `KP_PARAM_OVERRIDES`**. The same four parameters in
+three orders gave three different ids, and `runstamp._same_json` compares by value and cannot catch
+it. Fixed by deleting the loop variables; all orders now agree.
 
-   Unlike `g0235` v1 -> v2, the tables here do change: J\* falls 14-21% across the rate range in the
-   base table. Cheapest of the four items in compute, not in bookkeeping.
-2. **`vyg25` re-solved under `y_risk_neutral = 1`.** `vyx` already is, committed under the `vyxq`
-   prefix in the merge. One G solve plus the 21 integral tables per type.
-3. **`vyxq` adopted into the registry.** Those tables were built by calling the producers directly,
-   so they carry no `solve_id` and no manifest, and no spec describes the economy. Until that is
-   done, no protocol run can be stamped against them.
-4. **Ten seeds for the nine affected rows** at the unchanged protocol, then `docs/RESULTS.md`
-   rewritten and its top-of-file staleness note removed.
+### B. The protocol amendment
 
-**What this decides.** The complexity gap is claimed on `vyx` and `vyg25`, both affected. An
-off-protocol smoke test (N=200, T=360, window 240, one seed) put `vyx`'s DKKM-minus-best-linear at
-+0.007 (t 1.7) after the fix against +0.019 (t 3.6) before, and mean expected excess return at
-3.5%/yr against 17.7%. If the protocol run agrees in direction, K6 below -- whether a defensible
-calibration shows a gap at all -- is being asked of a much smaller gap, and the ladder items (K1,
-K3, K2) need re-ranking against the corrected `vyx` rather than the published one.
+Three constants, pinned against each other by `tests/test_protocol_is_uniform.py`, so they move in
+one commit: `variants/common/protocol.py` `KAPPAS`, the literal second copy at
+`variants/run_seeds_slurm.sh`, and nothing else -- the fair benchmark's grid is **derived**
+(`variants/run_estimators.py`, `fair_kappas = sorted(set(kappas) | {10 * max(kappas), 100 * max(kappas)})`),
+so it keeps its deliberate two-decade margin over DKKM's automatically.
+
+All thirteen live specs then get a new version carrying the new `estimation.kappas`.
+
+### C. Specs and solves, in the order precommitment requires
+
+`rebuild_all_jstar.sh` exits 1 on any id mismatch and the repo refuses a spec claiming a
+precommitment it did not earn, so the order is fixed: **compute the new ids without solving -> write
+and commit the specs that pin them -> build -> commit the tables and manifests in a LATER commit.**
+
+- **Compute.** BGN: `_scratch/precommit_id.sh bgn '<params>'`. KP14 has no case there; build the
+  `solstamp.Snapshot` directly under `python -B`, as `tests/test_solve_id_reproducible.py` does. The
+  **integ** id hashes the upstream G tables' raw bytes, so it cannot be computed until the G tables
+  exist -- use a throwaway `git worktree` whose registry is discarded, the precedent at
+  `docs/refactor/WORKING.md` section 61.
+- **BGN, six J\* tables.** `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac
+  (a Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256). J\* falls
+  14-21% across the rate range.
+- **KP14: rebuild through `build_vy_tables.py`, do not adopt the `vyxq` tables.** `KP_VY_ADOPT=1`
+  verifies file presence only, no kp_vy artifact carries an embedded `solve_id`, and -- decisively --
+  the G solve_id is **prefix-blind**, because `extra` is not hashed. `vyxq` and a post-fix `vyx`
+  produce the same id, and `solstamp.record` replaces a manifest's artifact list wholesale, so
+  adopting one would silently destroy the other. Rebuilding under the single prefix `vyx` removes
+  the collision. Cost: G is seconds to under a minute per type, integrals about 90 min per economy,
+  so roughly 4.5 h for `vyx`, `vyg25` and `kpbase` together. Then delete the pre-fix `G_vyx*` /
+  `integ_vyx*` and the transitional `G_vyxq*` / `integ_vyxq*`.
+- **Supersede the old manifests -- `supersede`, never `retire`.** Eighteen of them (12 BGN + 6 KP14).
+  Two live ids under one tag and stage make `runstamp.live_solves` return both, and then every seed
+  of that economy reads STALE forever; retiring instead breaks the specs that truthfully pin the old
+  ids.
+- **Confirm every id actually moved** before submitting. `kpbase` is the one to watch: at
+  `beta_f = 0` the KP14 correction is identically zero, so its tables may rebuild byte-identical
+  while only the id moves. If an id did *not* move, that economy's ten tasks exit in three seconds
+  with "already complete and current" -- the 2026-09-15 incident that skipped seventy tasks.
+
+### D. The campaign
+
+Both queues empty, then `bash variants/cluster_pull.sh` inside the shared checkout -- one tree, one
+pull, never a plain `git pull`. All thirteen rows stay in `variants/submit_campaign.sh`.
+
+**Memory is unchanged** (the amendment is estimator-side, the panels are the same size, and BGN's
+smaller J\* points memory downward). **Walltime moves**: `docs/RUNS.md` measures about 2.8 h of DKKM
+per seed at eight penalties, so eleven is roughly +57% on that stage. The one-day rows want two days
+and `g0235s`'s 24.5 h class wants real headroom. Budget **~900 node-hours over 130 jobs** against the
+2026-09-15 campaign's 650.
+
+**The re-run must be atomic.** `runstamp.stem` puts no spec version in a filename, so re-run files
+overwrite the old ones in place -- and a partial re-run leaves `aggregate_seeds.py` emitting
+`spec_id = "MIXED:v3|v4"` with pre- and post-fix seeds **averaged into one row** at `n_seeds = 10`,
+which no test catches. Do not aggregate or commit until all 130 tasks are in. Then
+`python variants/penalty_gate.py` **before reading any number**, then
+`python variants/aggregate_seeds.py`.
+
+`docs/RESULTS.md` is then rewritten: the staleness block and both italic markers come out, the
+protocol table's two ridge-grid rows and the KP14 solve-precision cell change, both economy tables
+refill, and the **penalty-gate table is regenerated by hand** -- it is pinned by no test, and
+uncensoring it is the whole point of the amendment.
+
+### What this decides
+
+The complexity gap is claimed on `vyx` and `vyg25`, both affected. An off-protocol smoke test
+(N=200, T=360, window 240, one seed) put `vyx`'s DKKM-minus-best-linear at +0.007 (t 1.7) after the
+fix against +0.019 (t 3.6) before, and mean expected excess return at 3.5%/yr against 17.7%. If the
+protocol run agrees in direction, K6 below -- whether a defensible calibration shows a gap at all --
+is being asked of a much smaller gap, and the ladder items (K1, K3, K2) need re-ranking against the
+corrected `vyx` rather than the published one. The amendment settles the second question at the same
+time: whether the KP14 gap was the economy's or the grid's floor.
 
 ## Recommendation: the protocol campaign
 

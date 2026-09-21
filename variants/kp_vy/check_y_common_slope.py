@@ -1,7 +1,7 @@
 """Does ONE price of y-risk price all three vyx types? Step 0 of the disaster plan.
 
-WHY THIS EXISTS. docs/kp14_y_risk_adjustment.md establishes analytically that the `vy`
-route's A(y) charges the y-risk premium as a CONSTANT addition to the discount rate --
+WHY THIS EXISTS. 2026-09-18: the `vy` route's A(y) was found to charge the y-risk premium
+as a CONSTANT addition to the discount rate --
 KP14's own eq. (11) shape, exact for its GBM shocks -- where a priced mean-reverting state
 needs a Girsanov drift change whose cumulative effect SATURATES. The omitted term is
 (gamma_v*sigma_y - sigma_y**2*b)*A'(y). Backing the price of y-risk out of the module's own
@@ -49,8 +49,7 @@ nothing to do with y. Two controls separate them, and neither costs a solve:
     the baseline error outright. Run it as the control.
 
 It then solves, per type, for the gamma_v that would set that type's mean mispricing to
-zero. Under a correct model all three equal the declared gamma_v. This is the panel
-counterpart of the implied-lambda table in docs/kp14_y_risk_adjustment.md.
+zero. Under a correct model all three equal the declared gamma_v.
 
 Finally it runs the regression docs/plan-before-home-20260917.md names in step 0 -- each
 type's conditional expected excess return on its y-exposure, testing for a common slope --
@@ -66,7 +65,13 @@ Run, from variants/:
   KP_VY_PREFIX=vyx python kp_vy/check_y_common_slope.py --tag vyx --N 500 --T 500 --seed 0
 
 The protocol panel (N 500, T 500, burn-in 400) peaks near 31 GiB while create_arrays runs;
-run it where that fits. See docs/kp14_y_risk_adjustment.md.
+run it where that fits.
+
+STATUS 2026-09-21: the defect described above was CORRECTED in merge 91095fb
+(parameters_kp14.py, y_risk_neutral = 1, now the default). This script reads the module's
+live coefficients, so it measures whichever branch is active: run as-is it should now report
+unpriced expected return near zero for every type, and it is the panel-scale confirmation
+that the fix holds. Set KP_PARAM_OVERRIDES y_risk_neutral = 0 to reproduce the defect.
 """
 import argparse, json, os, sys, time
 import numpy as np

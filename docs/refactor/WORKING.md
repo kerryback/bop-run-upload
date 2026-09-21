@@ -3913,3 +3913,111 @@ pre-submission order and the per-economy requests are in RUNS.md, campaign 2026-
 nor 10 -- in at least 8 of 10 seeds. If 1e-5 wins, DKKM is still censored and the grid needs another
 decade before any new economy is run. A test cannot assert this, because it is a property of results
 that do not exist yet; RUNS.md makes it the first thing read off the campaign.
+
+## §63. Two pricing defects, the W-form fix, and the amended ridge grid (2026-09-18 to 2026-09-21)
+
+**Two solves priced their own state wrong, and no validator could have caught it.** Every check the
+repo had compares REALISED returns with EXPECTED returns -- a statement about the simulation. None
+asked whether prices satisfy `E[M R] = 1` -- a statement about the solve. Both defects lived in that
+blind spot, and both are now asserted as identities in `tests/test_risk_neutral_pricing.py`.
+
+**1. kp_vy: the priced OU state `y`.** `A` and `G` were solved with the PHYSICAL generator, carrying
+the `y` premium as a constant `b*gamma_v*sigma_y` added to the discount rate. That is KP14's own
+eq. (11) shape and it is exact for the paper's GBM shocks, because a GBM's Girsanov adjustment is
+linear in the horizon and a constant addition to a discount rate is exactly a linear-in-`t`
+adjustment to the cumulant. For a mean-reverting state it is wrong: the adjustment SATURATES at
+`b*gamma_v*sigma_y/kappa_y` instead of growing. Claim values were understated by 6.9% / 17.7% /
+25.2% at `b = 0.02 / 0.07 / 0.14`, and no single `gamma_v` out to 20 priced all three types --
+a SHAPE error, not a level error. At `type_bv = [0]` the two coincide, which is why `kpbase` is the
+experimental control and why its error is exactly zero.
+
+**2. BGN: the bond covariance.** `vasicek.py` added `sigma12 = -Cov(log z, r)` to the cumulative
+variance once instead of twice, halving the rate-risk premium. Limiting yield spread 1.18%/yr as
+written against the 2.4% BGN (1999, p.21) report for that `beta_zr`. `J*` falls 14-21% across the
+rate range with the factor restored.
+
+**The fix is not the one two documents predicted, and the difference is the whole point.** Both
+`docs/OU-process-question.md` and `docs/kp14_y_risk_adjustment.md` -- now deleted -- prescribed
+folding the Girsanov drift into the generator per type,
+`drift = -kappa_y*y - gamma_v*sigma_y + sigma_y^2*b`, keeping the discount vector. That runs into a
+wall: under Q the long-run mean of `y` is `-gamma_v*sigma_y/kappa_y`, which is -4.30 at `gamma_v`
+1.8 and -5.98 at 2.5, both outside the reflecting grid `[-3.5, 3.5]`; and the discount bracket
+`rho + kappa_y*y*b + ...` goes NEGATIVE below `y = -8.85`, where the resolvent is ill-posed. The
+window between "wide enough for the Q-measure" and "ill-posed" is narrow and narrows further at
+higher `gamma_v`. Both documents concluded `NY` must go 21 -> ~41, that this is solve precision,
+which the protocol holds uniform within a model, and therefore that all three KP14 economies
+re-solve at ~123 integral tables instead of 63.
+
+**What landed instead: substitute `W = e^{by} A` and solve for `W`.** The substitution absorbs the
+Ito cross term `sigma_y^2*b*A'`, so the generator is a single type-INDEPENDENT one with drift
+`-kappa_y*y - gamma_v*sigma_y`, and the discount becomes the y-free `rho0`, which is positive
+everywhere. **There is no wall, so there is no narrow window.** The Q-measure is held on an internal
+fine grid spanning it and `A = e^{-by} W` is sampled back onto the unchanged 21-node table grid. `G`
+is solved the same way as `H = e^{by} G`. `NY` is still 21, `y_max` still 3.5, the table layout is
+unchanged and 63 integral tables stayed 63. `y_risk_neutral = 0` rebuilds the pre-fix tables bit for
+bit and `tests/test_g_direct_solve.py` asserts it.
+
+All three KP14 economies do re-solve -- but because `parameters_kp14.py` and `kp14_fd_vy.py` are
+digested into their solve ids, not because the grid moved. That is the ordinary source-digest
+mechanism of §38, not a precision change.
+
+**A correction to §62's statement of KP14 solve precision.** §62 describes it as "NY 21 with a
+byte-identical `Qy`". `NY` 21 is still true and `tests/test_protocol_is_uniform.py` still passes off
+the manifests, but on the default path the A-coefficients no longer come from `Qy` at all. The
+internal solve grid's span and its subdivision (`_sub`, and `KP_VY_GSUB`) are now precision knobs
+too, and **no manifest records them.** Worth closing: `PRECISION_KEYS["kp"]` is `("NY", "_i0")` and
+should probably gain them.
+
+**A defect found while auditing, unrelated to pricing.** `parameters_kp14.py` leaked its override
+loop variables `_k` and `_v` into the module namespace. `solstamp.param_namespace` keeps any
+module-scope name that is not a callable and does not start with `__`, so they were hashed into the
+solve_id -- leaving it dependent on the **key order of `KP_PARAM_OVERRIDES`**, since `_k` ends on
+whichever key came last. Measured: the same four parameters in three orders gave three different
+ids. Every live kp_vy manifest carries `"_k": "bv_comp"`, i.e. the order
+`type_share, type_bv, gamma_v, bv_comp`, so a spec authored in any other order would have silently
+claimed a different solve, and `runstamp._same_json` compares by value and cannot catch it. Fixed by
+deleting the loop variables after the check; all orders now agree. This is §38's hazard in a new
+place: what enters the digest is not only the source bytes but everything the source leaves lying in
+its namespace.
+
+**The transitional `vyxq` tables, and why they are not adopted.** The fix shipped `vyx` re-solved
+under a new prefix `vyxq` rather than overwriting, so the pre-fix tables and every result built on
+them stayed reproducible. They were built by calling the producers directly, so they carry no
+solve_id and no manifest. They are NOT being adopted, for a reason worth recording: **the kp_vy G
+solve_id is prefix-blind.** The prefix reaches `solstamp.snapshot` only through `extra`, and `extra`
+is descriptive and never hashed -- so `prefix='vyx'` and `prefix='vyxq'` produce the SAME id, while
+`solstamp.record` replaces a manifest's artifact list wholesale. Adopting `vyxq` and later solving
+under `vyx` would silently rewrite one over the other and leave one manifest tagged for both.
+Rebuilding through `build_vy_tables.py` under the single prefix `vyx` removes the collision
+entirely, and costs about 90 min of integrals per economy.
+
+**The ridge grid is widened at the same time, and that makes this a protocol amendment.** §62's gate
+-- the winning penalty interior in at least 8 of 10 seeds -- FAILED in five of thirteen economies:
+`vyx` 3/10 and `vyg25` 4/10 at the floor `1e-5`, `gx7` 2/10, `bx7` 7/10 and `g0235s` 5/10 at the
+ceiling `10`. §62 anticipated exactly this ("if 1e-5 wins, DKKM is still censored and the grid needs
+another decade before any new economy is run"). The grid becomes `1e-7 ... 1000`, eleven values.
+The fair benchmark needs no change: `run_estimators.py` DERIVES it as
+`sorted(set(kappas) | {10*max, 100*max})`, so its deliberate two-decade margin over DKKM's carries
+automatically.
+
+Because the grid is estimator-side it moves **every** row, so all thirteen economies re-run and all
+thirteen specs get a new version -- not just the nine the pricing fix touched. Budget about 900
+node-hours over 130 jobs against the 2026-09-15 campaign's 650; memory is unchanged, walltime is
+what moves, at roughly +57% on the DKKM stage.
+
+**The order everything must happen in**, and it is not negotiable: the comment edits to the two
+digested kp_vy sources FIRST (they re-key the ids, and doing them after precommitment means doing
+precommitment twice), then the protocol constants, then compute every new solve_id without solving,
+then commit the specs that pin them, then build, then commit tables and manifests in a LATER commit,
+then supersede the eighteen old manifests -- `supersede`, never `retire`, because two live ids under
+one tag and stage make `live_solves` return both and every seed of that economy reads STALE forever.
+`docs/NEXTUP.md` carries the live version of this list.
+
+**Still open.** `tests/test_risk_neutral_pricing.py` covers `kp_vy` and `bgn_gam`; `gs_bx` has no
+`E[M R] = 1` check anywhere, and whether it should is the one question worth keeping from the
+deleted documents. Separately, and not caused by any of this: all thirteen specs declare
+`"zero_book_in_sdf_solve": true` and **nothing in `variants/` or `tests/` reads it** -- the same
+shape as the `burnin` field that said 200 while the code ran 300/400. `sdf_compute_kp14.py` still
+solves `ER` over all N firms with a ridge fallback that fires only on an exception, which is the
+construction `sdf_weights_note.md` flagged as making `sdf_ret`/`max_sr` unreliable when zero-capital
+firms are present -- and `max_sr` is RESULTS.md's `SR_max` column.

@@ -2,8 +2,9 @@
 
 **STATUS: NO ECONOMY IN THIS DOCUMENT HAS BEEN RUN.** `bgnzr`, `gsdis`, `vydis` and `bgndis` are
 proposed tags, not results, and every prediction about them is registered rather than measured.
-**Step 0 is the one exception and it is now run** (2026-09-17, Sol 63535705): it bites, hard, and
-its result is in `docs/kp14_y_risk_adjustment.md` and summarised under step 0 below. Numbers fall into exactly three kinds and are marked as such: (a) measured,
+**Step 0 is the one exception: it was run, and then acted on.** The 2026-09-17 sizing run
+(Sol 63535705) showed the defect bites hard, and merge `91095fb` (2026-09-21) corrected it. Step 0
+below records both, and is the only part of this document that is closed. Numbers fall into exactly three kinds and are marked as such: (a) measured,
 from `variants/results/economy_table.csv` or a named log; (b) read from live code, with a
 `file:line`; (c) arithmetic derived here from (a) and (b), which is an argument and can be wrong.
 Nothing in this file is citable as a result, and `docs/RESULTS.md` remains the only place results
@@ -34,12 +35,19 @@ Uncommitted, and none of it is mine except the last three:
 | `variants/kp_vy/check_y_risk_adjustment.py` | untracked -- its reproducible harness |
 | `docs/plan-before-home-20260917.md` | untracked -- this file |
 
-**The one thing that matters.** Step 0 below. `variants/kp_vy/parameters_kp14.py:122-133` values a
-claim on `e^{beta_f*y}` flows with the physical generator and a premium folded into the discount
-rate, which is KP14's own construction (the paper's eq. 11) and is exact for its GBM shocks but not
-for a priced mean-reverting state. The omitted term is `(gamma_v*sigma_y - sigma_y^2*b)*A'(y)`.
-Established numerically three ways in `docs/kp14_y_risk_adjustment.md`; reproduce with
-`python variants/kp_vy/check_y_risk_adjustment.py`. Its footprint is exactly `vyx` and `vyg25`,
+> **This state-of-the-tree block is a snapshot of 2026-09-17 and is no longer current.** Everything
+> listed untracked is committed; the tip is well past `66272f6`; the suite is larger than 264; and
+> `docs/kp14_y_risk_adjustment.md` was deleted on 2026-09-21, superseded by the fix itself. It is
+> kept because the rest of the document reasons from it.
+
+**The one thing that matters.** Step 0 below. As this was written, `variants/kp_vy` valued a claim
+on `e^{beta_f*y}` flows with the physical generator and a premium folded into the discount rate,
+which is KP14's own construction (the paper's eq. 11) and is exact for its GBM shocks but not for a
+priced mean-reverting state. The omitted term is `(gamma_v*sigma_y - sigma_y^2*b)*A'(y)`.
+Reproduce the derivation with `python variants/kp_vy/check_y_risk_adjustment.py`, which hardcodes
+the pre-fix resolvent and so still shows it. **CORRECTED 2026-09-21** in merge `91095fb`; the live
+specification is `variants/kp_vy/parameters_kp14.py` and the identities are
+`tests/test_risk_neutral_pricing.py`. Its footprint is exactly `vyx` and `vyg25`,
 which are the only two economies in the project with a fair gap above +0.004.
 
 **UPDATE 2026-09-17: the check is run and the effect is large.** At each economy's own declared SDF
@@ -521,8 +529,8 @@ Sequence, and **step 0 was added 2026-09-17 after checking the footprint of the 
 
    **DONE 2026-09-17, and it bites.** The sizing run is complete: harness
    `variants/kp_vy/check_y_common_slope.py`, job `variants/kp_vy/run_ystep0_slurm.sh` (Sol 63535705,
-   48 GB, 15 min), outputs `variants/results/kp_vy_yslope_{kpbase,vyx,vyg25}_s000.json`, full write-up
-   in `docs/kp14_y_risk_adjustment.md`. It ran the registered common-slope regression (rejected at
+   48 GB, 15 min), outputs `variants/results/kp_vy_yslope_{kpbase,vyx,vyg25}_s000.json`. It ran the
+   registered common-slope regression (rejected at
    chi2(2) = 30,681 for `vyx`) and, alongside it, an exact test needing no elasticity approximation:
    whether the model's own prices satisfy `E^Q[P' + CF']/P = exp(r*dt)` under its own three stated
    prices of risk. `kpbase`, where no firm loads on `y`, satisfies it to 0.016 %/yr; `vyx` and
@@ -531,11 +539,15 @@ Sequence, and **step 0 was added 2026-09-17 after checking the footprint of the 
    cross-type premium SPREAD, is compensation for nothing. On `vyg25`'s saved moments (same solve ids
    the economy table reports) the unpriced part is 59% of `SR_max` and 61% of `SR_orth`.
 
-   **So the branch below is the live one**, and it is the expensive arm: the corrected generator, a
-   `y_max` of about 7 inside the -8.85 well-posedness wall, `NY` from 21 to about 41, re-solve all
-   three KP14 tags and re-run their 30 seed jobs. That is a decision, not a next step -- it re-keys
-   six solve ids and moves the project's only positive result. Nothing further in KP14 should be run
-   until it is taken.
+   **TAKEN, and cheaper than this document predicted.** Merge `91095fb` (2026-09-21) corrects the
+   generator. The expensive arm forecast here -- `y_max` about 7 inside a -8.85 well-posedness wall,
+   `NY` from 21 to about 41, the integral tables roughly doubling -- **did not happen**. Substituting
+   `W = e^{by} A` keeps the discount at the positive `rho0`, so there is no wall to stay inside: the
+   Q-measure is held on an internal fine grid and sampled back to the table nodes. `NY` is still 21,
+   `y_max` still 3.5, and 63 integral tables stayed 63. The conclusion survives for a different
+   reason -- all three KP14 tags re-solve because `parameters_kp14.py`'s bytes are digested into
+   their solve ids, not because the grid changed. The re-solve and the re-run are `docs/NEXTUP.md`.
+   Nothing further in KP14 should be run until that campaign lands.
 
 1. **A no-solve falsification probe (hours, zero cluster time).** Off existing panels: confirm
    the KP14 jump return is constant across firms under an `x` and a `z` rescaling; confirm the GS21
@@ -718,19 +730,26 @@ the growth-option discount `rho_ty`, which share the construction.
 
 **The decisive check, and it is a run rather than an argument.** On one saved `vyx` panel, regress
 each type's conditional expected excess return on its y-exposure and test for a COMMON slope. A slope
-that differs by type means part of the +0.36 room is not a risk premium. Until that is done, the
-headline is not withdrawn and not confirmed.
+that differs by type means part of the +0.36 room is not a risk premium. **RUN 2026-09-17: the
+common slope is rejected at chi2(2) = 30,681 for `vyx`, and the exact `E^Q[P' + CF']/P = exp(r*dt)`
+test misses by up to 13.3 %/yr. The headline is withdrawn pending the corrected campaign.**
 
-**The fix, cheap to write and expensive to adopt.** Build the generator with drift
-`-kappa_y*y - gamma_v*sigma_y + sigma_y^2*b` -- type-dependent, so `Qy` becomes one generator per type
--- keeping the discount vector as it is. Four `NY x NY` solves per type is free, and `kp14_fd_vy.py`
-already solves `G` per type. **But the risk-neutral long-run mean of `y` is
-`-gamma_v*sigma_y/kappa_y = -4.303`, outside the grid `[-3.5, 3.5]`, whose boundaries are
-REFLECTING.** Under P, +/-3.5 is 3.5 stationary sd and reflecting is harmless; under Q the process
-sits on the lower boundary. So a correct solve needs a wider or asymmetric `y` grid, which changes
-`NY` or `dy`, which is solve precision -- uniform within a model by protocol. **All three KP14
-economies re-solve together.** Avoiding ever solving under Q is very likely why the constant-discount
-route was taken.
+**The fix, as predicted here and as it actually landed.** The prescription was: build the generator
+with drift `-kappa_y*y - gamma_v*sigma_y + sigma_y^2*b`, type-dependent, keeping the discount vector
+as it is -- which runs into the risk-neutral long-run mean of `y` being
+`-gamma_v*sigma_y/kappa_y = -4.303`, outside the reflecting grid `[-3.5, 3.5]`, so that a correct
+solve needs a wider grid, which is solve precision and forces all three KP14 economies to re-solve
+together.
+
+**That is not what was done, and the difference matters.** Merge `91095fb` substitutes
+`W = e^{by} A` and solves for `W` instead. The substitution absorbs the Ito cross term, so the
+generator is a single type-INDEPENDENT one with drift `-kappa_y*y - gamma_v*sigma_y`, and the
+discount becomes the y-free `rho0`, positive everywhere -- so the sign wall at `y = -8.85` that made
+the grid window narrow does not exist in W-form. The Q-measure is held on an internal fine grid and
+`A = e^{-by} W` is sampled back onto the unchanged 21-node table grid. `NY` 21, `y_max` 3.5 and 63
+integral tables are all unchanged. All three KP14 economies do re-solve, but because the producer's
+source bytes are digested into their solve ids, not because the grid moved. Avoiding ever solving
+under Q is still very likely why the constant-discount route was taken originally.
 
 **Bearing on this experiment.** `vydis` adds another y-dependent term to the same discount, and the
 omitted term multiplies `A'`, so the error grows with exactly the curvature the disaster introduces.
