@@ -30,11 +30,11 @@ OV = ('{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],'
       '"gamma_v":1.8,"bv_comp":1.2}')
 
 
-def _solve(ftype):
+def _solve(ftype, ov=None):
     out = os.path.join(tempfile.mkdtemp(), f"G{ftype}.csv")
     r = subprocess.run([sys.executable, "-W", "ignore", SOLVER], cwd=KP,
                        capture_output=True, text=True,
-                       env=dict(os.environ, KP_PARAM_OVERRIDES=OV, KP_VY_PREFIX="vyx",
+                       env=dict(os.environ, KP_PARAM_OVERRIDES=ov or OV, KP_VY_PREFIX="vyx",
                                 KP_VY_TYPE=str(ftype), KP_VY_GOUT=out))
     assert r.returncode == 0, r.stdout + r.stderr
     return out, r.stdout
@@ -69,8 +69,13 @@ def test_it_is_fast_enough_that_a_reparametrisation_is_cheap():
 
 
 def test_the_solution_reproduces_the_committed_table():
-    """Guards the numerics, not just the plumbing."""
-    out, _ = _solve(1)
+    """Guards the numerics, not just the plumbing.
+
+    2026-09-18: the committed G_vyx*.csv were solved with the PRE-FIX pricing of y-risk (physical
+    generator, constant premium in the discount; docs/OU-process-question.md). They are compared
+    against y_risk_neutral=0, which therefore also proves that switch rebuilds the old tables
+    bit for bit. When the vyx tables are re-solved under the default, drop the override here."""
+    out, _ = _solve(1, OV[:-1] + ',"y_risk_neutral":0}')
     a = pd.read_csv(out)
     b = pd.read_csv(os.path.join(KP, "G_vyx1.csv"))
     cols = [c for c in a.columns if c.startswith("G_")]
