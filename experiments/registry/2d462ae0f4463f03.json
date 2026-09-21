@@ -120,6 +120,11 @@
   },
   "spec_ids": [],
   "stage": null,
+  "superseded_by": {
+    "on": null,
+    "reason": "the pricing fix of merge 91095fb: vasicek.py adds sigma12 = -Cov(log z, r) to the cumulative variance twice, not once, which re-keys every bgn_gam J* solve. Protocol v3.",
+    "solve_id": "84dca1cf8d88d200"
+  },
   "tags": [
     "Jstar_g0235"
   ],

@@ -71,11 +71,15 @@ def test_it_is_fast_enough_that_a_reparametrisation_is_cheap():
 def test_the_solution_reproduces_the_committed_table():
     """Guards the numerics, not just the plumbing.
 
-    2026-09-18: the committed G_vyx*.csv were solved with the PRE-FIX pricing of y-risk (physical
-    generator, constant premium in the discount; see parameters_kp14.py). They are compared
-    against y_risk_neutral=0, which therefore also proves that switch rebuilds the old tables
-    bit for bit. When the vyx tables are re-solved under the default, drop the override here."""
-    out, _ = _solve(1, OV[:-1] + ',"y_risk_neutral":0}')
+    2026-09-18: the committed G_vyx*.csv were solved with the PRE-FIX pricing of y-risk, so this
+    compared against y_risk_neutral=0 and the note here said to drop that override once the tables
+    were re-solved under the default.
+
+    2026-09-21: done. The committed tables are the CORRECTED ones (protocol v3), so the override is
+    gone and this now guards the default path -- which is the one every economy runs. The legacy
+    switch keeps its own guard in tests/test_risk_neutral_pricing.py, which asserts that
+    y_risk_neutral=0 still reproduces the constant-rate error rather than the closed form."""
+    out, _ = _solve(1)
     a = pd.read_csv(out)
     b = pd.read_csv(os.path.join(KP, "G_vyx1.csv"))
     cols = [c for c in a.columns if c.startswith("G_")]

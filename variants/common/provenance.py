@@ -44,6 +44,7 @@ ENV_EXACT = ("CONDA_ENV", "CONDA_DEFAULT_ENV", "VECLIB_MAXIMUM_THREADS",
              "SLURM_JOB_ID", "SLURM_ARRAY_TASK_ID", "SLURM_ARRAY_JOB_ID",
              "SLURM_CPUS_PER_TASK", "SLURMD_NODENAME")
 DIFF_CAP = 200_000
+STATUS_CAP = 1200
 # Paths whose contents are never inlined into a sidecar's diff: they are outputs, and a
 # diff of outputs cannot help reproduce a run. Their names still appear in `status`.
 OUTPUT_DIRS = ("variants/results",)
@@ -78,7 +79,17 @@ def git_state(cwd=None):
     porcelain = _git(["status", "--porcelain"], root, default="")
     st["dirty"] = bool(porcelain)
     if porcelain:
-        st["status"] = porcelain.splitlines()[:200]
+        # 2026-09-21: the cap is right but it was SILENT, and silence is the defect. The
+        # protocol-v3 rebuild left 261 entries here, and because porcelain is path-sorted,
+        # everything under variants/results -- the outputs this list exists to record as
+        # dirty -- fell past 200 and vanished with no indication. A campaign re-run dirties
+        # about 900 result files on the cluster, so every sidecar it writes would have
+        # under-reported. `diff` has carried diff_truncated since it was capped; `status`
+        # now says the same thing about itself.
+        lines = porcelain.splitlines()
+        st["status"] = lines[:STATUS_CAP]
+        st["status_total"] = len(lines)
+        st["status_truncated"] = len(lines) > STATUS_CAP
         # The inline diff exists so a dirty tree's CODE can be reproduced. Outputs are
         # not code: on 2026-09-08 the cluster tree was dirty only because the array had
         # overwritten three tracked result files, and every one of thirty sidecars

@@ -165,6 +165,15 @@ def test_dirty_results_are_listed_but_not_inlined():
             "the dirty result file must still appear in status")
         assert sentinel not in g.get("diff", ""), (
             "a result file's contents were inlined into the sidecar diff")
+        # 2026-09-21: status is capped, and the cap used to be SILENT at 200 lines. The
+        # protocol-v3 rebuild put 261 entries in the porcelain, and because it is
+        # path-sorted everything under variants/results -- the very files this test is
+        # about -- fell past the cap and vanished with no indication. A campaign re-run
+        # dirties about 900 result files. The cap is now STATUS_CAP and says so.
+        assert "status_truncated" in g and "status_total" in g, (
+            "a capped status list must report that it was capped, as diff_truncated does")
+        assert g["status_total"] >= len(g["status"])
+        assert g["status_truncated"] == (g["status_total"] > provenance.STATUS_CAP)
     finally:
         open(path, "wb").write(original)
 

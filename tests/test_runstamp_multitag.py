@@ -56,10 +56,14 @@ def test_solve_tags_parses_strings_and_lists():
 
 
 def test_one_tag_is_unchanged():
-    # The bgn_gam id moved on 2026-09-15: the protocol's burn-in change re-keyed every BGN
-    # jstar solve without changing a byte of its table. be222462dd017b2c is the same economy
-    # at burn-in 300 and is marked superseded_by this id, which is why exactly one comes back.
-    assert runstamp.live_solves("bgn_gam", "Jstar_g0235") == ["2d462ae0f4463f03"]
+    # The bgn_gam id has moved twice. 2026-09-15: the protocol's burn-in change re-keyed every
+    # BGN jstar solve without changing a byte of its table (be222462dd017b2c -> 2d462ae0f4463f03).
+    # 2026-09-21: the pricing fix of merge 91095fb restored the halved sigma12 term in
+    # vasicek.py, which re-keyed them again AND changed the tables, J* falling 14-21% across the
+    # rate range (2d462ae0f4463f03 -> 84dca1cf8d88d200). Both predecessors are marked
+    # superseded_by rather than retired, which is why exactly one comes back -- the property
+    # this test exists for, and the one that would make every BGN seed read STALE if it broke.
+    assert runstamp.live_solves("bgn_gam", "Jstar_g0235") == ["84dca1cf8d88d200"]
     assert runstamp.live_solves("gs_bx", "sol_g28") == ["8b584c38614695ac"]
 
 
