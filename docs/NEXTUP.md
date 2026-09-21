@@ -45,7 +45,19 @@ so it keeps its deliberate two-decade margin over DKKM's automatically.
 
 All thirteen live specs then get a new version carrying the new `estimation.kappas`.
 
-### C. Specs and solves, in the order precommitment requires
+### C. Specs and solves -- DONE 2026-09-21, all fifteen ids reproduced
+
+Commits `f2032b5` (specs) and `3ecaa00` (solves). Every one of the fifteen precommitted ids came
+back exactly, `rebuild_all_jstar.sh` printing "Every id reproduced"; twelve supersessions, not the
+eighteen first counted, because six BGN ids were already superseded in the protocol-v2 bump; exactly
+one live id per stage per tag afterwards.
+
+**The KP14 cost estimate below was wrong by an order of magnitude.** All three economies -- six
+solves, 154 tables -- built in about 20 minutes, not the ~90 minutes PER ECONOMY this file
+projected. That figure came from `WORKING.md` and predates the direct sparse G solve. The BGN six
+took about 45 minutes. Budget accordingly next time.
+
+The record of how it was done, kept because the next re-solve will need it:
 
 `rebuild_all_jstar.sh` exits 1 on any id mismatch and the repo refuses a spec claiming a
 precommitment it did not earn, so the order is fixed: **compute the new ids without solving -> write
@@ -76,7 +88,15 @@ and commit the specs that pin them -> build -> commit the tables and manifests i
   while only the id moves. If an id did *not* move, that economy's ten tasks exit in three seconds
   with "already complete and current" -- the 2026-09-15 incident that skipped seventy tasks.
 
-### D. The campaign
+### D. The campaign -- READY, NOT SUBMITTED
+
+Both queues empty, the shared checkout pulled to `3ecaa00` and clean, and both dry runs accepted:
+Sol's two highmem rows fit `sh005`, Phoenix's eleven fit `pc219`, and every request fits its nodes.
+Phoenix is the less contended cluster by a wide margin -- 23 pending in `public` against Sol's 1435,
+and fairshare 0.0241 against 0.0047 -- which is why the split leaves only the two highmem economies
+on Sol.
+
+What follows is the plan; nothing is queued.
 
 Both queues empty, then `bash variants/cluster_pull.sh` inside the shared checkout -- one tree, one
 pull, never a plain `git pull`. All thirteen rows stay in `variants/submit_campaign.sh`.
