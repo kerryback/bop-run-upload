@@ -16,9 +16,26 @@ artifacts across three producers, every change FUNCTIONAL rather than cosmetic.
 
 1. **The six BGN J\* tables.** `utils_bgn/BGN_solfiles/Jstar.csv` was regenerated and stamped in the
    merge; `variants/bgn_gam/Jstar_*.csv` were not, so `bgn_gam` is inconsistent with its own solver
-   until they are. `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac -- a
-   Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256. Cheapest
-   item here.
+   until they are.
+
+   **This is not a rebuild, it is a re-pin.** `vasicek.py` is a digest-bearing source for the jstar
+   stage, so all six precommitted ids move -- checked 2026-09-21 at merge `91095fb`, every one of
+   `bgnbase-v2`, `g0235-v3`, `g0235d-v2`, `g0235f-v2`, `g0235r-v2`, `g0235s-v2` mismatches. So
+   `rebuild_all_jstar.sh` will exit 1 with "do not commit, chase the id first", which is the guard
+   doing its job. The order the convention requires, and the one `g0235` v1 -> v2 followed when its
+   id moved for a far smaller reason:
+
+   a. compute each new id without solving -- `_scratch/precommit_id.sh bgn '<params>'`, or the
+      producer's own `solve_id=` line, which prints before any expensive work;
+   b. write six new spec versions carrying them, `lineage.changes` naming the bond-covariance fix,
+      `superseded_by` set on the current six;
+   c. commit those specs;
+   d. only then `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac -- a
+      Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256 -- and
+      commit the tables and manifests in a LATER commit than the one that pinned the ids.
+
+   Unlike `g0235` v1 -> v2, the tables here do change: J\* falls 14-21% across the rate range in the
+   base table. Cheapest of the four items in compute, not in bookkeeping.
 2. **`vyg25` re-solved under `y_risk_neutral = 1`.** `vyx` already is, committed under the `vyxq`
    prefix in the merge. One G solve plus the 21 integral tables per type.
 3. **`vyxq` adopted into the registry.** Those tables were built by calling the producers directly,
