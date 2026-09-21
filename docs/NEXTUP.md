@@ -3,7 +3,42 @@
 Rewritten 2026-09-15, when the measurement protocol landed (`docs/RESULTS.md`, "The measurement
 protocol"). One recommendation, then the ranked alternatives, then what is not worth running.
 
+## Now: re-solve and re-run what the pricing fix invalidated
+
+Merge `91095fb` (2026-09-21) corrected two solve-level defects -- `kp_vy`'s constant-rate treatment
+of the priced OU state, and BGN's halved bond covariance (`docs/OU-process-question.md`, stated as
+identities in `tests/test_risk_neutral_pricing.py`). Nine of the thirteen economies were solved
+before it. Nothing further down this file is worth starting until these land, because every KP14 and
+BGN number a new run would be compared against moves.
+
+`python variants/solve_impact.py main~1 main` lists what the merge invalidated: 25 MB of cached
+artifacts across three producers, every change FUNCTIONAL rather than cosmetic.
+
+1. **The six BGN J\* tables.** `utils_bgn/BGN_solfiles/Jstar.csv` was regenerated and stamped in the
+   merge; `variants/bgn_gam/Jstar_*.csv` were not, so `bgn_gam` is inconsistent with its own solver
+   until they are. `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac -- a
+   Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256. Cheapest
+   item here.
+2. **`vyg25` re-solved under `y_risk_neutral = 1`.** `vyx` already is, committed under the `vyxq`
+   prefix in the merge. One G solve plus the 21 integral tables per type.
+3. **`vyxq` adopted into the registry.** Those tables were built by calling the producers directly,
+   so they carry no `solve_id` and no manifest, and no spec describes the economy. Until that is
+   done, no protocol run can be stamped against them.
+4. **Ten seeds for the nine affected rows** at the unchanged protocol, then `docs/RESULTS.md`
+   rewritten and its top-of-file staleness note removed.
+
+**What this decides.** The complexity gap is claimed on `vyx` and `vyg25`, both affected. An
+off-protocol smoke test (N=200, T=360, window 240, one seed) put `vyx`'s DKKM-minus-best-linear at
++0.007 (t 1.7) after the fix against +0.019 (t 3.6) before, and mean expected excess return at
+3.5%/yr against 17.7%. If the protocol run agrees in direction, K6 below -- whether a defensible
+calibration shows a gap at all -- is being asked of a much smaller gap, and the ladder items (K1,
+K3, K2) need re-ranking against the corrected `vyx` rather than the published one.
+
 ## Recommendation: the protocol campaign
+
+**Ran 2026-09-15 to 2026-09-17**; its results are `docs/RESULTS.md`. Kept here for the predictions
+it registered and what each outcome was to decide. Nine of its thirteen economies are now superseded
+by the section above.
 
 **What.** All thirteen economies, ten seeds each, at the protocol: N 500, T 500, burn-in 400, window
 360, 125 evaluation months, the ridge grid `1e-5 … 10`, the model's full conditioning set, the fair
