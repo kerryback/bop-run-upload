@@ -38,22 +38,22 @@ SPECS = os.path.join(ROOT, "experiments", "specs")
 # kp_vy/vyxT860 left this table rather than moving up: its economy IS vyx's, and it
 # differed only in T, the window and the ridge grid. See its spec's lineage.retired.
 CURRENT = {
-    "g0235": "var-bgn_gam-g0235-v3",
-    "vyx": "var-kp_vy-vyx-v3",
-    "bx7": "var-gs_bx-bx7-v4",
-    "g28": "var-gs_bx-g28-v3",
+    "g0235": "var-bgn_gam-g0235-v4",
+    "vyx": "var-kp_vy-vyx-v4",
+    "bx7": "var-gs_bx-bx7-v5",
+    "g28": "var-gs_bx-g28-v4",
     # proposed 2026-09-10 (docs/RESULTS.md); B1's three persistence points and G1
-    "g0235f": "var-bgn_gam-g0235f-v2",
-    "g0235s": "var-bgn_gam-g0235s-v2",
-    "g0235r": "var-bgn_gam-g0235r-v2",
-    "gx7": "var-gs_bx-gx7-v2",
+    "g0235f": "var-bgn_gam-g0235f-v3",
+    "g0235s": "var-bgn_gam-g0235s-v3",
+    "g0235r": "var-bgn_gam-g0235r-v3",
+    "gx7": "var-gs_bx-gx7-v3",
     # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4 and B4
-    "vyg25": "var-kp_vy-vyg25-v2",
-    "g0235d": "var-bgn_gam-g0235d-v2",
+    "vyg25": "var-kp_vy-vyg25-v3",
+    "g0235d": "var-bgn_gam-g0235d-v3",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
-    "bgnbase": "var-bgn_gam-bgnbase-v2",
-    "kpbase": "var-kp_vy-kpbase-v2",
-    "gsbase": "var-gs_bx-gsbase-v2",
+    "bgnbase": "var-bgn_gam-bgnbase-v3",
+    "kpbase": "var-kp_vy-kpbase-v3",
+    "gsbase": "var-gs_bx-gsbase-v3",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"
 

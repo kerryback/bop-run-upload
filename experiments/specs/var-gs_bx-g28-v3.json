@@ -1,127 +1,128 @@
 {
-    "schema_version": 1,
-    "spec_id": "var-gs_bx-g28-v3",
-    "title": "GS21 with a countercyclical state-dependent price of risk, gamma(x)",
-    "question": "Can a gap open with ZERO nonlinear room -- from estimation efficiency rather than complexity?",
-    "notes": "Runnable spec for the gamma(x) economy. Identical to v1 except for the expected solve_id.\n\nITS expected_solves IS NOT A PRECOMMITMENT AND MUST NOT BE READ AS ONE. The id was taken from a solve that had already run, so tests/test_precommitment_is_real.py will classify it RETROFITTED -- correctly. v1 carried the real precommitment; it was invalidated by a documentation-only source change (see v1's notes). This spec makes no precommitment claim in its text, which is why the claim-vs-fact test still passes.\n\nTHE DESIGN HAZARD THIS EXPOSED, recorded because it will recur: solve_id digests the ENTIRE source file, so editing a comment or a string invalidates every cached solve for that producer and every spec pinning it. That is the mirror of why content-addressing beats a repo-wide git sha (207 commits, 6 touched the solver): it distinguishes 'the solver changed' from 'the repo changed', but NOT 'the code changed' from 'the comments changed'. Fixing it by digesting the AST instead would move every existing solve_id -- 504 MB and ~25 h of cluster time -- so it is deliberately not fixed. Do not run bulk sed over solver sources.\n\nRECONSTRUCTION of `sol_g28`, whose code was never in this repo. Recovered from variants/REPORT.md:553, not invented: gamma(x) = clip(0.5 - 0.28*x/sd(x), 0.05, 1.0).\n\nWHY THIS ECONOMY. PLAN 0.0 ranks GS gamma(x) 3rd of 24 on realized gap (+0.038, t 17.9) with room ~= 0, and it is the sole evidence for that document's second conclusion: that a gap can come from ESTIMATION EFFICIENCY rather than nonlinearity. REPORT.md 13g found RFF-3600 'needs its heaviest ridge and still trails lin_rank' in POPULATION (lin_ceil 0.3588 vs nl_ceil 0.3584), yet the ESTIMATED linrank landed 0.3198 -- 0.039 below its own ceiling -- while RFF attained 0.3581. Both estimators get ridge at their best kappa (REPORT.md:146, :793), so this is not ridge-vs-OLS. The audit in e1a1b66 left that conclusion resting on deleted code; this spec makes it runnable again.\n\nsd(x) IS THE STATIONARY SD sqrt(sigma_x^2/(1-rho_x^2)) = 0.038431, which is what tauchen spans +/-4 of. It is NOT xgrid.std(), the sd of uniformly spaced grid points, which is 2.32x larger; standardising by that would silently give an economy with 2.32x less gamma variation than REPORT.md specified. At slope 0.28 gamma has mean 0.502 and sd 0.258 under the stationary distribution, saturating 9.1% of the TIME (58% of grid POINTS, which sit in thin tails).\n\nThe calibration is the CORRECTED GS21 Table I one (2026-09-06), which REPORT.md's figures predate. This is therefore the mechanism under the right calibration, not a reproduction of +0.038. Expect the room to stay ~0 -- REPORT.md 13g already re-based it and found gamma(x) adds none; the question is whether the ESTIMATED gap survives.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 0.3087, EW market 0.2944, FMR 0.2518, best linear\n0.2692, DKKM 0.2975, gap +0.0283, fair gap -0.0022, room +0.0004.\n(a) room stays below +0.003; the market stays above 90% of SR_max.\n(b) DKKM moves by less than 0.005 either way (the grid loses 0.03/0.3/3, gains 1e-5/1e-4).\n(c) fair gap within 0.006 of zero. FALSIFIED above +0.01, which would reopen GS21 Path 1.\n(d) winning penalty interior in at least 8 of 10 seeds.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).",
-    "lineage": {
-        "parent_spec": "var-gs_bx-g28-v2",
-        "supersedes": "var-gs_bx-g28-v2",
-        "changes": [
-            "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
-            "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
-            "estimation.kappas [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
-            "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has",
-            "estimation.fair_linear added: declared, not changed -- the seed array already passes --fair_linear on every full run"
-        ]
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-g28-v3",
+  "title": "GS21 with a countercyclical state-dependent price of risk, gamma(x)",
+  "question": "Can a gap open with ZERO nonlinear room -- from estimation efficiency rather than complexity?",
+  "notes": "Runnable spec for the gamma(x) economy. Identical to v1 except for the expected solve_id.\n\nITS expected_solves IS NOT A PRECOMMITMENT AND MUST NOT BE READ AS ONE. The id was taken from a solve that had already run, so tests/test_precommitment_is_real.py will classify it RETROFITTED -- correctly. v1 carried the real precommitment; it was invalidated by a documentation-only source change (see v1's notes). This spec makes no precommitment claim in its text, which is why the claim-vs-fact test still passes.\n\nTHE DESIGN HAZARD THIS EXPOSED, recorded because it will recur: solve_id digests the ENTIRE source file, so editing a comment or a string invalidates every cached solve for that producer and every spec pinning it. That is the mirror of why content-addressing beats a repo-wide git sha (207 commits, 6 touched the solver): it distinguishes 'the solver changed' from 'the repo changed', but NOT 'the code changed' from 'the comments changed'. Fixing it by digesting the AST instead would move every existing solve_id -- 504 MB and ~25 h of cluster time -- so it is deliberately not fixed. Do not run bulk sed over solver sources.\n\nRECONSTRUCTION of `sol_g28`, whose code was never in this repo. Recovered from variants/REPORT.md:553, not invented: gamma(x) = clip(0.5 - 0.28*x/sd(x), 0.05, 1.0).\n\nWHY THIS ECONOMY. PLAN 0.0 ranks GS gamma(x) 3rd of 24 on realized gap (+0.038, t 17.9) with room ~= 0, and it is the sole evidence for that document's second conclusion: that a gap can come from ESTIMATION EFFICIENCY rather than nonlinearity. REPORT.md 13g found RFF-3600 'needs its heaviest ridge and still trails lin_rank' in POPULATION (lin_ceil 0.3588 vs nl_ceil 0.3584), yet the ESTIMATED linrank landed 0.3198 -- 0.039 below its own ceiling -- while RFF attained 0.3581. Both estimators get ridge at their best kappa (REPORT.md:146, :793), so this is not ridge-vs-OLS. The audit in e1a1b66 left that conclusion resting on deleted code; this spec makes it runnable again.\n\nsd(x) IS THE STATIONARY SD sqrt(sigma_x^2/(1-rho_x^2)) = 0.038431, which is what tauchen spans +/-4 of. It is NOT xgrid.std(), the sd of uniformly spaced grid points, which is 2.32x larger; standardising by that would silently give an economy with 2.32x less gamma variation than REPORT.md specified. At slope 0.28 gamma has mean 0.502 and sd 0.258 under the stationary distribution, saturating 9.1% of the TIME (58% of grid POINTS, which sit in thin tails).\n\nThe calibration is the CORRECTED GS21 Table I one (2026-09-06), which REPORT.md's figures predate. This is therefore the mechanism under the right calibration, not a reproduction of +0.038. Expect the room to stay ~0 -- REPORT.md 13g already re-based it and found gamma(x) adds none; the question is whether the ESTIMATED gap survives.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 0.3087, EW market 0.2944, FMR 0.2518, best linear\n0.2692, DKKM 0.2975, gap +0.0283, fair gap -0.0022, room +0.0004.\n(a) room stays below +0.003; the market stays above 90% of SR_max.\n(b) DKKM moves by less than 0.005 either way (the grid loses 0.03/0.3/3, gains 1e-5/1e-4).\n(c) fair gap within 0.006 of zero. FALSIFIED above +0.01, which would reopen GS21 Path 1.\n(d) winning penalty interior in at least 8 of 10 seeds.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).",
+  "lineage": {
+    "parent_spec": "var-gs_bx-g28-v2",
+    "supersedes": "var-gs_bx-g28-v2",
+    "changes": [
+      "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
+      "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
+      "estimation.kappas [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
+      "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has",
+      "estimation.fair_linear added: declared, not changed -- the seed array already passes --fair_linear on every full run"
+    ],
+    "superseded_by": "var-gs_bx-g28-v4"
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "gs_ashift_ladder": "none (single type, gs_bx = 1.0)",
+    "gs_price_of_risk": "gamma_x_linear_clipped"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      1.0,
+      1.0
+    ],
+    "gs_gamma_slope": 0.28
+  },
+  "types": {
+    "share": [
+      1.0
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0
+      ],
+      "gs_ashift": [
+        0.0
+      ]
     },
-    "engine": "oracle",
-    "model": "gs_bx",
-    "method": {
-        "gs21_discretization": "tauchen_exact",
-        "zero_book_in_sdf_solve": true,
-        "gs21_calibration": "table_I_corrected_2026_09_06",
-        "gs_ashift_ladder": "none (single type, gs_bx = 1.0)",
-        "gs_price_of_risk": "gamma_x_linear_clipped"
-    },
-    "panel": {
-        "N": 500,
-        "T": 500,
-        "burnin": 400
-    },
-    "seeds": {
-        "base": 0,
-        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
-        "type_seed": 910
-    },
-    "params": {
-        "gmreg": [
+    "soldirs": [
+      "sol_g28"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_g28",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
             1.0,
             1.0
-        ],
-        "gs_gamma_slope": 0.28
-    },
-    "types": {
-        "share": [
-            1.0
-        ],
-        "exposure": {
-            "gs_bx": [
-                1.0
-            ],
-            "gs_ashift": [
-                0.0
-            ]
+          ],
+          "gs_gamma_slope": 0.28
         },
-        "soldirs": [
-            "sol_g28"
-        ]
-    },
-    "solve": {
-        "stages": [
-            {
-                "name": "sol_g28",
-                "producer": "variants/gs_bx/gs_solve_gam.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        1.0,
-                        1.0
-                    ],
-                    "gs_gamma_slope": 0.28
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 0
-            }
-        ]
-    },
-    "env": {
-        "GS_BX_SOLDIRS": "sol_g28",
-        "GS_BX_BETAS": "1.0",
-        "GS_BX_SHARES": "1.0"
-    },
-    "estimation": {
-        "chars": [
-            "size",
-            "bm",
-            "agr",
-            "roe",
-            "mom",
-            "lev"
-        ],
-        "window": 360,
-        "levels": true,
-        "include_mkt": true,
-        "kappas": [
-            1e-05,
-            0.0001,
-            0.001,
-            0.01,
-            0.1,
-            1.0,
-            10.0
-        ],
-        "fair_linear": true
-    },
-    "provenance": {
-        "source_script": null,
-        "reconstructed_from": "variants/REPORT.md:553 (sol_g28) and 13g",
-        "reconstructed": "2026-09-07",
-        "verified_by": "tests/test_gs_solver_parity.py",
-        "solve_script": "variants/gs_bx/run_g28_slurm.sh",
-        "runner": "variants/run_seeds_slurm.sh",
-        "runner_note": "SEED_SPEC=g28"
-    },
-    "expected_solves": {
-        "sol_g28": "8b584c38614695ac"
-    },
-    "spec_hash": "5bb435be3d6b44ea83f0c109a53c160407c293df993ff5c0d481cbc68dbb87c1",
-    "precommitted": true,
-    "reused_solves": {
-        "sol_g28": "var-gs_bx-g28-v2"
-    },
-    "solves_pending": null
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_g28",
+    "GS_BX_BETAS": "1.0",
+    "GS_BX_SHARES": "1.0"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "reconstructed_from": "variants/REPORT.md:553 (sol_g28) and 13g",
+    "reconstructed": "2026-09-07",
+    "verified_by": "tests/test_gs_solver_parity.py",
+    "solve_script": "variants/gs_bx/run_g28_slurm.sh",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=g28"
+  },
+  "expected_solves": {
+    "sol_g28": "8b584c38614695ac"
+  },
+  "spec_hash": "5bb435be3d6b44ea83f0c109a53c160407c293df993ff5c0d481cbc68dbb87c1",
+  "precommitted": true,
+  "reused_solves": {
+    "sol_g28": "var-gs_bx-g28-v2"
+  },
+  "solves_pending": null
 }

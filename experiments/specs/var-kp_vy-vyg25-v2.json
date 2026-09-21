@@ -1,120 +1,121 @@
 {
-    "schema_version": 1,
-    "spec_id": "var-kp_vy-vyg25-v2",
-    "title": "KP14 vyx with the price of the priced state's risk raised from 1.8 to 2.5",
-    "question": "Does more Sharpe outside the market widen a genuine complexity gap?",
-    "notes": "K4 (docs/RESULTS.md, KP14 proposals). IDENTICAL to var-kp_vy-vyx-v2 except gamma_v, the price of the priced state's risk, 1.8 -> 2.5. Its own tables under prefix vyg25.\n\nWHY: vyx is the one economy where DKKM leaves the market (finding 8). The Sharpe carried by the state's shock scales with its price, and that Sharpe is the component the equal-weighted market does not span, so this turns the dial finding 8 identifies. vy -> vyx raised gamma_v 1.2 -> 1.8 and the gap rose with the room (legacy levels are a different economy; the direction survives).\n\nPREDICTION (2026-09-13): evaluation-window room +0.45 to +0.50 (vyx +0.3606); SR_max and the non-market Sharpe up about 40%; DKKM's winning penalty still the smallest on the grid; gap +0.15 to +0.20 (vyx +0.1046). FALSIFIED IF the gap is below +0.12. Same kappa grid as vyx, so the gap is comparable.\n\nCAVEAT: type premia approach 40% a year; report the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.\n\nFEASIBILITY, checked 2026-09-13 from parameters_kp14 itself: smallest growth-option discount rho_ty +0.0329 (vyx +0.0212), smallest value discount const_ty +0.2469, A0 finite and positive. (The same check showed K5's signed exposures infeasible: rho_ty -0.149 at beta = -0.06.)\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving -- build_vy_tables.py prints it before the G stage. The integ id depends on the G tables' digests, so it was read after building the G stage (7 s) in a throwaway git worktree whose registry was then discarded, and before any integ table existed; the same path first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2. The G solve ran on macOS; if a cluster rebuild canonicalises to different digests the integ id moves, and variants/run_solve_slurm.sh then fails before any seed starts. This spec is committed BEFORE the solve runs on Sol.\n\nCORRECTION, 2026-09-13, the same afternoon. Two sentences above claim more than was shown. (1) The vyx reproduction did not test a fresh G build: vyx's G tables are tracked in git, so the worktree read them and never re-solved G. (2) The integ stage does not hash CANONICALISED G tables: solstamp.artifact_digests hashes their raw file bytes, and only parameters are quantised to 8 significant digits. The hazard then fired as named: Sol job 63188594 rebuilt G with the same G id f41d052f1f960c4c but different trailing digits, and printed integ a2cc8d99c1bc474b; it was cancelled at 11 minutes, before any seed could start. The G tables built on the Mac, from which the integ id 8d1308e8f21723f8 was precommitted, were shipped to Sol byte-identical with their manifest, and Sol job 63188972 builds only the integ stage from them. The first attempt's files are kept in /data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/. docs/RUNS.md records both chains.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 1.3887, EW market 0.4694, FMR 0.7911, best linear\n0.8000, DKKM 0.9450, gap +0.1450, fair gap +0.1450, room +0.4108. Its parent's floor won in\n10 of 10 seeds, so like vyx its published DKKM is censored, and more of it.\n(a) room and SR_max unchanged within seed noise.\n(b) DKKM rises +0.04 to +0.11, at least as much as vyx's, since a higher price of the state's\nrisk raises signal-to-noise and the last decade of the parent's grid was still worth 0.046.\n(c) gap +0.18 to +0.26; gap and fair gap coincide to within 0.001. FALSIFIED below +0.12.\n(d) the gap stays ABOVE vyx's at the same grid. If widening the grid closes the vyx-to-vyg25\ndifference, the price of the state's risk was buying shrinkage, not signal.\n(e) winning penalty interior in at least 8 of 10 seeds.",
-    "lineage": {
-        "parent_spec": "var-kp_vy-vyg25-v1",
-        "supersedes": "var-kp_vy-vyg25-v1",
-        "changes": [
-            "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
-            "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
-            "estimation.kappas [0.001, 0.01, 0.1, 1] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
-            "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has"
-        ]
-    },
-    "engine": "oracle",
-    "model": "kp_vy",
-    "method": {
-        "kp_interpolation": "linear",
-        "kp_cir_quadrature": "adaptive_epsrel_1e-6",
-        "kp_regime_labels": "corrected_2026_09_04_entry_rates",
-        "zero_book_in_sdf_solve": true
-    },
-    "panel": {
-        "N": 500,
-        "T": 500,
-        "burnin": 400
-    },
-    "seeds": {
-        "base": 0,
-        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
-    },
-    "params": {
-        "type_share": [
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyg25-v2",
+  "title": "KP14 vyx with the price of the priced state's risk raised from 1.8 to 2.5",
+  "question": "Does more Sharpe outside the market widen a genuine complexity gap?",
+  "notes": "K4 (docs/RESULTS.md, KP14 proposals). IDENTICAL to var-kp_vy-vyx-v2 except gamma_v, the price of the priced state's risk, 1.8 -> 2.5. Its own tables under prefix vyg25.\n\nWHY: vyx is the one economy where DKKM leaves the market (finding 8). The Sharpe carried by the state's shock scales with its price, and that Sharpe is the component the equal-weighted market does not span, so this turns the dial finding 8 identifies. vy -> vyx raised gamma_v 1.2 -> 1.8 and the gap rose with the room (legacy levels are a different economy; the direction survives).\n\nPREDICTION (2026-09-13): evaluation-window room +0.45 to +0.50 (vyx +0.3606); SR_max and the non-market Sharpe up about 40%; DKKM's winning penalty still the smallest on the grid; gap +0.15 to +0.20 (vyx +0.1046). FALSIFIED IF the gap is below +0.12. Same kappa grid as vyx, so the gap is comparable.\n\nCAVEAT: type premia approach 40% a year; report the oracle's E[mu] beside the gap. This locates where the mechanism ends; it is not a calibration.\n\nFEASIBILITY, checked 2026-09-13 from parameters_kp14 itself: smallest growth-option discount rho_ty +0.0329 (vyx +0.0212), smallest value discount const_ty +0.2469, A0 finite and positive. (The same check showed K5's signed exposures infeasible: rho_ty -0.149 at beta = -0.06.)\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving -- build_vy_tables.py prints it before the G stage. The integ id depends on the G tables' digests, so it was read after building the G stage (7 s) in a throwaway git worktree whose registry was then discarded, and before any integ table existed; the same path first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2. The G solve ran on macOS; if a cluster rebuild canonicalises to different digests the integ id moves, and variants/run_solve_slurm.sh then fails before any seed starts. This spec is committed BEFORE the solve runs on Sol.\n\nCORRECTION, 2026-09-13, the same afternoon. Two sentences above claim more than was shown. (1) The vyx reproduction did not test a fresh G build: vyx's G tables are tracked in git, so the worktree read them and never re-solved G. (2) The integ stage does not hash CANONICALISED G tables: solstamp.artifact_digests hashes their raw file bytes, and only parameters are quantised to 8 significant digits. The hazard then fired as named: Sol job 63188594 rebuilt G with the same G id f41d052f1f960c4c but different trailing digits, and printed integ a2cc8d99c1bc474b; it was cancelled at 11 minutes, before any seed could start. The G tables built on the Mac, from which the integ id 8d1308e8f21723f8 was precommitted, were shipped to Sol byte-identical with their manifest, and Sol job 63188972 builds only the integ stage from them. The first attempt's files are kept in /data/sjpruitt/projects/bop-run-upload/k4_sol_first_attempt_63188594/. docs/RUNS.md records both chains.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 1.3887, EW market 0.4694, FMR 0.7911, best linear\n0.8000, DKKM 0.9450, gap +0.1450, fair gap +0.1450, room +0.4108. Its parent's floor won in\n10 of 10 seeds, so like vyx its published DKKM is censored, and more of it.\n(a) room and SR_max unchanged within seed noise.\n(b) DKKM rises +0.04 to +0.11, at least as much as vyx's, since a higher price of the state's\nrisk raises signal-to-noise and the last decade of the parent's grid was still worth 0.046.\n(c) gap +0.18 to +0.26; gap and fair gap coincide to within 0.001. FALSIFIED below +0.12.\n(d) the gap stays ABOVE vyx's at the same grid. If widening the grid closes the vyx-to-vyg25\ndifference, the price of the state's risk was buying shrinkage, not signal.\n(e) winning penalty interior in at least 8 of 10 seeds.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyg25-v1",
+    "supersedes": "var-kp_vy-vyg25-v1",
+    "changes": [
+      "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
+      "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
+      "estimation.kappas [0.001, 0.01, 0.1, 1] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
+      "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has"
+    ],
+    "superseded_by": "var-kp_vy-vyg25-v3"
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 2.5,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyg25"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
             0.34,
             0.33,
             0.33
-        ],
-        "type_bv": [
+          ],
+          "type_bv": [
             0.02,
             0.07,
             0.14
-        ],
-        "gamma_v": 2.5,
-        "bv_comp": 1.2
-    },
-    "param_env": "KP_PARAM_OVERRIDES",
-    "env": {
-        "KP_VY_PREFIX": "vyg25"
-    },
-    "solve": {
-        "stages": [
-            {
-                "name": "vy_tables",
-                "producer": "variants/kp_vy/build_vy_tables.py",
-                "param_env": "KP_PARAM_OVERRIDES",
-                "params": {
-                    "type_share": [
-                        0.34,
-                        0.33,
-                        0.33
-                    ],
-                    "type_bv": [
-                        0.02,
-                        0.07,
-                        0.14
-                    ],
-                    "gamma_v": 2.5,
-                    "bv_comp": 1.2
-                },
-                "args": {
-                    "prefix": "vyg25"
-                },
-                "type_index": null
-            }
-        ]
-    },
-    "estimation": {
-        "chars": [
-            "size",
-            "bm",
-            "agr",
-            "roe",
-            "mom"
-        ],
-        "window": 360,
-        "levels": true,
-        "include_mkt": true,
-        "kappas": [
-            1e-05,
-            0.0001,
-            0.001,
-            0.01,
-            0.1,
-            1.0,
-            10.0
-        ],
-        "fair_linear": true
-    },
-    "provenance": {
-        "source_script": null,
-        "source_script_note": "proposed 2026-09-13 as K4 in docs/RESULTS.md",
-        "runner": "variants/run_seeds_slurm.sh",
-        "runner_note": "SEED_SPEC=vyg25",
-        "solve_runner": "variants/run_solve_slurm.sh",
-        "verified_by": "tests/test_specs_match_shell.py"
-    },
-    "spec_hash": "a4eee0ee0afaebefc5ff64835bf7514020e822432865e995ae1279ab7e8fa984",
-    "expected_solves": {
-        "G": "f41d052f1f960c4c",
-        "integ": "8d1308e8f21723f8"
-    },
-    "precommitted": true,
-    "solves_pending": null,
-    "reused_solves": {
-        "G": "var-kp_vy-vyg25-v1",
-        "integ": "var-kp_vy-vyg25-v1"
-    }
+          ],
+          "gamma_v": 2.5,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyg25"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-13 as K4 in docs/RESULTS.md",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=vyg25",
+    "solve_runner": "variants/run_solve_slurm.sh",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "a4eee0ee0afaebefc5ff64835bf7514020e822432865e995ae1279ab7e8fa984",
+  "expected_solves": {
+    "G": "f41d052f1f960c4c",
+    "integ": "8d1308e8f21723f8"
+  },
+  "precommitted": true,
+  "solves_pending": null,
+  "reused_solves": {
+    "G": "var-kp_vy-vyg25-v1",
+    "integ": "var-kp_vy-vyg25-v1"
+  }
 }

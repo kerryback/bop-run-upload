@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyx-v4",
+  "title": "KP14 with a priced OU volatility factor and three firm types with exponential exposure",
+  "question": "Does premium-side extremity in the priced-vol channel create both room and capture?",
+  "notes": "Current runnable spec for the vyx economy. Parameters are unchanged from v1 and still match variants/kp_vy/run_vyx.sh; what changed is the ECONOMY those parameters produce, via the lambda regime-label fix. v1's published figures (room +0.3496, gap_RFF-lin +0.1009, t 21.6, rank 1 of 24) therefore describe a different economy and must NOT be quoted for this one. No figures are published here yet: the first clean run has not been made. Premia approx 4.6/12/22 pct per year under v1's labels; not re-derived under the corrected ones.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: the parent's SR_max 1.1778, EW market 0.3675, FMR 0.6389,\nbest linear 0.6428, DKKM 0.7475, gap +0.1046, fair gap +0.1046, room +0.3606. This is the\neconomy the protocol change should move MOST, because its parent's grid floor won in 9 of 10\nseeds: its published DKKM is a censored number.\n(a) room and SR_max unchanged within seed noise (population quantities; rf_cols already full).\n(b) DKKM rises by +0.03 to +0.09. The two decades added below 1e-3 are the ones X3 measured at\nwindow 720 as worth 0.073 and 0.049; at window 360 vyx's own decades flattened as 0.154 /\n0.100 / 0.035, so 1e-4 should be worth about 0.035 and 1e-5 less again.\n(c) gap and fair gap coincide to within 0.001, as in the parent -- the linear methods here beat\nthe market by 0.28, so the fair benchmark does not bind.\n(d) gap +0.13 to +0.19. FALSIFIED as a real complexity gap if it falls below +0.09, i.e. if\nwidening the grid REMOVES the gap rather than raising it.\n(e) the winning penalty is interior in at least 8 of 10 seeds. If 1e-5 still wins, the grid\nneeds another decade and this economy's DKKM is STILL censored -- the one outcome that would\nsay the protocol has not yet done its job.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).\n\n--- PROTOCOL v3 (2026-09-21): the amended ridge grid ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter moved; `params`, `env` and the solve stages are\nthe parent's. What moved is the MEASUREMENT, and for nine of the thirteen economies also the\nPRICING of the solve (below).\n\nestimation.kappas (1e-05 ... 10.0), seven values -> (1e-07 ... 1000.0), ELEVEN. The v2\ncampaign's own gate -- the winning DKKM penalty INTERIOR in at least 8 of 10 seeds -- failed\nin five of thirteen economies, and it failed in BOTH directions: vyx 3/10 and vyg25 4/10 won\nat the floor 1e-5, while gx7 2/10, bx7 7/10 and g0235s 5/10 won at the ceiling 10. A censored\nDKKM Sharpe is a lower bound of unknown size, and KP14's censoring sits directly under the\nproject's only positive result. Two decades each side rather than one, because gx7's ceiling\nwon in 8 of 10 seeds and one decade would plausibly not have uncensored it. The fair\nbenchmark's grid is DERIVED (run_estimators.py: sorted(set(kappas) | {10*max, 100*max})), so\nit keeps its deliberate two-decade margin over DKKM's automatically, now ending at 1e5.\n\nThis is a protocol amendment, not an experiment: it is estimator-side, so it moves every row\nof docs/RESULTS.md. All thirteen specs are bumped together for this reason -- including the\nfour gs_bx economies, whose solves the pricing fix does not touch.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE. The parent stays in\nexperiments/specs/ as the record of what those numbers were produced under.\n\nTHE SOLVE ALSO CHANGES. variants/kp_vy priced the mean-reverting state y the way KP14 prices\nits GBM shocks, as a constant b*gamma_v*sigma_y added to the discount rate. For an OU state\nthe Girsanov adjustment SATURATES at b*gamma_v*sigma_y/kappa_y rather than growing linearly\nin the horizon, so that over-discounts: claim values were understated by 6.9% / 17.7% / 25.2%\nat b = 0.02 / 0.07 / 0.14, and no single gamma_v out to 20 priced all three types. Corrected\nin merge 91095fb by substituting W = e^{by} A and solving under the Q-generator; NY, y_max\nand the 63-table layout are unchanged.\n\nPRECOMMITMENT: the new G and integ ids were computed from these parameters and the current\nsource WITHOUT solving (the integ id in a throwaway git worktree, since it hashes the G\ntables' bytes), and this spec is committed before the tables are built.\n\nPREDICTION (2026-09-21, protocol v3). Reference: the v2 ten seeds -- SR_max 1.1778, EW market\n0.3675, FMR 0.6389, best linear 0.6432, DKKM 0.7683, fair gap +0.1251, room +0.3606, t 36.2.\nCensored at the FLOOR in 7 of 10 seeds.\n\nThis row and vyg25 carry the project's only complexity gap, and the pricing fix is expected to\ntake most of it. The only evidence is an off-protocol smoke test (N=200, T=360, window 240,\none seed, 105 evaluation months): SR_max 0.919 -> 0.335, mean E[R]-Rf 17.7%/yr -> 3.5%,\nroom +0.204 -> +0.036, DKKM - best linear +0.019 (t 3.6) -> +0.007 (t 1.7). Those settings are\nnot the protocol's and the numbers are not comparable to the reference above; only the\nDIRECTION is being predicted.\n(a) SR_max falls by more than half, to below 0.55.\n(b) room falls by more than half, to below +0.18.\n(c) the fair gap falls to between +0.01 and +0.06, and stays POSITIVE at ten seeds.\n    FALSIFIED as a surviving complexity gap below +0.01, or if it is not distinguishable from\n    zero across the ten seeds -- in which case this project has no economy with a gap and the\n    headline in docs/RESULTS.md is withdrawn rather than reduced.\n(d) the winning penalty becomes INTERIOR in at least 8 of 10 seeds. Two effects push the same\n    way: four new decades, and a smaller signal needing more shrinkage, not less.\n(e) mean oracle expected excess return falls from 18.2%/yr to between 3% and 8% -- which is\n    the K6 question answering itself, since a defensible calibration was the point of K6.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyx-v3",
+    "supersedes": "var-kp_vy-vyx-v3",
+    "changes": [
+      "PROTOCOL: the economy is its parent's, parameter for parameter",
+      "estimation.kappas [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] -> [1e-07, 1e-06, 1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0] (common/protocol.py KAPPAS): two decades added at each end after the interior-penalty gate failed in five of thirteen economies in both directions",
+      "expected_solves.G f7be27e39d2b530f -> 8b4702211a1f5efb: the pricing fix of merge 91095fb re-keys it (parameters_kp14.py and kp14_fd_vy.py, both digested)",
+      "expected_solves.integ 84e195172f091cd2 -> c88b05407e4b377d: the pricing fix of merge 91095fb re-keys it (parameters_kp14.py and kp14_fd_vy.py, both digested)"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 1.8,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyx"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            0.02,
+            0.07,
+            0.14
+          ],
+          "gamma_v": 1.8,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyx"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": "variants/kp_vy/run_vyx.sh",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "9f52dee06da91915738fedbb70949c6a4b68d5958c873e118b019de404cd43bf",
+  "expected_solves": {
+    "G": "8b4702211a1f5efb",
+    "integ": "c88b05407e4b377d"
+  },
+  "precommitted": true,
+  "reused_solves": null,
+  "solves_pending": "G and integ precommitted 2026-09-21 from the current source WITHOUT solving; to be built on the Mac after this spec is committed"
+}

@@ -53,7 +53,18 @@ SEEDS = 10       # seeds 0..SEEDS-1, every economy, no exceptions: a run with fe
 # enough on BOTH sides that the argmax is INTERIOR: a grid whose edge wins reports the
 # grid, not the economy. `tests/test_protocol_is_uniform.py` pins the value; the campaign
 # checks the argmax is interior per economy, which is a separate and necessary gate.
-KAPPAS = (1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0)
+#
+# 2026-09-21: widened from (1e-5 ... 10), seven values, to eleven. That gate FAILED in five
+# of thirteen economies in the 2026-09-15 campaign, and it failed in both directions, which
+# is why both ends move: vyx 3/10 and vyg25 4/10 won at the floor 1e-5, while gx7 2/10,
+# bx7 7/10 and g0235s 5/10 won at the ceiling 10. A censored DKKM Sharpe is a lower bound
+# of unknown size, and KP14's censoring sits under the project's only positive result. Two
+# decades each side rather than one, because gx7's ceiling won in 8 of 10 seeds and one
+# decade would plausibly not have uncensored it.
+#
+# This is a PROTOCOL AMENDMENT, not an experiment: it is estimator-side, so it moves every
+# row of docs/RESULTS.md, and every live spec's estimation.kappas moves with it.
+KAPPAS = (1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1000.0)
 
 RFF = (36, 360, 3600)   # random-feature counts
 NMAT = 2                # independent RFF draws per count
