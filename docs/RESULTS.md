@@ -12,6 +12,23 @@ The tables are checked cell by cell against `variants/results/economy_table.csv`
 section -- so this file cannot fall behind the numbers without the suite saying so. Where each job
 ran: `docs/RUNS.md`. What to run next, and why: `docs/NEXTUP.md`.
 
+**Nine of the thirteen economies below predate a pricing fix (merge `91095fb`, 2026-09-21), and were
+not produced by the code now in the repo.** Two solve-level defects were found on 2026-09-18 and
+corrected: `kp_vy` carried the price of the mean-reverting state `y` as a constant added to the
+discount rate -- KP14's eq. (11) shape, exact for the paper's GBM shocks and wrong for an OU state,
+whose Girsanov adjustment saturates -- and BGN's bond recursion added the log-kernel/short-rate
+covariance to the cumulative variance once instead of twice. Every `kp_vy` row (`vyx`, `vyg25`,
+`kpbase`) and every `bgn_gam` row is affected; the four `gs_bx` rows are not. The numbers stay as the
+record of what the 2026-09-15..17 campaign produced, and `y_risk_neutral = 0` reproduces the pre-fix
+tables bit for bit, but they are not what the current code computes.
+
+This reaches the headline finding directly: the complexity gap is claimed on `vyx` and `vyg25`, two
+of the affected rows. The only measurement so far of which way it moves is an off-protocol smoke test
+(N=200, T=360, window 240, one seed) that put `vyx`'s DKKM-minus-best-linear at +0.007 (t 1.7) after
+the fix against +0.019 (t 3.6) before, on identical settings. Those figures are not comparable to the
+protocol numbers below. The argument is `docs/OU-process-question.md`; the re-solve and re-run are
+the first items in `docs/NEXTUP.md`.
+
 ## The measurement protocol
 
 Results differ along two axes and only one of them is interesting. An economy differs from another
@@ -130,6 +147,9 @@ to 0.164.
 **In the other eleven economies the fair gap is between -0.008 and +0.004.** That includes all three
 models as published, whose fair gaps are +0.0019 (BGN), -0.0016 (KP14) and -0.0028 (GS21).
 
+*Pre-fix pricing in the five `bgn_gam` rows and both `kp_vy` rows; see the note at the top of this
+file. The three `gs_bx` rows are unaffected.*
+
 | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | bgn_gam/g0235r | 10 | 0.0554 | 0.0466 | 0.0121 | 0.0230 | 0.0352 | +0.0232 (0.0183) | 191.6% | +0.0123 (0.0268) | -0.0062 (0.0143) | +0.0030 (0.0018) | 24.8% | 43.9 |
@@ -173,6 +193,10 @@ where the mechanism is, not where a referee would accept it. Every other economy
 
 Each paper's economy, before any parameterization was built on it. Every "what the parameterization
 added" statement in this file is a difference against these rows.
+
+*Pre-fix pricing in `bgnbase` and `kpbase`; see the note at the top of this file. `kpbase` has
+`beta_f = 0`, where the KP14 correction is identically zero, so its table content is expected to
+rebuild unchanged -- but its `solve_id` moves, because the digest covers the whole producer source.*
 
 | economy | seeds | SR_max | EW market SR | FMR SR | best linear SR | DKKM SR | DKKM - FMR | (DKKM - FMR) / FMR | DKKM - best linear | DKKM - best fair linear | room | room / FMR | t, DKKM vs FMR |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
