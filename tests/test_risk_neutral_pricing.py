@@ -7,7 +7,8 @@ whether prices satisfy E[M R] = 1 (a statement about the solve):
   * kp_vy carried the price of the mean-reverting state y the way KP14 carries its GBM shocks,
     as a constant added to the discount rate. For an OU state the Girsanov adjustment saturates,
     so that over-discounts; claim values were understated by 7% / 18% / 25% across the three
-    exposure types (docs/OU-process-question.md).
+    exposure types. The corrected specification is variants/kp_vy/parameters_kp14.py, which
+    substitutes W = e^{by} A and solves under the Q-generator.
   * BGN's bond recursion added the log-kernel/short-rate covariance to the cumulative variance
     once instead of twice, halving the rate-risk premium: a limiting yield spread of 1.18% a
     year where BGN (1999, p.21) report 2.4% for the same beta_zr.

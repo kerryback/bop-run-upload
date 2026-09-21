@@ -26,8 +26,15 @@ This reaches the headline finding directly: the complexity gap is claimed on `vy
 of the affected rows. The only measurement so far of which way it moves is an off-protocol smoke test
 (N=200, T=360, window 240, one seed) that put `vyx`'s DKKM-minus-best-linear at +0.007 (t 1.7) after
 the fix against +0.019 (t 3.6) before, on identical settings. Those figures are not comparable to the
-protocol numbers below. The argument is `docs/OU-process-question.md`; the re-solve and re-run are
-the first items in `docs/NEXTUP.md`.
+protocol numbers below. The corrected specification is `variants/kp_vy/parameters_kp14.py`
+(`y_risk_neutral = 1`, the substitution `W = e^{by} A` solved under the Q-generator), and both
+identities are asserted in `tests/test_risk_neutral_pricing.py`.
+
+**All thirteen rows will be re-run, not only the nine.** The ridge grid is being widened from
+`1e-5 ... 10` to `1e-7 ... 1000` at the same time -- the one open universal proposal in "Open
+proposals" below, and the gate table in "A numerical choice that binds" shows five rows censored at
+one edge or the other. That is a protocol amendment, so it moves every row including the four
+`gs_bx` rows the pricing fix does not touch. The sequence is `docs/NEXTUP.md`.
 
 ## The measurement protocol
 

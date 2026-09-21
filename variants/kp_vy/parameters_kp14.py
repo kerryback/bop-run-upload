@@ -34,9 +34,11 @@ bx_seed = 777
 # pre-fix way (0): physical generator plus a constant beta*gamma_v*sigma_y added to the
 # discount rate. The constant-rate form is exact for KP14's GBM shocks and wrong for a
 # mean-reverting state, whose cumulative Girsanov adjustment SATURATES at
-# beta*gamma_v*sigma_y/kappa_y instead of growing linearly in the horizon -- see
-# ../../docs/OU-process-question.md. 0 reproduces the pre-fix tables bit for bit and exists
-# only so they can be rebuilt for comparison. At type_bv = [0] the two coincide.
+# beta*gamma_v*sigma_y/kappa_y instead of growing linearly in the horizon. The corrected
+# specification is _solve_coeff_ty below -- the substitution W = e^{by} A, solved under the
+# Q-generator -- and its identities are asserted in tests/test_risk_neutral_pricing.py.
+# 0 reproduces the pre-fix tables bit for bit and exists only so they can be rebuilt for
+# comparison. At type_bv = [0] the two coincide.
 y_risk_neutral = 1
 g_file, integ_file = 'G_func.csv', 'integ_results.npz'
 
@@ -79,11 +81,20 @@ def _override_took(name, requested, current):
 
 
 _discarded = []
+# 2026-09-21: _k and _v are DELETED after the loop. solstamp.param_namespace keeps any
+# module-scope name that is not a callable and does not start with '__', so the loop
+# variables were being hashed into the solve_id -- leaving it dependent on the KEY ORDER of
+# KP_PARAM_OVERRIDES, since _k ends on whichever key came last. The same four parameters in
+# three orders gave three different ids. runstamp._same_json compares specs by value and
+# cannot catch it, so a spec authored with the keys in another order would silently claim a
+# different solve. Initialised first so the del is safe when the override dict is empty.
+_k = _v = None
 for _k, _v in json.loads(os.environ.get('KP_PARAM_OVERRIDES', '{}')).items():
     if _k not in _pre_override_names:
         _discarded.append(f"{_k}: no such parameter (misspelled? it would affect nothing)")
     elif not _override_took(_k, _v, globals()[_k]):
         _discarded.append(f"{_k}: requested {_v!r}, module has {globals()[_k]!r}")
+del _k, _v
 if _discarded:
     raise ValueError(
         "KP_PARAM_OVERRIDES entries that had NO EFFECT. Either the name is derived "
