@@ -43,7 +43,72 @@ writes, and what became of it. Newest first.
 
 ---
 
-## Campaign 2026-09-15 -- the measurement protocol: RUNNING
+## Campaign 2026-09-21 -- the corrected pricing and the amended ridge grid
+
+All thirteen economies again, and for the second time no economy's parameters change. Two things do:
+
+1. **The pricing fix** (merge `91095fb`). `variants/kp_vy` priced the mean-reverting state `y` as a
+   constant addition to the discount rate -- exact for KP14's GBM shocks, wrong for an OU state whose
+   Girsanov adjustment saturates -- and BGN's `vasicek.py` added `sigma12 = -Cov(log z, r)` to the
+   cumulative variance once instead of twice. Nine economies re-solve: all three `kp_vy`, all six
+   `bgn_gam`. The four `gs_bx` solves are untouched and reused.
+2. **The ridge grid** `1e-5 … 10` -> `1e-7 … 1000`, eleven values. The 2026-09-15 campaign's own gate
+   failed in five of thirteen economies and in both directions (`vyx` 3/10 and `vyg25` 4/10 at the
+   floor, `gx7` 2/10, `bx7` 7/10, `g0235s` 5/10 at the ceiling). Estimator-side, so it moves every
+   row -- which is why all thirteen specs are bumped to v3-equivalent and all thirteen economies
+   re-run, not only the nine.
+
+### Before submission, in this order
+
+| step | what | why this order |
+|---|---|---|
+| 1 | delete the two superseded KP14 pricing docs and fix their references FIRST | DONE, `028ec82`. Two of the ten references are in `parameters_kp14.py` and `kp14_fd_vy.py`, which are digested into every kp_vy solve_id. A comment-only edit re-keys them, so doing this after the ids are pinned means pinning them twice |
+| 2 | `python variants/common/protocol.py`'s `KAPPAS`, the literal copy in `run_seeds_slurm.sh`, and the `--kappas` in `run_g0235.sh` / `run_vyx.sh` | DONE, `f2032b5`. Three tests compare them against each other; the fair benchmark's grid is DERIVED and needs no edit |
+| 3 | compute all fifteen new solve_ids WITHOUT solving | DONE. BGN's six from `_scratch/precommit_id.sh bgn`; KP14's six needed a throwaway `git worktree`, because an integ id hashes the G tables' bytes and cannot be known until G exists. Seven G solves and all six ids: 21 s |
+| 4 | commit the thirteen new specs pinning them, with `solves_pending` on the nine | DONE, `f2032b5`. Before any manifest exists, or `tests/test_precommitment_is_real.py` classifies them retrofitted and `precommitted: true` becomes a false claim. Verified after committing: the nine read `precommitted`, the four `gs_bx` read `retrofitted` but are exempt through `reused_solves` |
+| 5 | `bash variants/bgn_gam/rebuild_all_jstar.sh` on the Mac, and `build_vy_tables.py` for `vyx`, `vyg25`, `kpbase` | one machine for all six BGN tables, for the reason the 2026-09-15 campaign records below. KP14 is REBUILT under prefix `vyx` rather than adopting the committed `vyxq` tables: the G solve_id is prefix-blind, because `extra` is never hashed, so `vyxq` and a post-fix `vyx` share an id and `solstamp.record` would silently rewrite one manifest over the other |
+| 6 | check each printed solve_id against its spec's `expected_solves` | fifteen ids computed without solving; each must come back exactly |
+| 7 | clear `solves_pending` in the nine specs; `git rm` the transitional `G_vyxq*` / `integ_vyxq*`; commit the tables and manifests; push | `solves_pending` is excluded from `spec_hash`, so clearing it does not disturb the pinning. **Until this lands the nine seed jobs abort in seconds** on the runner's "no live solve recorded" precondition |
+| 8 | supersede the eighteen old manifests -- `supersede`, never `retire` | two live ids under one tag and stage make `runstamp.live_solves` return both, and then every seed of that economy reads STALE forever. Retiring instead breaks `tests/test_specs_match_shell.py`, which refuses a spec pinning a retired id -- and the old specs truthfully pin the old ids |
+| 9 | `bash variants/cluster_pull.sh` in the shared checkout, **once**, with both queues empty | never a plain `git pull`; one tree serves both clusters |
+| 10 | `bash variants/submit_campaign.sh sol --dry` and `... phx --dry`, then without `--dry` | the dry run is each scheduler's own answer on start time and fit |
+
+### Sizing
+
+**Memory is unchanged** and the 2026-09-15 peaks below still stand: the amendment is estimator-side,
+the panels are the same size, and BGN's corrected J\* falls 14-21%, which moves memory DOWNWARD --
+BGN's peak tracks the J\* value scale (`g0235f` 37 to 345 and 22 GiB, `g0235r` 390 to 2041 and 77 GiB).
+
+**Walltime is what moves.** The estimator stage runs eleven penalties against seven. At the measured
+77-81 s per evaluation month at eight penalties, that is about +57% on the DKKM stage, so every
+one-day row goes to two days, the two-day rows to three, and the two Sol highmem rows from four days
+to six. `scontrol update TimeLimit` is refused on Sol, so a walltime kill loses the seed outright and
+over-requesting on an empty queue costs nothing. **Budget roughly 900 node-hours across 130
+seed-jobs**, against the 2026-09-15 campaign's 650.
+
+### Two things the 2026-09-15 campaign did not record, and this one must
+
+1. **Achieved `MaxRSS` and `Elapsed`, per economy.** The section below was written before submission
+   and never updated, so no achieved number for that campaign exists anywhere in the repo. Read them
+   off `sacct` when the arrays finish and put them here.
+2. **The re-run must be ATOMIC.** `runstamp.stem` puts no spec version in a filename, so re-run files
+   overwrite the old ones in place. A partial re-run leaves `aggregate_seeds.py` emitting
+   `spec_id = "MIXED:v3|v4"` with pre- and post-fix seeds **averaged into one row** at `n_seeds = 10`,
+   and no test catches it. Do not aggregate or commit until all 130 tasks are in.
+
+### Reading the outcome
+
+`python variants/penalty_gate.py` first, before any number. The gate is the point of the amendment:
+the winning penalty interior in at least 8 of 10 seeds, for all thirteen. A row still censored is a
+finding and is reported as one -- and if `gx7` or `vyx` is still at an edge, the grid needs a third
+decade on that side before any new economy is run. Then `python variants/aggregate_seeds.py`, then
+rewrite `docs/RESULTS.md`, grading each spec's registered prediction against what came back. Note
+that the penalty-gate table in `docs/RESULTS.md` is pinned by NO test and must be regenerated and
+re-transcribed by hand.
+
+---
+
+## Campaign 2026-09-15 -- the measurement protocol: COMPLETE (ran to 2026-09-17)
 
 All thirteen economies at one protocol, so that the only thing separating two rows of
 `docs/RESULTS.md` is the economy (`docs/RESULTS.md`, "The measurement protocol"; `docs/NEXTUP.md`).

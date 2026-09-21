@@ -14,6 +14,11 @@ whether prices satisfy E[M R] = 1 (a statement about the solve):
     year where BGN (1999, p.21) report 2.4% for the same beta_zr.
 
 Each test below states the identity that failed and would fail again if either came back.
+
+2026-09-21: gs_bx is added as the third model. Nothing was wrong with it -- but it was the one
+model with no E[M R] = 1 check anywhere, which is the blind spot both defects lived in, and the
+quantity was already being computed and thrown away. An identity that is measured but never
+asserted is not a check.
 """
 import json
 import os
@@ -111,3 +116,41 @@ def test_bgn_term_spread_is_the_papers():
     limiting yield of 2.4%'. The halved-covariance recursion gave 1.18%."""
     out = _run(_BGN, os.path.join(ROOT, "variants", "bgn_gam"))
     assert 0.021 < out["spread"] < 0.026, f"limiting yield spread is {out['spread']:.4f} a year"
+
+
+_GS = r"""
+import json, numpy as np
+np.seterr(all="ignore")
+import gs_sim_bx as gs
+np.random.seed(11)
+N, T = 40, gs.burnin + 25
+arr = gs.create_arrays(N, T)
+worst = max(np.abs(gs.conditional_moments(arr, t)["euler"] - 1).max()
+            for t in range(gs.burnin + 5, T - 2))
+print(json.dumps({"worst": float(worst)}))
+"""
+
+
+def test_gs_bx_prices_satisfy_its_euler_equation():
+    """The third model, and the reason this file exists rather than three separate ones.
+
+    2026-09-21: kp_vy and bgn_gam each shipped a pricing defect that every existing validator
+    missed, because they compare realised with expected returns and never ask whether prices
+    satisfy E[M R] = 1. gs_bx was the one model with no such check anywhere. It turns out the
+    quantity was already being COMPUTED -- gs_sim_bx.conditional_moments returns an `euler`
+    field and variants/gs_bx/validate_gs_bx.py prints max|euler - 1| -- and simply never
+    asserted, so nothing would have failed if it drifted. This asserts it.
+
+    Both economies are checked because they differ in the one way that could break it: gsbase
+    prices the shock at a constant gamma_x = 0.5, while g28's gamma(x) is countercyclical, and
+    a state-dependent price is exactly what a renormalisation can get wrong.
+    gs_solve_reg.py:133 claims the per-regime kernels are "exactly renormalized
+    (E[M_s|x] = e^{-r} in every state)"; this is that claim, measured. Both come back at
+    machine precision, about 1e-15.
+
+    Cost is the 88-100 MB solution load, not the panel: about 20 s of the 25 s per economy.
+    """
+    for soldir in ("sol_gsbase", "sol_g28"):
+        out = _run(_GS, os.path.join(ROOT, "variants", "gs_bx"),
+                   {"GS_BX_SOLDIRS": soldir, "GS_BX_BETAS": "1.0", "GS_BX_SHARES": "1.0"})
+        assert out["worst"] < 1e-10, f"{soldir}: max |E[MR] - 1| = {out['worst']:.2e}"
