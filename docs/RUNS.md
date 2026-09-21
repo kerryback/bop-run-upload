@@ -86,6 +86,40 @@ to six. `scontrol update TimeLimit` is refused on Sol, so a walltime kill loses 
 over-requesting on an empty queue costs nothing. **Budget roughly 900 node-hours across 130
 seed-jobs**, against the 2026-09-15 campaign's 650.
 
+### Submitted 2026-09-21
+
+Both queues empty and the shared checkout at `de109da` and clean before submission; both dry runs
+accepted; every request fit its nodes. Phoenix took eleven of the thirteen because it is far less
+contended -- 23 pending in `public` against Sol's 1435, fairshare 0.0241 against 0.0047 -- leaving
+Sol only the two highmem economies.
+
+| cluster | SEED_SPEC | partition | request | job |
+|---|---|---|---|---|
+| Sol | `g0235s` | highmem | 8 cpu, 128G, 6 d | 63759851 |
+| Sol | `g0235r` | highmem | 8 cpu, 128G, 6 d | 63759852 |
+| Phoenix | `bgnbase` | public | 8 cpu, 40G, 2 d | 21604189 |
+| Phoenix | `kpbase` | public | 8 cpu, 48G, 2 d | 21604190 |
+| Phoenix | `gsbase` | public | 8 cpu, 32G, 2 d | 21604191 |
+| Phoenix | `vyx` | public | 8 cpu, 48G, 3 d | 21604192 |
+| Phoenix | `vyg25` | public | 8 cpu, 48G, 3 d | 21604193 |
+| Phoenix | `g28` | public | 8 cpu, 32G, 2 d | 21604194 |
+| Phoenix | `gx7` | public | 8 cpu, 32G, 2 d | 21604195 |
+| Phoenix | `bx7` | public | 8 cpu, 32G, 2 d | 21604196 |
+| Phoenix | `g0235` | public | 8 cpu, 64G, 3 d | 21604197 |
+| Phoenix | `g0235f` | public | 8 cpu, 40G, 2 d | 21604198 |
+| Phoenix | `g0235d` | public | 8 cpu, 40G, 2 d | 21604199 |
+
+**The checkpoint did not skip anything this time.** All 110 Phoenix tasks went straight to RUNNING
+and none had finished 45 s later -- the 2026-09-15 failure was seven arrays exiting in three seconds
+each with "already complete and current", and it happened because a protocol change left the solve
+ids untouched. Here every one of the nine re-solved economies has a new id, so every seed reads
+STALE and re-runs. Spot-checked in the logs: `vyx` seed 0 consumes `8b4702211a1f5efb` and
+`c88b05407e4b377d` with `KP_PARAM_OVERRIDES` and `KP_VY_PREFIX` both matching
+`var-kp_vy-vyx-v4`; `bgnbase` seed 6 consumes `cb6340649eace098`. Sol's two arrays were pending on
+highmem nodes at submission.
+
+**Do not pull the shared checkout until both queues are empty again.**
+
 ### Two things the 2026-09-15 campaign did not record, and this one must
 
 1. **Achieved `MaxRSS` and `Elapsed`, per economy.** The section below was written before submission
