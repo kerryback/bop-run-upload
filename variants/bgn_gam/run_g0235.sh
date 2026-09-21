@@ -17,5 +17,5 @@ echo "G0235 JSTAR DONE"
 echo "G0235 VALIDATION DONE"
 $PY run_oracle.py --model bgn_gam --N 500 --T 500 --tag g0235 --levels --save_panel > results/logs/log_g0235_oracle.txt 2>&1
 echo "G0235 ORACLE DONE"
-$PY run_estimators.py --model bgn_gam --tag g0235 --window 360 --levels --include_mkt --kappas 1e-05,0.0001,0.001,0.01,0.1,1.0,10.0 --fair_linear > results/logs/log_g0235_est.txt 2>&1
+$PY run_estimators.py --model bgn_gam --tag g0235 --window 360 --levels --include_mkt --kappas 1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0 --fair_linear > results/logs/log_g0235_est.txt 2>&1
 echo "G0235 ALL DONE"

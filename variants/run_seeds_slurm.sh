@@ -80,7 +80,12 @@
 # a live manifest must fail loudly rather than quietly replicate a different economy.
 #
 # Live solve_ids as of 2026-09-07 (they ALL moved that day when solstamp's
-# canonicaliser was made portable -- WORKING.md §26):
+# canonicaliser was made portable -- WORKING.md §26).
+#
+# SUPERSEDED 2026-09-21 for the nine kp_vy and bgn_gam economies: the pricing fix of merge
+# 91095fb re-keyed every one of them (WORKING.md §63). The list below is kept as the
+# 2026-09-07 record; the LIVE ids are each spec's expected_solves, and until the tables are
+# rebuilt those nine specs declare solves_pending. The five gs_bx ids are unchanged.
 #     kp_vy   vyx    G f7be27e39d2b530f   integ 84e195172f091cd2
 #     bgn_gam g0235  jstar be222462dd017b2c
 #     gs_bx   g28    sol_g28 8b584c38614695ac
@@ -211,7 +216,7 @@ set -euo pipefail
 
 case "$SEED_SPEC" in
   vyx)
-    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v3; SOLVE_TAG=vyx
+    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v4; SOLVE_TAG=vyx
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
@@ -229,7 +234,7 @@ case "$SEED_SPEC" in
     # 62876077 aborted in 44 s on 2026-09-08 with "no live solve recorded" while
     # be222462dd017b2c sat in the registry the whole time. Failing closed and cheap is
     # the right direction for this check, but it was asking the wrong question.
-    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v3; SOLVE_TAG=Jstar_g0235
+    MODEL=bgn_gam; TAG=g0235; SPEC=var-bgn_gam-g0235-v4; SOLVE_TAG=Jstar_g0235
     export BGN_PARAM_OVERRIDES='{"gmult":[0.2,3.5],"jstar_gam_file":"Jstar_g0235.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && python rebuild_jstar_gam.py'
     ;;
@@ -241,7 +246,7 @@ case "$SEED_SPEC" in
     # Stationary stress share held at EXACTLY 1/3, as g0235 has it, so this is the same
     # economy at a different speed -- which is what makes it a clean test of the
     # rolling-window mechanism behind gap > room (WORKING.md §40, §49).
-    MODEL=bgn_gam; TAG=g0235f; SPEC=var-bgn_gam-g0235f-v2; SOLVE_TAG=Jstar_g0235f
+    MODEL=bgn_gam; TAG=g0235f; SPEC=var-bgn_gam-g0235f-v3; SOLVE_TAG=Jstar_g0235f
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.08333333333333333, "p10": 0.16666666666666666, "jstar_gam_file": "Jstar_g0235f.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
@@ -252,7 +257,7 @@ case "$SEED_SPEC" in
     # 5x SLOWER: calm 240mo, stress 120mo, ~2 switches inside a 360-month window.
     # Stationary stress share also held at 1/3. Paired with g0235f as a 20x speed ladder:
     # if the gap is flat across it, the rolling-window explanation is refuted.
-    MODEL=bgn_gam; TAG=g0235s; SPEC=var-bgn_gam-g0235s-v2; SOLVE_TAG=Jstar_g0235s
+    MODEL=bgn_gam; TAG=g0235s; SPEC=var-bgn_gam-g0235s-v3; SOLVE_TAG=Jstar_g0235s
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.008333333333333333, "jstar_gam_file": "Jstar_g0235s.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
@@ -264,7 +269,7 @@ case "$SEED_SPEC" in
     # This one moves the stationary MIX as well as the speed, so it is a different
     # economy rather than a different speed. It is the crash-like shape, and the question
     # is whether a window holding ~36 stress months can still learn the interaction.
-    MODEL=bgn_gam; TAG=g0235r; SPEC=var-bgn_gam-g0235r-v2; SOLVE_TAG=Jstar_g0235r
+    MODEL=bgn_gam; TAG=g0235r; SPEC=var-bgn_gam-g0235r-v3; SOLVE_TAG=Jstar_g0235r
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.004166666666666667, "p10": 0.0375, "jstar_gam_file": "Jstar_g0235r.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min'
     ;;
@@ -276,12 +281,12 @@ case "$SEED_SPEC" in
     # simulator reads GS_BX_* for which types exist; the solutions carry their own gs_bx
     # and gs_sim_bx.py refuses a ladder that disagrees with them. GS_SIM_OVERRIDES stays
     # UNSET (WORKING.md §42). The kappa grid is the spec's eight values.
-    MODEL=gs_bx; TAG=bx7; SPEC=var-gs_bx-bx7-v4; SOLVE_TAG=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
+    MODEL=gs_bx; TAG=bx7; SPEC=var-gs_bx-bx7-v5; SOLVE_TAG=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
     export GS_BX_SOLDIRS=sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c
     export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
     export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
     unset GS_SIM_OVERRIDES
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-bx7-v5 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   gx7)
     # G1: gamma(x) crossed with the five exposure types (docs/RESULTS.md). Type f's
@@ -290,7 +295,7 @@ case "$SEED_SPEC" in
     # map, which is the rule that produced vyx, here with GS21's own state.
     # FIVE solve tags, and the first of them is sol_g28 REUSED: beta = 1 at this slope
     # is the g28 economy, so only four solves are new (run_gx7_slurm.sh).
-    MODEL=gs_bx; TAG=gx7; SPEC=var-gs_bx-gx7-v2
+    MODEL=gs_bx; TAG=gx7; SPEC=var-gs_bx-gx7-v3
     SOLVE_TAG=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
     export GS_BX_SOLDIRS=sol_g28,sol_gx25,sol_gx40,sol_gx55,sol_gx70
     export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
@@ -298,7 +303,7 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     # Built 2026-09-10 on Phoenix, every id matching its precommitment, and published. So the
     # hint is FETCH: remaking them is four ~5 h solves (run_gx7_slurm.sh, if ever needed).
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   g28)
     # GS21, one type, gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0): the reconstruction of
@@ -308,31 +313,31 @@ case "$SEED_SPEC" in
     # takes its structural parameters out of solution.npz; the three GS_BX_* variables are
     # its only statement of which types exist, and GS_SIM_OVERRIDES must stay UNSET --
     # run_oracle.py refuses an undeclared value there (WORKING.md §42).
-    MODEL=gs_bx; TAG=g28; SPEC=var-gs_bx-g28-v3; SOLVE_TAG=sol_g28
+    MODEL=gs_bx; TAG=g28; SPEC=var-gs_bx-g28-v4; SOLVE_TAG=sol_g28
     export GS_BX_SOLDIRS=sol_g28
     export GS_BX_BETAS=1.0
     export GS_BX_SHARES=1.0
     unset GS_SIM_OVERRIDES
     # The solve exists and is published content-addressed; 3-6 h to remake, seconds to
     # fetch. The hint says fetch, never re-solve.
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-g28-v4 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   vyg25)
     # K4: vyx with the price of the state's risk raised from 1.8 to 2.5 -- the dial finding 8
     # says matters, since the Sharpe the state's shock carries is the part the market misses.
     # Its own tables under prefix vyg25, built by variants/run_solve_slurm.sh from the spec.
-    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v2; SOLVE_TAG=vyg25
+    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v3; SOLVE_TAG=vyg25
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyg25
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v2 variants/run_solve_slurm.sh'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v3 variants/run_solve_slurm.sh'
     ;;
   g0235d)
     # B4: g0235's multipliers with the switch probabilities SWAPPED, so stress is two thirds of
     # months (48-month stress spells, 24-month calm). Seed 0 is a SCREEN: seeds 1-9 only if its
     # evaluation-window room >= +0.05 and non-market Sharpe >= 0.30 (the spec's notes).
-    MODEL=bgn_gam; TAG=g0235d; SPEC=var-bgn_gam-g0235d-v2; SOLVE_TAG=Jstar_g0235d
+    MODEL=bgn_gam; TAG=g0235d; SPEC=var-bgn_gam-g0235d-v3; SOLVE_TAG=Jstar_g0235d
     export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.041666666666666664, "p10": 0.020833333333333332, "jstar_gam_file": "Jstar_g0235d.csv"}'
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v2 variants/run_solve_slurm.sh'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-bgn_gam-g0235d-v3 variants/run_solve_slurm.sh'
     ;;
   bgnbase)
     # A1: the BGN baseline as published -- gmult [1, 1], so both regimes price the market shock
@@ -341,7 +346,7 @@ case "$SEED_SPEC" in
     # bases to the rate alone; it now sees the full set, gam_stand included, as every
     # economy does -- an inert regime is a noise column, and paying for it is the price of
     # baseline and parameterization being scored the same way.
-    MODEL=bgn_gam; TAG=bgnbase; SPEC=var-bgn_gam-bgnbase-v2; SOLVE_TAG=Jstar_bgnbase
+    MODEL=bgn_gam; TAG=bgnbase; SPEC=var-bgn_gam-bgnbase-v3; SOLVE_TAG=Jstar_bgnbase
     export BGN_PARAM_OVERRIDES='{"gmult":[1.0,1.0],"jstar_gam_file":"Jstar_bgnbase.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min; the table is committed'
     ;;
@@ -351,7 +356,7 @@ case "$SEED_SPEC" in
     # simulated and exported, and nothing loads on it -- its 21 integral tables agree across y
     # to 4e-12. The bases see it anyway, as they do in vyx: a column no firm loads on is noise,
     # and withholding it from the baseline alone would make the baseline a different protocol.
-    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v2; SOLVE_TAG=kpbase
+    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v3; SOLVE_TAG=kpbase
     export KP_PARAM_OVERRIDES='{"type_share":[1.0],"type_bv":[0.0],"gamma_v":0.0,"bv_comp":0.0}'
     export KP_VY_PREFIX=kpbase
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=kpbase KP_PARAM_OVERRIDES=<the blob above> python build_vy_tables.py kpbase   # the tables are committed'
@@ -361,7 +366,7 @@ case "$SEED_SPEC" in
     # at gmreg [1, 1] so gamma_s = gamma_x 0.5 in both regimes and the regime is inert. The
     # bases see the full set, gam_stand included, as every economy's do. The solve is hours
     # (run_gsbase_slurm.sh, chained afterok); the hint is FETCH, as for every GS economy.
-    MODEL=gs_bx; TAG=gsbase; SPEC=var-gs_bx-gsbase-v2; SOLVE_TAG=sol_gsbase
+    MODEL=gs_bx; TAG=gsbase; SPEC=var-gs_bx-gsbase-v3; SOLVE_TAG=sol_gsbase
     export GS_BX_SOLDIRS=sol_gsbase
     export GS_BX_BETAS=1.0
     export GS_BX_SHARES=1.0
@@ -369,7 +374,7 @@ case "$SEED_SPEC" in
     # Built on Sol 2026-09-15 (job 63257244: tolerance exit at sweep 3024, the precommitted id) and
     # published content-addressed, so the hint is FETCH. Remaking it is one 5.6 h solve
     # (run_gsbase_slurm.sh).
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v2 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   *)
     echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;
@@ -391,10 +396,16 @@ esac
 #
 # The grid is wide on BOTH sides so the argmax CAN be interior. That it IS interior is a
 # check on each economy's results, not a property of the grid (docs/RESULTS.md).
+#
+# 2026-09-21: widened to eleven values, two decades each side, after the interior gate
+# failed in five of thirteen economies in BOTH directions (vyx/vyg25 at the floor,
+# gx7/bx7/g0235s at the ceiling). This literal must equal protocol.kappas_csv() --
+# tests/test_protocol_is_uniform.py compares them -- so regenerate it rather than typing
+# it:  python -c 'import sys; sys.path.insert(0,"variants/common"); import protocol; print(protocol.kappas_csv())'
 N=${SEED_N:-500}
 T=${SEED_T:-500}
 WINDOW=${SEED_WINDOW:-360}
-KAPPAS=1e-05,0.0001,0.001,0.01,0.1,1.0,10.0
+KAPPAS=1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0
 
 # An off-protocol run is a smoke test and may not be reported, so it may not write where
 # the reported results live. SEED_N/SEED_T/SEED_WINDOW stay available for one -- they are

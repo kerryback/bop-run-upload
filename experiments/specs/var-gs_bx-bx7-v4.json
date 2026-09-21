@@ -1,219 +1,220 @@
 {
-    "schema_version": 1,
-    "spec_id": "var-gs_bx-bx7-v4",
-    "title": "GS21 2-regime with five exposure types, each a separate solve",
-    "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
-    "notes": "PRECOMMITMENT: the five expected_solves were computed from the current parameters and code WITHOUT solving. sol_reg is carried over unchanged from v2; the other four are new.\n\nCurrent runnable spec for the bx7 economy. The five types differ ONLY in gs_bx (1.0/2.5/4.0/5.5/7.0), which is what 'exposure heterogeneity' was meant to mean. v1's published figures (room +0.0182, gap +0.0013, t 10.4, rank 22 of 24) came from a different calibration AND a different structure, so bx7's demotion out of the first production run rests on nothing that survives -- it is an open question again, not a settled one.\n\nVERIFIED 2026-09-07 17:12: all five solve_ids reproduced on Sol exactly as precommitted, computed there under python 3.14.3 / numpy 2.4.3 against the laptop's 3.11.14 / 2.4.2. Content-addressing holds across machines. solves_pending cleared. | 2026-09-08: kappa_e removed from `method`. It is a numeric constant, not an alternative implementation, and it is already hashed into every stage's solve_id via gs_solve_reg.py's parameter namespace -- carrying a second copy in `method` created a value that could drift from the hashed one with nothing checking. WORKING.md 30's rule: constant -> parameter, alternative implementation -> method. spec_hash recomputed; no run or manifest referenced the old one.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 0.3121, EW market 0.2926, FMR 0.2741, best linear\n0.2887, DKKM 0.2964, gap +0.0078, fair gap -0.0009, room +0.0066. Same clauses as g28: room\nbelow +0.010, market above 90% of SR_max, DKKM within 0.005 either way, fair gap within 0.006\nof zero and FALSIFIED above +0.01, winning penalty interior in at least 8 of 10 seeds.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).",
-    "lineage": {
-        "parent_spec": "var-gs_bx-bx7-v3",
-        "supersedes": "var-gs_bx-bx7-v3",
-        "changes": [
-            "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
-            "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
-            "estimation.kappas [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
-            "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has",
-            "estimation.fair_linear added: declared, not changed -- the seed array already passes --fair_linear on every full run"
-        ]
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-bx7-v4",
+  "title": "GS21 2-regime with five exposure types, each a separate solve",
+  "question": "Do heterogeneous production exposures bend the risk-price map enough to create harvestable room?",
+  "notes": "PRECOMMITMENT: the five expected_solves were computed from the current parameters and code WITHOUT solving. sol_reg is carried over unchanged from v2; the other four are new.\n\nCurrent runnable spec for the bx7 economy. The five types differ ONLY in gs_bx (1.0/2.5/4.0/5.5/7.0), which is what 'exposure heterogeneity' was meant to mean. v1's published figures (room +0.0182, gap +0.0013, t 10.4, rank 22 of 24) came from a different calibration AND a different structure, so bx7's demotion out of the first production run rests on nothing that survives -- it is an open question again, not a settled one.\n\nVERIFIED 2026-09-07 17:12: all five solve_ids reproduced on Sol exactly as precommitted, computed there under python 3.14.3 / numpy 2.4.3 against the laptop's 3.11.14 / 2.4.2. Content-addressing holds across machines. solves_pending cleared. | 2026-09-08: kappa_e removed from `method`. It is a numeric constant, not an alternative implementation, and it is already hashed into every stage's solve_id via gs_solve_reg.py's parameter namespace -- carrying a second copy in `method` created a value that could drift from the hashed one with nothing checking. WORKING.md 30's rule: constant -> parameter, alternative implementation -> method. spec_hash recomputed; no run or manifest referenced the old one.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: SR_max 0.3121, EW market 0.2926, FMR 0.2741, best linear\n0.2887, DKKM 0.2964, gap +0.0078, fair gap -0.0009, room +0.0066. Same clauses as g28: room\nbelow +0.010, market above 90% of SR_max, DKKM within 0.005 either way, fair gap within 0.006\nof zero and FALSIFIED above +0.01, winning penalty interior in at least 8 of 10 seeds.\n\nFAIR BENCHMARK (added with the protocol, 2026-09-15): estimation.fair_linear is now declared. The seed array has passed --fair_linear to run_estimators.py on every full run since 2026-09-13, so this records what the run does rather than changing it -- but the parent spec did not say so, and the fair methods for this economy were produced by E1's separate re-scoring of its saved panel instead of by its own run. Scoring them in the run is what lets one table carry every column (docs/RESULTS.md).",
+  "lineage": {
+    "parent_spec": "var-gs_bx-bx7-v3",
+    "supersedes": "var-gs_bx-bx7-v3",
+    "changes": [
+      "PROTOCOL ONLY: the economy is its parent's, parameter for parameter",
+      "panel.burnin 200 -> 400 (common/protocol.py BURNIN, all three models)",
+      "estimation.kappas [0.001, 0.01, 0.03, 0.1, 0.3, 1, 3, 10] -> [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] (common/protocol.py KAPPAS)",
+      "estimation.rf_cols None -> removed: the model's full conditioning set, as every economy now has",
+      "estimation.fair_linear added: declared, not changed -- the seed array already passes --fair_linear on every full run"
+    ],
+    "superseded_by": "var-gs_bx-bx7-v5"
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "gs_ashift_ladder": "none (gs_ashift = 0 for every type)"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      0.6,
+      3.0
+    ]
+  },
+  "types": {
+    "share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0,
+        2.5,
+        4.0,
+        5.5,
+        7.0
+      ],
+      "gs_ashift": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
     },
-    "engine": "oracle",
-    "model": "gs_bx",
-    "method": {
-        "gs21_discretization": "tauchen_exact",
-        "zero_book_in_sdf_solve": true,
-        "gs21_calibration": "table_I_corrected_2026_09_06",
-        "gs_ashift_ladder": "none (gs_ashift = 0 for every type)"
-    },
-    "panel": {
-        "N": 500,
-        "T": 500,
-        "burnin": 400
-    },
-    "seeds": {
-        "base": 0,
-        "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
-        "type_seed": 910
-    },
-    "params": {
-        "gmreg": [
+    "soldirs": [
+      "sol_reg",
+      "sol_b25c",
+      "sol_b40c",
+      "sol_b55c",
+      "sol_b70c"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_reg",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
             0.6,
             3.0
-        ]
-    },
-    "types": {
-        "share": [
-            0.2,
-            0.2,
-            0.2,
-            0.2,
-            0.2
-        ],
-        "exposure": {
-            "gs_bx": [
-                1.0,
-                2.5,
-                4.0,
-                5.5,
-                7.0
-            ],
-            "gs_ashift": [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0
-            ]
+          ]
         },
-        "soldirs": [
-            "sol_reg",
-            "sol_b25c",
-            "sol_b40c",
-            "sol_b55c",
-            "sol_b70c"
-        ]
-    },
-    "solve": {
-        "stages": [
-            {
-                "name": "sol_reg",
-                "producer": "variants/gs_bx/gs_solve_reg.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        0.6,
-                        3.0
-                    ]
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 0
-            },
-            {
-                "name": "sol_b25c",
-                "producer": "variants/gs_bx/gs_solve_reg.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        0.6,
-                        3.0
-                    ],
-                    "gs_bx": 2.5,
-                    "gs_ashift": 0.0
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 1
-            },
-            {
-                "name": "sol_b40c",
-                "producer": "variants/gs_bx/gs_solve_reg.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        0.6,
-                        3.0
-                    ],
-                    "gs_bx": 4.0,
-                    "gs_ashift": 0.0
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 2
-            },
-            {
-                "name": "sol_b55c",
-                "producer": "variants/gs_bx/gs_solve_reg.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        0.6,
-                        3.0
-                    ],
-                    "gs_bx": 5.5,
-                    "gs_ashift": 0.0
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 3
-            },
-            {
-                "name": "sol_b70c",
-                "producer": "variants/gs_bx/gs_solve_reg.py",
-                "param_env": "GS_PARAM_OVERRIDES",
-                "params": {
-                    "gmreg": [
-                        0.6,
-                        3.0
-                    ],
-                    "gs_bx": 7.0,
-                    "gs_ashift": 0.0
-                },
-                "args": {
-                    "xnum": 161,
-                    "tol": 1e-06
-                },
-                "type_index": 4
-            }
-        ]
-    },
-    "env": {
-        "GS_BX_SOLDIRS": "sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c",
-        "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
-        "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2"
-    },
-    "estimation": {
-        "chars": [
-            "size",
-            "bm",
-            "agr",
-            "roe",
-            "mom",
-            "lev"
-        ],
-        "window": 360,
-        "levels": true,
-        "include_mkt": true,
-        "kappas": [
-            1e-05,
-            0.0001,
-            0.001,
-            0.01,
-            0.1,
-            1.0,
-            10.0
-        ],
-        "fair_linear": true
-    },
-    "provenance": {
-        "source_script": "variants/gs_bx/run_gs_bx7_slurm.sh",
-        "source_script_note": "the SLURM array that produced the five pinned solves on Sol (2026-09-07); its OVERRIDES array restates the five solve stages exactly",
-        "runner": "variants/run_seeds_slurm.sh",
-        "runner_note": "SEED_SPEC=bx7 builds the panel and scores the estimators under --spec; the laptop script run_gs_bx7.sh was deleted 2026-09-09 (it re-solved the v2 ladder and ran unspec'd, unseeded)",
-        "transcribed": "2026-09-04",
-        "verified_by": "tests/test_specs_match_shell.py"
-    },
-    "spec_hash": "10d0410737c1cc50af4b7c84497515262937557c5163f261c11dd92636c9972f",
-    "expected_solves": {
-        "sol_reg": "63fa7ebbc2db49ea",
-        "sol_b25c": "649bb384300faadf",
-        "sol_b40c": "a3bb50b66287307c",
-        "sol_b55c": "645262a8e72d944c",
-        "sol_b70c": "0818d7153d5708cc"
-    },
-    "precommitted": true,
-    "reused_solves": {
-        "sol_reg": "var-gs_bx-bx7-v3",
-        "sol_b25c": "var-gs_bx-bx7-v3",
-        "sol_b40c": "var-gs_bx-bx7-v3",
-        "sol_b55c": "var-gs_bx-bx7-v3",
-        "sol_b70c": "var-gs_bx-bx7-v3"
-    },
-    "solves_pending": null
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      },
+      {
+        "name": "sol_b25c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 2.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 1
+      },
+      {
+        "name": "sol_b40c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 4.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 2
+      },
+      {
+        "name": "sol_b55c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 5.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 3
+      },
+      {
+        "name": "sol_b70c",
+        "producer": "variants/gs_bx/gs_solve_reg.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            0.6,
+            3.0
+          ],
+          "gs_bx": 7.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 4
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_reg,sol_b25c,sol_b40c,sol_b55c,sol_b70c",
+    "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
+    "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": "variants/gs_bx/run_gs_bx7_slurm.sh",
+    "source_script_note": "the SLURM array that produced the five pinned solves on Sol (2026-09-07); its OVERRIDES array restates the five solve stages exactly",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=bx7 builds the panel and scores the estimators under --spec; the laptop script run_gs_bx7.sh was deleted 2026-09-09 (it re-solved the v2 ladder and ran unspec'd, unseeded)",
+    "transcribed": "2026-09-04",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "spec_hash": "10d0410737c1cc50af4b7c84497515262937557c5163f261c11dd92636c9972f",
+  "expected_solves": {
+    "sol_reg": "63fa7ebbc2db49ea",
+    "sol_b25c": "649bb384300faadf",
+    "sol_b40c": "a3bb50b66287307c",
+    "sol_b55c": "645262a8e72d944c",
+    "sol_b70c": "0818d7153d5708cc"
+  },
+  "precommitted": true,
+  "reused_solves": {
+    "sol_reg": "var-gs_bx-bx7-v3",
+    "sol_b25c": "var-gs_bx-bx7-v3",
+    "sol_b40c": "var-gs_bx-bx7-v3",
+    "sol_b55c": "var-gs_bx-bx7-v3",
+    "sol_b70c": "var-gs_bx-bx7-v3"
+  },
+  "solves_pending": null
 }
