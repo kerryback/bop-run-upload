@@ -43,7 +43,7 @@ writes, and what became of it. Newest first.
 
 ---
 
-## Campaign 2026-09-21 -- the corrected pricing and the amended ridge grid
+## Campaign 2026-09-21 -- the corrected pricing and the amended ridge grid: COMPLETE (ran to 2026-09-22)
 
 All thirteen economies again, and for the second time no economy's parameters change. Two things do:
 
@@ -118,27 +118,77 @@ STALE and re-runs. Spot-checked in the logs: `vyx` seed 0 consumes `8b4702211a1f
 `var-kp_vy-vyx-v4`; `bgnbase` seed 6 consumes `cb6340649eace098`. Sol's two arrays were pending on
 highmem nodes at submission.
 
-**Do not pull the shared checkout until both queues are empty again.**
+**Do not pull the shared checkout until both queues are empty again.** Done 2026-09-22, with both
+queues empty and after the laptop had committed and pushed the 910 result files.
 
-### Two things the 2026-09-15 campaign did not record, and this one must
+### Achieved 2026-09-22: all 130 COMPLETED, none failed, none OOM, none walltime-killed
 
-1. **Achieved `MaxRSS` and `Elapsed`, per economy.** The section below was written before submission
-   and never updated, so no achieved number for that campaign exists anywhere in the repo. Read them
-   off `sacct` when the arrays finish and put them here.
-2. **The re-run must be ATOMIC.** `runstamp.stem` puts no spec version in a filename, so re-run files
-   overwrite the old ones in place. A partial re-run leaves `aggregate_seeds.py` emitting
-   `spec_id = "MIXED:v3|v4"` with pre- and post-fix seeds **averaged into one row** at `n_seeds = 10`,
-   and no test catches it. Do not aggregate or commit until all 130 tasks are in.
+Read off `sacct` on both clusters. **Every request was generous and the walltime estimate was the
+one that was wrong** -- wrong HIGH, which cost nothing on an empty queue and is the trade this
+campaign deliberately made.
+
+| economy | cluster | request | achieved MaxRSS | achieved Elapsed, min to max | CPU-h |
+|---|---|---|---|---|---|
+| `g0235r` | Sol highmem | 8 cpu, 128G, 6 d | 76.3 GiB | 12.98 to 20.78 h | 510 |
+| `g0235s` | Sol highmem | 8 cpu, 128G, 6 d | 70.5 GiB | 5.63 to 19.80 h | 460 |
+| `g0235` | Phoenix | 8 cpu, 64G, 3 d | 36.0 GiB | 5.81 to 7.84 h | 391 |
+| `vyx` | Phoenix | 8 cpu, 48G, 3 d | 29.2 GiB | 5.81 to 5.94 h | 380 |
+| `vyg25` | Phoenix | 8 cpu, 48G, 3 d | 29.1 GiB | 5.77 to 6.19 h | 382 |
+| `kpbase` | Phoenix | 8 cpu, 48G, 2 d | 29.1 GiB | 5.93 to 6.14 h | 382 |
+| `bgnbase` | Phoenix | 8 cpu, 40G, 2 d | 19.9 GiB | 5.58 to 8.32 h | 427 |
+| `g0235f` | Phoenix | 8 cpu, 40G, 2 d | 19.9 GiB | 5.55 to 6.67 h | 383 |
+| `g0235d` | Phoenix | 8 cpu, 40G, 2 d | 19.9 GiB | 5.22 to 5.49 h | 372 |
+| `bx7` | Phoenix | 8 cpu, 32G, 2 d | 4.3 GiB | 5.72 to 11.92 h | 486 |
+| `gx7` | Phoenix | 8 cpu, 32G, 2 d | 4.1 GiB | 5.77 to 7.74 h | 444 |
+| `gsbase` | Phoenix | 8 cpu, 32G, 2 d | 3.4 GiB | 6.00 to 8.82 h | 442 |
+| `g28` | Phoenix | 8 cpu, 32G, 2 d | 3.3 GiB | 5.97 to 9.60 h | 467 |
+
+**984 node-hours across the 130 tasks, 5,524 core-hours**, against a budget of about 900 node-hours
+and the 2026-09-15 campaign's 650.
+
+Three things this measurement settles, and they are the reason it is recorded:
+
+1. **The memory prediction was right and it was right for the stated reason.** The sizing section
+   above predicted memory would move DOWNWARD because BGN's corrected J\* falls 14-21% and BGN's peak
+   tracks the J\* value scale. It did: `g0235` came in at 36.0 GiB against a ~44 GiB projection and
+   `g0235r` at 76.3 against ~87. Every economy finished under 60% of its request.
+2. **The +57% walltime estimate was wrong in the safe direction.** It assumed eleven penalties would
+   cost 57% more than eight on a stage measured at ~2.8 h per seed. The slowest seed in the whole
+   campaign ran 20.8 h against a six-day request, and every Phoenix row finished inside 12 h against
+   a two- or three-day request. The next campaign can size from the table above: 1 day for the
+   `gs_bx` and the light `bgn_gam` rows, 1 day for `kp_vy`, 2 days for `g0235s`/`g0235r`.
+3. **`g0235s` and `g0235r` are the only rows whose seeds disagree by more than 2x in wall time**
+   -- 5.6 to 19.8 h and 13.0 to 20.8 h -- which is the same per-seed dispersion finding 4 reports in
+   their Sharpes, showing up in the scheduler.
+
+### What the re-run had to get right, and did
+
+**The re-run was ATOMIC.** `runstamp.stem` puts no spec version in a filename, so re-run files
+overwrite the old ones in place; a partial re-run would have left `aggregate_seeds.py` emitting
+`spec_id = "MIXED:v3|v4"` with pre- and post-fix seeds **averaged into one row** at `n_seeds = 10`,
+and no test catches that. Nothing was aggregated until all 130 were in, and `economy_table.csv`
+carries thirteen single-version rows at ten seeds each.
+
+**Every task re-ran.** All 130 job logs record STALE on their solves and all 130 record `[spec]`,
+`[env]` and `[readback]` verification. The 2026-09-15 campaign silently skipped seventy tasks that
+exited in three seconds with "already complete and current", because a protocol change had left the
+solve ids untouched; here all fifteen ids moved, which is what makes the skip impossible.
 
 ### Reading the outcome
 
-`python variants/penalty_gate.py` first, before any number. The gate is the point of the amendment:
-the winning penalty interior in at least 8 of 10 seeds, for all thirteen. A row still censored is a
-finding and is reported as one -- and if `gx7` or `vyx` is still at an edge, the grid needs a third
-decade on that side before any new economy is run. Then `python variants/aggregate_seeds.py`, then
-rewrite `docs/RESULTS.md`, grading each spec's registered prediction against what came back. Note
-that the penalty-gate table in `docs/RESULTS.md` is pinned by NO test and must be regenerated and
-re-transcribed by hand.
+`python variants/penalty_gate.py` first, before any number, then `python variants/aggregate_seeds.py`.
+Done 2026-09-22; the result is in `docs/RESULTS.md`. Two things are worth carrying forward from it:
+
+- **The gate's criterion was wrong and has been amended.** It asked only whether the argmax was
+  interior. Three rows failed that test (`g0235s` 6/10, `bx7` 7/10, `gx7` 5/10) and none of them is
+  censored: the Sharpe-vs-penalty curve is FLAT at the ceiling, because as kappa grows the ridge
+  direction stops depending on it and Sharpe is scale-invariant. Across all 130 seeds the 16 at the
+  ceiling gained at most 2.7e-05 over their best interior penalty. Reading the gate literally would
+  have bought a third decade and another ~990 node-hours to move three numbers by less than 3e-05.
+  `penalty_gate.py` now tests materiality as well as position, and `tests/test_penalty_gate.py` pins
+  both halves.
+- **The penalty-gate table in `docs/RESULTS.md` is pinned by NO test** and was regenerated and
+  hand-transcribed. That remains true for the next campaign.
 
 ---
 

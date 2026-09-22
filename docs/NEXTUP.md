@@ -1,220 +1,142 @@
 # Next up
 
-Rewritten 2026-09-15, when the measurement protocol landed (`docs/RESULTS.md`, "The measurement
-protocol"). One recommendation, then the ranked alternatives, then what is not worth running.
+Rewritten 2026-09-22, after the protocol-v3 campaign (`docs/RESULTS.md`). One recommendation, then
+the ranked alternatives, then what is not worth running.
 
-## Now: the corrected pricing and the amended grid, in one campaign
+## Now: K7, a third point in the price of the state's risk
 
-Two changes land together, and because the second is a protocol amendment **all thirteen economies
-re-run**, not just the nine the pricing fix touched.
+The protocol-v3 campaign is **done** (`docs/RUNS.md`, "Campaign 2026-09-21"; results in
+`docs/RESULTS.md`). All 130 tasks COMPLETED, nothing failed, and the answers it came back with
+reshape what is worth running next.
 
-1. **The pricing fix**, merge `91095fb` (2026-09-21): `kp_vy`'s constant-rate treatment of the priced
-   OU state, and BGN's halved bond covariance. Specified in `variants/kp_vy/parameters_kp14.py` and
-   `variants/bgn_gam/vasicek.py`, asserted in `tests/test_risk_neutral_pricing.py`. It invalidates
-   the solves behind all three `kp_vy` and all six `bgn_gam` economies -- 25 MB of cached artifacts
-   across three producers, every change FUNCTIONAL (`python variants/solve_impact.py 91095fb^1 91095fb`).
-2. **The ridge grid widens from `1e-5 ... 10` to `1e-7 ... 1000`**, eleven values. This is the one
-   open *universal* proposal in `docs/RESULTS.md`, "Open proposals", and the gate table there shows
-   five of thirteen rows censored: `vyx` 3/10 and `vyg25` 4/10 at the floor, `gx7` 2/10, `bx7` 7/10
-   and `g0235s` 5/10 at the ceiling. It is estimator-side, so it moves every row -- including the
-   four `gs_bx` rows the pricing fix leaves alone. Doing it now costs those four economies on top of
-   the nine that must re-run regardless, instead of a second 130-job campaign later.
+### What it decided
 
-### A. Documentation -- DONE 2026-09-21
+1. **The `vyx` headline is withdrawn.** Its registered prediction was that the fair gap would land
+   between +0.01 and +0.06 and stay positive at ten seeds, FALSIFIED below +0.01. It came back
+   **+0.0009**, positive in 7 of 10 seeds, t 0.3. The pricing fix removed 99% of it.
+2. **`vyg25` survived, and it is now the project's only strong result.** +0.0148, positive in 10 of
+   10 seeds, t 5.2. `bgn_gam/g0235f` is second at +0.0079, also 10 of 10, t 4.8. Every other economy
+   is between -0.0038 and +0.0025.
+3. **The calibration objection died with the gap.** `vyx` and `vyg25` sat at 18.2% and 22.9% oracle
+   expected excess return a year under the mispriced solve; corrected, they sit at 4.2% and 3.9%,
+   inside the 3.3%-to-12.6% band every other economy occupies. **That answers K6**, which existed to
+   find a defensible calibration: this IS one, and the gap at it is +0.0148 at best.
+4. **The ridge-grid amendment was worth running and found nothing at the ceiling.** The floor side
+   worked -- `vyx` and `vyg25` went from 7 and 6 seeds at the floor to none -- but two extra decades
+   above the old ceiling moved DKKM by at most +0.0001 in the four `gs_bx` economies, where the
+   effect can be isolated. The gate's criterion was wrong and has been amended; see below.
 
-`docs/OU-process-question.md` and `docs/kp14_y_risk_adjustment.md` deleted: both prescribe a fix that
-is not the one that landed (a per-type drift `-kappa_y*y - gamma_v*sigma_y + sigma_y^2*b`, plus a
-grid widening to `y_max` ~7 and `NY` 21 -> 41 that never happened -- the `W = e^{by} A` substitution
-removes the cross term and the ill-posedness wall, so `NY` is still 21 and 63 integral tables stayed
-63). Their live content survives in `parameters_kp14.py`, `kp14_fd_vy.py` and
-`tests/test_risk_neutral_pricing.py`.
+### The recommendation: K7, one economy between gamma_v 1.8 and 2.5
 
-In the same pass, a defect found while auditing: `parameters_kp14.py` leaked its override loop
-variables `_k`/`_v` into the module namespace, which `solstamp.param_namespace` hashes -- so the
-kp_vy solve_id **depended on the key order of `KP_PARAM_OVERRIDES`**. The same four parameters in
-three orders gave three different ids, and `runstamp._same_json` compares by value and cannot catch
-it. Fixed by deleting the loop variables; all orders now agree.
+`vyx` and `vyg25` differ in exactly one parameter, the price of the OU state's risk, and that one
+parameter is the difference between no gap and the only gap in the file. Two points do not locate a
+threshold, and the pre-fix pair that used to be the third point was measured on wrong solves.
 
-### B. The protocol amendment
+**What.** `vyx`'s parameters with `gamma_v` 2.1 or 2.2, everything else identical: `type_share`
+[0.34, 0.33, 0.33], `type_bv` [0.02, 0.07, 0.14], `bv_comp` 1.2. A new spec
+`var-kp_vy-vyK7-v1.json`, ids precommitted without solving, ten seeds.
 
-Three constants, pinned against each other by `tests/test_protocol_is_uniform.py`, so they move in
-one commit: `variants/common/protocol.py` `KAPPAS`, the literal second copy at
-`variants/run_seeds_slurm.sh`, and nothing else -- the fair benchmark's grid is **derived**
-(`variants/run_estimators.py`, `fair_kappas = sorted(set(kappas) | {10 * max(kappas), 100 * max(kappas)})`),
-so it keeps its deliberate two-decade margin over DKKM's automatically.
+**Cost.** Small, and much smaller than this file used to say. One G solve plus one set of integrals
+is a few minutes on the Mac -- the 2026-09-21 rebuild did three economies, six solves and 154
+tables in about 20 minutes total -- then ten Phoenix seed-jobs of about 6 h each, ~60 node-hours.
 
-All thirteen live specs then get a new version carrying the new `estimation.kappas`.
+**What it would decide.** Whether the gap is a threshold in `gamma_v` or smooth in it. If +0.0009 at
+1.8 and +0.0148 at 2.5 are joined by something near +0.007 at 2.1, the gap is smooth and small and
+the honest statement is that this class of economy produces a complexity gap of a hundredth of
+Sharpe at best. If 2.1 comes back near zero, there is a threshold, and locating it is a result.
 
-### C. Specs and solves -- DONE 2026-09-21, all fifteen ids reproduced
+**Register the falsification clause before building anything**, as the last campaign did: the
+project's precommitment discipline is the reason the `vyx` withdrawal above is clean rather than
+arguable.
 
-Commits `f2032b5` (specs) and `3ecaa00` (solves). Every one of the fifteen precommitted ids came
-back exactly, `rebuild_all_jstar.sh` printing "Every id reproduced"; twelve supersessions, not the
-eighteen first counted, because six BGN ids were already superseded in the protocol-v2 bump; exactly
-one live id per stage per tag afterwards.
+### The other thing that changed, and it is not an economy
 
-**The KP14 cost estimate below was wrong by an order of magnitude.** All three economies -- six
-solves, 154 tables -- built in about 20 minutes, not the ~90 minutes PER ECONOMY this file
-projected. That figure came from `WORKING.md` and predates the direct sparse G solve. The BGN six
-took about 45 minutes. Budget accordingly next time.
+**`bgn_gam/g0235f` breaks the stated basis for closing BGN's regime path.** That path was closed on
+five ten-seed points "whose fair gap never left -0.008 to +0.004". Under corrected pricing the top
+of that band is `g0235f` at +0.0079, positive in ten seeds of ten at t 4.8 -- more than double the
+old top, in an economy with no exposure heterogeneity at all. No spec's +0.01 falsification
+threshold was crossed, so nothing fired automatically, and no new economy is needed to ask the
+question: the five points are already measured. **Someone should decide whether the closure stands**
+before K7 or anything else is built on the assumption that BGN has no gap.
 
-The record of how it was done, kept because the next re-solve will need it:
+### The gate, amended
 
-`rebuild_all_jstar.sh` exits 1 on any id mismatch and the repo refuses a spec claiming a
-precommitment it did not earn, so the order is fixed: **compute the new ids without solving -> write
-and commit the specs that pin them -> build -> commit the tables and manifests in a LATER commit.**
+`variants/penalty_gate.py` asked only whether the winning penalty was interior. Three rows failed
+that (`g0235s` 6/10, `bx7` 7/10, `gx7` 5/10) and none is censored: as `kappa` grows, the ridge
+direction `(X'X + kI)^-1 X'y -> X'y / k` stops depending on `kappa`, and Sharpe is scale-invariant,
+so the curve has a horizontal asymptote. All 16 ceiling-winning seeds in the campaign gained at most
+2.7e-05 over their best interior penalty. The gate now tests materiality as well as position and
+`tests/test_penalty_gate.py` pins both halves. Reading it literally would have bought a third decade
+and another ~990 node-hours to move three numbers in the fifth decimal.
 
-- **Compute.** BGN: `_scratch/precommit_id.sh bgn '<params>'`. KP14 has no case there; build the
-  `solstamp.Snapshot` directly under `python -B`, as `tests/test_solve_id_reproducible.py` does. The
-  **integ** id hashes the upstream G tables' raw bytes, so it cannot be computed until the G tables
-  exist -- use a throwaway `git worktree` whose registry is discarded, the precedent at
-  `docs/refactor/WORKING.md` section 61.
-- **BGN, six J\* tables.** `bash variants/bgn_gam/rebuild_all_jstar.sh`, on the Mac and only the Mac
-  (a Phoenix build differs at 5e-15 relative and the manifests record the artifact sha256). J\* falls
-  14-21% across the rate range.
-- **KP14: rebuild through `build_vy_tables.py`, do not adopt the `vyxq` tables.** `KP_VY_ADOPT=1`
-  verifies file presence only, no kp_vy artifact carries an embedded `solve_id`, and -- decisively --
-  the G solve_id is **prefix-blind**, because `extra` is not hashed. `vyxq` and a post-fix `vyx`
-  produce the same id, and `solstamp.record` replaces a manifest's artifact list wholesale, so
-  adopting one would silently destroy the other. Rebuilding under the single prefix `vyx` removes
-  the collision. Cost: G is seconds to under a minute per type, integrals about 90 min per economy,
-  so roughly 4.5 h for `vyx`, `vyg25` and `kpbase` together. Then delete the pre-fix `G_vyx*` /
-  `integ_vyx*` and the transitional `G_vyxq*` / `integ_vyxq*`.
-- **Supersede the old manifests -- `supersede`, never `retire`.** Eighteen of them (12 BGN + 6 KP14).
-  Two live ids under one tag and stage make `runstamp.live_solves` return both, and then every seed
-  of that economy reads STALE forever; retiring instead breaks the specs that truthfully pin the old
-  ids.
-- **Confirm every id actually moved** before submitting. `kpbase` is the one to watch: at
-  `beta_f = 0` the KP14 correction is identically zero, so its tables may rebuild byte-identical
-  while only the id moves. If an id did *not* move, that economy's ten tasks exit in three seconds
-  with "already complete and current" -- the 2026-09-15 incident that skipped seventy tasks.
+### Still open, unclaimed by any of the above
 
-### D. The campaign -- READY, NOT SUBMITTED
+- `zero_book_in_sdf_solve: true` is declared in all thirteen specs and **read by nothing** in
+  `variants/` or `tests/` -- the same shape as the `burnin` field that silently said 200 while the
+  code ran 400. `variants/kp_vy/sdf_compute_kp14.py` still solves `ER` over all N firms with a ridge
+  fallback that fires only on an exception, which is the construction that produces unreliable
+  `sdf_ret` / `max_sr` -- and `max_sr` is `docs/RESULTS.md`'s `SR_max` column.
+- `PRECISION_KEYS["kp"]` is still `("NY", "_i0")` and does not record the internal Q-grid span or
+  subdivision, which the corrected solve introduced. Close it before another KP14 economy is added,
+  which K7 would be.
 
-Both queues empty, the shared checkout pulled to `3ecaa00` and clean, and both dry runs accepted:
-Sol's two highmem rows fit `sh005`, Phoenix's eleven fit `pc219`, and every request fits its nodes.
-Phoenix is the less contended cluster by a wide margin -- 23 pending in `public` against Sol's 1435,
-and fairshare 0.0241 against 0.0047 -- which is why the split leaves only the two highmem economies
-on Sol.
+## History: the two protocol campaigns, and what each was for
 
-What follows is the plan; nothing is queued.
+Kept short, because both have run and both are recorded in full in `docs/RUNS.md`.
 
-Both queues empty, then `bash variants/cluster_pull.sh` inside the shared checkout -- one tree, one
-pull, never a plain `git pull`. All thirteen rows stay in `variants/submit_campaign.sh`.
+**Protocol v2, 2026-09-15 to 2026-09-17.** Made the thirteen rows comparable: one N, T, burn-in,
+window, seed count, ridge grid and conditioning set for every economy, replacing three different
+grids and two different burn-ins, with the baselines no longer scored on narrowed feature bases. It
+asked no new question. Its own gate then reported five of thirteen rows censored at a grid edge,
+which is what made protocol v3 necessary.
 
-**Memory is unchanged** (the amendment is estimator-side, the panels are the same size, and BGN's
-smaller J\* points memory downward). **Walltime moves**: `docs/RUNS.md` measures about 2.8 h of DKKM
-per seed at eight penalties, so eleven is roughly +57% on that stage. The one-day rows want two days
-and `g0235s`'s 24.5 h class wants real headroom. Budget **~900 node-hours over 130 jobs** against the
-2026-09-15 campaign's 650.
+**Protocol v3, 2026-09-21 to 2026-09-22.** Two changes at once: the pricing fix (merge `91095fb`,
+nine economies re-solved) and the ridge grid from `1e-5 ... 10` to `1e-7 ... 1000` (estimator-side,
+so all thirteen re-ran). Outcome above. Two things about it are worth carrying into the next
+campaign rather than rediscovering:
 
-**The re-run must be atomic.** `runstamp.stem` puts no spec version in a filename, so re-run files
-overwrite the old ones in place -- and a partial re-run leaves `aggregate_seeds.py` emitting
-`spec_id = "MIXED:v3|v4"` with pre- and post-fix seeds **averaged into one row** at `n_seeds = 10`,
-which no test catches. Do not aggregate or commit until all 130 tasks are in. Then
-`python variants/penalty_gate.py` **before reading any number**, then
-`python variants/aggregate_seeds.py`.
+- **The precommitment discipline paid.** All fifteen solve ids were computed WITHOUT solving and
+  committed before any manifest existed, so when `vyx`'s prediction was falsified the falsification
+  was clean rather than arguable. `tests/test_precommitment_is_real.py` verifies the ordering by git
+  dates; the integ ids needed a throwaway `git worktree`, because a chained id hashes its upstream
+  tables' raw bytes and cannot be known until those tables exist.
+- **Confounding two changes in one campaign cost information.** Because the pricing fix and the grid
+  amendment landed together, the grid's effect can only be isolated in the four `gs_bx` economies,
+  whose solves did not change -- and there it was +0.0001. On the KP14 floor side, where the
+  amendment mattered most, its effect is not separable from the pricing fix and never will be. It
+  was still the right call, since both changes invalidated the same 130 jobs; but a protocol change
+  landed alone is a measurement, and landed with an economic change it is not.
 
-`docs/RESULTS.md` is then rewritten: the staleness block and both italic markers come out, the
-protocol table's two ridge-grid rows and the KP14 solve-precision cell change, both economy tables
-refill, and the **penalty-gate table is regenerated by hand** -- it is pinned by no test, and
-uncensoring it is the whole point of the amendment.
+## Ranked alternatives, all of them after K7
 
-### What this decides
-
-The complexity gap is claimed on `vyx` and `vyg25`, both affected. An off-protocol smoke test
-(N=200, T=360, window 240, one seed) put `vyx`'s DKKM-minus-best-linear at +0.007 (t 1.7) after the
-fix against +0.019 (t 3.6) before, and mean expected excess return at 3.5%/yr against 17.7%. If the
-protocol run agrees in direction, K6 below -- whether a defensible calibration shows a gap at all --
-is being asked of a much smaller gap, and the ladder items (K1, K3, K2) need re-ranking against the
-corrected `vyx` rather than the published one. The amendment settles the second question at the same
-time: whether the KP14 gap was the economy's or the grid's floor.
-
-## Recommendation: the protocol campaign
-
-**Ran 2026-09-15 to 2026-09-17**; its results are `docs/RESULTS.md`. Kept here for the predictions
-it registered and what each outcome was to decide. Nine of its thirteen economies are now superseded
-by the section above.
-
-**What.** All thirteen economies, ten seeds each, at the protocol: N 500, T 500, burn-in 400, window
-360, 125 evaluation months, the ridge grid `1e-5 … 10`, the model's full conditioning set, the fair
-linear benchmark. Nothing else changes -- no economy's parameters move, no solve is redone except
-BGN's six J\* tables, which the burn-in edit re-keyed without changing a byte of their contents.
-
-**Why this and not another economy.** Every number in `docs/RESULTS.md` today was measured off
-protocol in at least one respect, and two of those respects are known to move the answer:
-
-1. **DKKM's Sharpe is censored, differently in different economies.** It is a maximum over the ridge
-   grid, and the grid's floor won in 9 of 10 `vyx` seeds and 10 of 10 `vyg25` seeds. The floor was
-   `1e-3` for BGN and KP14 and `1e-3` for GS21 with interior points BGN and KP14 never had. So the
-   published KP14 gaps are lower bounds by an unknown amount, and the BGN-to-GS21 comparison
-   included a grid difference. `vyx`'s own measured gains per decade at this window were 0.154,
-   0.100, then 0.035, so the two new decades should be worth something and the flattening says not
-   much -- but "not much" from an extrapolation is exactly what the retired X3 run showed can be
-   wrong, and it is cheaper to measure than to argue.
-2. **The baselines were scored on narrowed feature bases.** They saw only the state their paper has;
-   the parameterizations saw the full set. Every "what the route added" statement therefore carries a
-   protocol difference alongside the economic one. That is the comparison the whole file is built on.
-
-Burn-in is the third change and is not expected to move anything: 300 or 400 months both reach the
-stationary distribution, and the run that shows it is this one. It is worth doing because 300 / 400 /
-300 across three models is a difference with no reason behind it, and because the spec field that was
-supposed to record it said 200.
-
-**No new question is being asked.** This is the run that makes the existing answers comparable. The
-next economy comes after it, and which economy that should be depends on what it finds -- see the
-alternatives.
-
-**Predictions** are registered per economy, in each spec's `notes` (the thirteen protocol-v2 specs,
-`experiments/specs/var-*-v{2,3,4}.json`). The common clauses: population quantities (room, SR_max)
-unchanged within seed noise everywhere, since neither burn-in nor the grid touches them; DKKM up 0 to
-0.010 in the BGN and GS21 economies whose floor did not bind; DKKM up +0.03 to +0.09 in `vyx` and
-+0.04 to +0.11 in `vyg25`; every fair gap outside KP14 within its old bound; and **the winning
-penalty interior -- neither `1e-5` nor `10` -- in at least 8 of 10 seeds of every economy**.
-
-**What each outcome decides.**
-
-- **Interior argmax everywhere, KP14 gaps up, the rest unmoved.** The protocol has done its job: the
-  numbers are comparable and the KP14 gap is the economy's rather than the grid's. Go to K6.
-- **`1e-5` still wins in KP14.** The grid needs another decade and KP14's DKKM is still censored.
-  That is a protocol amendment, not an experiment, and it is the one outcome that must be fixed
-  before any new economy is run -- otherwise the same problem is being rebuilt.
-- **A fair gap outside KP14 rises above +0.01.** A path this file records as closed is not closed,
-  and it was the narrowed bases or the grid that closed it. BGN's regime path or GS21's exposure path
-  reopens, and `g0235d`'s ten seeds are the first place to look, since its screen is what closed BGN.
-- **Burn-in moves a level statistic.** Then 300 months was not past stationarity for that model, and
-  the slow BGN regimes (`g0235s`, `g0235r`, calm spells of 240 months) are where it would show.
-
-**Cost.** 130 seed-jobs on Sol, roughly 650 node-hours; the sizing, ordering and memory are in
-`docs/RUNS.md`, campaign 2026-09-15. The BGN J\* rebuild is six tables of about 8 minutes on the Mac.
-
-## Ranked alternatives, all of them after the campaign
-
-1. **K6, the low end of the price ladder: gamma_v 1.2 with vyx's exposures.** The referee-facing
-   number, and the strongest candidate once the campaign lands. `docs/RESULTS.md` has two current
-   points on this ladder, gamma_v 1.8 and 2.5, whose oracle mean expected returns are 18.2% and
-   22.9% a year -- laboratory calibrations, as their specs say. gamma_v 1.2 should give about 14%.
-   The question is whether a defensible economy shows a gap at all. Prediction to be registered
-   against the campaign's `vyx` number, not today's: the gap should fall roughly with the price of
-   the state's risk, so below `vyx`'s, and the falsification line is a fair gap below +0.03. Cost:
-   one G solve (seconds) and three types of integrals (about 90 min), then ten seeds.
-2. **K1, a continuum of exposures.** Fifteen types over [0, 0.14], shares right-skewed so most firms
+1. **~~K6, the low end of the price ladder~~ -- ANSWERED, not by an economy.** K6 existed because
+   `vyx` and `vyg25` sat at 18.2% and 22.9% oracle expected excess return a year and no referee
+   would accept them. The pricing fix put them at 4.2% and 3.9% without changing a parameter, so
+   the defensible calibration is the one already measured, and the gap at it is +0.0009 and +0.0148.
+   Lowering `gamma_v` to 1.2 would lower the gap further, which is why K7 goes UP from 1.8 rather
+   than down.
+2. **Decide the BGN regime closure.** No compute at all: five ten-seed points are already measured
+   and `g0235f`'s fair gap is now +0.0079 at t 4.8, above the band the closure was stated on. This
+   is a reading, not an experiment, and it should happen before K7 because it changes what K7 is
+   testing -- whether the gap is a KP14 phenomenon or a small general one.
+3. **K1, a continuum of exposures.** Fifteen types over [0, 0.14], shares right-skewed so most firms
    sit low: less of the state's Sharpe spanned by the market, and a smooth exposure map for random
-   features. The case is weaker than K6's because the three-type structure was never shown to be
-   what the linear methods exploit. About 7.5 h of integrals, then 30 h of seeds. Promoted over K6 if
-   the campaign shows the KP14 gap is NOT signal-limited -- i.e. if the wider grid closes most of it,
-   so what remains is the feature basis rather than shrinkage.
-3. **K3, persistence of the priced state.** kappa_y 0.15 and 0.70. Informative about mechanism, not
-   about the size of the gap: slower reversion bends values more but gives a window fewer independent
-   cycles, so the prediction is that the gap FALLS at 0.15 and holds or rises at 0.70. Two solves of
-   about 90 min, then two arrays.
-4. **G3, the GS21 default-channel probe.** Twenty minutes, oracle only. Equity near default is a
+   features. Much cheaper than this file used to say -- the integral stage is about 20 min for three
+   economies, so fifteen types is roughly 1.7 h, then 30 h of seeds. The case for it strengthened
+   with the correction: at `vyx` the linear side now reaches 95.3% of its ceiling, so what is left
+   is a feature-basis question rather than a shrinkage one.
+4. **K3, persistence of the priced state.** kappa_y 0.15 and 0.70, two solves of about 15 min each.
+   More interesting after the fix than before it: the corrected Girsanov adjustment SATURATES at
+   `b gamma_v sigma_y / kappa_y`, so `kappa_y` now scales the whole correction rather than only the
+   timing of the state. Note the standing constraint that `sigma_y` is locked to `sqrt(2 kappa_y)`
+   (`parameters_kp14.py`), so this moves persistence and innovation size together.
+5. **G3, the GS21 default-channel probe.** Twenty minutes, oracle only. Equity near default is a
    convex claim on the same shock, so its loading rises as the state worsens -- heterogeneous,
    state-dependent exposures the market does not replicate. Levers: sigma_z 0.16 to 0.25, or the tax
    advantage of debt 0.2 to 0.3. Its gate as written, "the market below 85% of SR_max", is too weak:
    the KP14 baseline meets it at 35% and has no gap. It needs an evaluation-window room clause of at
-   least +0.05 as well. Not predicted to pass either, which is why it is cheap to settle. Queue it on
-   Phoenix `htc` beside the campaign; it competes with nothing.
-5. **K2, a rare extreme type.** Shares (0.45, 0.45, 0.10), top loading 0.14 to 0.20. Low priority:
+   least +0.05 as well. Not predicted to pass either, which is why it is cheap to settle.
+6. **K2, a rare extreme type.** Shares (0.45, 0.45, 0.10), top loading 0.14 to 0.20. Low priority:
    the bounded-rank argument is real but the discount check that withdrew K5 applies at a top loading
    of 0.20.
 
@@ -226,9 +148,12 @@ penalty interior -- neither `1e-5` nor `10` -- in at least 8 of 10 seeds of ever
   exactly this reason. Two thirds of it was the grid, which every economy now gets; the remaining
   third was a longer sample, which would have made one row incomparable to the other twelve, as its
   predecessor `vyxT860` did.
-- **Another step up the price ladder (gamma_v 3 or more).** `vyg25`'s room and SR_max rose by less
-  than half what was predicted, the economy is already at 22.9% a year, and the direction of travel
-  is toward a defensible calibration (K6), not away from one.
-- **Anything in BGN's regime family beyond `g0235d`'s ten seeds, or GS21's exposure family.** Closed
-  and retired for the reasons in `docs/RESULTS.md`, "Open proposals" -- unless the campaign reopens
-  them, which is one of its registered outcomes.
+- **Another step up the price ladder (gamma_v 3 or more).** The corrected solve makes this worse,
+  not better: at gamma_v 2.5 the oracle's mean expected excess return is 3.9% a year, BELOW gamma_v
+  1.8's 4.2%, because a higher price of risk cuts claim values faster than it raises premia. So
+  climbing the ladder buys a less plausible economy AND a smaller expected return. K7 goes between
+  the two measured points, not above them.
+- **Any NEW economy in BGN's regime family, or anything in GS21's exposure family.** GS21's is
+  closed: `gx7`'s pre-registered negative fired and the corrected campaign confirms it at +0.0003,
+  unchanged to four decimals. BGN's regime family needs a DECISION about the five points already
+  measured (item 2 above), not a sixth point.
