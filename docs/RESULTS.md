@@ -141,11 +141,13 @@ columns, in this order.
 
 **Two cautions.**
 
-1. **Room is not a ceiling on the gap and not a screen for it.** The gap exceeds the room in every
-   BGN and GS economy, because there it is the market shortfall; in KP14 it is 35% (vyx) and 40%
-   (vyg25) of the room. Ranking candidates by room does not rank them by gap.
+1. **Room is not a ceiling on the gap and not a screen for it.** The gap exceeds the room in six of
+   the thirteen economies -- all four GS21 rows and two BGN ones -- because there it is the market
+   shortfall rather than anything nonlinear; in KP14 it is 12% (vyx) and 27% (vyg25) of the room.
+   Ranking candidates by room does not rank them by gap, and the corrected campaign makes that
+   sharper: `vyx` has the file's second-largest room and its fifth-largest fair gap, which is +0.0009.
 2. **Every percentage is a RATIO OF MEANS, not a mean of per-seed ratios.** In g0235, (DKKM - FMR) /
-   FMR is 49.4% as the ratio of the ten-seed means and rather larger as the mean of per-seed ratios,
+   FMR is 34.6% as the ratio of the ten-seed means and 43.7% as the mean of per-seed ratios,
    because Fama-MacBeth's Sharpe is small and dispersed. In g0235r and g0235s it is below zero in some
    seeds, where a per-seed ratio has no meaning at all. Both versions live in `economy_table.csv`
    (`gap_fm_over_fm`, `gap_fm_pct_fm_mean`).
@@ -360,7 +362,7 @@ propositions, which is what makes them binding rather than measured:
 ladder was built in two models. In KP14, under corrected pricing, it produces room of +0.0545 and
 +0.0820 and fair gaps of +0.0009 and +0.0148. In GS21 the same construction produces room of +0.0082
 (`gx7`) and +0.0073 (`bx7`) and fair gaps of +0.0003 and -0.0017 -- fourteen and six times their
-no-ladder parents' room, and no gap. So KP14's ladder still yields seven to eleven times GS21's room,
+no-ladder parents' room, and no gap. So KP14's ladder still yields six to eleven times GS21's room,
 but only one of its two economies converts that into a gap, and the converting one does it at
 +0.0148. Before the pricing fix the same comparison was +0.36 against +0.008 of room and +0.125
 against +0.000 of gap, which is why this paragraph used to be stated as a clean contrast. BGN cannot
@@ -416,7 +418,7 @@ spans 0.1624 to 0.4919 -- a factor of 3.0 -- around a ten-seed mean of 0.3085, a
 runs -0.0077 to +0.0166 around a mean of +0.0037, so its seed 0 alone reads -0.0022: the wrong sign
 for the economy. The screen it was run as missed both of its gates on that one seed, and the
 ten-seed room, +0.0311, is indeed below the +0.05 gate, so the decision it drove was right; the
-levels it was read off were not. It also has the largest DKKM-minus-market of any economy here,
+levels it was read off were not. It also has the largest DKKM-minus-market of any BGN economy,
 +0.2190, and plain `linrank` follows it to within 0.004, which is finding 8 at its sharpest.
 
 ## Findings
@@ -450,7 +452,8 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
    market has over the best linear method. In the four GS21 economies the market reaches 94% to 97% of
    SR_max and DKKM sits 0.0006 to 0.0051 above it. In four of the five BGN regime economies it
    reaches 62% to 84%; the exception is g0235d at 26%, which is why that row has the largest
-   DKKM-minus-market in the file. The
+   DKKM-minus-market of any BGN economy, +0.2190 -- third in the file, behind vyg25 at +0.2974 and
+   vyx at +0.2535, whose markets carry 11% and 14%. The
    `gx7` row makes the mechanism explicit: its fair benchmark is `mkt_est` -- the market alone -- in 8
    of 10 seeds, and DKKM's winning penalty sits at the grid's ceiling in 5 of 10 even after the
    ceiling moved from 10 to 1000. DKKM is asking to be the market, and being measured against it.
@@ -463,7 +466,8 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
    g0235d, where it ranges from 0.006 below to 0.076 above; 0.33 in g0235d, where it is 0.219 above;
    and 0.42 and 0.49 in vyx and vyg25, where it is 0.254 and 0.297 above. Leaving the market is
    necessary for a complexity gap and not sufficient, and after the pricing fix it is not nearly
-   sufficient: vyx has the file's largest DKKM-minus-market after g0235d and a fair gap of +0.0009.
+   sufficient: vyx is SECOND in the file on DKKM-minus-market, at +0.2535, and its fair gap is
+   +0.0009.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in
