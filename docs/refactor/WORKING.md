@@ -4021,3 +4021,70 @@ shape as the `burnin` field that said 200 while the code ran 300/400. `sdf_compu
 solves `ER` over all N firms with a ridge fallback that fires only on an exception, which is the
 construction `sdf_weights_note.md` flagged as making `sdf_ret`/`max_sr` unreliable when zero-capital
 firms are present -- and `max_sr` is RESULTS.md's `SR_max` column.
+
+## §64. The campaign lands: the headline is withdrawn, and the gate was asking the wrong question (2026-09-22)
+
+The protocol-v3 campaign of §63 ran 2026-09-21 to 2026-09-22. **All 130 tasks COMPLETED**, none
+failed, none was OOM-killed, none hit its walltime, and all 130 job logs record STALE on their
+solves -- so nothing was skipped, which was the specific 2026-09-15 failure this campaign was
+sequenced to avoid. Achieved memory and wall time per economy are in `docs/RUNS.md`; peak RSS was
+76.3 GiB against a 128 G request and the slowest seed ran 20.8 h against six days, so every request
+was generous and the +57% walltime estimate was wrong in the safe direction.
+
+**The result.** `kp_vy/vyx`'s registered prediction was FALSIFIED. It predicted a fair gap between
++0.01 and +0.06, positive at ten seeds; it came back **+0.0009**, positive in 7 of 10, t 0.3. Its
+spec's stated consequence was that the headline be withdrawn rather than reduced, and
+`docs/RESULTS.md` withdraws it. What survives is `kp_vy/vyg25` at +0.0148 (10 of 10 seeds, t 5.2)
+and, new and unanticipated, `bgn_gam/g0235f` at +0.0079 (10 of 10, t 4.8). Every other economy is
+between -0.0038 and +0.0025.
+
+**The control did its job.** `kp_vy/kpbase` has `beta_f = 0` and `gamma_v = 0`, where the KP14
+correction is identically zero, and it came back with SR_max, the equal-weighted market and room
+EXACTLY unchanged to four decimals while its `solve_id` moved. The four `gs_bx` economies, which no
+pricing change touches, likewise reproduced every population column. So the large KP14 movement is
+the correction and not a side effect of the rebuild.
+
+**The pre-registration discipline is what makes the withdrawal clean.** All fifteen ids were
+computed without solving and committed before any manifest existed (§63's order), so there is no way
+to read the outcome as having been fitted after the fact. This is the first time in the project that
+the discipline has actually been load-bearing, and it is the reason to keep paying for it.
+
+**The gate's criterion was wrong, and this is the part worth remembering.** `variants/penalty_gate.py`
+asked only whether the winning ridge penalty was INTERIOR, and it failed in three economies --
+`g0235s` 6/10, `bx7` 7/10, `gx7` 5/10. Read literally that says "add a third decade above 1000 and
+re-run 130 jobs", about 990 node-hours. It would have bought nothing. As `kappa -> inf` the ridge
+coefficient `(X'X + kI)^-1 X'y -> X'y / k`: the portfolio DIRECTION stops depending on `kappa`, and
+a Sharpe ratio is scale-invariant, so `sharpe(kappa)` has a HORIZONTAL ASYMPTOTE. Once the grid
+reaches it the argmax lands on whichever ceiling node wins in the sixth decimal. Measured across all
+130 seeds: 16 put the argmax at the ceiling and **not one gained more than 2.7e-05** over its best
+interior penalty. The gate now asks both questions -- position, then what the edge BUYS -- with
+`TOL = 5e-5`, half the last digit `RESULTS.md` prints, and reports the second case as a FLAT TAIL.
+`tests/test_penalty_gate.py` pins both halves synthetically: a climbing tail must still fail, and a
+tail just over the tolerance must still fail.
+
+The general form of the mistake: **an argmax at a boundary is a question about the derivative there,
+not about the position.** The same shape would catch a bandwidth grid or a feature-count grid.
+
+**What the amendment itself was worth, measured.** Only the four `gs_bx` economies can answer this,
+because their solves did not change and the grid is the sole difference between their v2 and v3
+rows. Two extra decades above the old ceiling moved DKKM by at most **+0.0001** -- including in
+`gx7`, which the v2 gate called censored at the ceiling in 8 of 10 seeds. On the floor side the
+amendment clearly worked (`vyx` 7 seeds at the floor and `vyg25` 6, now none) but its effect is
+inseparable from the pricing fix and always will be, because the two landed together. That was the
+right call -- both invalidated the same 130 jobs -- but it is the cost of bundling: a protocol
+change landed alone is a measurement, and landed beside an economic change it is not.
+
+**One closure is now standing on evidence that no longer holds.** BGN's regime path was closed on
+five ten-seed points "whose fair gap never left -0.008 to +0.004". Under corrected pricing the top
+of that band is `g0235f` at +0.0079, positive in ten seeds of ten at t 4.8 -- in an economy with no
+exposure heterogeneity at all. No spec's +0.01 falsification threshold was crossed, so nothing fired
+automatically. It needs a decision, not a new economy; `docs/NEXTUP.md` carries it as the item
+before K7.
+
+**Still open**, carried forward from §63 and unchanged by the campaign: `zero_book_in_sdf_solve` is
+declared in all thirteen specs and read by nothing; `sdf_compute_kp14.py` still solves `ER` over all
+N firms with an exception-triggered ridge fallback; and `PRECISION_KEYS["kp"]` is still
+`("NY", "_i0")`, which does not record the internal Q-grid span or subdivision the corrected solve
+introduced. That last one should close before another KP14 economy is added, which the recommended
+K7 would be. The §63 question about `gs_bx` and `E[M R] = 1` is CLOSED: the check was added in
+`35fc307` and both GS21 solutions satisfy it at about 1e-15.
