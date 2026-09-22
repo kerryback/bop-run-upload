@@ -53,7 +53,7 @@
   },
   "common_aggregate": false
  },
- "spec_id": "var-gs_bx-gx7-v2",
+ "spec_id": "var-gs_bx-gx7-v3",
  "eval_window": 360,
  "eval_months": 125,
  "months": 485,
@@ -537,5 +537,5 @@
    ]
   }
  },
- "prov": "gs_bx_oracle_gx7_s004@c60eee5+dirty"
+ "prov": "gs_bx_oracle_gx7_s004@de109da+dirty"
 }

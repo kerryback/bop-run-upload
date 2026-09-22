@@ -2,19 +2,23 @@
  "model": "bgn_gam",
  "tag": "g0235",
  "seed": 5,
- "prov": "bgn_gam_estimators_g0235_s005_w360_summary@c60eee5+dirty",
- "spec_id": "var-bgn_gam-g0235-v3",
+ "prov": "bgn_gam_estimators_g0235_s005_w360_summary@de109da+dirty",
+ "spec_id": "var-bgn_gam-g0235-v4",
  "oracle_eval_window": 360,
  "window": 360,
  "winsor": 0.0,
  "kappas": [
+  1e-07,
+  1e-06,
   1e-05,
   0.0001,
   0.001,
   0.01,
   0.1,
   1.0,
-  10.0
+  10.0,
+  100.0,
+  1000.0
  ],
  "linear_only": false,
  "fair_linear": true,
@@ -28,10 +32,10 @@
  "solves": [
   {
    "stage": "jstar",
-   "solve_id": "2d462ae0f4463f03",
+   "solve_id": "84dca1cf8d88d200",
    "files": 1,
    "files_expected": 1,
-   "bytes": 9333
+   "bytes": 18584
   }
  ],
  "panel": "bgn_gam_panel_g0235_s005.parquet"
