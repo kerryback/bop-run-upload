@@ -62,11 +62,11 @@ Ranked on the corrected evidence. Costs are measured, not projected, unless mark
    did three economies, six solves and 154 tables in about 20 minutes -- then ten Phoenix seeds of
    ~6 h, about 60 node-hours. Decides whether the gap is a threshold in the price of the state's risk
    or smooth in it. Register the falsification clause first.
-3. **`gs_bx/gsdis`, GS21 capital destruction.** Promoted above `bgnzr` on 2026-09-23: it is the only
-   disaster design whose premise the corrected campaign CONFIRMED rather than disturbed -- no `gs_bx`
-   population quantity moved, to four decimals -- it re-keys nothing, and it is the cheapest entry.
-   New module `gs_solve_dis.py`, a parity test beside `tests/test_gs_solver_parity.py`, a precommitted
-   solve id, one solve, ten seeds at 32G.
+3. **~~`gs_bx/gsdis`, GS21 capital destruction~~ -- DECLINED by the probe, 2026-09-23.** Measured
+   theta of 0.004 to 0.074 gives a predicted ceiling of 1.003x, below `vyg25`'s existing 1.044x, and
+   the default boundary it was built to populate is never reached at the calibrated `kappa_D`. Do not
+   build `gs_solve_dis.py` on this rationale. Reopening it needs either a `b` grid past 1.0 and a
+   `kappa_D` beyond the stated calibration, or a different GS21 mechanism that raises K.
 4. **`bgn_gam/bgnzr`, rotate BGN's price of risk onto the rate channel.** Not a disaster: a pure
    parameter override, one 3-minute J\* rebuild, ten seeds at 40G, zero code and zero re-key. Still
    the cheapest untried lever, and still the precondition for a disaster in `r` -- but demoted below
@@ -115,6 +115,49 @@ line, per `docs/RESULTS.md` "Adding an experiment". None of this changes the pro
 a parameter and a driving force, which is what a new economy is allowed to be.
 
 ## The disaster-shock programme
+
+> **PROBED 2026-09-23, before anything was built, and the answer changes the ranking.** Details and
+> scripts in `_scratch/kceiling/`; the governing constraint is now finding 11 in `docs/RESULTS.md`.
+>
+> All three models are exact K-factor economies and the population ceiling on DKKM-over-linear is
+> set by K, the number of priced aggregate shocks: 1.00x at K=1, 1.01x at K=2, 1.03x at K=3, and it
+> does not open up until K exceeds the seven portfolios the fair benchmark supplies. **A disaster is
+> one more factor.** The verified counts are K=1 for all four `gs_bx`, K=2 for all six `bgn_gam` and
+> for `kpbase`, K=3 for `vyx` and `vyg25`, so a disaster buys one step on a curve that needs K near
+> 10 to get interesting. Raising K was also tried once already and abandoned for a measured reason
+> (`voc_diagnosis/dead_end_K/`: built, correct, did not move the objective, because the variance is
+> in the discount channel).
+>
+> The second lever is the loading nonlinearity theta, worth 1.27x at 0.95 but at most 1.04x below
+> 0.6 — **except at K=1, where the ceiling is 1.000 at every theta.** So GS21 capital destruction has
+> to deliver BOTH K 1->2 and an extreme theta. Measured directly off `sol_gsbase/solution.npz`, with
+> no solve, applying `b -> b/(1-kappa_D)` and regressing the induced change in log equity on the
+> characteristics:
+>
+> | design | K after | theta | predicted ceiling | today's best |
+> |---|---|---|---|---|
+> | GS21 capital destruction | 2 | **0.004 to 0.074, MEASURED** | **1.003** | 1.044 (`vyg25`) |
+> | BGN disaster in `r` | 3 | 0.91, implied from `g0235f` | 1.073 | |
+> | KP14 jump in `y`, on `vyg25` | 4 | 0.81, implied from `vyg25` | 1.097 | |
+>
+> **Two findings against the GS21 design as specified.** Its loading map is almost perfectly spanned
+> linearly — theta at most 0.074 across both the refinancing and no-refinancing branches at
+> `kappa_D` 0.10 and 0.25 — so its predicted ceiling is 1.003x, BELOW what `vyg25` already delivers.
+> And the default boundary is never populated: minimum equity per unit capital after the shock is
+> 7.7 to 24.6 against a smoothing shock of sd 5, and `P + 5 <= 0` at 0.00% of occupancy weight
+> everywhere. The claim that capital destruction drives high-`b` low-`z` firms across the boundary
+> does not hold at the calibrated size.
+>
+> **So the ranking below reverses**: `vydis` on `vyg25` first, then `bgndis`, then `gsdis` last
+> rather than first. That is the opposite of what this programme recommended, and the reason is that
+> the programme ranked on mechanism strength while the ceiling ranks on K and theta.
+>
+> **What the probe does NOT settle.** `kappa_D = 0.40` cannot be evaluated without extending the `b`
+> grid past 1.0, which is this programme's own open item — though `kappa_D = 0.25` already meets the
+> stated 25% value-loss calibration, so the calibrated case is the one measured and rejected. And a
+> purpose-built solver would re-price and re-optimise leverage; firms facing a hazard de-lever, which
+> moves them FURTHER from the boundary, so the measured theta is optimistic rather than conservative.
+
 
 Folded in on 2026-09-23 from `docs/plan-before-home-20260917.md`, deleted in the same commit,
 and pared to what is measured.

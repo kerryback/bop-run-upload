@@ -426,6 +426,61 @@ Numbered as they were found, and ORDERED by what reads together: the numbers are
 and from `docs/refactor/WORKING.md`, so they are kept even where a superseded reading was deleted,
 which leaves gaps. Finding 10 sits beside finding 8 because it is the same mechanism one method over.
 
+11. **The ceiling is structural, it was predicted in 2026-08-07, and this campaign confirms it.** All
+    three models are frictionless exact K-factor economies: `mu_t = -cov_t(R, m)` holds by
+    construction, so with K priced aggregate shocks and N large, ANY set of at least K
+    well-diversified portfolios with independent factor exposures attains the maximum Sharpe. The
+    fair benchmark supplies seven. A 22-agent audit measured the resulting population ceiling on
+    DKKM-over-linear by sweeping K with the total factor Sharpe held fixed (`voc_diagnosis/`,
+    `findings.md` B3; the sweep is `voc_diagnosis/scripts/headroom3.py` and it reproduces exactly):
+
+    | K | 1 | 2 | 3 | 5 | 10 | 20 |
+    |---|---|---|---|---|---|---|
+    | ceiling on DKKM / linear | 1.00x | 1.01x | 1.03x | 1.10x | 1.60x | 2.26x |
+
+    **K read off each model's own log-SDF**, which is the part to check before trusting the rest. A
+    state-dependent PRICE is not another shock, and a regime whose switch carries no kernel value is
+    not another shock:
+
+    | model | K | why |
+    |---|---|---|
+    | GS21 | **1** | the kernel is affine in the x innovation alone and is renormalised per regime, so `gmreg` and `gamma(x)` scale the price and the switch carries no kernel value (`gs_solve_reg.py:137-138`) |
+    | BGN | **2** | `log M = -r - 0.5 sigma_z^2 - sigma_z nu`, and exactly two true factors are exported (`panel_functions.py:222-223`): cash flow and the rate. The `gmult` switch is unpriced |
+    | KP14 | **2**, or **3** on the `vy` route | constant prices on three Brownians, but the baseline runs `gamma_v = 0` with one type at `beta_f = 0`, so nothing loads on the third |
+
+    Measured against it, on the corrected campaign:
+
+    | K | economies | predicted ceiling | measured DKKM / best fair linear |
+    |---|---|---|---|
+    | 1 | the four GS21 rows | 1.00x | 0.990 to 1.001, mean **0.994** |
+    | 2 | five BGN regimes, both BGN and KP14 baselines | 1.01x | 0.949 to 1.049, mean **1.002** |
+    | 3 | `vyx`, `vyg25` | 1.03x | 1.003 to 1.044, mean **1.023** |
+
+    Monotone in K, and no economy exceeds its own K's ceiling even at the most extreme loading
+    nonlinearity the sweep allows. The level sits about a hundredth below the population prediction,
+    which is the right sign: the sweep is zero-estimation-error, and in live estimation DKKM reaches
+    81% to 92% of its own ceiling against the linear side's 92% to 95%.
+
+    **Three things follow, and they reframe this whole file.**
+
+    - **"No model as published has a complexity gap" is a PREDICTION, not just a measurement.** At
+      K = 1 and 2 the ceiling is 1.00x-1.01x, and the three baselines come in at 0.990, 0.995 and
+      1.000. The negative result is what the structure requires.
+    - **The pre-fix `vyx` and `vyg25` were the anomaly.** At K = 3 they reported 1.19x and 1.20x
+      against a 1.03x ceiling. That should have been unreachable, and it was: the pricing defect is
+      why. The corrected rows sit at 1.003 and 1.044.
+    - **At K = 1 the ceiling is 1.000 at EVERY degree of loading nonlinearity**, which is a cell the
+      published sweep did not cover and which this file's GS21 rows illustrate: an exposure ladder, a
+      countercyclical price of risk and a two-state regime move the ratio by 0.011 in total. With one
+      priced shock the shape of the exposure map cannot matter, because any portfolio with the right
+      exposure already attains the maximum.
+
+    **What DOES vary within a K is the loading nonlinearity**, and that is where the two surviving
+    gaps come from. Reading each economy's implied nonlinear share off the same surface: `g0235f`
+    about 0.91 and `vyg25` about 0.81, against roughly zero for the other eleven. So the surviving
+    gaps are a loading-shape story inside a fixed K, not a dimension story -- which is also why the
+    ceiling at the project's reach is a few hundredths of Sharpe and not a multiple.
+
 8. **Where the market spans most of the economy, the measured gap is the market portfolio against
    linear methods not given it on the same terms.** DKKM appends the equal-weighted market to its random features UNPENALISED
    while shrinking the features (`--include_mkt`, as in the paper): it gets the market for free and
