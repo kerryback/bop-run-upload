@@ -9,10 +9,19 @@ A gives 4.18 / 3.68 / 3.26 for b = 0.02 / 0.07 / 0.14 against a declared gamma_v
 merely the wrong level, but a DIFFERENT level per type. No single SDF prices all three.
 
 That is an argument about a coefficient in one claim. It is not yet a statement about a
-reported number. This script is the run that decides, and it is step 0 of
-docs/plan-before-home-20260917.md, which gates every further KP14 experiment: vyx (+0.1251)
-and vyg25 (+0.1636) are the only two economies in the project with a fair gap above +0.004,
-and they are exactly the two the error lands on.
+reported number. This script is the run that decided it, on 2026-09-17 (Sol 63535705): it was
+the gate on every further KP14 experiment, because vyx (+0.1251) and vyg25 (+0.1636) were then
+the only two economies in the project with a fair gap above +0.004, and they are exactly the
+two the error lands on.
+
+OUTCOME, and this script is now HISTORY rather than a gate. The common slope was rejected at
+chi2(2) = 30,681 for vyx and the exact test below missed by up to 13.3 %/yr, so the generator
+was corrected in merge 91095fb (2026-09-21) by substituting W = e^{by} A and solving under Q.
+The corrected campaign then withdrew the vyx headline outright: its fair gap is +0.0009, not
++0.1251, and vyg25's is +0.0148, not +0.1636. Do not quote the two figures above as current --
+they are what this script was run to test, and they did not survive it. Current numbers are
+docs/RESULTS.md; the live specification is parameters_kp14.py and the identities are asserted
+in tests/test_risk_neutral_pricing.py; the queue that replaced the plan is docs/NEXTUP.md.
 
 THE TEST, AND WHY IT IS EXACT RATHER THAN A DECOMPOSITION. KP14 as implemented states three
 constant prices of risk -- gamma_x, gamma_z, gamma_v -- on three Brownians. Any pricing
@@ -51,10 +60,10 @@ nothing to do with y. Two controls separate them, and neither costs a solve:
 It then solves, per type, for the gamma_v that would set that type's mean mispricing to
 zero. Under a correct model all three equal the declared gamma_v.
 
-Finally it runs the regression docs/plan-before-home-20260917.md names in step 0 -- each
-type's conditional expected excess return on its y-exposure, testing for a common slope --
-with beta^y differentiated through the module's own interpolants. The exact test above is
-the headline; the regression is reported beside it because it is what the plan registered.
+Finally it runs the registered regression -- each type's conditional expected excess return on
+its y-exposure, testing for a common slope -- with beta^y differentiated through the module's
+own interpolants. The exact test above is the headline; the regression is reported beside it
+because it is what was pre-registered.
 
 WHAT IT DOES NOT DO. It does not re-solve anything and it does not touch G_SOURCES or
 I_SOURCES (build_vy_tables.py:100-101, explicit two-file lists), so no solve id moves.

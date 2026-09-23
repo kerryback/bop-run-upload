@@ -8,7 +8,9 @@
 #SBATCH -A grp_sjpruitt
 #SBATCH -o /data/sjpruitt/ystep0/ystep0.%j.log
 #
-# Step 0 of docs/plan-before-home-20260917.md: the KP14 y risk-adjustment gate.
+# The KP14 y risk-adjustment gate, run 2026-09-17 (Sol 63535705). It fired: the generator was
+# corrected in merge 91095fb and the corrected campaign withdrew the vyx headline. Kept as the
+# reproducible harness for the check, not as pending work -- see docs/NEXTUP.md for the queue.
 # Runs check_y_common_slope.py on the PROTOCOL panel (N 500, T 500, burn-in 400) for the
 # two affected economies and the control, which is why it is here and not on a laptop:
 # create_arrays peaks near 31 GiB at T+1 = 901.
