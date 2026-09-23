@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-bgnzr-v1",
+  "title": "BGN with price of risk rotated onto the rate channel: the gate on the discount channel",
+  "question": "Does room rise when price of risk is rotated from BGN's cash-flow channel onto its rate channel, and by enough that a multi-factor term structure is worth building?",
+  "notes": "bgnzr: a GATE on BGN's discount channel, not a gap candidate.\n\nIDENTICAL to var-bgn_gam-bgnbase-v3 except beta_zr, -0.00014 -> -0.00020. Its own J* table.\n\nWHY. Finding 12 (docs/RESULTS.md) identifies the mechanism behind both surviving gaps in this\nproject: a fast, OBSERVABLE state that bends the cross-sectional premium map. Along BGN's regime\nspeed ladder, at a constant 33.3% stress share, the fair gap runs -0.0038 -> +0.0025 -> +0.0079 as\nthe switch probabilities scale x0.2, x1, x4, and DKKM's edge over linrank_m -- the linear method\nthat DOES carry interactions and the market -- runs 0.0001 -> 0.0026 -> 0.0079. That ladder cannot\nbe extended: one more x4 means calm spells of 3 months and stress spells of 1.5, and a PRICE OF RISK\ndoes not switch on that timescale.\n\nBGN already carries the same mechanism in a defensible form. Its rate r is AR(1) at kappa = 0.95, a\n13.5-month half-life, about 27 independent excursions per 360-month window -- between g0235's 20 and\ng0235f's 80, continuous rather than two-state, and unarguable for a short rate. BGN's affine premium\ncoefficients are rate-dependent, so r bends the map already, and the rate channel's loading is\nduration and the assets-in-place/growth-option mix (loadings_compute.py), which is\ncharacteristic-linked rather than the sampling noise the cash-flow channel disperses on. What it\nlacks is a PRICE: sigma_z * corr_zr is -0.070 against the cash-flow channel's +0.394.\n\nbeta_zr rotates price between the two channels at constant total: the prices are\nsigma_z*sqrt(1 - corr_zr^2) and sigma_z*corr_zr with corr_zr = beta_zr/(sigma_z*sigma_r), the legs\nof a right triangle with hypotenuse sigma_z = 0.4 (panel_functions.py:222-223).\n\nWHY -0.00020 AND NOT FURTHER (finding 13). beta_zr is also the covariance the 2026-09-18 pricing fix\ncorrected -- sigma12 = -Cov(log z, r) now enters the cumulative variance twice instead of once -- so\nthe limiting term spread is about twice as sensitive to it as the pre-fix code implied. Measured on\nthe corrected vasicek.py: -0.00014 gives 2.37%/yr (BGN 1999 p.21 report 2.4%), -0.00020 gives\n3.79%/yr, -0.00025 gives 4.97%/yr, -0.00040 gives 8.52%/yr. The plan that proposed this experiment\nnamed -0.0004 to -0.00056 as the live region; that needs an 8.5-12.3%/yr limiting spread against the\npaper's own 2.4% and is NOT AVAILABLE. -0.00020 raises the rate channel's share of the total price\nfrom 15.1% to 20.5%, a 43% increase in its price, at a spread of 3.79%/yr.\n\nWHAT THIS IS FOR. Not a gap. BGN is K = 2 whatever beta_zr does -- the rotation moves price between\ntwo existing factors and adds none -- so finding 11 caps DKKM/fair near 1.02 and the fair gap should\nstay inside the BGN band. What this run buys is d(room)/d(rate price) over a 43% price step, which\nis the number that decides whether a MULTI-FACTOR TERM STRUCTURE (docs/NEXTUP.md item 4) earns a new\nsolver. One factor couples \"more price of rate risk\" to \"steeper limiting curve\" because the single\nfactor governs both; a multi-factor structure decouples them, since the limiting yield is set by the\nmost persistent factor while a fast-mean-reverting slope factor can carry a price of risk almost\nfree of the limiting spread, and BGN's project durations are medium-term.\n\nPREDICTION (2026-09-23), against bgnbase's ten seeds: SR_max 0.3013, EW market 0.1618 (53.7% of\nSR_max), FMR 0.2133, best linear 0.2318, DKKM 0.2382, fair gap -0.0001, room +0.0274, DKKM/fair\n1.000.\n(a) the rate channel's price rises 43%, -0.070 -> -0.100, by construction; the cash-flow channel\n    loses 1.8%, +0.394 -> +0.387.\n(b) SR_max rises. The rate loading is large, common-signed and low-noise, so rotating price onto it\n    is better spanned than the cash-flow channel is.\n(c) the market's share of SR_max rises above 53.7%. That is condition 4 moving the WRONG way and is\n    this direction's standing risk, so it is predicted rather than hoped against.\n(d) the fair gap stays inside the BGN band, -0.008 to +0.008. FALSIFIED above +0.012, which would\n    mean the rotation argument in docs/RESULTS.md's negative half is wrong.\n(e) THE GATE. room rises above bgnbase's +0.0274. **FALSIFIED as a live discount channel if room\n    rises by less than +0.005**, i.e. comes back below +0.0324: a linear extrapolation of a 43%\n    price step to the 3-5x a slope factor could carry then cannot reach the vyg25 class of +0.08 of\n    room, and item 4 does not earn a new solver.\n\nPRECOMMITMENT: the J* id was computed from these parameters and the current source WITHOUT solving,\nvia _scratch/precommit_id.sh, which reads rebuild_jstar_gam.py's [solstamp] line and kills the\nprocess -- there is no --dry-run on a digest-bearing producer. The same call reproduced bgnbase's\nrecorded cb6340649eace098 as a control. This spec is committed BEFORE the table is built.",
+  "lineage": {
+    "parent_spec": "var-bgn_gam-bgnbase-v3",
+    "supersedes": null,
+    "changes": [
+      "beta_zr -0.00014 -> -0.00020: a rotation of the price of risk from the cash-flow channel onto the rate channel at constant total price (sigma_z 0.4). Rate share of the total price 15.1% -> 20.5%",
+      "its own J* table, Jstar_bgnzr.csv",
+      "NOT a protocol change: panel, estimation and seeds are the parent's"
+    ]
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true,
+    "bgn_price_of_risk": "constant sigma_z 0.4 in both regimes (gmult inert at its default), rotated onto the rate channel by beta_zr -0.00020"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "beta_zr": -0.0002,
+    "jstar_gam_file": "Jstar_bgnzr.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "beta_zr": -0.0002,
+          "jstar_gam_file": "Jstar_bgnzr.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-17 in the disaster plan, re-scoped 2026-09-23 as the gate on docs/NEXTUP.md item 4",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=bgnzr",
+    "solve_note": "to be built on the Mac: cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<params> python rebuild_jstar_gam.py",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "jstar": "550412fe21ce97a3"
+  },
+  "precommitted": true,
+  "solves_pending": [
+    "jstar"
+  ],
+  "spec_hash": "5081fd2bf30c3005dc136f22d4534930b0028870947560e16f53e84ecd60b36b",
+  "reused_solves": null
+}

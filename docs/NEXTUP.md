@@ -24,8 +24,8 @@ answer by more than a few hundredths**, and that is why the list below is ordere
 | # | experiment | models | K | predicted ceiling | cost | status |
 |---|---|---|---|---|---|---|
 | 1 | ~~Decide the BGN regime closure~~ | BGN | — | — | none | **DONE 2026-09-23 — it does not stand** |
-| 1a | **`g0235ff` — one more 4x on the switch speed** | **BGN** | 2 | 1.02 | **3 min + 10 seeds** | **ready, do this first** |
-| 2 | `bgnzr` — rotate price onto the rate channel | BGN | 2 | 1.02 | 3 min + 10 seeds | ready, gate for #4 |
+| ~~1a~~ | ~~`g0235ff` — one more 4x on the switch speed~~ | BGN | — | — | — | **DROPPED — a price of risk cannot switch on a 1.5-month spell** |
+| 2 | **`bgnzr` — GATE on the discount channel** | **BGN** | 2 | 1.02 | **3 min + 10 seeds** | **ready, do this next** |
 | 3 | K7 — a third `gamma_v` point | KP14 | 3 | 1.05 | 20 min + 10 seeds | ready |
 | 4 | **Multi-factor term structure** | **BGN** | **2 → 5** | **1.16** | new solver | scoping |
 | 5 | **Multiple priced states** | **KP14** | **3 → 6** | **1.18** | new solve chain | scoping |
@@ -49,31 +49,47 @@ It is a loading-shape result, not a dimension one, exactly as finding 11 require
 unpriced so every BGN economy is K=2, and what grows is DKKM's edge over `linrank_m` — the linear
 method that DOES carry interactions and the market — 0.0001 → 0.0026 → **0.0079** along the ladder.
 
-### 1a. `g0235ff` — one more 4x on the switch speed
-The follow-on the decision implies, and the cheapest live lever in the file: `g0235f`'s parameters
-with both switch probabilities 4x again, `p01` 0.333 and `p10` 0.667, spells of 3 and 1.5 months,
-about 320 switches per window. Both stay under 1, so it is feasible. **A pure parameter override** —
-one 3-minute J\* rebuild with a precommitted id, ten seeds at 40G, no code and no re-key, the same
-shape as `bgnzr`.
+### ~~1a. `g0235ff`~~ — DROPPED 2026-09-23 on economics
+Arithmetically available — monthly probabilities 0.333 and 0.667 are both under 1 — but it means
+calm spells of 3 months and stress spells of 1.5. **A price of risk does not switch on that
+timescale.** A volatility process can; a price of risk cannot. `g0235f` at 12 and 6 months is the
+fastest defensible point in the family, so the ladder's top is where it was measured, not where the
+parameter space ends.
 
-Predict before building: the mechanism says **saturation, not a turnover**, because the regime stays
-observable however fast it switches, so the interaction never disappears from the conditional
-premium — it only becomes better identified within a window, and by 80 switches it already is.
-Falsification: a fair gap below `g0235f`'s +0.0079 means the ladder has turned over and the family
-really is exhausted; above about +0.012 means it is still climbing and the speed dimension deserves
-a third point. Caveat to state in the spec: at 1.5-month spells a "regime" has stopped being a
-business-cycle object and is a high-frequency shock to the price of risk.
+### 2. `bgnzr` — the GATE on BGN's discount channel
+**What survives from item 1 is the mechanism, and BGN already carries it in a defensible form.** The
+ladder identifies a fast observable state that bends the cross-sectional premium map; BGN's rate `r`
+is one — AR(1) at `kappa = 0.95`, **13.5-month half-life, ~27 independent excursions per window**,
+between `g0235`'s 20 and `g0235f`'s 80, continuous rather than two-state, and unarguable for a short
+rate. Its loading is duration and the assets-in-place/growth-option mix, characteristic-linked
+rather than the cash-flow channel's sampling noise. What it lacks is a price: `sigma_z * corr_zr` is
+−0.070 against +0.394.
 
-### 2. `bgnzr` — rotate BGN's price of risk onto the rate channel
-Pure parameter override, `beta_zr` -0.00014 → about -0.0003, one 3-minute J\* rebuild, ten seeds at
-40G. Zero code, zero re-key. Its value is as the **gate on item 4**: if rotating the available price
-onto the rate channel produces no room, a term-structure programme there has nothing to amplify.
-State the gate on the rate channel's share of SR_max, not on the gap. Re-anchor the prediction first
-— every `bgnbase` reference number moved (SR_max 0.2830 → 0.3013, room +0.0267 → +0.0274, fair gap
-+0.0019 → -0.0001), and the old falsification line is void because `g0235f` already sits above it.
-**Tighten the live region to about -0.0003:** at -0.00048 the corrected code gives a 10.4%/yr
-limiting term spread against BGN's own 2.4%, which is the calibration objection that killed pre-fix
-`vyx`.
+**The rotation is far more limited than the old plan thought**, because `beta_zr` IS the covariance
+the pricing fix corrected, and the limiting term spread is now about twice as sensitive to it
+(finding 13):
+
+| `beta_zr` | rate share of total price | limiting term spread |
+|---|---|---|
+| −0.00014, published | 15.1% | 2.37%/yr (BGN p.21 report 2.4%) |
+| **−0.00020** | **20.5%** | **3.79%/yr** |
+| −0.00025 | 24.8% | 4.97%/yr |
+| −0.00040 | 36.6% | 8.52%/yr |
+
+The planned −0.0004 to −0.00056 region needs an 8.5–12.3%/yr limiting spread and is not available.
+
+**So run it once, at −0.00020, as a measurement rather than a candidate.** `bgnzr` is not a gap
+candidate — BGN is K=2 whatever `beta_zr` does, so finding 11 caps it near 1.02. What it buys is
+`d(room) / d(rate price)` over a 43% price increase, which is the number that decides whether item 4
+earns a new solver. Pure parameter override: one 3-minute J\* rebuild with a precommitted id, ten
+seeds at 40G, no code and no re-key.
+
+**Register before building**, against `bgnbase` (SR_max 0.3013, market 53.7% of it, room +0.0274,
+fair gap −0.0001): the fair gap stays inside the BGN band; the market's share of SR_max rises, which
+is condition 4 moving the wrong way and is this direction's standing risk; and **the gate —
+FALSIFIED as a live discount channel if room rises by less than +0.005 over +0.0274**, because a
+linear extrapolation of a 43% price step to the 3–5x a slope factor could carry then cannot reach
+the `vyg25` class of +0.08 of room.
 
 ### 3. K7 — a third point in `gamma_v`
 `vyx`'s parameters at `gamma_v` 2.1 or 2.2, nothing else changed. One G solve plus integrals is
@@ -91,6 +107,13 @@ Vasicek `r` with a 3-4 factor term structure (level, slope, curvature), priced, 
 as the loading map — which is characteristic-linked and persistent rather than sampling noise, the
 one genuinely promising feature the `bgnzr` analysis found. Affine structure survives, so `B(k, r)`
 generalises; what needs work is the option value, which is where a disaster in `r` also broke.
+
+**Finding 13 is the argument for doing it this way rather than by rotation.** With one factor, "more
+price of rate risk" and "steeper limiting curve" are the same knob — which is why item 2's rotation
+caps out at a 43% price increase. A multi-factor structure decouples them: the limiting yield is set
+by the most persistent factor, while a **fast-mean-reverting slope factor can carry a real price of
+risk almost free of the limiting spread**, and BGN's project durations are medium-term, exactly
+where a slope factor bites and the limiting spread does not.
 
 ### 5. Multiple priced states in KP14 — K 3 → 6
 The same experiment, and the cheaper implementation: the `vy` route already added one priced OU

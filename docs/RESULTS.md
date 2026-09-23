@@ -551,11 +551,53 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     **0.0001, 0.0026, 0.0079** along the same ladder, winning in 4, 9 and 10 seeds of ten. So this
     is not the finding-8 story of a benchmark denied the market.
 
-    One more 4x step is available -- monthly probabilities 0.333 and 0.667, spells of 3 and 1.5
-    months -- and the mechanism predicts saturation rather than a turnover, because the regime stays
-    observable however fast it switches. Either answer is informative. The caveat is economic rather
-    than numerical: at 1.5-month spells a "regime" has stopped being a business-cycle object and
-    become a high-frequency shock to the price of risk.
+    **The ladder cannot be extended, and the reason is economic rather than numerical.** One more 4x
+    step is arithmetically available -- monthly probabilities 0.333 and 0.667 are both under 1 -- but
+    it means calm spells of 3 months and stress spells of 1.5. A PRICE OF RISK does not switch on
+    that timescale; a volatility process can, a price of risk cannot. So `g0235f`, at 12 and 6
+    months, is the fastest defensible point in this family and the top of the ladder is where it is
+    measured, not where the parameter space ends.
+
+    **What survives is the mechanism, and BGN already carries it in a defensible form.** What the
+    ladder identifies is a fast, observable state that bends the cross-sectional premium map. BGN's
+    rate `r` is one: AR(1) at `kappa = 0.95`, a **13.5-month half-life**, about **27 independent
+    excursions per 360-month window** -- between `g0235`'s 20 and `g0235f`'s 80, continuous rather
+    than two-state, and unarguable for a short rate. BGN's affine premium coefficients are
+    rate-dependent, so it bends the map already, and its loading is duration and the
+    assets-in-place/growth-option mix, which is characteristic-linked rather than the sampling noise
+    the cash-flow channel disperses on. What it lacks is a price: `sigma_z * corr_zr` is **-0.070**
+    against the cash-flow channel's +0.394.
+
+13. **The corrected bond covariance closed BGN's cheapest untried lever.** `beta_zr` is a ROTATION
+    at constant total price of risk: the two exported factors are priced at
+    `sigma_z sqrt(1 - corr_zr^2)` and `sigma_z corr_zr` with `corr_zr = beta_zr / (sigma_z sigma_r)`,
+    the legs of a right triangle with hypotenuse `sigma_z = 0.4`, so moving `beta_zr` moves price
+    between two differently-shaped loading maps without changing the total. Before 2026-09-18 that
+    looked like the cheapest way to put real premium on the rate channel. It is not, because
+    `beta_zr` is also the covariance the pricing fix corrected -- `sigma12 = -Cov(log z, r)` now
+    enters the cumulative variance twice instead of once -- and the limiting term spread is roughly
+    twice as sensitive to it as the pre-fix code implied:
+
+    | `beta_zr` | rate share of the total price | limiting term spread |
+    |---|---|---|
+    | -0.00014, published | 15.1% | **2.37%/yr**, against the 2.4% BGN (1999, p.21) report |
+    | -0.00020 | 20.5% | 3.79%/yr |
+    | -0.00025 | 24.8% | 4.97%/yr |
+    | -0.00040 | 36.6% | 8.52%/yr |
+    | -0.00048 | 42.9% | 10.42%/yr |
+
+    A rotation large enough to triple the rate channel's price needs a limiting term spread three to
+    four times what the paper reports and six to eight times the empirical average slope. **The
+    defensible rotation stops near -0.00020**, a 43% increase in the rate price, not a tripling.
+
+    **This is an argument FOR a multi-factor term structure, not against the rate channel.** With
+    one factor, "more price of rate risk" and "steeper limiting curve" are the same knob, because
+    the single factor governs both. A multi-factor affine structure decouples them: the limiting
+    yield is set by the most persistent factor, while a fast-mean-reverting slope factor can carry a
+    real price of risk almost free of the limiting spread -- and BGN's project durations are
+    medium-term, exactly where a slope factor bites and the limiting spread does not. So the
+    constraint measured here does not say the discount channel is dead; it says the one-factor
+    Vasicek is the wrong instrument for loading it.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in
