@@ -350,6 +350,22 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"gmult":[1.0,1.0],"jstar_gam_file":"Jstar_bgnbase.csv"}'
     SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~4-8 min; the table is committed'
     ;;
+  bgnzr)
+    # The GATE on BGN's discount channel (docs/NEXTUP.md item 2), not a gap candidate. bgnbase
+    # with beta_zr -0.00014 -> -0.00020: a ROTATION of the price of risk from the cash-flow
+    # channel onto the rate channel at constant total (sigma_z 0.4), which moves the rate
+    # channel's share of the price from 15.1% to 20.5%. It stops there and not further because
+    # beta_zr is the covariance the 2026-09-18 pricing fix corrected, and the limiting term
+    # spread is now about twice as sensitive to it: 3.79%/yr here against BGN (1999, p.21)'s
+    # 2.4%, and 8.5%/yr at the -0.00040 an earlier plan proposed (docs/RESULTS.md finding 13).
+    # What this run buys is d(room)/d(rate price) over a 43% price step, which decides whether
+    # a multi-factor term structure earns a new solver. BGN stays K=2, so finding 11 caps the
+    # ratio near 1.02 -- a large fair gap here would falsify the rotation argument, not confirm
+    # the economy.
+    MODEL=bgn_gam; TAG=bgnzr; SPEC=var-bgn_gam-bgnzr-v1; SOLVE_TAG=Jstar_bgnzr
+    export BGN_PARAM_OVERRIDES='{"beta_zr":-0.0002,"jstar_gam_file":"Jstar_bgnzr.csv"}'
+    SOLVE_HINT='cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py   # ~3-4 min; the table is committed'
+    ;;
   kpbase)
     # A1: the KP14 baseline as published (r = 0.05, the repository's standing departure) -- one
     # firm type at beta 0, no priced state (gamma_v 0), no compensation. The y process is still

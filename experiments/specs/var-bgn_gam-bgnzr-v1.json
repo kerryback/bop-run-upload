@@ -80,16 +80,14 @@
     "source_script_note": "proposed 2026-09-17 in the disaster plan, re-scoped 2026-09-23 as the gate on docs/NEXTUP.md item 4",
     "runner": "variants/run_seeds_slurm.sh",
     "runner_note": "SEED_SPEC=bgnzr",
-    "solve_note": "to be built on the Mac: cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<params> python rebuild_jstar_gam.py",
+    "solve_note": "built on the Mac 2026-09-23: cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<params> python rebuild_jstar_gam.py; the printed solve_id 550412fe21ce97a3 reproduced the precommitment exactly; table and manifest committed",
     "verified_by": "tests/test_specs_match_shell.py"
   },
   "expected_solves": {
     "jstar": "550412fe21ce97a3"
   },
   "precommitted": true,
-  "solves_pending": [
-    "jstar"
-  ],
+  "solves_pending": null,
   "spec_hash": "5081fd2bf30c3005dc136f22d4534930b0028870947560e16f53e84ecd60b36b",
   "reused_solves": null
 }

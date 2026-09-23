@@ -66,6 +66,7 @@ EOF
 
 read -r -d '' PHX_JOBS <<'EOF' || true
 bgnbase|public|40G|2-00:00|15.8 GiB -> ~18
+bgnzr|public|40G|1-00:00|the bgnbase class: achieved 19.9 GiB and 8.3 h there, so 40G and one day
 kpbase|public|48G|2-00:00|29.2 GiB, burn-in already 400
 gsbase|public|32G|2-00:00|4.5 GiB -> ~5; GS21 panels are the lightest
 vyx|public|48G|3-00:00|30.6 GiB, burn-in already 400
