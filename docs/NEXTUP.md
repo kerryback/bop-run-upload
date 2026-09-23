@@ -23,7 +23,8 @@ answer by more than a few hundredths**, and that is why the list below is ordere
 
 | # | experiment | models | K | predicted ceiling | cost | status |
 |---|---|---|---|---|---|---|
-| 1 | Decide the BGN regime closure | BGN | — | — | none | ready |
+| 1 | ~~Decide the BGN regime closure~~ | BGN | — | — | none | **DONE 2026-09-23 — it does not stand** |
+| 1a | **`g0235ff` — one more 4x on the switch speed** | **BGN** | 2 | 1.02 | **3 min + 10 seeds** | **ready, do this first** |
 | 2 | `bgnzr` — rotate price onto the rate channel | BGN | 2 | 1.02 | 3 min + 10 seeds | ready, gate for #4 |
 | 3 | K7 — a third `gamma_v` point | KP14 | 3 | 1.05 | 20 min + 10 seeds | ready |
 | 4 | **Multi-factor term structure** | **BGN** | **2 → 5** | **1.16** | new solver | scoping |
@@ -36,12 +37,32 @@ answer by more than a few hundredths**, and that is why the list below is ordere
 answer by more than a hundredth.** Everything above them is cheap and settles what they should test;
 everything below them is bounded by its model's current K.
 
-### 1. Decide the BGN regime closure — no compute
-That path was closed on five ten-seed points "whose fair gap never left -0.008 to +0.004". Under
-corrected pricing the top is `g0235f` at **+0.0079, positive in ten of ten seeds, t 4.8** — more than
-double, in an economy with no exposure heterogeneity at all. No spec's +0.01 threshold was crossed,
-so nothing fired automatically. Five points are already measured; this is a reading, not a run, and
-it decides whether the surviving gap is KP14-specific or general.
+### 1. ~~Decide the BGN regime closure~~ — DONE 2026-09-23, and it does not stand
+Finding 12 in `docs/RESULTS.md` has the table. The closure confused two dimensions of the regime
+family. Holding the stationary stress share at 33.3% and scaling both switch probabilities together,
+the fair gap is **monotone in switching speed**: -0.0038 (4 switches per window) → +0.0025 (20) →
+**+0.0079** (80), with t of -0.83 → 2.69 → 4.78 and seeds positive 4 → 8 → **10 of 10**. Room moves
+the same way. Holding speed fixed and moving the stress share instead, 10% / 33% / 67% gives -0.0005,
++0.0025, +0.0025 — flat. **The share is exhausted; the speed is not.**
+
+It is a loading-shape result, not a dimension one, exactly as finding 11 requires: the switch is
+unpriced so every BGN economy is K=2, and what grows is DKKM's edge over `linrank_m` — the linear
+method that DOES carry interactions and the market — 0.0001 → 0.0026 → **0.0079** along the ladder.
+
+### 1a. `g0235ff` — one more 4x on the switch speed
+The follow-on the decision implies, and the cheapest live lever in the file: `g0235f`'s parameters
+with both switch probabilities 4x again, `p01` 0.333 and `p10` 0.667, spells of 3 and 1.5 months,
+about 320 switches per window. Both stay under 1, so it is feasible. **A pure parameter override** —
+one 3-minute J\* rebuild with a precommitted id, ten seeds at 40G, no code and no re-key, the same
+shape as `bgnzr`.
+
+Predict before building: the mechanism says **saturation, not a turnover**, because the regime stays
+observable however fast it switches, so the interaction never disappears from the conditional
+premium — it only becomes better identified within a window, and by 80 switches it already is.
+Falsification: a fair gap below `g0235f`'s +0.0079 means the ladder has turned over and the family
+really is exhausted; above about +0.012 means it is still climbing and the speed dimension deserves
+a third point. Caveat to state in the spec: at 1.5-month spells a "regime" has stopped being a
+business-cycle object and is a high-frequency shock to the price of risk.
 
 ### 2. `bgnzr` — rotate BGN's price of risk onto the rate channel
 Pure parameter override, `beta_zr` -0.00014 → about -0.0003, one 3-minute J\* rebuild, ten seeds at

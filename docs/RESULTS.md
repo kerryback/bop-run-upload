@@ -523,6 +523,40 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
    sufficient: vyx is SECOND in the file on DKKM-minus-market, at +0.2535, and its fair gap is
    +0.0009.
 
+12. **BGN's regime path was closed on the wrong dimension: the stationary stress share is
+    exhausted, the switching SPEED is not.** The path was closed on five ten-seed points "whose fair
+    gap never left -0.008 to +0.004". Under corrected pricing that band is broken, and the way it
+    breaks is systematic rather than a single outlier. Three of the five vary ONLY the switch
+    probabilities, both scaled together, so the stationary stress share is 33.3% in all three and
+    switching speed is the only thing that moves:
+
+    | switch probabilities | spells, calm / stress | switches per 360-month window | fair gap | t | seeds positive | room |
+    |---|---|---|---|---|---|---|
+    | x0.2 | 240 / 120 mo | 4 | -0.0038 | -0.83 | 4 of 10 | +0.0070 |
+    | x1 | 48 / 24 mo | 20 | +0.0025 | 2.69 | 8 of 10 | +0.0276 |
+    | x4 | 12 / 6 mo | 80 | **+0.0079** | **4.78** | **10 of 10** | +0.0447 |
+
+    Monotone in every column. The other dimension of the family is flat: holding the speed fixed and
+    moving the stationary stress share 10% / 33% / 67% gives fair gaps of -0.0005, +0.0025, +0.0025.
+    **So the share is exhausted and the speed is not**, and the closure confused the two.
+
+    **It is a loading-nonlinearity result, not a dimension one, which finding 11 requires.** The
+    regime switch is unpriced, so every BGN economy is K=2 whatever the regime does, and the ceiling
+    is the same for all six. What moves is the SHAPE: a firm's conditional premium is its cash-flow
+    beta times `gmult` at the current regime, a characteristic-times-observable-state product. At 4
+    switches per window the estimation window holds essentially one regime, the product is locally a
+    constant times beta, and a linear map suffices; at 80 switches both regimes are amply
+    represented in every window and the interaction has to be carried. The test is against the
+    linear method that DOES carry interactions and the market, `linrank_m`: DKKM beats it by
+    **0.0001, 0.0026, 0.0079** along the same ladder, winning in 4, 9 and 10 seeds of ten. So this
+    is not the finding-8 story of a benchmark denied the market.
+
+    One more 4x step is available -- monthly probabilities 0.333 and 0.667, spells of 3 and 1.5
+    months -- and the mechanism predicts saturation rather than a turnover, because the regime stays
+    observable however fast it switches. Either answer is informative. The caveat is economic rather
+    than numerical: at 1.5-month spells a "regime" has stopped being a business-cycle object and
+    become a high-frequency shock to the price of risk.
+
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in
     eight of the thirteen economies. Sorting all thirteen by the market's share of SR_max separates
@@ -621,7 +655,7 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
 | proposal | scope | what it would decide | status |
 |---|---|---|---|
 | ~~A wider ridge grid~~ | universal | whether the censored rows' DKKM levels were materially higher | **CLOSED 2026-09-22.** Done: `1e-5 ... 10` became `1e-7 ... 1000`, all thirteen re-ran, and the answer is no. In the four `gs_bx` economies, where the effect can be isolated because no solve changed, two extra decades above the old ceiling moved DKKM by at most +0.0001 -- including in `gx7`, which had been censored at the ceiling in 8 of 10 seeds. See the gate section |
-| **The BGN regime path, reopened for review** | BGN | whether `g0235f`'s fair gap of +0.0079, positive in ten seeds of ten at t 4.8, breaks the closure. The path was closed on five ten-seed points "whose fair gap never left -0.008 to +0.004"; under corrected pricing the top of that band is +0.0079, so the stated evidence no longer holds even though no spec's +0.01 falsification threshold was crossed | OPEN as a QUESTION, not an experiment: no new economy is needed to ask it, and `g0235f` (frequent switching, calm 12 months and stress 6) is now the file's second-largest fair gap |
+| **BGN's regime SPEED ladder** | BGN | how much further the fair gap climbs with switching frequency. **The closure was decided 2026-09-23 and does not stand** -- see finding 12. The share dimension is exhausted; the speed dimension is monotone and unexhausted, with roughly one more 4x step available before the monthly switch probability hits its bound | OPEN, and the cheapest live lever in the file: a pure parameter override, one 3-minute J\* rebuild, ten seeds at 40G |
 | ~~K6, gamma_v 1.2 with vyx's exposures~~ | KP14 | whether a defensible calibration shows a gap | **ANSWERED 2026-09-22 by the pricing fix, not by an economy.** K6 existed because `vyx` and `vyg25` sat at 18.2% and 22.9% expected excess return a year and a referee would not accept them. Corrected, they sit at 4.2% and 3.9%, inside the file's 3.3%-to-12.6% band, and the gap at that calibration is +0.0009 and +0.0148. Lowering `gamma_v` further would lower the gap, not defend it |
 | **K7, a third point in gamma_v** | KP14; lever universal, closed in BGN and GS21 | where between 1.8 and 2.5 the fair gap becomes distinguishable from zero. Finding 9 is two points and the interesting structure is between them, not above 2.5 | OPEN, the leading candidate now: one G solve plus one set of integrals, about 25 min, then ten seeds |
 | K1, a continuum of exposures | KP14; ~10x the cost in GS21, no knob in BGN | fifteen types over [0, 0.14], shares right-skewed. A smooth exposure map suits random features and lowers the market's average exposure | OPEN, and much cheaper than this row used to say: the integral stage is about 20 min for THREE economies, not 90 min for one, so fifteen types is roughly 1.7 h of integrals then 30 h of seeds |
