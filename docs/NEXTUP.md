@@ -93,17 +93,45 @@ slope or curvature factor loads differently across firms than the level factor d
 `bgnzr` result gives no support for.
 
 ### 4. Multiple priced states in KP14 — K 3 → 6, and now the only live K lever
-The same experiment, and the cheaper implementation: the `vy` route already added one priced OU
-state with a per-type exposure ladder, and the machinery is parameter-driven. Add `y2`, `y3` with
-their own `beta_f` ladders and prices. Each new state multiplies the integral-table count, so scope
-the cost before committing — but the 2026-09-21 rebuild did three economies, six solves and 154
-tables in about 20 minutes, so the old "90 min per economy" figure is 13x out.
 
-> **Both of these leave the published models.** BGN with four term-structure factors is not BGN
-> (1999), and KP14 with three priced states is not KP14 (2014). That is a decision about what the
-> paper is, not a technical one. The honest alternative is to report that within the three models as
-> published, faithfully implemented and correctly priced, the complexity gap is at most +0.015 of
-> monthly Sharpe — which finding 11 says is what the structure requires.
+**PROBED 2026-09-24, before anything was built. Scripts in `_scratch/kmulti/`.** Two results, one
+about the design and one about this file's own arithmetic.
+
+**The cost was overstated here by two orders of magnitude, and the old text is wrong.** It said each
+new state multiplies the integral-table count, implying a product grid — 21^3 nodes and 63 tables
+becoming ~27,800. That is not what a vector state costs. A type-f claim is on `e^{b_f . y}`, and with
+independent OU components sharing `kappa_y` the projection `s_f = b_f . y` is itself a scalar OU. So
+**type f IS the scalar problem the repository already solves**, at `b_eff = ||b_f||` and
+`gamma_eff = (b_f . gamma)/||b_f||`. The chain is already per-type and 1-D — `A` per type
+(`parameters_kp14.py`), `G` per type over `(eps, y)` selected by `KP_VY_TYPE`
+(`kp14_fd_vy.py:25`), 63 tables = 21 nodes x 3 types. **Cost scales with the number of TYPES, not
+the number of states**, and at `nstates = 1` the substitution is the identity, which is the
+backwards-compatibility check.
+
+**The mechanism is real and it is a product.** Premium tracks `b_f . gamma`; exposure magnitude
+tracks `||b_f||`. Under ONE state those are the same number times a constant, so any characteristic
+that reveals the magnitude spans the whole premium cross-section exactly — R^2 of 1.000, which is
+why `vyx` and `vyg25` have three types and three perfectly ordered premia. Splitting the price
+across three states at CONSTANT total (`||gamma||` = 2.5, `vyg25`'s value, so the calibration does
+not drift back toward what the pricing fix removed) makes the premium the PRODUCT of magnitude and
+alignment. A map on magnitude alone then reaches R^2 0.38 to 0.52, and even a map on magnitude and
+alignment jointly reaches only 0.86 to 0.89, because no linear map represents a product. The design
+also produces premium INVERSIONS — a type with `||b|| = 0.05` earning more than one with 0.14 —
+which a map monotone in the magnitude cannot produce at all.
+
+**But six types is precisely the wrong number, which is what the probe was for.** The fair linear
+side carries up to **11 columns** (`linlev_m`: the market, five rank-standardised characteristics
+and five level features; `linrank_m` carries 6). A type ladder of six leaves it enough freedom to
+interpolate six premia exactly, whatever their geometry. **The design only bites above eleven
+types**, so it wants 15-20 — which is K1's structure in three dimensions rather than one. Cost stays
+modest: each type is one 1-D `G` solve plus `NY` integral tables, and the 2026-09-21 rebuild did six
+solves and 154 tables in about 20 minutes. Note N=500 firms over 20 types is 25 firms per type, so
+the within-type characteristic noise is worth checking before committing.
+
+**And the probe invalidated part of finding 11.** Measured directly on `vyg25`'s panel and true
+moments, its loading nonlinearity is **0.19**, not the 0.81 inverted from the synthetic surface, and
+the answer is stable across every basis tried. The implied-theta column is withdrawn; the K column,
+which is a direct measurement, stands. See finding 11.
 
 ### 5-7. Bounded by their model's current K
 **GS21 second priced shock** (K 1 → 2, ceiling 1.02): the only way GS21 gets off a ceiling of exactly

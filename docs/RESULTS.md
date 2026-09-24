@@ -477,11 +477,27 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
       priced shock the shape of the exposure map cannot matter, because any portfolio with the right
       exposure already attains the maximum.
 
-    **What DOES vary within a K is the loading nonlinearity**, and that is where the two surviving
-    gaps come from. Reading each economy's implied nonlinear share off the same surface: `g0235f`
-    about 0.91 and `vyg25` about 0.81, against roughly zero for the other eleven. So the surviving
-    gaps are a loading-shape story inside a fixed K, not a dimension story -- which is also why the
-    ceiling at the project's reach is a few hundredths of Sharpe and not a multiple.
+    **WITHDRAWN 2026-09-24: the implied loading-nonlinearity column.** This finding originally read
+    each economy's nonlinear share off the same synthetic surface, by inverting its measured ratio,
+    and reported `g0235f` about 0.91 and `vyg25` about 0.81. Measured DIRECTLY on `vyg25`'s saved
+    panel and true conditional moments -- one minus the R-squared of `mu_t` on the five
+    characteristics, which is the definition `headroom3.build` uses -- it is **0.19**, and the
+    answer is stable across every basis tried: 0.205 on raw characteristics, 0.191 on
+    rank-standardised, 0.160 adding squares, 0.118 adding all pairwise interactions. At 0.19 the
+    surface's K=3 row predicts a ceiling of about 1.005, and `vyg25` measures 1.044.
+
+    So the surface's theta and a measured one minus R-squared are **not the same scale**, and any
+    number inverted from the surface is withdrawn. The likely reason is that the surface's
+    nonlinear block is an orthogonalised nine-term basis, while whatever is nonlinear in a real
+    economy is concentrated differently, so a random-feature basis reaches more of it per unit of
+    theta than the construction implies.
+
+    **What this does and does not cost.** The K column above is a DIRECT measurement against K read
+    off each model's log-SDF, and it stands: 0.994, 1.002, 1.023 at K = 1, 2, 3, monotone. So does
+    every conclusion resting on K alone -- including that GS21 sits at a ceiling of exactly 1.000 at
+    any theta, which is what closed the capital-destruction proposal. What goes is the claim that
+    the surviving gaps are a loading-shape story rather than a dimension story: that rested on the
+    inverted column and is not established either way.
 
 8. **Where the market spans most of the economy, the measured gap is the market portfolio against
    linear methods not given it on the same terms.** DKKM appends the equal-weighted market to its random features UNPENALISED
