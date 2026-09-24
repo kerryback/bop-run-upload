@@ -37,15 +37,22 @@ def create_arrays(N, T):
     rng_gam = np.random.default_rng(gam_seed)
     ar = np.exp(-kappa_y * dt)
     sd_c = np.sqrt((1 - ar ** 2))                     # stationary sd is 1
-    yreg = np.zeros(T + 1)
-    yreg[0] = rng_gam.standard_normal()
+    yreg = np.zeros((T + 1, nstates))
+    yreg[0] = rng_gam.standard_normal(nstates)
     for t_ in range(T):
-        yreg[t_ + 1] = ar * yreg[t_] + sd_c * rng_gam.standard_normal()
+        yreg[t_ + 1] = ar * yreg[t_] + sd_c * rng_gam.standard_normal(nstates)
+    # At nstates = 1 this draws exactly the stream the scalar version drew, so the three live
+    # kp_vy economies simulate the same path.
 
-    # quadrature nodes/weights for E over y' (per current y)
+    # Each type reads its OWN normalised projection ytil[f] = (b_f . y) / ||b_f||, which is a
+    # scalar OU with the same kappa_y and unit stationary sd -- so every table lookup below is
+    # the scalar lookup it always was, just at the type's own coordinate.
+    ytil = project_y(yreg)                                          # (ntypes, T+1)
+
+    # quadrature nodes/weights for E over y' (per current y, per type)
     ghx, ghw = np.polynomial.hermite.hermgauss(7)
     ghw = ghw / np.sqrt(np.pi)
-    yq = ar * yreg[:, None] + sd_c * np.sqrt(2) * ghx[None, :]      # (T+1, 7)
+    yq_t = ar * ytil[:, :, None] + sd_c * np.sqrt(2) * ghx[None, None, :]   # (ntypes, T+1, 7)
 
 
     # simulates length x N matrix of Cox-Ingersoll-Ross processes
@@ -119,16 +126,17 @@ def create_arrays(N, T):
     # firm exposure types on the priced OU factor y
     rng_bx = np.random.default_rng(bx_seed)
     ftype = rng_bx.choice(ntypes, size=N, p=type_share)
-    bvf = type_bv[ftype]                                  # (N,)
+    bvf = b_eff[ftype]                                    # (N,) effective exposure magnitude
     tt = type_theta[ftype]                                # (N,)
-    ebv = np.exp(bvf[None, :] * yreg[:, None])            # (T+1, N): e^{beta_f y_t}
+    _ytil_n = ytil[ftype].T                               # (T+1, N): each firm's own projection
+    ebv = np.exp(bvf[None, :] * _ytil_n)                  # (T+1, N): e^{b_f . y_t}
 
-    def _coefs_ty(yv_col):
-        # per-(date, firm) A-coefficients at the y-path (yv_col: (T+1,) or scalar)
-        C = [np.empty((np.size(yv_col), N)) for _ in range(4)]
+    def _coefs_ty(ycols):
+        # per-(date, firm) A-coefficients, each type read at ITS OWN column (ycols: (ntypes, M))
+        C = [np.empty((ycols.shape[1], N)) for _ in range(4)]
         for f in range(ntypes):
             cols = ftype == f
-            a = _coef_at(yv_col, f)
+            a = _coef_at(ycols[f], f)
             for k in range(4):
                 C[k][:, cols] = np.asarray(a[k]).reshape(-1, 1)
         return C
@@ -152,7 +160,7 @@ def create_arrays(N, T):
     chi = chi* alive # adjust chi for project death
 
     # Kj[t1, k] is capital allocated at time t1 by firm k if a project were to be initialized
-    _Cown = _coefs_ty(yreg)
+    _Cown = _coefs_ty(ytil)
     Kj = ((alpha*z*_Aval(_Cown, eps, 1.0))**(1/(1 - alpha))) 
 
     # K[t1, t2, n] is capital allocated at t2 to project arriving at time t1 for firm n (0 if project is dead)
@@ -191,8 +199,8 @@ def create_arrays(N, T):
     _Gd = np.empty_like(eps); _Gu = np.empty_like(eps)
     for f in range(ntypes):
         cols = ftype == f
-        _Gd[:, cols] = np.stack([at_y(G_down_ty[f], yreg[t_])(eps[t_, cols]) for t_ in range(eps.shape[0])])
-        _Gu[:, cols] = np.stack([at_y(G_up_ty[f], yreg[t_])(eps[t_, cols]) for t_ in range(eps.shape[0])])
+        _Gd[:, cols] = np.stack([at_y(G_down_ty[f], ytil[f, t_])(eps[t_, cols]) for t_ in range(eps.shape[0])])
+        _Gu[:, cols] = np.stack([at_y(G_up_ty[f], ytil[f, t_])(eps[t_, cols]) for t_ in range(eps.shape[0])])
     PVGO = z**(alpha/(1 - alpha))*x*ebv*lambda_f*(_Gd*(high == 0) + _Gu*(high == 1)) 
 
     # price[t] is price at date t
@@ -205,7 +213,7 @@ def create_arrays(N, T):
     # compute 4 terms from the KP14.tex overleaf
     Et_x = np.exp(mu_x*dt)*x
     # E_t[e^{beta_f y'} ...] handled inside the y'-quadrature with per-type exp factors
-    ebq = np.exp(bvf[None, None, :] * yq[:, :, None])      # (T+1, 7, N): e^{beta_f y'_q}
+    ebq = np.exp(bvf[None, None, :] * yq_t[ftype].transpose(1, 2, 0))   # (T+1, 7, N)
     alph = alpha/(1 - alpha)
     Et_z_alph = z**alph*np.exp(alph*mu_z*dt + 0.5*alph*(2*alpha-1)/(1 - alpha)*sigma_z**2*dt)
 
@@ -215,7 +223,7 @@ def create_arrays(N, T):
     # E over y' via Gauss-Hermite quadrature (7 nodes, common shock)
     EtA = 0.0
     for q in range(len(ghw)):
-        Cq = _coefs_ty(yq[:, q])
+        Cq = _coefs_ty(yq_t[:, :, q])
         EtA = EtA + ghw[q] * ebq[None, :, q, :] * _Aval([c[None, :, :] for c in Cq], _eE, _uE)
     term1 = Et_x*(1 - delta*dt)*np.sum(chi*EtA*K**alpha, axis = 0)
 
@@ -227,7 +235,7 @@ def create_arrays(N, T):
             for t_ in range(e.shape[0]):
                 row = 0.0
                 for q in range(len(ghw)):
-                    row = row + ghw[q] * np.exp(type_bv[f] * yq[t_, q]) * at_y([tb[name] for tb in Et_ty[f]], yq[t_, q])(e[t_, cols])
+                    row = row + ghw[q] * np.exp(b_eff[f] * yq_t[f, t_, q]) * at_y([tb[name] for tb in Et_ty[f]], yq_t[f, t_, q])(e[t_, cols])
                 out[t_, cols] = row
         return out
     Et_G = ((high == 0)*lambda_f*((1 - mu_H*dt)* _mixG("Et_G_down", eps) + mu_H*dt* _mixG("Et_G_up", eps)) + 
@@ -312,7 +320,12 @@ def create_panel(N, T, arr_tuple):
     df.ret -= (np.exp(r*dt) - 1)
     df = df.rename(columns={"ret": "xret"})
 
-    sser = pd.DataFrame({"month": range(T), "rf_stand": yreg[:T] / 4.0})
+    # The priced state is observable to the estimators. One column per state, so the vector case
+    # hides nothing the scalar case revealed; rf_stand keeps its name and meaning at nstates = 1.
+    _cols = {"month": range(T)}
+    for _j in range(nstates):
+        _cols["rf_stand" if _j == 0 else f"rf_stand{_j + 1}"] = yreg[:T, _j] / 4.0
+    sser = pd.DataFrame(_cols)
     df = df.merge(sser, on="month")
     df = df[df.month > burnin - 1]
     return df

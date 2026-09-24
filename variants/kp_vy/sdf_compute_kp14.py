@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy import interpolate
 from parameters_kp14 import *
-from parameters_kp14 import _coef_at
+from parameters_kp14 import _coef_at, project_y
 from joblib import Parallel, delayed
 
 import scipy.special
@@ -38,28 +38,30 @@ def _yw(yv):
     return iy, w
 
 _FTYPE = [None]      # set by sdf_compute; module-level for the helpers
+_YTIL = [None]       # each type's projection of the state path, same lifetime as _FTYPE
 
-def _tab_at(name, yv):
-    iy, w = _yw(yv)
+def _tab_at(name, yv_ty):
+    """yv_ty is one y value PER TYPE -- each type reads its own projection."""
     ftype = _FTYPE[0]
     def f(e):
         out = np.empty_like(np.asarray(e, float))
         for ff in range(ntypes):
             cols = ftype == ff
             if cols.any():
+                iy, w = _yw(float(yv_ty[ff]))
                 out[..., cols] = ((1 - w) * _tabs[ff][iy][name](e[..., cols])
                                   + w * _tabs[ff][iy + 1][name](e[..., cols]))
         return out
     return f
 
-def _coef_vec(yv, scale=None):
-    """per-firm A-coefficient vectors at y'=yv, optionally scaled (e.g. by e^{beta_f yv})"""
+def _coef_vec(yv_ty, scale=None):
+    """per-firm A-coefficient vectors at each type's own y'=yv_ty[f], optionally scaled"""
     ftype = _FTYPE[0]
     N = len(ftype)
     C = [np.empty(N) for _ in range(4)]
     for ff in range(ntypes):
         cols = ftype == ff
-        a = _coef_at(yv, ff)
+        a = _coef_at(float(yv_ty[ff]), ff)
         for k in range(4):
             C[k][cols] = float(a[k])
     if scale is not None:
@@ -98,7 +100,8 @@ def sdf_compute(N, T, arr_tuple):
     (K, book, op_cashflow, x, z, eps, uj, chi, rate, high, Et_G, EtA, alph, Et_z_alph, price, ret, eret, lambda_f,
      loadings_z_taylor, loadings_x_taylor, loadings_z_proj, loadings_x_proj, yreg, ftype) = arr_tuple
     _FTYPE[0] = ftype
-    bvf = type_bv[ftype]
+    bvf = b_eff[ftype]
+    _YTIL[0] = project_y(yreg)
     tt = type_theta[ftype]
     _ghx, _ghw = np.polynomial.hermite.hermgauss(7)
     _ghw = _ghw / np.sqrt(np.pi)
@@ -110,8 +113,8 @@ def sdf_compute(N, T, arr_tuple):
 
     def sdf_loop(t, iter=0):  # compute ER at date t+1 (to t+2)
         t = t + 1
-        y_now = float(yreg[t])
-        yq = _ar * y_now + _sdc * np.sqrt(2) * _ghx         # quadrature nodes for y' 
+        y_now = _YTIL[0][:, t]                              # (ntypes,) each type's projection
+        yq = _ar * y_now[:, None] + _sdc * np.sqrt(2) * _ghx[None, :]   # (ntypes, 7)
         Ktalpha = K[:t + 1, t, :]**alpha
         ujt = uj[:t + 1, t, :]
         eps_rep = np.repeat(eps[t, :].reshape((1, N)), t + 1, axis=0)
@@ -122,7 +125,7 @@ def sdf_compute(N, T, arr_tuple):
             """all A/G-dependent pieces of E_t[R_i R_j] * P_i P_j conditional on y' = yv; the
             per-firm value factor e^{beta_f yv} is absorbed into the coefficients and linear tables,
             so squared/cross terms carry the right powers automatically."""
-            ebq = np.exp(bvf * yv)                        # (N,)
+            ebq = np.exp(bvf * yv[_FTYPE[0]])             # (N,) e^{b_f . y'} per firm
             coef = _coef_vec(yv, scale=ebq)               # e-scaled per-firm A-coefficients
             _t1 = _tab_at_s = lambda name: (lambda e: ebq * _tab_at(name, yv)(e))     # linear tables x e^{b y'}
             _t2 = lambda name: (lambda e: ebq**2 * _tab_at(name, yv)(e))              # squared/cross tables x e^{2 b y'}
@@ -163,10 +166,10 @@ def sdf_compute(N, T, arr_tuple):
             M[np.arange(N), np.arange(N)] = diag
             return M
 
-        Mmix = sum(_ghw[q] * branch(float(yq[q])) for q in range(len(_ghw)))
+        Mmix = sum(_ghw[q] * branch(yq[:, q]) for q in range(len(_ghw)))
 
         # cash-flow adjustment terms (regime-free)
-        cf = np.sum(eps[t, :]*ujt*x[t]*Ktalpha*dt, axis=0) * np.exp(bvf * y_now) * tt
+        cf = np.sum(eps[t, :]*ujt*x[t]*Ktalpha*dt, axis=0) * np.exp(bvf * y_now[_FTYPE[0]]) * tt
         term4 = np.outer(cf/price[t, :], 1 + eret[t, :])
         term4 = term4 + term4.T - np.outer(cf/price[t, :], cf/price[t, :])
         term8_diag = 2*cf/price[t, :]*(1 + eret[t, :]) - (cf/price[t, :])**2

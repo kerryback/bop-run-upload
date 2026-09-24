@@ -42,9 +42,11 @@ if y_risk_neutral:
     _idx = _idx[(y_solve[_idx] >= _lo - 1e-9) & (y_solve[_idx] <= _hi + 1e-9)]
     y_grid = y_solve[_idx]; NY = len(y_grid)
     _tab_pos = np.searchsorted(_idx, _i_tab); assert np.array_equal(_idx[_tab_pos], _i_tab)
-    Qy = build_generator(y_grid, -kappa_y * y_grid - gamma_v * sigma_y)
+    # this type's own Q-drift shift: gamma_eff(f) = (b_f . gamma)/||b_f||, which is the
+    # scalar gamma_v whenever there is only one priced state
+    Qy = build_generator(y_grid, -kappa_y * y_grid - gamma_eff[_ft] * sigma_y)
     rho_y = rho0_at(y_grid)
-    _b = type_bv[_ft]
+    _b = b_eff[_ft]
     _Afine = [a[_idx] for a in coef_on_solve_grid(_ft)]
     def A_y(ep, u, yv, f):                                   # A at solve-grid nodes (not clamped)
         i = int(np.argmin(np.abs(y_grid - yv)))
