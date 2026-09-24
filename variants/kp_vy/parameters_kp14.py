@@ -108,6 +108,54 @@ type_bv = _np.array(type_bv, float)
 ntypes = len(type_share)
 assert len(type_bv) == ntypes
 
+# ---- several priced states, at no extra grid cost ------------------------------------------
+# type_bv may be (ntypes,) -- ONE priced state, the original economy -- or (ntypes, nstates), a
+# loading VECTOR per type over independent unit-variance OU states that share kappa_y. The vector
+# case needs no product grid and no new solve: the projection s_f = b_f . y is ITSELF a scalar OU,
+# stationary sd ||b_f||, with its Q-drift shifted by -sigma_y (b_f . gamma). So type f is exactly
+# the scalar problem below, at
+#     b_eff(f) = ||b_f||        gamma_eff(f) = (b_f . gamma) / ||b_f||
+# and everything downstream reads the type's own normalised projection in place of y.
+#
+# WHY THIS MATTERS ECONOMICALLY. The premium tracks b_f . gamma while the exposure MAGNITUDE
+# tracks ||b_f||. With one state those are the same number times a constant, so any characteristic
+# revealing the magnitude spans the whole premium cross-section exactly. With several they are a
+# PRODUCT of magnitude and alignment, which no linear map in the characteristics reaches.
+_bv = type_bv if type_bv.ndim == 2 else type_bv[:, None]
+nstates = _bv.shape[1]
+gamma_vec = _np.atleast_1d(_np.array(gamma_v, float))
+assert len(gamma_vec) == nstates, (
+    f"gamma_v has {len(gamma_vec)} entries but type_bv declares {nstates} priced state(s)")
+if nstates == 1:
+    # The scalar path is kept LITERALLY as it was, sign and all, so the three live kp_vy
+    # economies rebuild byte-identical. The projection below normalises |b| and flips the grid
+    # for b < 0 -- the same pricing in different coordinates, but not the same floating point.
+    b_eff = _bv[:, 0].copy()
+    gamma_eff = _np.full(ntypes, float(gamma_vec[0]))
+else:
+    b_eff = _np.linalg.norm(_bv, axis=1)
+    _safe = _np.where(b_eff > 0, b_eff, 1.0)
+    # at ||b_f|| = 0 the claim is on e^0 and A is 1/(rho0 + theta) whatever the generator, so
+    # the value here is arbitrary; gamma_vec[0] keeps it continuous with the scalar path.
+    gamma_eff = _np.where(b_eff > 0, (_bv @ gamma_vec) / _safe, float(gamma_vec[0]))
+type_bv_mat = _bv          # (ntypes, nstates), star-exported for the panel's projection
+
+
+def project_y(yreg):
+    """Each type's normalised projection of a state path: ytil[f] = (b_f . y) / ||b_f||.
+
+    That projection is a scalar OU with the same kappa_y and unit stationary sd, so every table
+    lookup downstream is the scalar lookup it always was, at the type's own coordinate. At
+    nstates = 1 it returns the raw path for every type, sign and all, which is what keeps the
+    three live kp_vy economies byte-identical.
+    """
+    yreg = _np.asarray(yreg, float)
+    if yreg.ndim == 1:
+        yreg = yreg[:, None]
+    if nstates == 1:
+        return _np.repeat(yreg[:, 0][None, :], ntypes, axis=0)
+    return (yreg @ type_bv_mat.T).T / b_eff[:, None]
+
 y_grid = _np.linspace(-y_max, y_max, NY)
 dy = y_grid[1] - y_grid[0]
 sigma_y = _np.sqrt(2.0 * kappa_y)                      # stationary sd 1
@@ -141,8 +189,8 @@ const_base_y = r + gamma_x * gm_grid * sigma_x + delta - mu_x                   
 def const_ty(f):
     """effective discount for type-f claims (flows ~ e^{beta_f y}):
     Ito on e^{beta y}: drift beta*(-kappa_y*y) + 0.5*beta^2*sigma_y^2; priced comp beta*gamma_v*sigma_y"""
-    b = type_bv[f]
-    return const_base_y + b * gamma_v * sigma_y + b * kappa_y * y_grid - 0.5 * b ** 2 * sigma_y ** 2
+    b, gv = b_eff[f], gamma_eff[f]
+    return const_base_y + b * gv * sigma_y + b * kappa_y * y_grid - 0.5 * b ** 2 * sigma_y ** 2
 
 # ---- risk-neutral pricing of the y-exposed claims -------------------------------------------
 # Under the SDF  dM/M = ... - gamma_v dB_v  the state follows, under Q,
@@ -155,7 +203,7 @@ def const_ty(f):
 # In W-form there is no such wall, so the solve grid below simply spans the Q-stationary
 # distribution (mean -gamma_v*sigma_y/kappa_y, sd 1) AND the table grid, finely; the table
 # grid y_grid itself -- and with it NY and every downstream table -- is unchanged.
-y_mean_Q = -gamma_v * sigma_y / kappa_y
+y_mean_Q = -float(_np.max(_np.abs(gamma_eff))) * sigma_y / kappa_y   # the widest type's Q-mean
 _ys_lo = min(-y_max, y_mean_Q) - 8.0
 _ys_hi = max(y_max, y_mean_Q) + 8.0
 _sub = 20                                              # solve nodes per table interval
@@ -185,15 +233,18 @@ def build_generator(yv, drift):
         Q[i, i] = -(up + dn)
     return Q
 
-_QyQ_solve = build_generator(y_solve, -kappa_y * y_solve - gamma_v * sigma_y)
+# One generator per type: the Q-drift shift is gamma_eff(f)-dependent as soon as there is more
+# than one priced state. At nstates = 1 every entry is the old single generator.
+_QyQ_solve_ty = [build_generator(y_solve, -kappa_y * y_solve - gamma_eff[f] * sigma_y)
+                 for f in range(ntypes)]
 _const_base_solve = r + gamma_x * gmult_y(y_solve) * sigma_x + delta - mu_x
 _A_solve = {}                                          # (f, theta_c) -> A on y_solve, pre-compensation
 
 def _solve_coeff_ty(f, theta_c):
     if not y_risk_neutral:
         return _np.linalg.solve(_np.diag(const_ty(f) + theta_c) - Qy, _np.ones(NY))
-    b = type_bv[f]
-    W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve, _np.exp(b * y_solve))
+    b = b_eff[f]
+    W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve_ty[f], _np.exp(b * y_solve))
     _A_solve[(f, theta_c)] = W * _np.exp(-b * y_solve)
     return _A_solve[(f, theta_c)][_i_tab]
 A0_ty = _np.stack([_solve_coeff_ty(f, 0.0) for f in range(ntypes)])                 # (ntypes, NY)
@@ -230,8 +281,8 @@ def rho0_at(yv):
             - 0.5 * (alpha / (1 - alpha)) ** 2 * sigma_z ** 2)
 
 rho_ty = _np.stack([(r + gamma_x * gm_grid * sigma_x - mu_x
-                     + type_bv[f] * gamma_v * sigma_y + type_bv[f] * kappa_y * y_grid
-                     - 0.5 * type_bv[f] ** 2 * sigma_y ** 2
+                     + b_eff[f] * gamma_eff[f] * sigma_y + b_eff[f] * kappa_y * y_grid
+                     - 0.5 * b_eff[f] ** 2 * sigma_y ** 2
                      - alpha / (1 - alpha) * (mu_z - gamma_z * sigma_z - 0.5 * sigma_z ** 2)
                      - 0.5 * (alpha / (1 - alpha)) ** 2 * sigma_z ** 2)
                     for f in range(ntypes)])                                        # (ntypes, NY)
