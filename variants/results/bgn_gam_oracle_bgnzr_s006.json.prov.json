@@ -1,0 +1,73 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "cc56eea22127534912a3470447b98d966a773ab1",
+  "branch": "main",
+  "root": "/data/sjpruitt/GitHub/bop-run-upload",
+  "dirty": false
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "bgn_gam",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "6",
+  "--tag",
+  "bgnzr",
+  "--spec",
+  "var-bgn_gam-bgnzr-v1",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants/bgn_gam",
+ "env": {
+  "BGN_PARAM_OVERRIDES": "{\"beta_zr\":-0.0002,\"jstar_gam_file\":\"Jstar_bgnzr.csv\"}",
+  "CONDA_DEFAULT_ENV": "bop",
+  "MKL_NUM_THREADS": "8",
+  "NUMEXPR_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "SEED_SPEC": "bgnzr",
+  "SLURMD_NODENAME": "pc219",
+  "SLURM_ARRAY_JOB_ID": "21609884",
+  "SLURM_ARRAY_TASK_ID": "6",
+  "SLURM_CPUS_PER_TASK": "8",
+  "SLURM_JOB_ID": "21609891",
+  "VECLIB_MAXIMUM_THREADS": "8"
+ },
+ "when": "2026-09-23T12:16:26-0700",
+ "environment": {
+  "python": "3.12.13",
+  "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "pc219",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "pandas": "3.0.3",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout cc56eea22127534912a3470447b98d966a773ab1 && cd variants && <env below> python run_oracle.py --model bgn_gam --N 500 --T 500 --seed 6 --tag bgnzr --spec var-bgn_gam-bgnzr-v1 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "jstar",
+   "solve_id": "550412fe21ce97a3",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 9374
+  }
+ ],
+ "extra": {
+  "spec_id": "var-bgn_gam-bgnzr-v1",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "verified",
+  "eval_window": 360
+ }
+}

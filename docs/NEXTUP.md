@@ -25,17 +25,19 @@ answer by more than a few hundredths**, and that is why the list below is ordere
 |---|---|---|---|---|---|---|
 | 1 | ~~Decide the BGN regime closure~~ | BGN | — | — | none | **DONE 2026-09-23 — it does not stand** |
 | ~~1a~~ | ~~`g0235ff` — one more 4x on the switch speed~~ | BGN | — | — | — | **DROPPED — a price of risk cannot switch on a 1.5-month spell** |
-| 2 | **`bgnzr` — GATE on the discount channel** | **BGN** | 2 | 1.02 | **3 min + 10 seeds** | **ready, do this next** |
+| 2 | ~~`bgnzr` — GATE on the discount channel~~ | BGN | 2 | 1.02 | done | **RUN 2026-09-23 — GATE FALSIFIED** |
 | 3 | K7 — a third `gamma_v` point | KP14 | 3 | 1.05 | 20 min + 10 seeds | ready |
-| 4 | **Multi-factor term structure** | **BGN** | **2 → 5** | **1.16** | new solver | scoping |
-| 5 | **Multiple priced states** | **KP14** | **3 → 6** | **1.18** | new solve chain | scoping |
-| 6 | A second priced shock | GS21 | 1 → 2 | 1.02 | new solver | low priority |
-| 7 | K1 — a continuum of exposures | KP14 | 3 | 1.05 | 1.7 h + 30 h seeds | ready |
-| 8 | K3 — persistence of the priced state | KP14 | 3 | 1.05 | 2 × 15 min | ready |
+| **4** | **Multiple priced states** | **KP14** | **3 → 6** | **1.18** | new solve chain | **now the only live K lever** |
+| 5 | K1 — a continuum of exposures | KP14 | 3 | 1.05 | 1.7 h + 30 h seeds | ready |
+| 6 | K3 — persistence of the priced state | KP14 | 3 | 1.05 | 2 × 15 min | ready |
+| 7 | A second priced shock | GS21 | 1 → 2 | 1.02 | new solver | low priority |
+| ~~—~~ | ~~Multi-factor term structure~~ | BGN | — | — | — | **WITHDRAWN — its premise is what item 2 falsified** |
 
-**Items 4 and 5 are the same experiment in two models, and they are the only ones that can move the
-answer by more than a hundredth.** Everything above them is cheap and settles what they should test;
-everything below them is bounded by its model's current K.
+**Item 4 is now the only experiment on the list that can move the answer by more than a hundredth.**
+Its BGN twin was withdrawn on 2026-09-23 when item 2 falsified the premise both rested on. Everything
+else is bounded by its model's current K — and KP14 is the one model whose extra priced state
+demonstrably produces room (`vyx` +0.0545, `vyg25` +0.0820), which is why the survivor is the KP14
+one.
 
 ### 1. ~~Decide the BGN regime closure~~ — DONE 2026-09-23, and it does not stand
 Finding 12 in `docs/RESULTS.md` has the table. The closure confused two dimensions of the regime
@@ -56,40 +58,24 @@ timescale.** A volatility process can; a price of risk cannot. `g0235f` at 12 an
 fastest defensible point in the family, so the ladder's top is where it was measured, not where the
 parameter space ends.
 
-### 2. `bgnzr` — the GATE on BGN's discount channel
-**What survives from item 1 is the mechanism, and BGN already carries it in a defensible form.** The
-ladder identifies a fast observable state that bends the cross-sectional premium map; BGN's rate `r`
-is one — AR(1) at `kappa = 0.95`, **13.5-month half-life, ~27 independent excursions per window**,
-between `g0235`'s 20 and `g0235f`'s 80, continuous rather than two-state, and unarguable for a short
-rate. Its loading is duration and the assets-in-place/growth-option mix, characteristic-linked
-rather than the cash-flow channel's sampling noise. What it lacks is a price: `sigma_z * corr_zr` is
-−0.070 against +0.394.
+### 2. ~~`bgnzr`~~ — RUN 2026-09-23, GATE FALSIFIED
+Finding 14 has the table. A 43% increase in the rate channel's price moved room from **+0.0274 to
++0.0292** — a rise of +0.0018 against a registered threshold of +0.005, and against a cross-seed
+standard error on room of 0.0055, so not distinguishable from zero. Extrapolated to the 3–5x a
+multi-factor structure could carry, room reaches +0.036 to +0.044 against `vyg25`'s +0.0820.
 
-**The rotation is far more limited than the old plan thought**, because `beta_zr` IS the covariance
-the pricing fix corrected, and the limiting term spread is now about twice as sensitive to it
-(finding 13):
+Four of five registered clauses held: SR_max rose, the market's share of it rose (condition 4 moving
+the wrong way, registered as the standing risk), the fair gap stayed in band. The gate did not.
 
-| `beta_zr` | rate share of total price | limiting term spread |
-|---|---|---|
-| −0.00014, published | 15.1% | 2.37%/yr (BGN p.21 report 2.4%) |
-| **−0.00020** | **20.5%** | **3.79%/yr** |
-| −0.00025 | 24.8% | 4.97%/yr |
-| −0.00040 | 36.6% | 8.52%/yr |
+**And the direction of the miss is informative.** The fair gap went -0.0001 → **-0.0019** and
+DKKM/fair 0.9997 → **0.9925**: rotating onto the rate channel made DKKM relatively WORSE. The rate
+channel's dispersion is duration and the assets-in-place/growth-option mix — characteristic-linked
+and persistent, which is exactly what a linear sort on book-to-price and 1/price is built to find.
+BGN's own bound says `E[R]` is affine in those characteristics with rate-dependent coefficients. A
+persistent, characteristic-linked loading map is good for the linear methods, not for complexity.
 
-The planned −0.0004 to −0.00056 region needs an 8.5–12.3%/yr limiting spread and is not available.
-
-**So run it once, at −0.00020, as a measurement rather than a candidate.** `bgnzr` is not a gap
-candidate — BGN is K=2 whatever `beta_zr` does, so finding 11 caps it near 1.02. What it buys is
-`d(room) / d(rate price)` over a 43% price increase, which is the number that decides whether item 4
-earns a new solver. Pure parameter override: one 3-minute J\* rebuild with a precommitted id, ten
-seeds at 40G, no code and no re-key.
-
-**Register before building**, against `bgnbase` (SR_max 0.3013, market 53.7% of it, room +0.0274,
-fair gap −0.0001): the fair gap stays inside the BGN band; the market's share of SR_max rises, which
-is condition 4 moving the wrong way and is this direction's standing risk; and **the gate —
-FALSIFIED as a live discount channel if room rises by less than +0.005 over +0.0274**, because a
-linear extrapolation of a 43% price step to the 3–5x a slope factor could carry then cannot reach
-the `vyg25` class of +0.08 of room.
+Cost: ~60 node-hours to close a direction that would have cost a new solver. Peak 19.8 GiB against
+40G, 5.5–5.9 h per seed.
 
 ### 3. K7 — a third point in `gamma_v`
 `vyx`'s parameters at `gamma_v` 2.1 or 2.2, nothing else changed. One G solve plus integrals is
@@ -98,24 +84,15 @@ about 20 minutes on the Mac; then ten Phoenix seeds, ~60 node-hours. It is now a
 price of risk onto the loading nonlinearity and says whether the gap is a threshold or smooth.
 Register the falsification clause before building.
 
-### 4. Multi-factor term structure in BGN — K 2 → 5
-**The audit already named this**: *"any revival must inject into the discount channel (project
-duration × multiple term-structure factors), not the dividend channel"*, after raising K at BGN's
-cash-flow shock was built, verified and found inert (`voc_diagnosis/dead_end_K/`) because the
-variance is not there. 36-50% of BGN return variance IS in the rate channel. Replace the one-factor
-Vasicek `r` with a 3-4 factor term structure (level, slope, curvature), priced, with project duration
-as the loading map — which is characteristic-linked and persistent rather than sampling noise, the
-one genuinely promising feature the `bgnzr` analysis found. Affine structure survives, so `B(k, r)`
-generalises; what needs work is the option value, which is where a disaster in `r` also broke.
+### ~~4. Multi-factor term structure in BGN~~ — WITHDRAWN 2026-09-23
+Its premise was that 36–50% of BGN return variance sits in the rate channel, so injecting K there
+would pay. **Item 2 tested the premise and it failed.** The variance is there and it is the wrong
+kind: the rate channel's loading map is characteristic-linked, so more term-structure factors give
+more of exactly what the linear side already captures. Reopening this needs a reason to believe a
+slope or curvature factor loads differently across firms than the level factor does — which the
+`bgnzr` result gives no support for.
 
-**Finding 13 is the argument for doing it this way rather than by rotation.** With one factor, "more
-price of rate risk" and "steeper limiting curve" are the same knob — which is why item 2's rotation
-caps out at a 43% price increase. A multi-factor structure decouples them: the limiting yield is set
-by the most persistent factor, while a **fast-mean-reverting slope factor can carry a real price of
-risk almost free of the limiting spread**, and BGN's project durations are medium-term, exactly
-where a slope factor bites and the limiting spread does not.
-
-### 5. Multiple priced states in KP14 — K 3 → 6
+### 4. Multiple priced states in KP14 — K 3 → 6, and now the only live K lever
 The same experiment, and the cheaper implementation: the `vy` route already added one priced OU
 state with a per-type exposure ladder, and the machinery is parameter-driven. Add `y2`, `y3` with
 their own `beta_f` ladders and prices. Each new state multiplies the integral-table count, so scope
@@ -128,7 +105,7 @@ tables in about 20 minutes, so the old "90 min per economy" figure is 13x out.
 > published, faithfully implemented and correctly priced, the complexity gap is at most +0.015 of
 > monthly Sharpe — which finding 11 says is what the structure requires.
 
-### 6-8. Bounded by their model's current K
+### 5-7. Bounded by their model's current K
 **GS21 second priced shock** (K 1 → 2, ceiling 1.02): the only way GS21 gets off a ceiling of exactly
 1.000, but the payoff is the smallest and there is no natural candidate shock. **K1**, fifteen
 exposure types over [0, 0.14]: raises theta, not K, so bounded at 1.05; about 1.7 h of integrals then

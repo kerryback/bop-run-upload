@@ -45,16 +45,17 @@ of its mean (finding 4).
 | bgn_gam/g0235r | -0.0005 | 0.0027 | -0.6 | 5 of 10 |
 | kp_vy/kpbase | -0.0010 | 0.0058 | -0.6 | 6 of 10 |
 | gs_bx/bx7 | -0.0017 | 0.0020 | -2.8 | 0 of 10 |
+| bgn_gam/bgnzr | -0.0019 | 0.0067 | -0.9 | 5 of 10 |
 | gs_bx/g28 | -0.0024 | 0.0018 | -4.3 | 0 of 10 |
 | gs_bx/gsbase | -0.0028 | 0.0019 | -4.7 | 2 of 10 |
 | bgn_gam/g0235s | -0.0038 | 0.0145 | -0.8 | 4 of 10 |
 
 **Only `vyg25` and `g0235f` are positive in every seed AND several standard errors from zero**, at
-+0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other eleven lie
++0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other twelve lie
 between -0.0038 and +0.0025, and that includes all three models as published: -0.0001 (BGN), -0.0010
 (KP14), -0.0028 (GS21).
 
-### Every column, all thirteen economies
+### Every column, all fourteen economies
 
 **Ranked by (DKKM - FMR) / FMR**, the ratio of the ten-seed means, which is the comparison a reader
 of the DKKM paper expects. It is not the verdict, and the two orderings are near-reverses at the
@@ -71,6 +72,7 @@ NEGATIVE fair gaps. Read this table for the levels and the one above for the ans
 | bgn_gam/g0235f | 10 | 0.2375 | 0.1465 | 0.1406 | 0.1537 | 0.1690 | +0.0285 (0.0225) | 20.3% | +0.0154 (0.0085) | +0.0079 (0.0052) | +0.0447 (0.0118) | 31.8% | 14.9 |
 | kp_vy/vyg25 | 10 | 0.4952 | 0.0529 | 0.2921 | 0.3283 | 0.3503 | +0.0582 (0.0264) | 19.9% | +0.0219 (0.0164) | +0.0148 (0.0090) | +0.0820 (0.0085) | 28.1% | 19.6 |
 | gs_bx/g28 | 10 | 0.3144 | 0.2978 | 0.2544 | 0.2694 | 0.3028 | +0.0484 (0.0415) | 19.0% | +0.0334 (0.0261) | -0.0024 (0.0018) | +0.0006 (0.0005) | 0.2% | 27.6 |
+| bgn_gam/bgnzr: the discount-channel gate | 10 | 0.3171 | 0.1767 | 0.2291 | 0.2516 | 0.2573 | +0.0282 (0.0495) | 12.3% | +0.0057 (0.0204) | -0.0019 (0.0067) | +0.0292 (0.0173) | 12.8% | 15.0 |
 | bgn_gam/bgnbase: BGN as published | 10 | 0.3013 | 0.1618 | 0.2133 | 0.2318 | 0.2382 | +0.0249 (0.0387) | 11.7% | +0.0063 (0.0148) | -0.0001 (0.0061) | +0.0274 (0.0109) | 12.8% | 13.6 |
 | kp_vy/vyx | 10 | 0.4214 | 0.0598 | 0.2840 | 0.3069 | 0.3133 | +0.0293 (0.0245) | 10.3% | +0.0064 (0.0161) | +0.0009 (0.0087) | +0.0545 (0.0057) | 19.2% | 11.4 |
 | gs_bx/bx7 | 10 | 0.3270 | 0.3061 | 0.2822 | 0.2930 | 0.3091 | +0.0269 (0.0267) | 9.5% | +0.0161 (0.0136) | -0.0017 (0.0020) | +0.0073 (0.0050) | 2.6% | 17.2 |
@@ -598,6 +600,48 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     medium-term, exactly where a slope factor bites and the limiting spread does not. So the
     constraint measured here does not say the discount channel is dead; it says the one-factor
     Vasicek is the wrong instrument for loading it.
+
+14. **BGN's discount channel is closed by measurement: loading it produces almost no room.** Finding
+    13 established that `beta_zr` can be rotated only as far as -0.00020 before the limiting term
+    spread leaves what the paper reports. `bgnzr` runs exactly that point -- `bgnbase` with the
+    price of risk rotated onto the rate channel, the rate's share of the total rising 15.1% to
+    20.5%, a **43% increase in the rate channel's price** -- as a pre-registered GATE rather than a
+    gap candidate. Ten seeds, 2026-09-23, gate clean at 10 of 10 interior.
+
+    | | `bgnbase` | `bgnzr` | change |
+    |---|---|---|---|
+    | SR_max | 0.3013 | 0.3171 | +0.0158 |
+    | EW market, share of SR_max | 53.7% | 55.7% | +2.0 pp |
+    | best linear | 0.2318 | 0.2516 | +0.0198 |
+    | DKKM | 0.2382 | 0.2573 | +0.0192 |
+    | **room** | **+0.0274** | **+0.0292** | **+0.0018** |
+    | fair gap | -0.0001 | -0.0019 | -0.0019 |
+    | DKKM / best fair linear | 0.9997 | 0.9925 | -0.0072 |
+
+    **The registered gate was room rising by at least +0.005, and it rose by +0.0018** -- against a
+    cross-seed standard error on room of 0.0055, so the rise is not distinguishable from zero.
+    FALSIFIED. Extrapolating the 43% price step linearly to the three- to five-fold a multi-factor
+    term structure could carry puts room at +0.036 to +0.044, against `vyg25`'s +0.0820, so it does
+    not reach the class of the economies that do produce a gap.
+
+    **Four of the five registered clauses held; the one that mattered did not.** SR_max rose as
+    predicted, the market's share of it rose as predicted -- condition 4 moving the wrong way, which
+    was registered as this direction's standing risk -- and the fair gap stayed inside the BGN band.
+    What failed is the premise the whole discount-channel programme rested on.
+
+    **Why, and it is the reason the rate channel looked promising in the first place.** The rate
+    channel's dispersion is duration and the assets-in-place versus growth-option mix, which is
+    characteristic-linked and persistent rather than sampling noise over live projects -- and that
+    is exactly what makes a linear sort on book-to-price and 1/price capture it. BGN's own bound
+    says `E[R]` is affine in those two characteristics with rate-dependent coefficients, so loading
+    more premium onto the rate channel enlarges a spread the linear side is built to find. The fair
+    gap moving from -0.0001 to -0.0019 and DKKM/fair from 0.9997 to 0.9925 say it directly: the
+    rotation made DKKM relatively WORSE. A persistent, characteristic-linked loading map is good for
+    the linear methods, not for complexity.
+
+    So the proposal to replace BGN's one-factor Vasicek with a multi-factor term structure is
+    withdrawn. It was motivated by 36-50% of BGN return variance sitting in the rate channel; the
+    variance is there, and it is the wrong kind.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in

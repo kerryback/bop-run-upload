@@ -50,6 +50,10 @@ CURRENT = {
     # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4 and B4
     "vyg25": "var-kp_vy-vyg25-v3",
     "g0235d": "var-bgn_gam-g0235d-v3",
+    # the GATE on BGN's discount channel, 2026-09-23 (docs/RESULTS.md finding 14): bgnbase with the
+    # price of risk rotated onto the rate channel. It joined CURRENT only once economy_table.csv had
+    # its row -- test_the_live_universe_is_one_set_agreed_by_three_sources requires the two to agree.
+    "bgnzr": "var-bgn_gam-bgnzr-v1",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
     "bgnbase": "var-bgn_gam-bgnbase-v3",
     "kpbase": "var-kp_vy-kpbase-v3",
