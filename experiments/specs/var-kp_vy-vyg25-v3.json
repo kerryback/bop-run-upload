@@ -12,7 +12,8 @@
       "estimation.kappas [1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0] -> [1e-07, 1e-06, 1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0] (common/protocol.py KAPPAS): two decades added at each end after the interior-penalty gate failed in five of thirteen economies in both directions",
       "expected_solves.G f41d052f1f960c4c -> 12152f8f86cc415e: the pricing fix of merge 91095fb re-keys it (parameters_kp14.py and kp14_fd_vy.py, both digested)",
       "expected_solves.integ 8d1308e8f21723f8 -> 7562a864dacb6b3e: the pricing fix of merge 91095fb re-keys it (parameters_kp14.py and kp14_fd_vy.py, both digested)"
-    ]
+    ],
+    "superseded_by": "var-kp_vy-vyg25-v4"
   },
   "engine": "oracle",
   "model": "kp_vy",

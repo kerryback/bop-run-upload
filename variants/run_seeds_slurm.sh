@@ -216,7 +216,7 @@ set -euo pipefail
 
 case "$SEED_SPEC" in
   vyx)
-    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v4; SOLVE_TAG=vyx
+    MODEL=kp_vy; TAG=vyx; SPEC=var-kp_vy-vyx-v5; SOLVE_TAG=vyx
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":1.8,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyx
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=vyx python build_vy_tables.py vyx'
@@ -326,10 +326,26 @@ case "$SEED_SPEC" in
     # K4: vyx with the price of the state's risk raised from 1.8 to 2.5 -- the dial finding 8
     # says matters, since the Sharpe the state's shock carries is the part the market misses.
     # Its own tables under prefix vyg25, built by variants/run_solve_slurm.sh from the spec.
-    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v3; SOLVE_TAG=vyg25
+    MODEL=kp_vy; TAG=vyg25; SPEC=var-kp_vy-vyg25-v4; SOLVE_TAG=vyg25
     export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2}'
     export KP_VY_PREFIX=vyg25
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v3 variants/run_solve_slurm.sh'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vyg25-v4 variants/run_solve_slurm.sh'
+    ;;
+  vym3)
+    # The first economy in this project that raises K, the number of priced aggregate shocks
+    # (docs/RESULTS.md finding 11): THREE independent priced OU states instead of one, and twenty
+    # types whose loading VECTORS span all three. The total price of y-risk is UNCHANGED --
+    # ||gamma|| = 2.5, vyg25's scalar value, split as 2.5/sqrt(3) each -- so this isolates
+    # DIMENSION from LEVEL rather than drifting back toward the calibration the pricing fix
+    # removed. A type's premium tracks b_f . gamma while its exposure magnitude tracks ||b_f||;
+    # with one state those are the same number times a constant, with three they are a PRODUCT,
+    # which no linear map in the characteristics represents. Twenty types and not six because the
+    # fair linear side carries up to eleven columns (linlev_m) and would otherwise interpolate.
+    # No product grid: each type is the scalar 1-D problem at its own projection.
+    MODEL=kp_vy; TAG=vym3; SPEC=var-kp_vy-vym3-v1; SOLVE_TAG=vym3
+    export KP_PARAM_OVERRIDES='{"type_share":[0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05],"type_bv":[[0.0115470054,0.0115470054,0.0115470054],[-0.0005603547,0.0141365838,0.0141365838],[0.0069282032,-0.0043855053,0.0182419117],[-0.0103478274,0.0121021169,0.0121021169],[0.0023094011,-0.0115470054,0.0161658075],[0.0346410162,0.0346410162,0.0346410162],[-0.001681064,0.0424097514,0.0424097514],[0.0207846097,-0.0131565158,0.0547257352],[-0.0310434822,0.0363063508,0.0363063508],[0.0069282032,-0.0346410162,0.0484974226],[0.0577350269,0.0577350269,0.0577350269],[-0.0028017733,0.070682919,0.070682919],[0.0346410162,-0.0219275263,0.0912095586],[-0.051739137,0.0605105846,0.0605105846],[0.0115470054,-0.0577350269,0.0808290377],[0.0808290377,0.0808290377,0.0808290377],[-0.0039224826,0.0989560865,0.0989560865],[0.0484974226,-0.0306985369,0.1276933821],[-0.0724347918,0.0847148185,0.0847148185],[0.0161658075,-0.0808290377,0.1131606528]],"gamma_v":[1.443375673,1.443375673,1.443375673],"bv_comp":1.2}'
+    export KP_VY_PREFIX=vym3
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vym3-v1 variants/run_solve_slurm.sh'
     ;;
   g0235d)
     # B4: g0235's multipliers with the switch probabilities SWAPPED, so stress is two thirds of
@@ -372,7 +388,7 @@ case "$SEED_SPEC" in
     # simulated and exported, and nothing loads on it -- its 21 integral tables agree across y
     # to 4e-12. The bases see it anyway, as they do in vyx: a column no firm loads on is noise,
     # and withholding it from the baseline alone would make the baseline a different protocol.
-    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v3; SOLVE_TAG=kpbase
+    MODEL=kp_vy; TAG=kpbase; SPEC=var-kp_vy-kpbase-v4; SOLVE_TAG=kpbase
     export KP_PARAM_OVERRIDES='{"type_share":[1.0],"type_bv":[0.0],"gamma_v":0.0,"bv_comp":0.0}'
     export KP_VY_PREFIX=kpbase
     SOLVE_HINT='cd variants/kp_vy && KP_VY_PREFIX=kpbase KP_PARAM_OVERRIDES=<the blob above> python build_vy_tables.py kpbase   # the tables are committed'

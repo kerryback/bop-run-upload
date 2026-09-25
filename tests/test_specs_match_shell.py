@@ -39,7 +39,7 @@ SPECS = os.path.join(ROOT, "experiments", "specs")
 # differed only in T, the window and the ridge grid. See its spec's lineage.retired.
 CURRENT = {
     "g0235": "var-bgn_gam-g0235-v4",
-    "vyx": "var-kp_vy-vyx-v4",
+    "vyx": "var-kp_vy-vyx-v5",
     "bx7": "var-gs_bx-bx7-v5",
     "g28": "var-gs_bx-g28-v4",
     # proposed 2026-09-10 (docs/RESULTS.md); B1's three persistence points and G1
@@ -48,7 +48,7 @@ CURRENT = {
     "g0235r": "var-bgn_gam-g0235r-v3",
     "gx7": "var-gs_bx-gx7-v3",
     # proposed 2026-09-13 (docs/RESULTS.md finding 8): K4 and B4
-    "vyg25": "var-kp_vy-vyg25-v3",
+    "vyg25": "var-kp_vy-vyg25-v4",
     "g0235d": "var-bgn_gam-g0235d-v3",
     # the GATE on BGN's discount channel, 2026-09-23 (docs/RESULTS.md finding 14): bgnbase with the
     # price of risk rotated onto the rate channel. It joined CURRENT only once economy_table.csv had
@@ -56,7 +56,7 @@ CURRENT = {
     "bgnzr": "var-bgn_gam-bgnzr-v1",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
     "bgnbase": "var-bgn_gam-bgnbase-v3",
-    "kpbase": "var-kp_vy-kpbase-v3",
+    "kpbase": "var-kp_vy-kpbase-v4",
     "gsbase": "var-gs_bx-gsbase-v3",
 }
 SEED_ARRAY = "variants/run_seeds_slurm.sh"

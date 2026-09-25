@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-kpbase-v4",
+  "title": "KP14 as published: the baseline economy, constant prices of risk, one firm type, no priced state",
+  "question": "What do the estimators find in the unmodified Kogan-Papanikolaou economy at the corrected arrival rate, measured as every current row is?",
+  "notes": "A1 (docs/NEXTUP.md; docs/RESULTS.md, 'Baselines: the anchor'). Every path in RESULTS.md is a departure from one of three baseline economies, and until this spec the only record of this one was a single pre-refactor seed. This spec makes the baseline a first-class economy: ten seeds, the current code, the same protocol as every current row, and the fair linear benchmark (finding 8), so that 'what the route added' is measured against a number produced the same way.\n\nTHE ECONOMY: variants/kp_vy with one firm type whose cash flows do not load on the state y (type_bv [0], type_share [1]), the state's price of risk gamma_v 0 and no value compensation (bv_comp 0). With beta 0 the effective discount const_ty is const_base_y at every y-node, so the A-coefficients, the G function and the integral tables are y-independent and the economy is the constant-price KP14 of the paper: gamma_x 0.69, gamma_z -0.35, the growth-option arrival regime at its CORRECTED labels (mean arrival rate exactly 1, docs/kp14_regime_labels.md), Table II matched on 17 of 18 parameters. THE ONE DEPARTURE FROM THE PAPER: r = 0.05 where the paper has 0.025. It is the repository's baseline since the initial commit and the parent of every KP14 path (vyx, vyg25, vyxT860 all run at 0.05), so it is kept here; a spec at r 0.025 would be a one-parameter child of this one. The y process is still simulated and exported to the panel as rf_stand, and nothing in the economy depends on it. REPORT.md sections 18 and 19: kp_vy at type_bv [0] reduces to the kp_gamy unit economy, which at unit multipliers reduces to the KP14 baseline (validated at each step).\n\nFEATURE COLUMNS (estimation.rf_cols): none. The paper's KP14 has no exported conditioning state in this pipeline, and y is a state no firm loads on, so it is dropped rather than interacted into every basis as noise. Every economy exports its full conditioning set into the panel; a baseline drops the columns the paper's model does not have, so that a noise column is not interacted into every basis. The seed array passes it as --rf_cols to run_oracle.py and run_estimators.py, and the oracle summary and the run record carry it.\n\nWHAT THE LEGACY ROW SAID (single seed, DIFFERENT economy -- the arrival regime was mislabelled and the mean arrival rate simulated was 1.72; 23f9380:variants/results/grid_summary.csv): SR_max 0.2396, linear ceiling 0.2226, nonlinear ceiling 0.2263, room +0.0037, FMR 0.2052, FF 0.1926, best linear 0.1969, DKKM 0.2005, gap +0.0036, t -8.5. Levels are not citable for this economy; the direction (no room, no gap) is what this spec tests.\n\nPREDICTION (2026-09-14): room over the evaluation months below +0.010 (expected returns are affine in one firm variable, the growth-option share of value, so no nonlinear basis has anything to add); SR_max over the evaluation months 0.15 to 0.35; measured gap within +-0.015; fair gap within +-0.005 of zero. FALSIFIED as a no-gap baseline if the ten-seed fair gap exceeds +0.01.\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving; the integ id hashes the G tables' raw bytes, so the G stage (one type, about a second) was built in a throwaway git worktree whose registry was discarded, and the build was killed at the integ id line before any integral table existed (_scratch/precommit_kp.sh, which first reproduced vyx's recorded G f7be27e39d2b530f and integ 84e195172f091cd2 from the tracked tables). Because the integ id is not portable across platforms (WORKING.md section 54), BOTH stages are built on the Mac and the tables committed, as vyx's and vyg25's are; the cluster verifies them by content.\n\n--- PROTOCOL v2 (2026-09-15): what changed, and what did not ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter of the economy moved; `params`, `env` and the\nsolve stages are its parent's. What moved is the MEASUREMENT, which is now identical for\nevery reported economy and is stated once in variants/common/protocol.py and in\ndocs/RESULTS.md, \"The measurement protocol\":\n\n  1. panel.burnin 400 for all three models. It was 300 (bgn_gam, gs_bx) and 400 (kp_vy) in\n     the code, while twelve of nineteen specs DECLARED 200 -- config.py's value, i.e. the\n     legacy main.py pipeline's, copied from the wrong tree. Nothing read the spec field and\n     no test compared it, so it drifted unnoticed. 400 is the longest of the three, so no\n     economy is now burned in less than it was.\n  2. estimation.kappas = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 10] for every economy. Three\n     different grids used to reach the estimators -- four values for bgn_gam and kp_vy,\n     eight for gs_bx, and five including 1e-4 for the retired vyxT860 -- and DKKM's reported\n     Sharpe is a max over that grid. The floor won in 29 of 30 KP14 Path 1 seeds, so the\n     number was censored at a point that differed by economy: a quarter of vyxT860's\n     headline gap was the extra decade, not the economy (docs/RESULTS.md, pre-2026-09-15,\n     Path 1). The grid is now wide on both sides so the argmax can be interior, which the\n     campaign checks per economy rather than assuming.\n  3. estimation.rf_cols removed: every economy's feature bases see its model's FULL\n     conditioning set. Narrowing a baseline to the state its paper has made baseline and\n     parameterization differ in their bases as well as their economics, and then \"what the\n     route added\" was not a difference in the economy alone.\n  4. Ten seeds, 0-9, for every economy. There is no screen tier any more: fewer seeds is a\n     numerical shortcut, and cross-seed sd of a gap runs 15% to 63% of its mean.\n\nN = 500, T = 500, window 360 and therefore 125 evaluation months (T - 15 - window) are the\nparent's values and every other economy's; kp_vy/vyxT860, the one economy that departed\nfrom them, is retired rather than re-run, because its economy IS vyx.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE and are deleted, not\narchived and quoted. The parent spec stays in experiments/specs/ as the record of what\nthose numbers were produced under.\n\nPREDICTION (2026-09-15). Reference: the parent's SR_max 0.2292, EW market 0.0797, FMR 0.1930,\nbest linear 0.2020, DKKM 0.2073, gap +0.0053, fair gap -0.0024, room +0.0044.\n(a) room stays below +0.010 and SR_max moves by less than 0.005. The column rf_cols now adds\nis the state y, which NO firm loads on in this economy (its 21 integral tables agree across y\nto 4e-12), so it is a pure noise column: it can enrich a basis but cannot condition on\nanything.\n(b) DKKM rises 0.000 to 0.010. This economy's winning penalty was interior, unlike Path 1's.\n(c) fair gap within 0.005 of zero. FALSIFIED as a no-gap baseline above +0.01.\n(d) winning penalty interior in at least 8 of 10 seeds. If 1e-5 wins here, the KP14 floor is\na property of the MODEL and not of Path 1's exposure structure, which would be news.\n\n--- PROTOCOL v3 (2026-09-21): the amended ridge grid ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter moved; `params`, `env` and the solve stages are\nthe parent's. What moved is the MEASUREMENT, and for nine of the thirteen economies also the\nPRICING of the solve (below).\n\nestimation.kappas (1e-05 ... 10.0), seven values -> (1e-07 ... 1000.0), ELEVEN. The v2\ncampaign's own gate -- the winning DKKM penalty INTERIOR in at least 8 of 10 seeds -- failed\nin five of thirteen economies, and it failed in BOTH directions: vyx 3/10 and vyg25 4/10 won\nat the floor 1e-5, while gx7 2/10, bx7 7/10 and g0235s 5/10 won at the ceiling 10. A censored\nDKKM Sharpe is a lower bound of unknown size, and KP14's censoring sits directly under the\nproject's only positive result. Two decades each side rather than one, because gx7's ceiling\nwon in 8 of 10 seeds and one decade would plausibly not have uncensored it. The fair\nbenchmark's grid is DERIVED (run_estimators.py: sorted(set(kappas) | {10*max, 100*max})), so\nit keeps its deliberate two-decade margin over DKKM's automatically, now ending at 1e5.\n\nThis is a protocol amendment, not an experiment: it is estimator-side, so it moves every row\nof docs/RESULTS.md. All thirteen specs are bumped together for this reason -- including the\nfour gs_bx economies, whose solves the pricing fix does not touch.\n\nRESULTS PRODUCED UNDER THE PARENT SPEC ARE NOT COMPARABLE TO THESE. The parent stays in\nexperiments/specs/ as the record of what those numbers were produced under.\n\nTHE SOLVE ALSO CHANGES. variants/kp_vy priced the mean-reverting state y the way KP14 prices\nits GBM shocks, as a constant b*gamma_v*sigma_y added to the discount rate. For an OU state\nthe Girsanov adjustment SATURATES at b*gamma_v*sigma_y/kappa_y rather than growing linearly\nin the horizon, so that over-discounts: claim values were understated by 6.9% / 17.7% / 25.2%\nat b = 0.02 / 0.07 / 0.14, and no single gamma_v out to 20 priced all three types. Corrected\nin merge 91095fb by substituting W = e^{by} A and solving under the Q-generator; NY, y_max\nand the 63-table layout are unchanged.\n\nPRECOMMITMENT: the new G and integ ids were computed from these parameters and the current\nsource WITHOUT solving (the integ id in a throwaway git worktree, since it hashes the G\ntables' bytes), and this spec is committed before the tables are built.\n\nPREDICTION (2026-09-21, protocol v3). Reference: the v2 ten seeds -- SR_max 0.2292, EW market\n0.0797, FMR 0.1930, best linear 0.2020, DKKM 0.2081, fair gap -0.0016, room +0.0044.\n\nTHIS ROW IS THE CONTROL, and its prediction is the sharpest in the campaign. At type_bv = [0]\nand gamma_v = 0 the KP14 correction is IDENTICALLY ZERO, so the corrected tables should carry\nthe same numbers as the pre-fix ones. Measured before this spec was written: the rebuilt G\ntable differs from the committed pre-fix one by a relative norm of 3.5e-12 (max abs 6.7e-06),\nwhich is the different solve path -- an 89-node internal Q-grid sampled back to 21 nodes,\nagainst a direct 21-node solve -- and not an economic difference.\n(a) EVERY population quantity unchanged to display precision. FALSIFIED if SR_max or room\n    moves by more than seed noise: that would mean the fix touches an economy in which the\n    correction is provably zero, i.e. the fix has a bug.\n(b) DKKM moves by less than +0.005; its penalty was interior 10/10.\n(c) fair gap stays within 0.005 of -0.0016.\n\n--- THE PRICED STATE GENERALISES TO SEVERAL, 2026-09-24 ---\n\nTHE ECONOMY IS UNCHANGED. Not one parameter moved; `params`, `env` and the solve stages are the\nparent's, and the G tables rebuild BYTE-IDENTICAL -- verified for all seven committed tables before\nthis spec was written. What moved is the PRODUCER: variants/kp_vy now accepts a loading VECTOR per\ntype over several independent priced OU states (commit bbbb384), so `type_bv` may be (ntypes,) as\nhere or (ntypes, nstates), and `gamma_v` the matching price vector. A type's claim is on\ne^{b_f . y}, and the projection s_f = b_f . y is itself a scalar OU, so type f remains exactly the\nscalar problem this economy solves, at b_eff = ||b_f|| and gamma_eff = (b_f . gamma)/||b_f||. At\nnstates = 1 the substitution is the identity and the sign of b is preserved deliberately.\n\nSo this bump records a SOURCE change with no economic content. solve_id digests the producer's whole\nsource, so all six kp_vy ids moved and the specs must move with them; the tables they name are the\nsame bytes. Results produced under the parent spec remain valid numbers for this economy -- unlike a\nprotocol or pricing bump -- but the seeds are re-run so the recorded provenance names a live solve.\n\nPRECOMMITMENT: both ids were computed from these parameters and the current source WITHOUT solving,\nby constructing the solstamp snapshots directly against the G tables already on disk. This spec is\ncommitted before any new manifest exists.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-kpbase-v3",
+    "supersedes": "var-kp_vy-kpbase-v3",
+    "changes": [
+      "PRODUCER: kp_vy generalised to several priced states (bbbb384). The economy is unchanged and the G tables rebuild byte-identical; solve_id digests the whole producer source, so both ids moved.",
+      "expected_solves G 57d8ab3fd1e683a8 -> 3a5431c05455a6d4, integ eeea76dd678bb9eb -> 48069bc07b02f4d3"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true,
+    "kp_price_of_risk": "constant: gamma_x 0.69, gamma_z -0.35; no priced state (gamma_v 0, type_bv [0])"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      1.0
+    ],
+    "type_bv": [
+      0.0
+    ],
+    "gamma_v": 0.0,
+    "bv_comp": 0.0
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "kpbase"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            1.0
+          ],
+          "type_bv": [
+            0.0
+          ],
+          "gamma_v": 0.0,
+          "bv_comp": 0.0
+        },
+        "args": {
+          "prefix": "kpbase"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-09-14 as A1 in docs/NEXTUP.md",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=kpbase",
+    "solve_note": "built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=kpbase python build_vy_tables.py kpbase; tables and manifests committed",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "G": "3a5431c05455a6d4",
+    "integ": "48069bc07b02f4d3"
+  },
+  "precommitted": true,
+  "solves_pending": [
+    "G",
+    "integ"
+  ],
+  "spec_hash": "b1dd3e3ce703716b0815c5ab650ba3e61a902795e212991caca4f8d149216649",
+  "reused_solves": null
+}
