@@ -482,7 +482,7 @@
     "source_script_note": "designed 2026-09-24 from the probe in _scratch/kmulti/; docs/NEXTUP.md item 4",
     "runner": "variants/run_seeds_slurm.sh",
     "runner_note": "SEED_SPEC=vym3",
-    "solve_note": "to be built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=vym3 python build_vy_tables.py",
+    "solve_note": "built on the Mac 2026-09-24: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> python build_vy_tables.py <prefix>  -- NOTE the prefix is argv[1], not KP_VY_PREFIX. Both printed ids reproduced the precommitment exactly.",
     "verified_by": "tests/test_specs_match_shell.py"
   },
   "expected_solves": {
@@ -490,10 +490,7 @@
     "integ": "01405d3733a85066"
   },
   "precommitted": true,
-  "solves_pending": [
-    "G",
-    "integ"
-  ],
+  "solves_pending": null,
   "spec_hash": "c93283e287354b8e05c9b4b829cacbe1f1ec781c84fd7019ab17ea8576e38bb5",
   "reused_solves": null
 }

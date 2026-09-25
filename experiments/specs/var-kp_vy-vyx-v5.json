@@ -103,7 +103,8 @@
   "provenance": {
     "source_script": "variants/kp_vy/run_vyx.sh",
     "transcribed": "2026-09-04",
-    "verified_by": "tests/test_specs_match_shell.py"
+    "verified_by": "tests/test_specs_match_shell.py",
+    "solve_note": "built on the Mac 2026-09-24: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> python build_vy_tables.py <prefix>  -- NOTE the prefix is argv[1], not KP_VY_PREFIX. Both printed ids reproduced the precommitment exactly."
   },
   "spec_hash": "c97c23c694fc2dfdbfc42622c8a96b5e3e4b3a3d5afa3d98a7d0399b23fe7061",
   "expected_solves": {
@@ -112,8 +113,5 @@
   },
   "precommitted": true,
   "reused_solves": null,
-  "solves_pending": [
-    "G",
-    "integ"
-  ]
+  "solves_pending": null
 }
