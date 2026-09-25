@@ -1,0 +1,499 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vym3-v1",
+  "title": "KP14 with three priced states and twenty rank-3 exposure types: the first economy that raises K",
+  "question": "Does raising the number of priced aggregate shocks from three to five, at constant total price of risk, produce a complexity gap larger than the best the project has measured?",
+  "notes": "vym3: THREE priced states, twenty types, rank-3 loadings -- the first economy in this project\nthat raises K, the number of priced aggregate shocks.\n\nWHY. Finding 11 (docs/RESULTS.md): all three models are frictionless exact K-factor economies, so\nmu_t = -cov_t(R, m) by construction and the population ceiling on DKKM-over-linear is set by K\nagainst the number of portfolios the linear side spans. Measured: 0.994 at K=1, 1.002 at K=2, 1.023\nat K=3, monotone. Every existing economy sits at K <= 3 and the best measured ratio in the file is\nvyg25's 1.044. The sweep in voc_diagnosis/findings.md B3, reproduced in _scratch/kceiling/, puts the\nceiling at 1.158 for K=5. This economy is K=5: x, z, and three priced OU states.\n\nTHE MECHANISM IS A PRODUCT, and that is the whole content. A type's premium tracks b_f . gamma while\nits exposure MAGNITUDE tracks ||b_f||. With ONE state those are the same number times a constant, so\nany characteristic revealing the magnitude spans the premium cross-section exactly -- R^2 of 1.000,\nwhich is why vyx and vyg25 have three types and three perfectly ordered premia, and why their gaps\nare hundredths. With three states the premium is the PRODUCT of magnitude and alignment, which no\nlinear map in the characteristics represents. Measured on the design below: a map on magnitude alone\nreaches R^2 0.52, and even magnitude and alignment jointly reach 0.885.\n\nTHE DESIGN. Five alignment directions (cos to gamma of 1.0, 0.8, 0.6, 0.4, 0.2) crossed with four\nmagnitudes (0.02, 0.06, 0.10, 0.14), equal shares. Loading matrix rank 3. Premia b_f . gamma run\n0.01 to 0.35 over TWENTY distinct values against only FOUR distinct magnitudes, and the ladder\nINVERTS: a type at ||b|| = 0.02 earns 0.05 while one at 0.06 earns 0.03. A linear map monotone in\nwhatever characteristic tracks the magnitude cannot produce that ordering.\n\nTWENTY TYPES, NOT SIX, and the count is the point. The fair linear side carries up to ELEVEN columns\n(linlev_m: the market, five rank-standardised characteristics, five level features). Six types would\nleave it enough freedom to interpolate six premia exactly whatever their geometry; twenty\nover-determines it by nine. This was probed before the economy was designed (_scratch/kmulti/).\n\nTHE PRICE OF RISK IS HELD FIXED, NOT RAISED. ||gamma|| = 2.5, which is vyg25's scalar gamma_v, split\nacross the three states at 2.5/sqrt(3) each. So SR_max and expected returns stay in the band the\npricing fix left them in and the experiment isolates DIMENSION from LEVEL. Raising the total price\ninstead would drift back toward the laboratory calibration the 2026-09-21 correction removed.\n\nCOST. No product grid: each type is the scalar 1-D problem at its own projection, so twenty types is\ntwenty G solves of about 2 s each and 420 integral tables, against vyg25's three and 63.\n\nFEASIBILITY, checked before this spec was written: A0 finite and positive throughout (3.08 to 5.74);\nthe A-solve discount at least 0.2297; rho0_at, which is what the corrected G solve discounts at,\n+0.01575 and y-free. NOTE that rho_ty -- the PRE-FIX discount vector -- goes to -0.104 for the\nhigh-magnitude low-alignment types, against vyg25's +0.033. It is inert under y_risk_neutral = 1 and\nno live consumer reads it, but this economy CANNOT be rebuilt under the legacy y_risk_neutral = 0\nswitch. The extreme type solves G on 103 nodes at a relative residual of 5.7e-13.\n\nPREDICTION (2026-09-24). Reference: vyg25's ten seeds -- SR_max 0.4952, EW market 0.0529, FMR 0.2921,\nbest linear 0.3283, DKKM 0.3503, fair gap +0.0148 (t 5.2, positive in 10 of 10), room +0.0820,\nDKKM/fair 1.044.\n(a) SR_max within 25% of vyg25's, because the total price of y-risk is unchanged by construction and\n    only its direction is spread. FALSIFIED as a constant-price design if SR_max exceeds 0.75, which\n    would mean the split raised the level rather than the dimension.\n(b) oracle mean expected excess return stays inside the file's 3.3% to 12.6% a year band. This is the\n    calibration clause and it is what the pricing fix bought; a design that leaves the band is not\n    defensible whatever its gap.\n(c) room RISES above vyg25's +0.0820, because three priced directions give the true conditional mean\n    a cross-sectional shape a rank-linear basis cannot reach.\n(d) THE GATE: the fair gap EXCEEDS vyg25's +0.0148 and stays positive at ten seeds. FALSIFIED as a\n    K lever below +0.0148 -- in which case raising the number of priced states does not buy what\n    finding 11's ceiling says it should, and the K explanation of this project's negative result is\n    itself wrong, which is a larger finding than the economy.\n(e) the winning ridge penalty is interior in at least 8 of 10 seeds.\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving.\nThe integ id hashes the G tables' raw bytes and so cannot be known until they exist; it was read in a\nthrowaway git worktree whose registry was discarded, the precedent recorded in docs/RUNS.md. This\nspec is committed BEFORE any manifest exists.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyg25-v4",
+    "supersedes": null,
+    "changes": [
+      "THREE priced OU states instead of one, at constant total price: ||gamma|| = 2.5 split as 2.5/sqrt(3) each",
+      "TWENTY types with rank-3 loading VECTORS (five alignments x four magnitudes) instead of three scalar loadings",
+      "bv_comp 1.2 and every other parameter are vyg25's"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_regime_labels": "corrected (docs/kp14_regime_labels.md)",
+    "zero_book_in_sdf_solve": true,
+    "kp_priced_states": "three independent unit-variance OU states sharing kappa_y, priced at 2.5/sqrt(3) each; each type loads with a 3-vector and is solved at its own scalar projection"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05
+    ],
+    "type_bv": [
+      [
+        0.0115470054,
+        0.0115470054,
+        0.0115470054
+      ],
+      [
+        -0.0005603547,
+        0.0141365838,
+        0.0141365838
+      ],
+      [
+        0.0069282032,
+        -0.0043855053,
+        0.0182419117
+      ],
+      [
+        -0.0103478274,
+        0.0121021169,
+        0.0121021169
+      ],
+      [
+        0.0023094011,
+        -0.0115470054,
+        0.0161658075
+      ],
+      [
+        0.0346410162,
+        0.0346410162,
+        0.0346410162
+      ],
+      [
+        -0.001681064,
+        0.0424097514,
+        0.0424097514
+      ],
+      [
+        0.0207846097,
+        -0.0131565158,
+        0.0547257352
+      ],
+      [
+        -0.0310434822,
+        0.0363063508,
+        0.0363063508
+      ],
+      [
+        0.0069282032,
+        -0.0346410162,
+        0.0484974226
+      ],
+      [
+        0.0577350269,
+        0.0577350269,
+        0.0577350269
+      ],
+      [
+        -0.0028017733,
+        0.070682919,
+        0.070682919
+      ],
+      [
+        0.0346410162,
+        -0.0219275263,
+        0.0912095586
+      ],
+      [
+        -0.051739137,
+        0.0605105846,
+        0.0605105846
+      ],
+      [
+        0.0115470054,
+        -0.0577350269,
+        0.0808290377
+      ],
+      [
+        0.0808290377,
+        0.0808290377,
+        0.0808290377
+      ],
+      [
+        -0.0039224826,
+        0.0989560865,
+        0.0989560865
+      ],
+      [
+        0.0484974226,
+        -0.0306985369,
+        0.1276933821
+      ],
+      [
+        -0.0724347918,
+        0.0847148185,
+        0.0847148185
+      ],
+      [
+        0.0161658075,
+        -0.0808290377,
+        0.1131606528
+      ]
+    ],
+    "gamma_v": [
+      1.443375673,
+      1.443375673,
+      1.443375673
+    ],
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vym3"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "G",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05
+          ],
+          "type_bv": [
+            [
+              0.0115470054,
+              0.0115470054,
+              0.0115470054
+            ],
+            [
+              -0.0005603547,
+              0.0141365838,
+              0.0141365838
+            ],
+            [
+              0.0069282032,
+              -0.0043855053,
+              0.0182419117
+            ],
+            [
+              -0.0103478274,
+              0.0121021169,
+              0.0121021169
+            ],
+            [
+              0.0023094011,
+              -0.0115470054,
+              0.0161658075
+            ],
+            [
+              0.0346410162,
+              0.0346410162,
+              0.0346410162
+            ],
+            [
+              -0.001681064,
+              0.0424097514,
+              0.0424097514
+            ],
+            [
+              0.0207846097,
+              -0.0131565158,
+              0.0547257352
+            ],
+            [
+              -0.0310434822,
+              0.0363063508,
+              0.0363063508
+            ],
+            [
+              0.0069282032,
+              -0.0346410162,
+              0.0484974226
+            ],
+            [
+              0.0577350269,
+              0.0577350269,
+              0.0577350269
+            ],
+            [
+              -0.0028017733,
+              0.070682919,
+              0.070682919
+            ],
+            [
+              0.0346410162,
+              -0.0219275263,
+              0.0912095586
+            ],
+            [
+              -0.051739137,
+              0.0605105846,
+              0.0605105846
+            ],
+            [
+              0.0115470054,
+              -0.0577350269,
+              0.0808290377
+            ],
+            [
+              0.0808290377,
+              0.0808290377,
+              0.0808290377
+            ],
+            [
+              -0.0039224826,
+              0.0989560865,
+              0.0989560865
+            ],
+            [
+              0.0484974226,
+              -0.0306985369,
+              0.1276933821
+            ],
+            [
+              -0.0724347918,
+              0.0847148185,
+              0.0847148185
+            ],
+            [
+              0.0161658075,
+              -0.0808290377,
+              0.1131606528
+            ]
+          ],
+          "gamma_v": [
+            1.443375673,
+            1.443375673,
+            1.443375673
+          ],
+          "bv_comp": 1.2
+        },
+        "args": {
+          "KP_VY_PREFIX": "vym3"
+        },
+        "type_index": null
+      },
+      {
+        "name": "integ",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05
+          ],
+          "type_bv": [
+            [
+              0.0115470054,
+              0.0115470054,
+              0.0115470054
+            ],
+            [
+              -0.0005603547,
+              0.0141365838,
+              0.0141365838
+            ],
+            [
+              0.0069282032,
+              -0.0043855053,
+              0.0182419117
+            ],
+            [
+              -0.0103478274,
+              0.0121021169,
+              0.0121021169
+            ],
+            [
+              0.0023094011,
+              -0.0115470054,
+              0.0161658075
+            ],
+            [
+              0.0346410162,
+              0.0346410162,
+              0.0346410162
+            ],
+            [
+              -0.001681064,
+              0.0424097514,
+              0.0424097514
+            ],
+            [
+              0.0207846097,
+              -0.0131565158,
+              0.0547257352
+            ],
+            [
+              -0.0310434822,
+              0.0363063508,
+              0.0363063508
+            ],
+            [
+              0.0069282032,
+              -0.0346410162,
+              0.0484974226
+            ],
+            [
+              0.0577350269,
+              0.0577350269,
+              0.0577350269
+            ],
+            [
+              -0.0028017733,
+              0.070682919,
+              0.070682919
+            ],
+            [
+              0.0346410162,
+              -0.0219275263,
+              0.0912095586
+            ],
+            [
+              -0.051739137,
+              0.0605105846,
+              0.0605105846
+            ],
+            [
+              0.0115470054,
+              -0.0577350269,
+              0.0808290377
+            ],
+            [
+              0.0808290377,
+              0.0808290377,
+              0.0808290377
+            ],
+            [
+              -0.0039224826,
+              0.0989560865,
+              0.0989560865
+            ],
+            [
+              0.0484974226,
+              -0.0306985369,
+              0.1276933821
+            ],
+            [
+              -0.0724347918,
+              0.0847148185,
+              0.0847148185
+            ],
+            [
+              0.0161658075,
+              -0.0808290377,
+              0.1131606528
+            ]
+          ],
+          "gamma_v": [
+            1.443375673,
+            1.443375673,
+            1.443375673
+          ],
+          "bv_comp": 1.2
+        },
+        "args": {
+          "KP_VY_PREFIX": "vym3"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "designed 2026-09-24 from the probe in _scratch/kmulti/; docs/NEXTUP.md item 4",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=vym3",
+    "solve_note": "to be built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=vym3 python build_vy_tables.py",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "G": "dd23d7300cd54a0d",
+    "integ": "01405d3733a85066"
+  },
+  "precommitted": true,
+  "solves_pending": [
+    "G",
+    "integ"
+  ],
+  "spec_hash": "c93283e287354b8e05c9b4b829cacbe1f1ec781c84fd7019ab17ea8576e38bb5",
+  "reused_solves": null
+}

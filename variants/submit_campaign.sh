@@ -71,6 +71,7 @@ kpbase|public|48G|2-00:00|29.2 GiB, burn-in already 400
 gsbase|public|32G|2-00:00|4.5 GiB -> ~5; GS21 panels are the lightest
 vyx|public|48G|3-00:00|30.6 GiB, burn-in already 400
 vyg25|public|48G|3-00:00|29.2 GiB; longest KP14 at 7.6 h under the v2 grid
+vym3|public|64G|2-00:00|the KP14 class at 29.2 GiB, plus twenty types of tables against three; 64G for headroom
 g28|public|32G|2-00:00|GS21 class, ~5 GiB
 gx7|public|32G|2-00:00|GS21 class; loads five 90-100 MB solutions
 bx7|public|32G|2-00:00|GS21 class; loads five 88-100 MB solutions
