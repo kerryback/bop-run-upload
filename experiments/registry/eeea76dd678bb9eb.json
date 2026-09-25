@@ -595,6 +595,11 @@
   },
   "spec_ids": [],
   "stage": "integ",
+  "superseded_by": {
+    "on": null,
+    "reason": "the producer generalised to several priced states (bbbb384); solve_id digests the whole producer source, so the id moved. The tables are BYTE-IDENTICAL and the economy is unchanged -- this is a re-key, not a re-derivation.",
+    "solve_id": "48069bc07b02f4d3"
+  },
   "tags": [
     "kpbase"
   ],
