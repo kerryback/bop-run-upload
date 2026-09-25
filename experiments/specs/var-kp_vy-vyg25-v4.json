@@ -106,7 +106,8 @@
     "runner": "variants/run_seeds_slurm.sh",
     "runner_note": "SEED_SPEC=vyg25",
     "solve_runner": "variants/run_solve_slurm.sh",
-    "verified_by": "tests/test_specs_match_shell.py"
+    "verified_by": "tests/test_specs_match_shell.py",
+    "solve_note": "built on the Mac 2026-09-24: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> python build_vy_tables.py <prefix>  -- NOTE the prefix is argv[1], not KP_VY_PREFIX. Both printed ids reproduced the precommitment exactly."
   },
   "spec_hash": "19c3041753095d3ae7c21cf0f68e8f1b8550a7f2c62bbb0a377221cc31e59a51",
   "expected_solves": {
@@ -114,9 +115,6 @@
     "integ": "6d483105d19fd627"
   },
   "precommitted": true,
-  "solves_pending": [
-    "G",
-    "integ"
-  ],
+  "solves_pending": null,
   "reused_solves": null
 }

@@ -30,7 +30,7 @@ result's provenance is in question**. It is not results (`docs/RESULTS.md`) and 
   to what origin carries, then fast-forwards; any difference, or a checkout that cannot fast-forward,
   aborts with nothing touched (`tests/test_cluster_pull.py`).
 
-## Three hazards worth carrying forward
+## Four hazards worth carrying forward
 
 Each of these has fired at least once and cost something. They are the reason for a test or a rule.
 
@@ -59,6 +59,17 @@ Each of these has fired at least once and cost something. They are the reason fo
   fair benchmark, winsorisation -- against `variants/common/protocol.py`, with `run_is_current`
   folding it in (`tests/test_runstamp_multitag.py`). **Before submitting, confirm every id you expect
   to move has moved**; the 2026-09-21 campaign did, and all 130 tasks read STALE and re-ran.
+
+- **`build_vy_tables.py` takes its prefix as `argv[1]`, NOT from `KP_VY_PREFIX`** -- unlike
+  `kp14_fd_vy.py` and `panel_functions_kp14.py`, which do read the env var. Running it with only the
+  env var set silently builds under the DEFAULT prefix `vy`, and on 2026-09-24 that wrote three
+  economies over each other in `G_vy*.csv` and recorded six manifests. The G ids came out RIGHT --
+  `extra` is not hashed, so a G solve_id is prefix-blind -- while the integ ids came out WRONG,
+  because `artifact_digests` keys by repo-relative PATH and `G_vy0.csv` is not `G_vyx0.csv`. So the
+  failure mode is a manifest carrying a CORRECT id and the WRONG artifacts, which a later correct
+  build would find already recorded and skip. Nothing committed was touched and `git clean` of
+  `variants/kp_vy` and `experiments/registry` undid it, but check the printed
+  `[solstamp] ... prefix=` line before letting a build finish.
 
 ## Choosing a cluster
 

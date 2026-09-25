@@ -98,7 +98,7 @@
     "source_script_note": "proposed 2026-09-14 as A1 in docs/NEXTUP.md",
     "runner": "variants/run_seeds_slurm.sh",
     "runner_note": "SEED_SPEC=kpbase",
-    "solve_note": "built on the Mac: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> KP_VY_PREFIX=kpbase python build_vy_tables.py kpbase; tables and manifests committed",
+    "solve_note": "built on the Mac 2026-09-24: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> python build_vy_tables.py <prefix>  -- NOTE the prefix is argv[1], not KP_VY_PREFIX. Both printed ids reproduced the precommitment exactly.",
     "verified_by": "tests/test_specs_match_shell.py"
   },
   "expected_solves": {
@@ -106,10 +106,7 @@
     "integ": "48069bc07b02f4d3"
   },
   "precommitted": true,
-  "solves_pending": [
-    "G",
-    "integ"
-  ],
+  "solves_pending": null,
   "spec_hash": "b1dd3e3ce703716b0815c5ab650ba3e61a902795e212991caca4f8d149216649",
   "reused_solves": null
 }

@@ -1,0 +1,547 @@
+{
+  "achieved": {
+    "exit": "direct_solve",
+    "max_rel_residual": 1.19e-12,
+    "per_type_rel_residual": {
+      "0": 1.19e-12,
+      "1": 1.08e-12,
+      "2": 8.24e-13
+    }
+  },
+  "artifacts": [
+    {
+      "bytes": 787820,
+      "path": "variants/kp_vy/G_vyx0.csv",
+      "sha256": "acda02d1580c10fbfbfd48bc6d74e79249fb8cb8a792067ba20b7039dd8be1c7"
+    },
+    {
+      "bytes": 801289,
+      "path": "variants/kp_vy/G_vyx1.csv",
+      "sha256": "ba1875ce674f283407180894ec184885ddb24d4611f0e9a705bb4c5b43aca26c"
+    },
+    {
+      "bytes": 788133,
+      "path": "variants/kp_vy/G_vyx2.csv",
+      "sha256": "6b20970af7460d7a5eeea34abff89c57b1732f17a6538bcafe4c619f429a65c1"
+    }
+  ],
+  "committable": true,
+  "env_params": {},
+  "environment": {
+    "hostname": "FIN-4227130.local",
+    "machine": "arm64",
+    "numpy": "2.4.2",
+    "pandas": "3.0.0",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python": "3.11.14",
+    "scipy": "1.17.0"
+  },
+  "extra": {
+    "prefix": "vyx"
+  },
+  "inputs": {},
+  "model": "kp_vy",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "A0_ty": {
+      "__array_sha256__": "53ddb2a169437e12d338ab2615b484a6d42ebe3afcb8212fa172855b67296d9e",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A1_ty": {
+      "__array_sha256__": "c032adad869eec181836e4fbf08b10072154bee2966f0e0b6cc1ef405929b4bb",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A2_ty": {
+      "__array_sha256__": "1fbd7f08678e04d0396b94cdf0e66eed99765d504d37f40bb84696942e975d24",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A3_ty": {
+      "__array_sha256__": "e10ee99074ce790076b8a06ea548a97c5d2d9b45f20c71b7237363ba89c72af7",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A_0": "4.135083000089826",
+    "A_1": "1.670615968910816",
+    "A_2": "1.3331172311133523",
+    "A_3": "0.907067326397374",
+    "C": "0.05972165551735604",
+    "NY": 21,
+    "Qy": {
+      "__array_sha256__": "e687dabff6c33d05313acdf74e753bb65f1bc01a79f5fface07be851af175cd2",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "_A_solve": {
+      "(0, 0.0)": {
+        "__array_sha256__": "a4c04e3d485d5e41c143bea12871b2db77d4e636702b7785c4bd689cc1d62d0a",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(0, 0.35)": {
+        "__array_sha256__": "8b757588ffff370a3d7beeac8b55e84a057be70d9f5bbf7fa2da5ba368e9b35d",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(0, 0.5)": {
+        "__array_sha256__": "7fe7aaaee4583da1e8d3d1566ed0597e1ab29333248343a4ccc1744e6277bd2f",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(0, 0.85)": {
+        "__array_sha256__": "2e802f673028890d4bf066e29700d4f7a76c1a8538672a8b4978cd7fb238ebeb",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(1, 0.0)": {
+        "__array_sha256__": "d55f47bfdce62419836ed61a93e61d1292356ac9be87212cd0fc91b39bb53fe1",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(1, 0.35)": {
+        "__array_sha256__": "b494c72213545709ecf9db952e3277fee03e4b30f7f79dce3540b473aad3dfe1",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(1, 0.5)": {
+        "__array_sha256__": "bd87d37e142ab928cb360c67864cd55bad62133f606594b636527374271cf4e1",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(1, 0.85)": {
+        "__array_sha256__": "51c00fa217ed296d2f1fe5c85bc8585985b8a7457853a3d3d97f9df481d5959d",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(2, 0.0)": {
+        "__array_sha256__": "cc579657b628dcc5629ad27c4951e9fade3207b78eb27702dd112b9fa08ea626",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(2, 0.35)": {
+        "__array_sha256__": "941f0e5fc486db845b79f18ed456bea015f041e02d0f3b6421316df48c16f652",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(2, 0.5)": {
+        "__array_sha256__": "fa178eeb8b10bb60a1c705b30cd6afa518dc759e6522e6251da18107e9b8acad",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      },
+      "(2, 0.85)": {
+        "__array_sha256__": "ed168b89078f6bb71f17ae11ce4efe219e50d13e871d3e840d9edfa9c1adc3bc",
+        "dtype": "float64",
+        "shape": [
+          1381
+        ]
+      }
+    },
+    "_NORMALISED": {
+      "__set__": [
+        "\"type_share\""
+      ]
+    },
+    "_QyQ_solve_ty": [
+      {
+        "__array_sha256__": "cc022c03d20f06d7f43020aaa42d9de6a91c79a164ac5d9156e15bcfd8e1c943",
+        "dtype": "float64",
+        "shape": [
+          1381,
+          1381
+        ]
+      },
+      {
+        "__array_sha256__": "cc022c03d20f06d7f43020aaa42d9de6a91c79a164ac5d9156e15bcfd8e1c943",
+        "dtype": "float64",
+        "shape": [
+          1381,
+          1381
+        ]
+      },
+      {
+        "__array_sha256__": "cc022c03d20f06d7f43020aaa42d9de6a91c79a164ac5d9156e15bcfd8e1c943",
+        "dtype": "float64",
+        "shape": [
+          1381,
+          1381
+        ]
+      }
+    ],
+    "_ar_y": "np.float64(0.9712545752136729)",
+    "_bv": {
+      "__array__": [
+        "0.02",
+        "0.07",
+        "0.14"
+      ],
+      "shape": [
+        3,
+        1
+      ]
+    },
+    "_const_base_solve": {
+      "__array_sha256__": "f1113e6b31d3323495b205f83902c00ec7a811142704130f47d32280cc487f1b",
+      "dtype": "float64",
+      "shape": [
+        1381
+      ]
+    },
+    "_discarded": [],
+    "_i0": 10,
+    "_i_tab": {
+      "__array__": [
+        520,
+        540,
+        560,
+        580,
+        600,
+        620,
+        640,
+        660,
+        680,
+        700,
+        720,
+        740,
+        760,
+        780,
+        800,
+        820,
+        840,
+        860,
+        880,
+        900,
+        920
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "_n_hi": 23,
+    "_n_lo": 26,
+    "_pre_override_names": {
+      "__set__": [
+        "\"NY\"",
+        "\"__builtins__\"",
+        "\"__cached__\"",
+        "\"__doc__\"",
+        "\"__file__\"",
+        "\"__loader__\"",
+        "\"__name__\"",
+        "\"__package__\"",
+        "\"__spec__\"",
+        "\"_np\"",
+        "\"alpha\"",
+        "\"burnin\"",
+        "\"bv_comp\"",
+        "\"bx_seed\"",
+        "\"delta\"",
+        "\"dt\"",
+        "\"g_file\"",
+        "\"g_hi\"",
+        "\"g_lo\"",
+        "\"g_steep\"",
+        "\"gam_seed\"",
+        "\"gamma_v\"",
+        "\"gamma_x\"",
+        "\"gamma_z\"",
+        "\"integ_file\"",
+        "\"json\"",
+        "\"kappa_y\"",
+        "\"lambda_H\"",
+        "\"mu_H\"",
+        "\"mu_L\"",
+        "\"mu_lambda\"",
+        "\"mu_x\"",
+        "\"mu_z\"",
+        "\"os\"",
+        "\"r\"",
+        "\"sigma_eps\"",
+        "\"sigma_lambda\"",
+        "\"sigma_u\"",
+        "\"sigma_x\"",
+        "\"sigma_z\"",
+        "\"theta_eps\"",
+        "\"theta_u\"",
+        "\"type_bv\"",
+        "\"type_share\"",
+        "\"y_max\"",
+        "\"y_risk_neutral\""
+      ]
+    },
+    "_sd_c": "np.float64(0.23804316861970193)",
+    "_sub": 20,
+    "_ys_hi": "11.5",
+    "_ys_lo": "np.float64(-12.302822993603819)",
+    "alpha": "0.85",
+    "b_eff": {
+      "__array__": [
+        "0.02",
+        "0.07",
+        "0.14"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "burnin": 400,
+    "bv_comp": "1.2",
+    "bx_seed": 777,
+    "const_base_y": {
+      "__array__": [
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "delta": "0.1",
+    "dt": "0.08333333333333333",
+    "dy": "np.float64(0.3500000000000001)",
+    "exit_H": "0.16",
+    "exit_L": "0.075",
+    "g_file": "G_func.csv",
+    "g_hi": "1.0",
+    "g_lo": "1.0",
+    "g_steep": "1.5",
+    "gam_seed": 555,
+    "gamma_eff": {
+      "__array__": [
+        "1.8",
+        "1.8",
+        "1.8"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "gamma_v": "1.8",
+    "gamma_vec": {
+      "__array__": [
+        "1.8"
+      ],
+      "shape": [
+        1
+      ]
+    },
+    "gamma_x": "0.69",
+    "gamma_z": "-0.35",
+    "gm_grid": {
+      "__array__": [
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "integ_file": "integ_results.npz",
+    "kappa_y": "0.35",
+    "lambda_H": "2.35",
+    "lambda_L": "0.36718749999999983",
+    "mu_H": "0.075",
+    "mu_L": "0.16",
+    "mu_lambda": "2.0",
+    "mu_x": "0.01",
+    "mu_z": "0.005",
+    "nstates": 1,
+    "ntypes": 3,
+    "pm_tau": {
+      "__array__": [
+        "1.0",
+        "2.706688829728226",
+        "10.069686376283853"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "prob_H": "0.3191489361702128",
+    "r": "0.05",
+    "rho": "0.04573253873300447",
+    "rho_ty": {
+      "__array_sha256__": "8bc16291dd95af5ba332eafd02a805a4092dba651462a7e65c3f942d53160721",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "sigma_eps": "0.2",
+    "sigma_lambda": "2.0",
+    "sigma_u": "1.5",
+    "sigma_x": "0.13",
+    "sigma_y": "np.float64(0.8366600265340756)",
+    "sigma_z": "0.035",
+    "theta_eps": "0.35",
+    "theta_u": "0.5",
+    "type_bv": {
+      "__array__": [
+        "0.02",
+        "0.07",
+        "0.14"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "type_bv_mat": {
+      "__array__": [
+        "0.02",
+        "0.07",
+        "0.14"
+      ],
+      "shape": [
+        3,
+        1
+      ]
+    },
+    "type_share": {
+      "__array__": [
+        "0.34",
+        "0.33",
+        "0.33"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "type_theta": {
+      "__array__": [
+        "1.0",
+        "1.1610896388756973",
+        "1.4140097097002413"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "y_grid": {
+      "__array__": [
+        "-3.5",
+        "-3.15",
+        "-2.8",
+        "-2.45",
+        "-2.1",
+        "-1.75",
+        "-1.4000000000000004",
+        "-1.0500000000000003",
+        "-0.7000000000000002",
+        "-0.3500000000000001",
+        "0.0",
+        "0.34999999999999964",
+        "0.6999999999999993",
+        "1.0499999999999998",
+        "1.3999999999999995",
+        "1.75",
+        "2.0999999999999996",
+        "2.4499999999999993",
+        "2.8",
+        "3.1499999999999995",
+        "3.5"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "y_max": "3.5",
+    "y_mean_Q": "np.float64(-4.302822993603818)",
+    "y_risk_neutral": 1,
+    "y_solve": {
+      "__array_sha256__": "3cbfd74bcd377ac3cc933a18ed444ff29cd0b7b7c3cafd6ff4459133afcd3663",
+      "dtype": "float64",
+      "shape": [
+        1381
+      ]
+    }
+  },
+  "recorded_at": "2026-09-24T22:26:20-0700",
+  "solve_id": "c5bb280a9cc16cf2",
+  "sources": {
+    "variants/kp_vy/kp14_fd_vy.py": "3c94e636066338fac56f4adae37c8dfca43808b9fb3d4e9da77b8e39d3cdf2bd",
+    "variants/kp_vy/parameters_kp14.py": "76cde412b5726611d98fdfcbc4cd819ff1c1ef8f31584dc52aeec25da6b99324"
+  },
+  "spec_ids": [],
+  "stage": "G",
+  "tags": [
+    "vyx"
+  ],
+  "total_bytes": 2377242
+}
