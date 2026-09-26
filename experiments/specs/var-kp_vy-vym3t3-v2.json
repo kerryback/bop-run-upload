@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vym3t3-v2",
+  "title": "KP14 with three priced states at three types: dimension against estimation density",
+  "question": "Was vym3's falsification caused by raising K to 5, or by spreading N=500 firms over twenty types at 25 firms each? This runs vym3's geometry at vyg25's density.",
+  "notes": "vym3t3: vym3's THREE priced states with THREE types instead of twenty -- the experiment that\nseparates dimension from estimation density.\n\nWHY. vym3 was the first economy in this project to raise K, the number of priced aggregate shocks,\nfrom 3 to 5. Its gate was FALSIFIED on 2026-09-25: the fair gap went +0.0148 (vyg25) to -0.0032,\npositive in only 5 of 10 seeds, and room FELL from +0.0820 to +0.0558 against a registered\nprediction that it would rise (docs/RESULTS.md finding 15). But vym3 changed TWO things at once. It\nraised K AND it went from three types to twenty. At N=500 with equal shares, twenty types is 25\nfirms per distinct premium value against vyg25's 167, and DKKM is the higher-variance of the two\nestimators, so it should pay for thin types before the linear side does. Nothing in that run can say\nwhich change cost the gap. THIS ECONOMY CHANGES BACK EXACTLY ONE OF THEM.\n\nTHE TYPES ARE SELECTED, NOT DESIGNED, and that is what makes the comparison clean. They are types\n3, 10 and 19 of vym3's own twenty -- same gamma vector, same three directions, same magnitudes,\nonly the count and the shares differ:\n\n  type   ||b||   cos to gamma   premium (b.gamma)\n     3   0.02           0.40    0.0200\n    10   0.10           1.00    0.2500\n    19   0.14           0.20    0.0700\n\nFOUR requirements, and the fourth is what supersedes v1 of this spec. A triple must be rank 3, carry\nthree distinct magnitudes, contain at least one inversion, AND leave the cross-section genuinely\nTHREE-DIMENSIONAL. v1 picked types (0, 9, 16) on the first three and on matching vym3's premium mean\nexactly. Its per-state total loading ratio is 7.10: formally rank 3, but the third priced state\nbarely present in the cross-section, so a negative result could have been read as weak dimension\nrather than thin density -- the very confound this economy exists to remove. Caught before any\nseed ran; v1's tables were built and discarded.\n\n  measure                          vym3    v1 (0,9,16)   THIS (3,10,19)\n  per-state total |loading| ratio  2.28    7.10          2.17\n  unit-direction condition number  2.25    3.07          1.60\n\nNote that a bare matrix_rank check does NOT catch this: two otherwise-qualifying triples pass it\nwith unit-direction condition numbers near 1e10. Of the 49 triples that clear all four bars, this\none has the widest premium range.\n\nRANK 3, so K stays at 5: x, z and all three priced OU states are loaded in the cross-section, and\non both balance measures this economy is at or better than vym3 itself.\n\nTHE PREMIUM MEAN IS 0.1133 against vym3's 0.1200, 5.6% low. vym3's falsification came with a 16%\nfall in SR_max and a 32% fall in room, so a three-type economy at a DIFFERENT premium level would\nconfound density with level all over again; 5.6% is inside the tolerance clause (b) sets and is the\nprice of taking state balance over an exact mean match. It does NOT match vyg25, whose premium mean\nis 0.1917; that gap is inherent to dispersing alignment at fixed ||gamma|| and no three-type\nselection can remove it, so vyg25 is the K=3 reference and vym3 is the controlled comparison.\n\nTHE INVERSION SURVIVES, and it is vym3's stated mechanism -- more sharply here than in v1: the\nLARGEST magnitude earns nearly the smallest premium. ||b|| = 0.10 earns 0.250 while ||b|| = 0.14\nearns 0.070. A linear map monotone in whatever characteristic tracks the magnitude cannot produce\nthat ordering. A monotone triple would have been vyg25 with a rescaled ladder and would have tested\nnothing.\n\nDENSITY IS vyg25's EXACTLY. Shares [0.34, 0.33, 0.33] are vyg25's own, so at N=500 the types carry\n170/165/165 firms against vym3's 25 each. Type 0 is in fact vyg25's smallest type outright --\nb_eff 0.02 at gamma_eff 2.5 -- so the two economies share a type.\n\nWHAT THIS DESIGN DOES NOT CLAIM. It does not claim to raise theta. Every KP14 economy measured on\nits panel sits near 0.19 -- vyg25 0.200, vym3 0.187 -- and finding 15 established that neither\nper-month theta nor the share of premium variance carried by time variation distinguishes an economy\nwith a gap from one without. Changing the type count is not expected to move either, and prediction\n(a) below is a FAMILY CHECK, not a mechanism claim. The whole content of this economy is the firms\nper type.\n\nFEASIBILITY, checked before this spec was written (_scratch/vym3t3/design.py): A0 finite and\npositive throughout, 3.246 to 5.782; rho0_at, which is what the corrected G solve discounts at,\n+0.01575 and y-free; b_eff [0.02, 0.10, 0.14] and gamma_eff [1.0, 2.5, 0.5]. NOTE that rho_ty --\nthe PRE-FIX discount vector -- runs -0.104 to +0.344. It is inert under y_risk_neutral = 1 and no\nlive consumer reads it, but this economy CANNOT be rebuilt under the legacy y_risk_neutral = 0\nswitch, the same caveat vym3 carries.\n\nCOST. Three G solves and 63 integral tables, against vym3's twenty and 420 -- the same chain, since\ncost scales with the number of TYPES and not the number of states. Ten Phoenix seeds at the\n2026-09-25 measured sizing: 48G, 2 days, about 6 h and 29.1 GiB each, ~60 node-hours.\n\nPREDICTION (2026-09-26). References: vym3's ten seeds -- SR_max 0.4178, room +0.0558, best fair\nlinear 0.2888, DKKM 0.2856, fair gap -0.0032 (t -1.65, positive in 5 of 10), theta 0.187. And\nvyg25's -- SR_max 0.4952, room +0.0820, fair gap +0.0148 (t 5.2, 10 of 10), theta 0.200.\n(a) FAMILY CHECK, not a mechanism claim: measured theta lands in [0.15, 0.25], where every KP14\n    economy measured so far sits. Outside it, this is not the same family and the comparison to\n    vym3 is not one-variable.\n(b) SR_max within 15% of vym3's 0.4178, the premium mean being within 5.6% of vym3's.\n    FALSIFIED as a level-matched design outside that, in which case density and level are confounded\n    again and the run answers nothing.\n(c) oracle mean expected excess return inside the file's 3.3% to 12.6% a year band.\n(d) room within 25% of vym3's +0.0558, for the same reason as (b).\n(e) THE GATE: the fair gap is POSITIVE with t >= 2. At the cross-seed sd this family shows, 0.006\n    to 0.009 over ten seeds, that is about +0.005.\n      - at or above +0.0148, vyg25's: dimension PAYS once density is restored, twenty types was the\n        whole defect, and the K programme reopens with a firms-per-type constraint this file does\n        not yet record.\n      - between +0.005 and +0.0148: density mattered AND dimension still costs. Both effects real,\n        and the next question is how the two trade off.\n      - below: FALSIFIED. Dimension does not pay at ANY density, finding 15 stands unqualified, and\n        the K programme is closed for good rather than provisionally.\n(f) the winning ridge penalty is interior in at least 8 of 10 seeds.\n\nPRECOMMITMENT: the G id was computed from these parameters and the current source WITHOUT solving.\nThe integ id hashes the G tables' raw bytes keyed by repo-relative path and so cannot be known until\nthey exist; it was read in a throwaway git worktree whose registry was discarded, the precedent\nvar-kp_vy-vym3-v1 set and docs/RUNS.md records. This spec is committed BEFORE any manifest exists.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vym3-v1",
+    "supersedes": "var-kp_vy-vym3t3-v1",
+    "superseded_by": null,
+    "changes": [
+      "THREE types instead of twenty -- types 3, 10 and 19 of vym3's own twenty, selected not redesigned",
+      "supersedes v1, whose triple (0, 9, 16) left a per-state loading ratio of 7.10 against vym3's 2.28: rank 3 but not three-DIMENSIONAL, which would have confounded weak dimension with thin density. Caught before any seed ran",
+      "shares [0.34, 0.33, 0.33], vyg25's, so 170/165/165 firms per type against vym3's 25 each",
+      "every other parameter is vym3's: the same gamma vector, the same three directions, the same magnitudes"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_regime_labels": "corrected (docs/kp14_regime_labels.md)",
+    "zero_book_in_sdf_solve": true,
+    "kp_priced_states": "three independent unit-variance OU states sharing kappa_y, priced at 2.5/sqrt(3) each; each type loads with a 3-vector and is solved at its own scalar projection. Three types at vyg25's shares"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      [
+        -0.0103478274,
+        0.0121021169,
+        0.0121021169
+      ],
+      [
+        0.0577350269,
+        0.0577350269,
+        0.0577350269
+      ],
+      [
+        0.0161658075,
+        -0.0808290377,
+        0.1131606528
+      ]
+    ],
+    "gamma_v": [
+      1.443375673,
+      1.443375673,
+      1.443375673
+    ],
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vym3t3"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "G",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            [
+              -0.0103478274,
+              0.0121021169,
+              0.0121021169
+            ],
+            [
+              0.0577350269,
+              0.0577350269,
+              0.0577350269
+            ],
+            [
+              0.0161658075,
+              -0.0808290377,
+              0.1131606528
+            ]
+          ],
+          "gamma_v": [
+            1.443375673,
+            1.443375673,
+            1.443375673
+          ],
+          "bv_comp": 1.2
+        },
+        "args": {
+          "KP_VY_PREFIX": "vym3t3"
+        },
+        "type_index": null
+      },
+      {
+        "name": "integ",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            [
+              -0.0103478274,
+              0.0121021169,
+              0.0121021169
+            ],
+            [
+              0.0577350269,
+              0.0577350269,
+              0.0577350269
+            ],
+            [
+              0.0161658075,
+              -0.0808290377,
+              0.1131606528
+            ]
+          ],
+          "gamma_v": [
+            1.443375673,
+            1.443375673,
+            1.443375673
+          ],
+          "bv_comp": 1.2
+        },
+        "args": {
+          "KP_VY_PREFIX": "vym3t3"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "designed 2026-09-26 from _scratch/vym3t3/; docs/NEXTUP.md item 1; v2 after the state-balance check rejected v1's triple",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=vym3t3",
+    "solve_note": "built on the Mac 2026-09-26: cd variants/kp_vy && KP_PARAM_OVERRIDES=<params> python build_vy_tables.py <prefix>  -- NOTE the prefix is argv[1], not KP_VY_PREFIX.",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "G": "6386de85717eaa91",
+    "integ": "052c029c3bf7210a"
+  },
+  "precommitted": true,
+  "solves_pending": [
+    "G",
+    "integ"
+  ],
+  "reused_solves": null,
+  "spec_hash": "1ac0609274f82e1bf69fd7decd66beaf625a0071ff64675e757b3ecd25d44d90"
+}

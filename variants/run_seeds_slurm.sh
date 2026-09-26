@@ -353,14 +353,16 @@ case "$SEED_SPEC" in
     # raised K from 3 to 5 AND went from three types to twenty, and its gate was falsified; at
     # N=500 twenty equal types is 25 firms per distinct premium against vyg25's 167, and nothing in
     # that run says which change cost the gap. The types here are SELECTED, not redesigned -- types
-    # 0, 9 and 16 of vym3's own twenty, so the gamma vector, the directions and the magnitudes are
-    # all vym3's. Rank 3, so K stays at 5. The premium mean is EXACTLY vym3's 0.1200, so the level
-    # is matched and vym3t3-vs-vym3 is a one-variable comparison. The inversion survives: ||b||=0.02
-    # earns 0.050 while ||b||=0.06 earns 0.030. Shares are vyg25's, so density is vyg25's.
-    MODEL=kp_vy; TAG=vym3t3; SPEC=var-kp_vy-vym3t3-v1; SOLVE_TAG=vym3t3
-    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[[0.0115470054,0.0115470054,0.0115470054],[0.0069282032,-0.0346410162,0.0484974226],[-0.0039224826,0.0989560865,0.0989560865]],"gamma_v":[1.443375673,1.443375673,1.443375673],"bv_comp":1.2}'
+    # 3, 10 and 19 of vym3's own twenty, so the gamma vector, the directions and the magnitudes are
+    # all vym3's. Rank 3 AND genuinely three-dimensional: per-state loading ratio 2.17 against
+    # vym3's own 2.28, unit-direction condition 1.60 against 2.25. That fourth bar is what rejected
+    # v1's triple (0, 9, 16), whose ratio was 7.10. Premium mean 0.1133 against vym3's 0.1200, so
+    # the level is matched. The inversion is sharp: the LARGEST magnitude earns nearly the smallest
+    # premium -- ||b||=0.10 earns 0.250 while ||b||=0.14 earns 0.070. Shares are vyg25's.
+    MODEL=kp_vy; TAG=vym3t3; SPEC=var-kp_vy-vym3t3-v2; SOLVE_TAG=vym3t3
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[[-0.0103478274,0.0121021169,0.0121021169],[0.0577350269,0.0577350269,0.0577350269],[0.0161658075,-0.0808290377,0.1131606528]],"gamma_v":[1.443375673,1.443375673,1.443375673],"bv_comp":1.2}'
     export KP_VY_PREFIX=vym3t3
-    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vym3t3-v1 variants/run_solve_slurm.sh'
+    SOLVE_HINT='sbatch --export=ALL,SOLVE_SPEC=var-kp_vy-vym3t3-v2 variants/run_solve_slurm.sh'
     ;;
   g0235d)
     # B4: g0235's multipliers with the switch probabilities SWAPPED, so stress is two thirds of

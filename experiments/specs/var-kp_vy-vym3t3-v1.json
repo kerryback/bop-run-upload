@@ -10,8 +10,10 @@
     "changes": [
       "THREE types instead of twenty -- types 0, 9 and 16 of vym3's own twenty, selected not redesigned",
       "shares [0.34, 0.33, 0.33], vyg25's, so 170/165/165 firms per type against vym3's 25 each",
-      "every other parameter is vym3's: the same gamma vector, the same three directions, the same magnitudes"
-    ]
+      "every other parameter is vym3's: the same gamma vector, the same three directions, the same magnitudes",
+      "SUPERSEDED 2026-09-26 before any seed ran: its triple (0, 9, 16) left a per-state total loading ratio of 7.10 against vym3's 2.28, so the third priced state was barely present in the cross-section -- formally rank 3, but not three-DIMENSIONAL, which would have confounded weak dimension with thin density. Its G tables were built and discarded; no manifest for 268198310aa84712 or 644041b18773f8d2 was ever committed."
+    ],
+    "superseded_by": "var-kp_vy-vym3t3-v2"
   },
   "engine": "oracle",
   "model": "kp_vy",
