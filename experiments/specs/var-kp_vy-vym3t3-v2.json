@@ -186,10 +186,7 @@
     "integ": "052c029c3bf7210a"
   },
   "precommitted": true,
-  "solves_pending": [
-    "G",
-    "integ"
-  ],
+  "solves_pending": null,
   "reused_solves": null,
   "spec_hash": "1ac0609274f82e1bf69fd7decd66beaf625a0071ff64675e757b3ecd25d44d90"
 }
