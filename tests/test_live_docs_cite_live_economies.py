@@ -82,7 +82,7 @@ def test_the_live_universe_is_one_set_agreed_by_three_sources():
     models = {m for m, _ in csv}
     for m in models:
         assert os.path.isdir(os.path.join(ROOT, "variants", m)), f"no live model dir for {m}"
-    assert len(csv) == 14, f"expected 14 live economies, found {len(csv)}"
+    assert len(csv) == 15, f"expected 15 live economies, found {len(csv)}"
 
 
 def test_no_dead_route_is_named_outside_the_appendix():

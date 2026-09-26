@@ -11,14 +11,14 @@
  "solves": [
   {
    "stage": "G",
-   "solve_id": "57d8ab3fd1e683a8",
+   "solve_id": "3a5431c05455a6d4",
    "files": 1,
    "files_expected": 1,
    "bytes": 789781
   },
   {
    "stage": "integ",
-   "solve_id": "eeea76dd678bb9eb",
+   "solve_id": "48069bc07b02f4d3",
    "files": 21,
    "files_expected": 21,
    "bytes": 1907220
@@ -35,7 +35,7 @@
   },
   "common_aggregate": false
  },
- "spec_id": "var-kp_vy-kpbase-v3",
+ "spec_id": "var-kp_vy-kpbase-v4",
  "eval_window": 360,
  "eval_months": 125,
  "months": 485,
@@ -519,5 +519,5 @@
    ]
   }
  },
- "prov": "kp_vy_oracle_kpbase_s008@de109da+dirty"
+ "prov": "kp_vy_oracle_kpbase_s008@c3aaea0+dirty"
 }
