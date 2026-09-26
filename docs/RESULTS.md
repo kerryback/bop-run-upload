@@ -3,8 +3,10 @@
 Every economy run through the oracle-and-estimator pipeline: what it was built to test, what it
 produced, and what it decided. One measurement protocol governs all of them, stated once below, so
 that the only thing separating two rows of a table is the economy. Every number here comes from the
-protocol-v3 campaign of 2026-09-21 to 2026-09-22: thirteen economies, ten seeds each, 130 tasks
-across Sol and Phoenix, all COMPLETED. Where each job ran and what it cost: `docs/RUNS.md`. What to
+protocol-v3 campaign of 2026-09-21 to 2026-09-22 (thirteen economies, ten seeds each, 130 tasks
+across Sol and Phoenix, all COMPLETED) or from the two single-economy runs that have joined it under
+the same protocol: `bgnzr` on 2026-09-23 and `vym3` on 2026-09-25, each a pre-registered GATE and
+each FALSIFIED (findings 14 and 15). Fifteen economies, 150 seeds. Where each job ran and what it cost: `docs/RUNS.md`. What to
 run next, and why: `docs/NEXTUP.md`.
 
 Every table below is checked cell by cell against `variants/results/economy_table.csv`
@@ -48,14 +50,15 @@ of its mean (finding 4).
 | bgn_gam/bgnzr | -0.0019 | 0.0067 | -0.9 | 5 of 10 |
 | gs_bx/g28 | -0.0024 | 0.0018 | -4.3 | 0 of 10 |
 | gs_bx/gsbase | -0.0028 | 0.0019 | -4.7 | 2 of 10 |
+| kp_vy/vym3 | -0.0032 | 0.0062 | -1.7 | 5 of 10 |
 | bgn_gam/g0235s | -0.0038 | 0.0145 | -0.8 | 4 of 10 |
 
 **Only `vyg25` and `g0235f` are positive in every seed AND several standard errors from zero**, at
-+0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other twelve lie
++0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other thirteen lie
 between -0.0038 and +0.0025, and that includes all three models as published: -0.0001 (BGN), -0.0010
 (KP14), -0.0028 (GS21).
 
-### Every column, all fourteen economies
+### Every column, all fifteen economies
 
 **Ranked by (DKKM - FMR) / FMR**, the ratio of the ten-seed means, which is the comparison a reader
 of the DKKM paper expects. It is not the verdict, and the two orderings are near-reverses at the
@@ -75,6 +78,7 @@ NEGATIVE fair gaps. Read this table for the levels and the one above for the ans
 | bgn_gam/bgnzr: the discount-channel gate | 10 | 0.3171 | 0.1767 | 0.2291 | 0.2516 | 0.2573 | +0.0282 (0.0495) | 12.3% | +0.0057 (0.0204) | -0.0019 (0.0067) | +0.0292 (0.0173) | 12.8% | 15.0 |
 | bgn_gam/bgnbase: BGN as published | 10 | 0.3013 | 0.1618 | 0.2133 | 0.2318 | 0.2382 | +0.0249 (0.0387) | 11.7% | +0.0063 (0.0148) | -0.0001 (0.0061) | +0.0274 (0.0109) | 12.8% | 13.6 |
 | kp_vy/vyx | 10 | 0.4214 | 0.0598 | 0.2840 | 0.3069 | 0.3133 | +0.0293 (0.0245) | 10.3% | +0.0064 (0.0161) | +0.0009 (0.0087) | +0.0545 (0.0057) | 19.2% | 11.4 |
+| kp_vy/vym3: three priced states, twenty types | 10 | 0.4178 | 0.0617 | 0.2593 | 0.2846 | 0.2856 | +0.0263 (0.0151) | 10.2% | +0.0010 (0.0098) | -0.0032 (0.0062) | +0.0558 (0.0074) | 21.5% | 11.3 |
 | gs_bx/bx7 | 10 | 0.3270 | 0.3061 | 0.2822 | 0.2930 | 0.3091 | +0.0269 (0.0267) | 9.5% | +0.0161 (0.0136) | -0.0017 (0.0020) | +0.0073 (0.0050) | 2.6% | 17.2 |
 | kp_vy/kpbase: KP14 as published | 10 | 0.2292 | 0.0797 | 0.1930 | 0.2015 | 0.2079 | +0.0150 (0.0109) | 7.7% | +0.0064 (0.0087) | -0.0010 (0.0058) | +0.0044 (0.0011) | 2.3% | 15.4 |
 | gs_bx/gsbase: GS21 as published | 10 | 0.2926 | 0.2785 | 0.2650 | 0.2689 | 0.2835 | +0.0185 (0.0106) | 7.0% | +0.0146 (0.0079) | -0.0028 (0.0019) | +0.0012 (0.0001) | 0.4% | 24.4 |
@@ -198,7 +202,7 @@ two ten-seed means, times 100.
 ## The answer so far
 
 **The complexity gap is real, it is much smaller than this file claimed before 2026-09-22, and it
-survives in two economies out of thirteen.** The numbers are in "The results" at the top of this
+survives in two economies out of fifteen.** The numbers are in "The results" at the top of this
 file; what follows is what they mean.
 
 **What broke: the two conditions no longer separate the rows.** Before the pricing fix this file
@@ -224,7 +228,7 @@ answered by the correction rather than by a new economy.
 this file only as the left-hand side of a before-and-after, never as a current number; the specs
 that produced them are retained in `experiments/specs/` under `lineage.superseded_by`.*
 
-**In the other eleven economies the fair gap is between -0.0038 and +0.0025.** That includes all
+**In the other thirteen economies the fair gap is between -0.0038 and +0.0025.** That includes all
 three models as published, whose fair gaps are -0.0001 (BGN), -0.0010 (KP14) and -0.0028 (GS21).
 
 **Why the KP14 route still has the largest room, and why that is no longer the story.** Three
@@ -249,6 +253,22 @@ which is the objection the pre-fix rows could not answer: the oracle's mean expe
 is 3.9% a year with a cross-sectional sd of 2.0% in `vyg25` and 9.9% with 1.7% in `g0235f`, against
 3.3% to 12.6% across the file. What they ARE is small -- +0.015 and +0.008 of monthly Sharpe -- and
 the question the project now faces is whether a gap of that size is worth a paper's central claim.
+
+**And as of 2026-09-25 there is no theory left that says where the next gap would come from.** The
+replacement for the two conditions was finding 11's structural ceiling: with K priced aggregate
+shocks the population advantage is capped, the three baselines sit at K = 1 and 2 where the cap is
+1.00x-1.01x, and the negative result is therefore what the structure requires rather than an
+accident. That much still holds, and it is the strongest thing in this file. What does NOT hold is
+the converse. `vym3` raised K from 3 to 5 -- the first economy in the project to move it -- and the
+gap went from +0.0148 to **-0.0032** (finding 15). Nor does the loading nonlinearity substitute for
+it: measured on the panels rather than inverted from the synthetic surface, `vym3` and `vyg25` are
+indistinguishable both per month (0.197 against 0.196) and pooled (0.301 against 0.293), while their
+gaps differ by 0.018. **So the ceiling bounds what is possible and predicts nothing about what is
+attainable, and this project currently has no measured statistic of an economy that says in advance
+whether it will have a gap.** Two things separate `vyg25` from `vym3` and this run cannot tell them
+apart -- twenty types is 25 firms per distinct premium against 167, and SR_max fell 16% -- which is
+why `docs/NEXTUP.md` now ranks by what an experiment DISCRIMINATES rather than by a predicted
+ceiling. Predicted ceilings have failed twice, on `bgnzr` and on `vym3`.
 
 ## The three models as published
 
@@ -459,7 +479,9 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     | 3 | `vyx`, `vyg25` | 1.03x | 1.003 to 1.044, mean **1.023** |
 
     Monotone in K, and no economy exceeds its own K's ceiling even at the most extreme loading
-    nonlinearity the sweep allows. The level sits about a hundredth below the population prediction,
+    nonlinearity the sweep allows. (**Finding 15 extends this table to K = 5 and it stops being
+    monotone there: `vym3` measures 0.989.** The ceiling survives as an upper bound; the column
+    does not survive as a guide to where to build.) The level sits about a hundredth below the population prediction,
     which is the right sign: the sweep is zero-estimation-error, and in live estimation DKKM reaches
     81% to 92% of its own ceiling against the linear side's 92% to 95%.
 
@@ -658,6 +680,117 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     So the proposal to replace BGN's one-factor Vasicek with a multi-factor term structure is
     withdrawn. It was motivated by 36-50% of BGN return variance sitting in the rate channel; the
     variance is there, and it is the wrong kind.
+
+15. **Raising K from 3 to 5 REMOVED the gap instead of raising it. A ceiling is not a floor, and
+    finding 11's monotone K column breaks at its first out-of-sample point.** `vym3` is the first
+    economy in this project that raises K, the number of priced aggregate shocks: KP14 with THREE
+    priced OU states instead of one, twenty types carrying rank-3 loading vectors, and the total
+    price of y-risk held fixed at `||gamma|| = 2.5` -- `vyg25`'s scalar value, split as `2.5/sqrt(3)`
+    per state -- so the experiment moves DIMENSION and not LEVEL. Ten seeds, 2026-09-25, gate clean
+    at 10 of 10 interior.
+
+    | | `vyg25` | `vym3` | change |
+    |---|---|---|---|
+    | K | 3 | **5** | +2 |
+    | priced states / types | 1 / 3 | 3 / 20 | |
+    | SR_max | 0.4952 | 0.4178 | **-0.0774** |
+    | EW market SR | 0.0529 | 0.0617 | +0.0088 |
+    | best linear | 0.3283 | 0.2846 | -0.0437 |
+    | best FAIR linear | 0.3355 | 0.2888 | -0.0467 |
+    | DKKM | 0.3503 | 0.2856 | -0.0647 |
+    | **room** | **+0.0820** | **+0.0558** | **-0.0262** |
+    | **fair gap** | **+0.0148** | **-0.0032** | **-0.0180** |
+    | DKKM / best fair linear | 1.044 | **0.989** | -0.055 |
+    | measured theta | 0.200 | 0.187 | -0.013 |
+
+    **The registered gate was a fair gap EXCEEDING `vyg25`'s +0.0148 and positive at ten seeds. It
+    came in at -0.0032, positive in 5 of 10, t = -1.65.** FALSIFIED, and not narrowly: `vym3` has
+    the second-worst DKKM-over-fair ratio of the fifteen economies in this file.
+
+    **Three of the five registered clauses held, including every one about the design's mechanics.**
+    SR_max stayed within 25% of `vyg25`'s (-15%, and far under the 0.75 that would have meant the
+    split raised the level); the oracle's mean expected excess return is 4.33% a year, inside the
+    file's 3.3%-12.6% band; the winning ridge penalty is interior in 10 of 10 seeds. So the economy
+    is what it claimed to be. **What failed is clause (c), and it is the tell: room was predicted to
+    RISE above +0.0820 and it FELL to +0.0558.** Three priced directions left the oracle with LESS
+    advantage over the linear side, not more.
+
+    **Why: K moved and the premium's shape did not -- by any statistic this project can measure.**
+    Measured on `vym3`'s saved panel and true conditional moments the same way finding 11's
+    withdrawal measured `vyg25`'s -- one minus the R-squared of `mu_t` on the five rank-standardised
+    characteristics, 485 months -- theta is **0.187**, against `vyg25`'s 0.200. Twenty types, three
+    priced states and a rank-3 loading matrix left the premium exactly as linearly spannable as
+    three types and one state had.
+
+    That per-month theta is a snapshot, so the obvious next suspect is TIME VARIATION in the linear
+    map: a rolling estimator fits one coefficient vector per 360-month window, so premium variance
+    carried by month-to-month movement in that vector is what it structurally cannot track. Fitting
+    one POOLED coefficient vector instead of a fresh one each month raises theta from 0.1955 to
+    0.2928 in `vyg25` and from 0.1971 to 0.3007 in `vym3`. Both statistics are
+    `variants/diagnostics/premium_shape.py`, which reproduces this table from a saved panel:
+
+    | | per-month theta, mean | per-month theta, var-weighted | pooled theta | time-variation share | fair gap |
+    |---|---|---|---|---|---|
+    | `vyg25` | 0.1995 | 0.1955 | 0.2928 | **+0.0973** | **+0.0148** |
+    | `vym3` | 0.1871 | 0.1971 | 0.3007 | **+0.1037** | **-0.0032** |
+
+    (The two per-month columns differ in averaging only -- unweighted over months, which is the
+    convention finding 11's withdrawal quotes, against the sum-of-squares ratio that is comparable
+    to the pooled figure. `vym3` is lower on one and higher on the other, which is itself the point:
+    the difference between these economies is inside the noise of how you average.)
+
+    **The two economies are indistinguishable on both, and `vym3` is marginally HIGHER on each while
+    having the worse gap.** So the difference in outcome is not in the premium surface at all, and
+    the design's premise -- that a product of magnitude and alignment would be unspannable -- is
+    measurably false: it did not change spannability. This project currently has NO measured
+    statistic of the premium that predicts which economy has a gap.
+
+    **The mechanism, which is the transferable part.** A type's premium is `b_f . gamma` while its
+    exposure MAGNITUDE is `||b_f||`. Spreading gamma over three directions and dispersing the types'
+    alignment makes those two quantities come apart -- that was the design's whole content -- but
+    what it adds to the cross-section is UNPRICED loading variation. A type at `cos = 0.2` carries
+    five times the exposure per unit of premium it earns. Cross-sectionally that is noise in the
+    loading map, not structure in the premium: it lowers SR_max by 0.077 and room by 0.026 while
+    leaving the premium a smooth function of the characteristics. **Misalignment is not
+    nonlinearity.**
+
+    **The design was also sized against the wrong benchmark, and the wrong row.** It put twenty types
+    in rather than six so as to over-determine the eleven-column `linlev_m` basis. The fair winner
+    was `linrank_m` in 6 of 10 seeds and Fama-French in 3 -- a six-column rank basis -- and it beat
+    DKKM anyway. Over-determining a basis buys nothing while the premium remains smooth in the
+    characteristics. Worse, **the gate of +0.0148 was sized off the surface's theta = 0.7 row, which
+    this file had withdrawn the same day.** Read at the measured theta of 0.19, the surface's own
+    K = 5 ceiling is 1.036 against its K = 3 ceiling of 1.006 -- the step was worth at most 0.03 of
+    ratio, not the 1.03 -> 1.10 the design quoted. The prize was overstated by a factor of three
+    before a single node-hour was spent.
+
+    **What this costs finding 11.** Its K column now reads:
+
+    | K | 1 | 2 | 3 | **5** |
+    |---|---|---|---|---|
+    | measured DKKM / best fair linear | 0.994 | 1.002 | 1.023 | **0.989** |
+
+    Monotone over the three points the models happened to occupy, and the first point outside that
+    range does not follow it. **So the ceiling stands as an upper bound and fails as a guide.** It
+    correctly predicts that K = 1 and K = 2 economies cannot have a gap, which is still why the
+    negative result for all three models as published is structural rather than accidental; it does
+    not predict that a K = 5 economy will have one. Nor does theta replace it: the two economies
+    with a real gap, `vyg25` (+0.0148) and `g0235f` (+0.0079), are neither the two with the largest
+    K nor -- on the evidence above -- distinguishable by theta from an economy with no gap at all.
+
+    **What is left unexplained, and it is the honest open question.** Two candidates survive that
+    this run cannot separate. First, ESTIMATION DENSITY: twenty types at N = 500 and equal shares is
+    25 firms per distinct premium value, against `vyg25`'s 167, and DKKM is the higher-variance
+    estimator of the two, so it should pay for thin types first. Second, the LEVEL: SR_max fell 16%
+    and room 32%, and DKKM reaches only 81%-92% of its own ceiling in live estimation, so a smaller
+    prize is also a harder one to capture. Separating them costs one economy -- `vym3`'s three
+    priced states with `vyg25`'s THREE types rather than twenty -- and until that is run the
+    mechanism behind this falsification is not known, only its fact.
+
+    **The K programme is therefore closed as a lever.** Raising K turned out to be cheap -- the
+    generalisation cost no extra grid, twenty types is twenty 1-D solves, and the whole campaign was
+    about 240 node-hours including the three rebuilds -- and it does nothing at theta = 0.19. Any
+    future proposal has to argue it moves theta, measured on the panel, and not K.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in

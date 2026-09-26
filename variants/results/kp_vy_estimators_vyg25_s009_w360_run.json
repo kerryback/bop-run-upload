@@ -2,8 +2,8 @@
  "model": "kp_vy",
  "tag": "vyg25",
  "seed": 9,
- "prov": "kp_vy_estimators_vyg25_s009_w360_summary@de109da+dirty",
- "spec_id": "var-kp_vy-vyg25-v3",
+ "prov": "kp_vy_estimators_vyg25_s009_w360_summary@c3aaea0+dirty",
+ "spec_id": "var-kp_vy-vyg25-v4",
  "oracle_eval_window": 360,
  "window": 360,
  "winsor": 0.0,
@@ -31,14 +31,14 @@
  "solves": [
   {
    "stage": "G",
-   "solve_id": "12152f8f86cc415e",
+   "solve_id": "601516e2d7fa4993",
    "files": 3,
    "files_expected": 3,
    "bytes": 2379285
   },
   {
    "stage": "integ",
-   "solve_id": "7562a864dacb6b3e",
+   "solve_id": "6d483105d19fd627",
    "files": 63,
    "files_expected": 63,
    "bytes": 5721660

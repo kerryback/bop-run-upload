@@ -2,8 +2,8 @@
  "model": "kp_vy",
  "tag": "vyx",
  "seed": 4,
- "prov": "kp_vy_estimators_vyx_s004_w360_summary@de109da+dirty",
- "spec_id": "var-kp_vy-vyx-v4",
+ "prov": "kp_vy_estimators_vyx_s004_w360_summary@c3aaea0+dirty",
+ "spec_id": "var-kp_vy-vyx-v5",
  "oracle_eval_window": 360,
  "window": 360,
  "winsor": 0.0,
@@ -31,14 +31,14 @@
  "solves": [
   {
    "stage": "G",
-   "solve_id": "8b4702211a1f5efb",
+   "solve_id": "c5bb280a9cc16cf2",
    "files": 3,
    "files_expected": 3,
    "bytes": 2377242
   },
   {
    "stage": "integ",
-   "solve_id": "c88b05407e4b377d",
+   "solve_id": "068f0fe8c6cb862c",
    "files": 63,
    "files_expected": 63,
    "bytes": 5721660

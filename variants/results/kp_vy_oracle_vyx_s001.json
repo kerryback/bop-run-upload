@@ -11,14 +11,14 @@
  "solves": [
   {
    "stage": "G",
-   "solve_id": "8b4702211a1f5efb",
+   "solve_id": "c5bb280a9cc16cf2",
    "files": 3,
    "files_expected": 3,
    "bytes": 2377242
   },
   {
    "stage": "integ",
-   "solve_id": "c88b05407e4b377d",
+   "solve_id": "068f0fe8c6cb862c",
    "files": 63,
    "files_expected": 63,
    "bytes": 5721660
@@ -35,7 +35,7 @@
   },
   "common_aggregate": false
  },
- "spec_id": "var-kp_vy-vyx-v4",
+ "spec_id": "var-kp_vy-vyx-v5",
  "eval_window": 360,
  "eval_months": 125,
  "months": 485,
@@ -519,5 +519,5 @@
    ]
   }
  },
- "prov": "kp_vy_oracle_vyx_s001@de109da+dirty"
+ "prov": "kp_vy_oracle_vyx_s001@c3aaea0+dirty"
 }

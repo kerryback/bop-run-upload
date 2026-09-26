@@ -54,6 +54,10 @@ CURRENT = {
     # price of risk rotated onto the rate channel. It joined CURRENT only once economy_table.csv had
     # its row -- test_the_live_universe_is_one_set_agreed_by_three_sources requires the two to agree.
     "bgnzr": "var-bgn_gam-bgnzr-v1",
+    # the first economy that raises K, 2026-09-25 (docs/RESULTS.md finding 15): three priced OU
+    # states and twenty rank-3 types at constant total price of risk. Its gate was FALSIFIED; it
+    # stays in CURRENT because a falsified economy is still a live, reported row.
+    "vym3": "var-kp_vy-vym3-v1",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
     "bgnbase": "var-bgn_gam-bgnbase-v3",
     "kpbase": "var-kp_vy-kpbase-v4",

@@ -117,6 +117,24 @@ campaign deliberately made.
 **984 node-hours across the 130 tasks, 5,524 core-hours**, against a budget of about 900 node-hours
 and the 2026-09-15 campaign's 650.
 
+The 2026-09-25 rebuild re-measured the four KP14 rows on Phoenix, and they are the sizing numbers to
+use for items 1-3 of `docs/NEXTUP.md`, every one of which is a KP14 economy:
+
+| economy | cluster | request | achieved MaxRSS | achieved Elapsed, min to max | CPU-h |
+|---|---|---|---|---|---|
+| `vym3` (20 types) | Phoenix | 8 cpu, 64G, 2 d | 29.46 GiB | 5.88 to 6.21 h | 481 |
+| `kpbase` | Phoenix | 8 cpu, 48G, 2 d | 29.10 GiB | 5.97 to 6.27 h | 487 |
+| `vyx` | Phoenix | 8 cpu, 48G, 3 d | 29.18 GiB | 5.85 to 5.98 h | 474 |
+| `vyg25` | Phoenix | 8 cpu, 48G, 3 d | 29.12 GiB | 5.82 to 6.41 h | 476 |
+
+**240 node-hours across the 40 tasks, 1,918 core-hours.**
+
+**Twenty types cost 0.36 GiB over one type, and no wall time at all.** The per-type work is a 1-D `G`
+solve and `NY` integral tables, all of it done once on the Mac before the seeds launch; what the
+seed job holds in memory is the N=500 x T=500 panel and its moments, which does not depend on the
+type count. So 48G and a 2-day wall are the right request for any KP14 economy in this family, and
+the type count is not a sizing input.
+
 Three things this measurement settles, and they are the reason it is recorded:
 
 1. **The memory prediction was right and it was right for the stated reason.** The sizing section
@@ -149,6 +167,7 @@ solve ids untouched; here all fifteen ids moved, which is what makes the skip im
 
 | campaign | what it was | outcome |
 |---|---|---|
+| **vym3**, 2026-09-25, the K lever | Four economies, forty seeds. `vym3` is new -- KP14 with THREE priced OU states, twenty rank-3 types, total price of y-risk held at `||gamma||` = 2.5 -- and `vyx`, `vyg25` and `kpbase` re-ran because generalising `parameters_kp14.py`, `kp14_fd_vy.py` and `integ_kp14.py` to a vector state re-keyed all six KP14 solve ids. All eight ids precommitted and reproduced exactly; all three existing economies' tables came back byte-identical at `nstates = 1` and their ten-seed numbers reproduced to four decimals. Phoenix `21620602` (vym3, 64G, 2 d), `21620603`-`5` (vyx, vyg25, kpbase, 48G) | **COMPLETE, 40 of 40**, exit 0:0, 5.82 to 6.41 h each (min to max over all forty), peak 29.46 GiB against 64G -- and `vym3`'s twenty types cost 0.36 GiB over `kpbase`'s one, because the footprint is the panel, not the types. **The gate is FALSIFIED**: the fair gap went +0.0148 -> -0.0032, positive in 5 of 10 seeds, against a registered threshold of +0.0148. Raising K from 3 to 5 removed the gap (finding 15). 240 node-hours, 1,918 core-hours |
 | **bgnzr**, 2026-09-23, the gate on BGN's discount channel | One economy, ten seeds. `bgnbase` with `beta_zr` -0.00014 -> -0.00020, a rotation of the price of risk onto the rate channel at constant total, rate share 15.1% -> 20.5%. Stops there because the corrected covariance makes the limiting term spread twice as sensitive to `beta_zr` (finding 13): 3.79%/yr here against BGN's own 2.4%. J\* id `550412fe21ce97a3`, precommitted and reproduced exactly. Phoenix `21609884`, public, 40G, 1 day, sized from `bgnbase`'s achieved 19.9 GiB and 8.3 h | **COMPLETE, 10 of 10**, 5.5-5.9 h each, peak 19.8 GiB against 40G -- the `bgnbase` class it was sized from. **The gate is FALSIFIED**: room rose +0.0274 -> +0.0292, a rise of +0.0018 against a registered +0.005 and a cross-seed se of 0.0055. The multi-factor term structure is withdrawn (finding 14). ~60 node-hours to close a direction that would have cost a new solver |
 | **campaign 2026-09-21**, the corrected pricing and the amended ridge grid (ran to 2026-09-22) | All thirteen economies. Two changes: the pricing fix (merge `91095fb` -- `kp_vy`'s constant-rate treatment of the priced OU state, BGN's halved bond covariance; nine economies re-solved) and the ridge grid `1e-5 ... 10` -> `1e-7 ... 1000`, which is estimator-side and so moved all thirteen. Sol `63759851`-`2` (the two highmem BGN rows), Phoenix `21604189`-`21604199` | **COMPLETE, 130 of 130.** Costs above. The result is `docs/RESULTS.md`: `vyx`'s headline withdrawn, `vyg25` and `g0235f` surviving. The gate's criterion was found to be wrong and was amended -- see below |
 | **campaign 2026-09-15**, the measurement protocol (ran to 2026-09-17) | All thirteen at one protocol, so that the only thing separating two rows of `docs/RESULTS.md` is the economy: burn-in 400 everywhere (was 300/400/300), one ridge grid (was three), the full conditioning set for the baselines too, ten seeds for `g0235d`. No economy's parameters changed; only BGN's six J\* tables re-solved. About 650 node-hours | **COMPLETE**, after the restart the third hazard above describes. Its own gate then reported five of thirteen rows censored at a grid edge, which is what made the 2026-09-21 campaign necessary |
