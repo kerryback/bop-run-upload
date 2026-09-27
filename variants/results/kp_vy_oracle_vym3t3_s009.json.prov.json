@@ -1,0 +1,81 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": "f34c62df94b9e5ff30ca2e1c478fe364bd95d201",
+  "branch": "main",
+  "root": "/data/sjpruitt/GitHub/bop-run-upload",
+  "dirty": false
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "kp_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "9",
+  "--tag",
+  "vym3t3",
+  "--spec",
+  "var-kp_vy-vym3t3-v2",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "variants",
+ "cwd_at_write": "variants/kp_vy",
+ "env": {
+  "CONDA_DEFAULT_ENV": "bop",
+  "KP_PARAM_OVERRIDES": "{\"type_share\":[0.34,0.33,0.33],\"type_bv\":[[-0.0103478274,0.0121021169,0.0121021169],[0.0577350269,0.0577350269,0.0577350269],[0.0161658075,-0.0808290377,0.1131606528]],\"gamma_v\":[1.443375673,1.443375673,1.443375673],\"bv_comp\":1.2}",
+  "KP_VY_PREFIX": "vym3t3",
+  "MKL_NUM_THREADS": "8",
+  "NUMEXPR_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "SEED_SPEC": "vym3t3",
+  "SLURMD_NODENAME": "pc323",
+  "SLURM_ARRAY_JOB_ID": "21632381",
+  "SLURM_ARRAY_TASK_ID": "9",
+  "SLURM_CPUS_PER_TASK": "8",
+  "SLURM_JOB_ID": "21632381",
+  "VECLIB_MAXIMUM_THREADS": "8"
+ },
+ "when": "2026-09-26T11:23:53-0700",
+ "environment": {
+  "python": "3.12.13",
+  "platform": "Linux-4.18.0-553.124.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "pc323",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "pandas": "3.0.3",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout f34c62df94b9e5ff30ca2e1c478fe364bd95d201 && cd variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 9 --tag vym3t3 --spec var-kp_vy-vym3t3-v2 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "G",
+   "solve_id": "6386de85717eaa91",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2374138
+  },
+  {
+   "stage": "integ",
+   "solve_id": "052c029c3bf7210a",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "extra": {
+  "spec_id": "var-kp_vy-vym3t3-v2",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "verified",
+  "eval_window": 360
+ }
+}

@@ -58,6 +58,10 @@ CURRENT = {
     # states and twenty rank-3 types at constant total price of risk. Its gate was FALSIFIED; it
     # stays in CURRENT because a falsified economy is still a live, reported row.
     "vym3": "var-kp_vy-vym3-v1",
+    # the controlled follow-up, 2026-09-26 (docs/RESULTS.md finding 16): vym3's three priced states
+    # at vyg25's density, three types instead of twenty. Gate FALSIFIED; it stays in CURRENT
+    # because a falsified economy is still a live, reported row.
+    "vym3t3": "var-kp_vy-vym3t3-v2",
     # the three BASELINES, 2026-09-14 (A1): each paper's economy as published, through the same pipeline
     "bgnbase": "var-bgn_gam-bgnbase-v3",
     "kpbase": "var-kp_vy-kpbase-v4",
