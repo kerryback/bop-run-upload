@@ -6,7 +6,8 @@ that the only thing separating two rows of a table is the economy. Every number 
 protocol-v3 campaign of 2026-09-21 to 2026-09-22 (thirteen economies, ten seeds each, 130 tasks
 across Sol and Phoenix, all COMPLETED) or from the two single-economy runs that have joined it under
 the same protocol: `bgnzr` on 2026-09-23 and `vym3` on 2026-09-25, each a pre-registered GATE and
-each FALSIFIED (findings 14 and 15). Fifteen economies, 150 seeds. Where each job ran and what it cost: `docs/RUNS.md`. What to
+each FALSIFIED (findings 14 and 15), and `vym3t3` on 2026-09-26, likewise a GATE and likewise
+falsified (finding 16). Sixteen economies, 160 seeds. Where each job ran and what it cost: `docs/RUNS.md`. What to
 run next, and why: `docs/NEXTUP.md`.
 
 Every table below is checked cell by cell against `variants/results/economy_table.csv`
@@ -39,6 +40,7 @@ of its mean (finding 4).
 |---|---|---|---|---|
 | kp_vy/vyg25 | **+0.0148** | 0.0090 | 5.2 | **10 of 10** |
 | bgn_gam/g0235f | **+0.0079** | 0.0052 | 4.8 | **10 of 10** |
+| kp_vy/vym3t3 | +0.0036 | 0.0151 | 0.8 | 6 of 10 |
 | bgn_gam/g0235 | +0.0025 | 0.0030 | 2.7 | 8 of 10 |
 | bgn_gam/g0235d | +0.0025 | 0.0072 | 1.1 | 5 of 10 |
 | kp_vy/vyx | +0.0009 | 0.0087 | 0.3 | 7 of 10 |
@@ -54,11 +56,11 @@ of its mean (finding 4).
 | bgn_gam/g0235s | -0.0038 | 0.0145 | -0.8 | 4 of 10 |
 
 **Only `vyg25` and `g0235f` are positive in every seed AND several standard errors from zero**, at
-+0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other thirteen lie
-between -0.0038 and +0.0025, and that includes all three models as published: -0.0001 (BGN), -0.0010
++0.015 and +0.008 of monthly Sharpe against attainable Sharpes of 0.50 and 0.24. The other fourteen lie
+between -0.0038 and +0.0036, and that includes all three models as published: -0.0001 (BGN), -0.0010
 (KP14), -0.0028 (GS21).
 
-### Every column, all fifteen economies
+### Every column, all sixteen economies
 
 **Ranked by (DKKM - FMR) / FMR**, the ratio of the ten-seed means, which is the comparison a reader
 of the DKKM paper expects. It is not the verdict, and the two orderings are near-reverses at the
@@ -75,6 +77,7 @@ NEGATIVE fair gaps. Read this table for the levels and the one above for the ans
 | bgn_gam/g0235f | 10 | 0.2375 | 0.1465 | 0.1406 | 0.1537 | 0.1690 | +0.0285 (0.0225) | 20.3% | +0.0154 (0.0085) | +0.0079 (0.0052) | +0.0447 (0.0118) | 31.8% | 14.9 |
 | kp_vy/vyg25 | 10 | 0.4952 | 0.0529 | 0.2921 | 0.3283 | 0.3503 | +0.0582 (0.0264) | 19.9% | +0.0219 (0.0164) | +0.0148 (0.0090) | +0.0820 (0.0085) | 28.1% | 19.6 |
 | gs_bx/g28 | 10 | 0.3144 | 0.2978 | 0.2544 | 0.2694 | 0.3028 | +0.0484 (0.0415) | 19.0% | +0.0334 (0.0261) | -0.0024 (0.0018) | +0.0006 (0.0005) | 0.2% | 27.6 |
+| kp_vy/vym3t3: three priced states, THREE types | 10 | 0.4431 | 0.0632 | 0.2459 | 0.2700 | 0.2785 | +0.0326 (0.0156) | 13.3% | +0.0085 (0.0200) | +0.0036 (0.0151) | +0.0869 (0.0104) | 35.3% | 13.3 |
 | bgn_gam/bgnzr: the discount-channel gate | 10 | 0.3171 | 0.1767 | 0.2291 | 0.2516 | 0.2573 | +0.0282 (0.0495) | 12.3% | +0.0057 (0.0204) | -0.0019 (0.0067) | +0.0292 (0.0173) | 12.8% | 15.0 |
 | bgn_gam/bgnbase: BGN as published | 10 | 0.3013 | 0.1618 | 0.2133 | 0.2318 | 0.2382 | +0.0249 (0.0387) | 11.7% | +0.0063 (0.0148) | -0.0001 (0.0061) | +0.0274 (0.0109) | 12.8% | 13.6 |
 | kp_vy/vyx | 10 | 0.4214 | 0.0598 | 0.2840 | 0.3069 | 0.3133 | +0.0293 (0.0245) | 10.3% | +0.0064 (0.0161) | +0.0009 (0.0087) | +0.0545 (0.0057) | 19.2% | 11.4 |
@@ -202,7 +205,7 @@ two ten-seed means, times 100.
 ## The answer so far
 
 **The complexity gap is real, it is much smaller than this file claimed before 2026-09-22, and it
-survives in two economies out of fifteen.** The numbers are in "The results" at the top of this
+survives in two economies out of sixteen.** The numbers are in "The results" at the top of this
 file; what follows is what they mean.
 
 **What broke: the two conditions no longer separate the rows.** Before the pricing fix this file
@@ -228,7 +231,7 @@ answered by the correction rather than by a new economy.
 this file only as the left-hand side of a before-and-after, never as a current number; the specs
 that produced them are retained in `experiments/specs/` under `lineage.superseded_by`.*
 
-**In the other thirteen economies the fair gap is between -0.0038 and +0.0025.** That includes all
+**In the other fourteen economies the fair gap is between -0.0038 and +0.0036.** That includes all
 three models as published, whose fair gaps are -0.0001 (BGN), -0.0010 (KP14) and -0.0028 (GS21).
 
 **Why the KP14 route still has the largest room, and why that is no longer the story.** Three
@@ -268,7 +271,17 @@ attainable, and this project currently has no measured statistic of an economy t
 whether it will have a gap.** Two things separate `vyg25` from `vym3` and this run cannot tell them
 apart -- twenty types is 25 firms per distinct premium against 167, and SR_max fell 16% -- which is
 why `docs/NEXTUP.md` now ranks by what an experiment DISCRIMINATES rather than by a predicted
-ceiling. Predicted ceilings have failed twice, on `bgnzr` and on `vym3`.
+ceiling. Predicted ceilings have failed three times, on `bgnzr`, on `vym3` and on `vym3t3`.
+
+**The controlled follow-up changed the shape of that conclusion without changing its sign.**
+`vym3t3` ran `vym3`'s geometry at `vyg25`'s density and separated the two things `vym3` confounded
+(finding 16). Density was real -- the gap flips from -0.0032 to +0.0036 -- and insufficient, since
++0.0036 at t 0.76 is a quarter of `vyg25`'s and indistinguishable from zero. What it exposed is
+that **the K=5 economy has the largest POPULATION room in this file, +0.0869, and DKKM realises the
+smallest fraction of its own ceiling, 74.9%.** Raising the number of priced states enlarges the
+headroom and enlarges the variance of capturing it, and for the high-variance estimator the second
+effect dominates. So the ceiling is not wrong about where the prize is. It is silent about whether
+anything can reach it, and at K = 5 nothing here does.
 
 ## The three models as published
 
@@ -745,6 +758,11 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     measurably false: it did not change spannability. This project currently has NO measured
     statistic of the premium that predicts which economy has a gap.
 
+    (**Amended 2026-09-26.** `vym3t3` moved the time-variation share to +0.1641, well outside the
+    +0.097 to +0.104 the two economies above share, and its room is the largest in the file. So the
+    statistic does track ROOM. It still does not track the GAP -- `vym3t3`'s is +0.0036 at t 0.76.
+    See finding 16.)
+
     **The mechanism, which is the transferable part.** A type's premium is `b_f . gamma` while its
     exposure MAGNITUDE is `||b_f||`. Spreading gamma over three directions and dispersing the types'
     alignment makes those two quantities come apart -- that was the design's whole content -- but
@@ -787,10 +805,95 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     priced states with `vyg25`'s THREE types rather than twenty -- and until that is run the
     mechanism behind this falsification is not known, only its fact.
 
+    **ANSWERED 2026-09-26 by `vym3t3`, and the answer is both and neither** (finding 16). Density
+    was real: at `vyg25`'s exact density the gap flips sign, -0.0032 to +0.0036. It was not enough:
+    +0.0036 at t = 0.76 is a quarter of `vyg25`'s and not distinguishable from zero. What the
+    controlled run exposed is a third thing neither candidate named -- the K=5 economy has the
+    LARGEST population room in this file, +0.0869, and DKKM realises the WORST fraction of its own
+    ceiling, 74.9%. The prize got bigger and the estimator got worse at collecting it.
+
     **The K programme is therefore closed as a lever.** Raising K turned out to be cheap -- the
     generalisation cost no extra grid, twenty types is twenty 1-D solves, and the whole campaign was
     about 240 node-hours including the three rebuilds -- and it does nothing at theta = 0.19. Any
     future proposal has to argue it moves theta, measured on the panel, and not K.
+
+16. **Restoring density flipped the sign and did not restore the gap; what it revealed is that the
+    K=5 economy has the LARGEST population room in this file and DKKM is the one method that
+    cannot convert it.** Finding 15 left `vym3` unattributable: it raised K from 3 to 5 AND went
+    from three types to twenty, and at N=500 twenty equal types is 25 firms per distinct premium
+    against `vyg25`'s 167. `vym3t3` changes back exactly one of those. Types 3, 10 and 19 of
+    `vym3`'s own twenty, so the gamma vector, the three directions and the magnitudes are all
+    `vym3`'s, at `vyg25`'s shares. Ten seeds, 2026-09-26, gate clean at 10 of 10 interior.
+
+    | | `vym3` (20 types) | `vym3t3` (3 types) | `vyg25` (K=3) |
+    |---|---|---|---|
+    | firms per distinct premium | 25 | **167** | 167 |
+    | SR_max | 0.4178 | 0.4431 | 0.4952 |
+    | population LINEAR ceiling | 0.2983 | 0.2852 | 0.3461 |
+    | population NONLINEAR ceiling | 0.3541 | 0.3721 | 0.4281 |
+    | **room** | +0.0558 | **+0.0869** | +0.0820 |
+    | DKKM, % of its own ceiling | 80.7% | **74.9%** | 81.8% |
+    | best fair linear, % of its own ceiling | 96.8% | 96.4% | 96.9% |
+    | **fair gap** | **-0.0032** | **+0.0036** | **+0.0148** |
+    | cross-seed sd of the gap | 0.0062 | **0.0151** | 0.0090 |
+    | t | -1.65 | **+0.76** | +5.18 |
+    | premium time-variation share | +0.1037 | **+0.1641** | +0.0973 |
+
+    **THE GATE was the fair gap positive with t >= 2. It came in at +0.0036, t = 0.76, positive in
+    6 of 10. FALSIFIED.** Four of the six registered clauses held -- measured theta 0.181 inside the
+    family band, SR_max +6.0% against `vym3`, expected excess return 4.35% a year, penalty interior
+    10 of 10.
+
+    **The clause that failed is the one that carries the finding.** Clause (d) predicted room within
+    25% of `vym3`'s +0.0558. It came in at **+0.0869, up 56%, and that is the largest room of any
+    economy in this file** -- above `vyg25`'s +0.0820, which had held the record. Room is a
+    POPULATION quantity, the distance between the linear and nonlinear ceilings computed from the
+    true conditional moments with no estimation error in it. So three priced states at adequate
+    density genuinely do leave more on the table for a nonlinear method. The pre-registered
+    dimension story was right about the population and wrong about everything that follows from it.
+
+    **What moved it: time variation, in three directions at once.** `vym3t3` is the first economy in
+    this project where a design change moved a measured statistic of the premium. Fitting one pooled
+    coefficient vector instead of a fresh one each month raises theta from 0.204 to 0.368, a
+    time-variation share of **+0.1641** against +0.0973 in `vyg25` and +0.1037 in `vym3` -- 60% to
+    70% higher (`variants/diagnostics/premium_shape.py`). A rolling estimator fits one coefficient
+    vector per 360-month window, so that is premium variance neither method can track, and it is
+    what the population room is made of.
+
+    **And DKKM is the method that pays for it.** Against its own nonlinear ceiling DKKM realises
+    74.9% here, the WORST of the sixteen economies, against 81.8% in `vyg25` and 80.7% in `vym3`.
+    The fair linear side realises 96.4%, indistinguishable from its 96.9% and 96.8% in the other
+    two. The whole efficiency loss falls on the one estimator that was supposed to collect the
+    prize. The cross-seed sd of the gap tripling, 0.0062 to 0.0151 with per-seed values spanning
+    -0.0226 to +0.0226 and no single outlier driving it, says the same thing: estimating a premium
+    surface that moves in three independent directions from one 360-month window is a
+    higher-variance problem, and DKKM is the higher-variance estimator.
+
+    **DENSITY MATTERED, and it is not enough.** Holding the geometry fixed and taking firms per
+    premium from 25 to 167 moved the gap by +0.0068, from -0.0032 to +0.0036 -- a sign flip, and a
+    move about the size of `g0235f`'s entire gap. So `vym3`'s twenty types were part of its
+    falsification, and the thin-cross-section hypothesis in finding 15 was not wrong. It was also
+    not sufficient: at `vyg25`'s exact density, the K=5 economy still returns a quarter of
+    `vyg25`'s gap and cannot be distinguished from zero.
+
+    **The registered dichotomy was too coarse, and saying so is part of the result.** This spec
+    committed to reading a falsified gate as "dimension does not pay at ANY density, and the K
+    programme is closed for good". That reading does not survive its own clause (d). Dimension pays
+    in the population -- the room is the largest measured -- and fails in the estimator. The honest
+    statement is narrower and more useful than either branch offered:
+
+    > Raising K enlarges the headroom and enlarges the variance of capturing it, and for DKKM the
+    > second effect is the larger one. The ceiling is not wrong about where the prize is; it is
+    > silent about whether anything can reach it, and at K=5 nothing here does.
+
+    **What this leaves.** The K programme is closed as a route to a MEASURED gap, now on two
+    economies and 300 node-hours rather than one. It is not closed as a description of where
+    population headroom lives, and finding 15's flat statement that no measured statistic of the
+    premium tracks anything needs one amendment: the time-variation share now separates `vym3t3`
+    from the rest, and it tracks ROOM (+0.1641 with the largest room; +0.0973 and +0.1037 with
+    middling ones). It still does not track the GAP. Any proposal that wants a gap has to argue it
+    raises room WITHOUT raising the variance of estimating it, and nothing in this file yet shows
+    how.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in

@@ -34,36 +34,18 @@ thirteen that have no gap, or is parked.
 
 | # | experiment | models | what it settles | cost | status |
 |---|---|---|---|---|---|
-| **1** | **`vym3t3` — `vym3`'s three priced states with THREE types, not twenty** | **KP14** | **dimension vs ESTIMATION DENSITY — the two things finding 15 could not separate** | **3 solves + 10 seeds, ~60 node-h** | **ready; informative whichever way it comes out** |
-| **2** | **K3 — `kappa_y` at 0.15 and 0.70** | **KP14** | **whether BGN's switching-speed ladder (finding 12) — the only loading-shape effect that has ever produced a gap — replicates in a second model** | **2 × 15 min + 20 seeds** | **ready; the cross-model twin** |
-| 3 | K7 — a third `gamma_v` point | KP14 | whether the gap is smooth or a threshold between `vyx` (+0.0009) and `vyg25` (+0.0148) | 20 min + 10 seeds | ready |
-| 4 | K1 — a continuum of exposure types | KP14 | — | 1.7 h + 30 h seeds | **parked — a continuum is item 1's density problem taken to the limit; run item 1 first** |
-| 5 | A second priced shock in GS21 | GS21 | — | new solver | **withdrawn — a pure K lever, and K is what finding 15 falsified** |
+| **1** | **K3 — `kappa_y` at 0.15 and 0.70** | **KP14** | **whether BGN's switching-speed ladder (finding 12) — the only loading-shape effect that has ever produced a gap — replicates in a second model** | **2 × 15 min + 20 seeds** | **ready; the cross-model twin, and now the only live item with a mechanism behind it** |
+| 2 | K7 — a third `gamma_v` point | KP14 | whether the gap is smooth or a threshold between `vyx` (+0.0009) and `vyg25` (+0.0148) | 20 min + 10 seeds | ready |
+| 3 | K1 — a continuum of exposure types | KP14 | — | 1.7 h + 30 h seeds | **parked — finding 16 shows density is real but not sufficient, so a continuum buys the density problem back for nothing** |
+| 4 | A second priced shock in GS21 | GS21 | — | new solver | **withdrawn — a pure K lever, and K is what findings 15 and 16 closed** |
+| ~~1~~ | ~~`vym3t3` — three priced states at three types~~ | KP14 | — | done | **RUN 2026-09-26 — GATE FALSIFIED (finding 16), but room is the largest in the file** |
 | ~~1~~ | ~~Decide the BGN regime closure~~ | BGN | — | none | **DONE 2026-09-23 — it does not stand** |
 | ~~1a~~ | ~~`g0235ff` — one more 4x on the switch speed~~ | BGN | — | — | **DROPPED — a price of risk cannot switch on a 1.5-month spell** |
 | ~~2~~ | ~~`bgnzr` — GATE on the discount channel~~ | BGN | — | done | **RUN 2026-09-23 — GATE FALSIFIED** |
 | ~~4~~ | ~~Multiple priced states in KP14~~ | KP14 | — | done | **RUN 2026-09-25 — GATE FALSIFIED (finding 15)** |
 | ~~—~~ | ~~Multi-factor term structure~~ | BGN | — | — | **WITHDRAWN — its premise is what `bgnzr` falsified** |
 
-### 1. `vym3t3` — the same three priced states, three types instead of twenty
-**The one experiment that settles finding 15.** `vym3` changed two things at once: it raised K from
-3 to 5 AND went from three types to twenty. At N=500 and equal shares twenty types is **25 firms per
-distinct premium value against `vyg25`'s 167**, and DKKM is the higher-variance of the two
-estimators, so it should pay for thin types first. Run `vym3`'s exact three-state geometry with three
-types — the three magnitudes that span its range, at three alignments — and the density confound is
-gone.
-
-- If the gap comes back positive, the K=5 economy was fine and **twenty types was the defect**;
-  every future design is then bounded by firms-per-type, which is a protocol constraint the file
-  does not yet record.
-- If it stays negative, **dimension itself is what does not pay**, finding 15 stands unqualified,
-  and the K programme is closed for good rather than provisionally.
-
-Cost is three G solves plus 63 integral tables (about 20 minutes on the Mac) and ten Phoenix seeds.
-Register the falsification clause before building. It reuses the generalised chain committed in
-`bbbb384`, so there is no new code.
-
-### 2. K3 — `kappa_y` at 0.15 and 0.70
+### 1. K3 — `kappa_y` at 0.15 and 0.70
 **Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
 established the only loading-shape result that has ever produced a gap: in BGN, holding the
 stationary stress share fixed and scaling both switch probabilities together, the fair gap is
@@ -77,7 +59,7 @@ More interesting after the pricing fix, not less: the corrected Girsanov adjustm
 `b gamma_v sigma_y / kappa_y`, so `kappa_y` scales the whole correction. Note `sigma_y` is locked to
 `sqrt(2 kappa_y)`. Two solves of about 15 minutes, then twenty seeds.
 
-### 3. K7 — a third point in `gamma_v`
+### 2. K7 — a third point in `gamma_v`
 `vyx`'s parameters at `gamma_v` 2.1 or 2.2, nothing else changed. One G solve plus integrals is
 about 20 minutes on the Mac; then ten Phoenix seeds, ~60 node-hours. `vyx` and `vyg25` differ ONLY
 in `gamma_v` and their fair gaps are +0.0009 and +0.0148, so a middle point says whether the gap is
@@ -86,7 +68,7 @@ survived. **Its old framing as a theta probe is dead**: the implied thetas it wa
 and 0.81) were inverted from the synthetic surface and withdrawn in finding 11; measured directly
 both economies sit near 0.19. Register the falsification clause before building.
 
-### 4-5. Parked and withdrawn
+### 3-4. Parked and withdrawn
 **K1, a continuum of exposure types** (fifteen types over [0, 0.14]; ~1.7 h of integrals then 30 h of
 seeds): PARKED. It was ranked on raising theta, and `vym3` has now shown that more types at fixed N
 does not raise measured theta while it does thin the cross-section — fifteen types is 33 firms each.
@@ -97,6 +79,35 @@ of exactly 1.000, and it is a pure K lever, which is what finding 15 falsified. 
 natural candidate shock either. Reopening it needs a reason that is not the ceiling table.
 
 ## Struck: run, dropped or withdrawn
+
+### ~~1. `vym3t3`~~ — RUN 2026-09-26, GATE FALSIFIED (and the most informative failure yet)
+Finding 16 has the tables. `vym3`'s three priced states with THREE types instead of twenty — types
+3, 10 and 19 of `vym3`'s own, at `vyg25`'s shares, so firms per distinct premium went 25 → 167 with
+the geometry held. **Fair gap +0.0036 at t 0.76, positive in 6 of 10, against a registered gate of
+positive at t ≥ 2.**
+
+Four of six clauses held. **Clause (d) failed and it is the finding**: room was predicted within 25%
+of `vym3`'s +0.0558 and came in at **+0.0869 — the largest in the file**, above `vyg25`'s +0.0820.
+Room is a POPULATION quantity, so three priced states at adequate density genuinely do leave more
+for a nonlinear method. DKKM realised **74.9% of its own ceiling, the worst of the sixteen**, while
+the fair linear side realised 96.4%, its usual number. The cross-seed sd of the gap tripled to
+0.0151.
+
+**Density was real and insufficient.** The sign flipped, -0.0032 → +0.0036, a move the size of
+`g0235f`'s whole gap, so `vym3`'s thin types were part of its falsification. But at `vyg25`'s exact
+density the K=5 economy still returns a quarter of `vyg25`'s gap.
+
+**The registered dichotomy was too coarse.** This spec committed to reading a falsified gate as
+"dimension does not pay at any density". That does not survive its own clause (d): dimension pays in
+the population and fails in the estimator. Raising K enlarges the headroom and enlarges the variance
+of capturing it, and for DKKM the second effect is larger.
+
+**One thing to carry forward.** `vym3t3` is the first economy here whose design change moved a
+measured statistic of the premium — the time-variation share, +0.1641 against +0.097 and +0.104.
+It tracks ROOM and not the GAP. Any future proposal has to argue it raises room WITHOUT raising the
+variance of estimating it, and nothing in this file yet shows how. 62 node-hours.
+
+
 
 ### ~~1. Decide the BGN regime closure~~ — DONE 2026-09-23, and it does not stand
 Finding 12 in `docs/RESULTS.md` has the table. The closure confused two dimensions of the regime
@@ -179,13 +190,13 @@ it beat DKKM anyway. The 25-firms-per-type note in the old text ("worth checking
 committing") was the right worry and was not acted on; it is now item 1.
 
 ## Housekeeping, not experiments
-- `zero_book_in_sdf_solve: true` is declared in all fifteen live specs and **read by nothing** — the same
+- `zero_book_in_sdf_solve: true` is declared in all sixteen live specs and **read by nothing** — the same
   shape as the `burnin` field that said 200 while the code ran 400. `sdf_compute_kp14.py` still
   solves `ER` over all N firms with a ridge fallback that fires only on an exception, which is the
   construction that makes `sdf_ret` / `max_sr` unreliable — and `max_sr` is RESULTS.md's `SR_max`.
 - `PRECISION_KEYS["kp"]` is still `("NY", "_i0")` and does not record the internal Q-grid the
-  corrected solve introduced. **Close it before another KP14 economy is added, which items 1, 2 and
-  3 all are** — every live item on the queue is now a KP14 economy, so this is on the critical path
+  corrected solve introduced. **Close it before another KP14 economy is added, which items 1 and 2
+  both are** — every live item on the queue is now a KP14 economy, so this is on the critical path
   rather than beside it.
 
 ---
