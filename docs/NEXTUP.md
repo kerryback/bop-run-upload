@@ -45,6 +45,50 @@ thirteen that have no gap, or is parked.
 | ~~4~~ | ~~Multiple priced states in KP14~~ | KP14 | — | done | **RUN 2026-09-25 — GATE FALSIFIED (finding 15)** |
 | ~~—~~ | ~~Multi-factor term structure~~ | BGN | — | — | **WITHDRAWN — its premise is what `bgnzr` falsified** |
 
+### 0. PROBE — `vym3` at N=1000: is the density channel worth anything on its own?
+**OFF-PROTOCOL and not reportable.** N=1000 departs from 500/500/360, so the runner refuses it
+unless it names its own `BOP_RESULTS_DIR` (`variants/run_seeds_slurm.sh:448`). It writes to
+`/data/sjpruitt/probe_n1000`, never to `variants/results`, and produces no economy row. N touches
+nothing in the solve, so `vym3`'s committed G and integ tables are reused unchanged — no spec, no
+new solve_id.
+
+**Why `vym3` and not `vym3t3`.** Finding 16 read its +0.0068 as the density channel, but `vym3t3`
+changed the type COUNT (20 → 3), the geometry and the premium mean all at once. N=1000 on `vym3`
+holds every one of those fixed and moves ONLY firms per distinct premium, 25 → 50. **It is the
+cleaner density test, and it is the one finding 16 could not run.**
+
+**What the decomposition predicts.** `gap = room − excess estimation loss` is an identity, and
+across the sixteen economies `excess_loss = 0.0024 + 0.887·room` (corr 0.99), so a room rise
+returns only 11% of itself. N can only touch the DIVERSIFIABLE part of the loss, and that is
+already spent: idiosyncratic risk is 0.26% of a diversified portfolio's variance at N=500 and 0.13%
+at N=1000, a 0.06% reduction in portfolio volatility. So N should be nearly inert EXCEPT through
+type resolution, which is a separate channel.
+
+**REGISTERED PREDICTION (2026-09-28), before the run.** References: `vym3` at N=500 — SR_max
+0.4178, room +0.0558, DKKM 0.2856, fair 0.2888, fair gap **-0.0032** (t -1.65, 5 of 10 positive),
+DKKM 80.7% of its own ceiling.
+- (a) fair gap rises by **+0.001 to +0.004**, point estimate +0.0025, landing near -0.0007 — still
+  negative, still not significant. The band is wide because the +0.0025 is log-interpolated from
+  finding 16's 25 → 167 move, which was NOT a clean density change.
+- (b) room rises by **under 5%**, to below +0.0586. Room is a fixed-coefficient population
+  quantity and N only removes idio drag.
+- (c) SR_max rises by **under 1%**, to below 0.4220.
+- (d) DKKM's share of its own ceiling rises by **under 2 points**, to below 82.7%.
+- (e) the cross-seed sd of the gap does NOT fall materially (stays above 0.005). Seed variance is
+  dominated by the aggregate state path, which is one path per seed at any N.
+
+**THE FALSIFIER, and it is the point of running this.** If DKKM's share of its own ceiling rises by
+**more than 5 points**, or the gap rises by more than +0.006, then the estimation loss is NOT mostly
+time-series and N IS a lever. That would reopen raising N across the whole file and would mean the
+0.887 slope is an artifact of N=500 rather than a structural relation. Under the predictions above
+it is neither, and N is closed as a route.
+
+**Cost.** Wall time scales 4-8x (the oracle is O(N^2 P) in `Phi'Sigma Phi` and O(N^3) in `max_sr`,
+per month) and the per-month Sigma block of `months_data` goes ~1 GB to ~3.9 GB. Phoenix `public`
+allows 7 days and ~112 GB, so no highmem is needed. **Seed 0 runs ALONE first as a timing and
+memory probe**; the other nine are sized from what it achieves, because at 6 h per seed today a 6x
+factor lands near the 2-day wall the campaign has been using.
+
 ### 1. K3 — `kappa_y` at 0.15 and 0.70
 **Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
 established the only loading-shape result that has ever produced a gap: in BGN, holding the
