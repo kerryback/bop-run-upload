@@ -89,6 +89,48 @@ allows 7 days and ~112 GB, so no highmem is needed. **Seed 0 runs ALONE first as
 memory probe**; the other nine are sized from what it achieves, because at 6 h per seed today a 6x
 factor lands near the 2-day wall the campaign has been using.
 
+**RESULT (2026-09-29). GRADED: the falsifier did NOT trip, and N is closed as a route to the gap.**
+Ten seeds, `21639406_0` + `21659003_1..9`, 7:34-7:42 each, 58.2 GiB peak, all exit 0. Penalty gate
+PASSES 10/10 interior. Paired by seed, which is exact here: the aggregate state path is
+bit-identical across N (`rf` matches to 0.000e+00), so each seed is its own control.
+
+| | N=500 | N=1000 | paired d | t |
+|---|---|---|---|---|
+| SR_max | 0.4261 | 0.5145 | **+0.0884** | +9.03 |
+| room | 0.0594 | 0.0954 | **+0.0360** | +9.45 |
+| DKKM | 0.2856 | 0.3143 | +0.0287 | +1.62 |
+| fair linear | 0.2888 | 0.3163 | +0.0275 | +1.22 |
+| **fair gap** | -0.0032 | -0.0021 | **+0.0012** | **+0.17** |
+
+- (a) **HELD.** +0.0012, inside the +0.001 to +0.004 band; still negative, still not significant.
+- (b) **FAILED.** Room rose **61%**, not under 5%.
+- (c) **FAILED.** SR_max rose **21%**, not under 1%.
+- (d) **HELD.** DKKM's share of its ceiling **fell** 3.9 points (t -1.33), against "rises under 2".
+- (e) **HELD.** Cross-seed sd of the gap rose 0.0062 to 0.0192, above the 0.005 floor.
+
+**The premise behind (b) and (c) was wrong: diversification is NOT exhausted at N=500.** The
+"0.26% of a diversified portfolio's variance" argument above is withdrawn. Measured directly by
+subsampling the N=1000 moments back to its own first 457 firms -- same realization, same premium
+level -- SR_max goes 0.4507 to 0.5424 on the firm count alone.
+
+**The error did not propagate, and that is the finding.** Room rose in **10 of 10** seeds; the gap
+rose in **5 of 10**. On the identity `gap = room - excess loss` (exact to 0.00e+00 every seed):
+d(room) **+0.0360** (t +9.45), d(excess loss) **+0.0349** (t +4.19), d(gap) **+0.0012** (t +0.17).
+**The slope along N is 0.968**, against the 0.887 cross-economy slope: doubling the cross-section
+buys 61% more room and the estimators hand back 97% of it. This is the sharpest confirmation of
+room-is-not-gap in the file, precisely because it moves room by a large unambiguous 9-sigma amount
+and the gap does not follow. The 0.887 slope is not an artifact of N=500, and raising N does not
+reopen anything.
+
+**One caveat for any future N experiment.** N does not nest: `ftype = rng_bx.choice(ntypes, size=N)`
+consumes N draws before the idio shocks, so changing N offsets the whole firm-level stream and
+redraws the run's premium level. At seed 0 that moved `mean_mu` 21%. It averages out -- paired over
+ten seeds `mean_mu` is -0.0000 (t -0.04) -- but a single-seed N comparison is not interpretable, and
+per-firm substreams would be needed to make one so.
+
+Grading harness: `_scratch/probe_n1000/grade.py`, run as
+`python variants/penalty_gate.py --results _scratch/probe_n1000` then `python _scratch/probe_n1000/grade.py`.
+
 ### 1. K3 — `kappa_y` at 0.15 and 0.70
 **Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
 established the only loading-shape result that has ever produced a gap: in BGN, holding the
