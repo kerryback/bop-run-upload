@@ -32,7 +32,7 @@ Phase 2 (lands with the solfile regeneration)
     to *stamped and valid* and never passes through *stamped and failing* --
     which is the state that would invite a permanent skip-the-check flag.
 
-See `kp14_crash_20260826.md` for the diagnosis this exists to prevent.
+See `docs/kp14_crash_20260826.md` for the diagnosis this exists to prevent.
 """
 
 import hashlib

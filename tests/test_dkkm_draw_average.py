@@ -22,7 +22,7 @@ import sys
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "utils", "evaluate_sdfs.py")
+SRC = os.path.join(ROOT, "legacy", "utils", "evaluate_sdfs.py")  # moved 2026-10-05
 
 
 def _live(path):

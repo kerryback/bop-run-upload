@@ -3300,7 +3300,7 @@ deleted documents. Separately, and not caused by any of this: all thirteen specs
 `"zero_book_in_sdf_solve": true` and **nothing in `variants/` or `tests/` reads it** -- the same
 shape as the `burnin` field that said 200 while the code ran 300/400. `sdf_compute_kp14.py` still
 solves `ER` over all N firms with a ridge fallback that fires only on an exception, which is the
-construction `sdf_weights_note.md` flagged as making `sdf_ret`/`max_sr` unreliable when zero-capital
+construction `archive/notes/sdf_weights_note.md` flagged as making `sdf_ret`/`max_sr` unreliable when zero-capital
 firms are present -- and `max_sr` is RESULTS.md's `SR_max` column.
 
 ## §64. The campaign lands: the headline is withdrawn, and the gate was asking the wrong question (2026-09-22)

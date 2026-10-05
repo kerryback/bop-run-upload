@@ -55,6 +55,12 @@ export BOP_TEMP_DIR=$TEMP
 # should NOT also tee to logs/. Keep this path in sync with the #SBATCH -o line
 # at the top -- SBATCH directives cannot use shell variables, so the model name
 # appears in both places and must match.
+# This script moved into legacy/ on 2026-10-05. SLURM resolves the `#SBATCH -o` path
+# against the SUBMIT directory, so this must still be submitted from the repo root
+# (`sbatch legacy/run_bop_job.sh`); cd-ing here keeps outslurm/ and main.py agreeing
+# with that whatever the working directory ends up being on the node.
+cd "$(dirname "$(dirname "$(readlink -f "$0")")")" || exit 1
+
 export BOP_LOG_FILE="outslurm/${CLUSTER}.bop.${MODEL}.${SLURM_ARRAY_TASK_ID}.log"
 [ -f "$BOP_LOG_FILE" ] || { echo "ERROR: $BOP_LOG_FILE missing -- #SBATCH -o line has drifted from BOP_LOG_FILE"; exit 1; }
 
@@ -64,4 +70,4 @@ mkdir -p outslurm
 
 echo "Running $MODEL panel $SLURM_ARRAY_TASK_ID on $(hostname) at $(date)"
 
-python main.py $MODEL $SLURM_ARRAY_TASK_ID $((SLURM_ARRAY_TASK_ID + 1)) $CHARS_FLAG
+python legacy/main.py $MODEL $SLURM_ARRAY_TASK_ID $((SLURM_ARRAY_TASK_ID + 1)) $CHARS_FLAG

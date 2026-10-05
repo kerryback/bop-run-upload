@@ -264,7 +264,7 @@ KP14_R = 0.05          # paper: 0.025 -- see note above
 # sigma_eps/sigma_u and the doubled gamma_x (1.38) were repo-only departures.
 # Any change here MUST be followed by `python utils_kp14/regen_solfiles.py`;
 # the stamp guard refuses to run on stale solution files (see
-# kp14_crash_20260826.md for what happens otherwise).
+# docs/kp14_crash_20260826.md for what happens otherwise).
 KP14_GAMMA_X = 0.69
 KP14_GAMMA_Z = -0.35
 KP14_ALPHA = 0.85

@@ -94,7 +94,7 @@ KNOWN_ISSUE = """\
 To regenerate and re-stamp all 18 solution files, from the repo root:
     python utils_gs21/regen_solfiles.py
 One producer (gs21_solve.py) writes them in a single ~2.5 min run, so there is no
-ordering to get wrong. Background: kp14_crash_20260826.md."""
+ordering to get wrong. Background: docs/kp14_crash_20260826.md."""
 
 
 def verify(mode='error'):

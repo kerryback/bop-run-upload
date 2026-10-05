@@ -65,7 +65,7 @@ KNOWN_ISSUE = """\
 To regenerate and re-stamp both solution files, from the repo root:
     python utils_kp14/regen_solfiles.py
 G_func.csv must be rebuilt before integ_results.npz (integ_kp14.py reads it);
-the driver enforces that order. Background: kp14_crash_20260826.md."""
+the driver enforces that order. Background: docs/kp14_crash_20260826.md."""
 
 
 def verify(mode='warn'):

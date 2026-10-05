@@ -80,7 +80,7 @@ This re-solves 201 grid points at ~19 s each (~32 min at n_jobs=2). If you only
 need to record provenance for files you already trust, use --stamp-only.
 Note the regenerated r grid differs from the committed one by ~1e-5: the
 committed endpoints came from an unseeded 1e8-draw simulation, and make_jstar.py
-uses the analytic quantiles instead. Background: kp14_crash_20260826.md."""
+uses the analytic quantiles instead. Background: docs/kp14_crash_20260826.md."""
 
 
 def verify(mode='error'):

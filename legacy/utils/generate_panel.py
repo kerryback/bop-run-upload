@@ -35,6 +35,11 @@ import importlib
 # Parent directory is needed for config and utils package imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# ...and the repo root, one level further up: config.py and the model trees
+# (utils_bgn/, utils_kp14/, utils_gs21/, utils_factors/) stayed there when this
+# tree moved into legacy/ on 2026-10-05. The line above now resolves to legacy/,
+# which is what `from utils.<mod> import ...` needs.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from utils.sparse_3d import save_sparse_3d
 

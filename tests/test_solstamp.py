@@ -333,7 +333,7 @@ def test_downstream_stage_does_not_invalidate_upstream():
 
 
 def test_upstream_artifact_change_propagates_downstream():
-    """utils/solfile_stamp.py's 'mode 3: upstream moved, downstream did not'."""
+    """legacy/utils/solfile_stamp.py's 'mode 3: upstream moved, downstream did not'."""
     with tempfile.TemporaryDirectory() as tmp:
         src = _sources(tmp)
         art = os.path.join(tmp, "G0.csv")

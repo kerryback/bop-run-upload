@@ -14,7 +14,7 @@ excluding defaulted firms helps.
 Run on Sol (bop env), repo root:
     BOP_SCRATCH_DIR=/scratch/sjpruitt/bop_gs21 \
     BOP_TEMP_DIR=/scratch/sjpruitt/bop_temp_gs21 \
-    python diag_gs21.py gs21_0 560
+    python archive/diagnostics/diag_gs21.py gs21_0 560
 (adjust dirs/panel/month to your GS21 outputs; trailing args = extra months)
 """
 import sys, os, pickle, warnings
