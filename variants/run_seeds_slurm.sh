@@ -506,7 +506,7 @@ source activate "$CONDA_ENV"
 # non-interactive shell sbatch provides. Without this, `python` resolves to the mamba
 # BASE interpreter and every task dies in ~1 s with ModuleNotFoundError: numpy (the
 # traceback names /etc/python/sitecustomize.py). Hit on Phoenix 2026-08-31 on all 11
-# array tasks. Same fix as run_bop_job.sh:33-40.
+# array tasks. Same fix as legacy/run_bop_job.sh.
 export PATH="$CONDA_PREFIX/bin:$PATH"
 echo "python: $(which python)"
 

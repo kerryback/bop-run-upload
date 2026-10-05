@@ -1,304 +1,101 @@
 # The Virtue of Complexity in Simple Economic Models
 
-Code repository for Back, Ober, and Pruitt - "The Virtue of Complexity in Simple Economic Models"
+Code for Back, Ober and Pruitt, *"The Virtue of Complexity in Simple Economic Models"*.
 
-*Last updated: March 30, 2026*
+Three structural asset-pricing models are simulated to a firm panel, and in each one the **true**
+stochastic discount factor is known. That makes it possible to ask a question the empirical
+literature cannot: when a high-complexity estimator beats a linear one out of sample, how much of
+the available prize did it actually collect, and how much was there to collect in the first place?
 
-A computational finance research framework for estimating and evaluating Stochastic Discount Factors (SDFs) across multiple macroeconomic asset pricing models. The project compares traditional Fama-French factor methods with modern Random Fourier Features (DKKM) approaches.
+The estimators compared are **DKKM** (random Fourier features plus ridge, in the Didisheim–Ke–Kelly–
+Malamud sense) against a **fair linear benchmark** — Fama-French, Fama-MacBeth, linear-in-ranks and
+the market, each given the same conditioning information and the same evaluation.
 
-## Overview
+| model | reference |
+|---|---|
+| **BGN** | Berk, Green and Naik (1999) |
+| **KP14** | Kogan and Papanikolaou (2014) |
+| **GS21** | Gomes and Schmid (2021) |
 
-This framework:
-- **Simulates** panel data from three structural asset pricing models (BGN, KP14, GS21)
-- **Estimates** factor returns using Fama-French and Random Fourier Features methods
-- **Computes** SDF weights via ridge regression
-- **Evaluates** portfolio performance through Sharpe ratios and other statistics
-- **Scales** to cloud (AWS/Koyeb) or SLURM cluster deployment, with optional AWS S3 integration
+## Start here
 
-## Models Implemented
+**[`docs/quickstart.md`](docs/quickstart.md)** — what the research documents hold, the measurement
+protocol, and the loop a new economy goes through from proposal to graded result.
 
-| Model | Reference |
-|-------|-----------|
-| **BGN** | Berk-Green-Naik 1999 |
-| **KP14** | Kogan-Papanikolaou 2014 |
-| **GS21** | Gomes-Schmid 2021 |
+| | |
+|---|---|
+| [`docs/RESULTS.md`](docs/RESULTS.md) | every economy's numbers, and the numbered cross-cutting findings |
+| [`docs/NEXTUP.md`](docs/NEXTUP.md) | the live queue, and every experiment already run with its pre-registration and grade |
+| [`docs/RUNS.md`](docs/RUNS.md) | cluster procedure, hazards, and the measured cost of every campaign |
+| [`variants/README.md`](variants/README.md) | the pipeline itself: economies, estimators, feature bases, and the solve registry |
 
-## Directory Structure
+## Layout
 
 ```
-├── config.py                 # Centralized configuration
-├── main.py                   # Main script to run simulations
-├── requirements.txt          # Python dependencies
-├── deploy_koyeb.sh           # Wrapper to run main.py on Koyeb with AWS S3 storage
-├── run_bop_job.sh            # SLURM sbatch script for cluster deployment
-│
-├── utils/                    # Core workflow scripts
-│   ├── generate_panel.py         # Panel data generation
-│   ├── generate_25_portfolios.py # Double-sorted portfolios
-│   ├── generate_fama_factors.py  # Fama-French factors
-│   ├── generate_dkkm_factors.py  # Random Fourier Features factors
-│   ├── estimate_sdf_fama.py      # Fama/CAPM SDF estimation
-│   ├── estimate_sdf_dkkm.py      # DKKM SDF estimation
-│   ├── calculate_moments.py      # SDF conditional moments
-│   ├── evaluate_sdfs.py          # Portfolio statistics
-│   └── upload_to_aws.py          # S3 utilities
-│
-├── utils_factors/            # Factor computation utilities
-│   ├── dkkm_functions.py         # Random Fourier Features
-│   ├── fama_functions.py         # Fama-French construction
-│   ├── factor_utils.py           # Common utilities
-│   └── sdf_utils.py              # SDF-specific utilities
-│
-├── utils_bgn/                # BGN model implementation
-├── utils_kp14/               # KP14 model implementation
-└── utils_gs21/               # GS21 model implementation
+variants/            THE LIVE PIPELINE. Engineered economies, the oracle and the estimators.
+  common/              protocol.py (the measurement protocol), oracle.py (feature bases and the
+                       two-pass population evaluation), solstamp.py (content-addressed solves)
+  bgn_gam/ kp_vy/ gs_bx/   per-model solvers, simulators and parameters
+  run_oracle.py        simulate a panel, compute true conditional moments, report every ceiling
+  run_estimators.py    DKKM and the linear benchmarks on rolling windows, scored on truth
+  aggregate_seeds.py   the results table; refuses to write an off-protocol row
+  penalty_gate.py      did the ridge grid bind? Run before reading any number
+
+experiments/
+  specs/               one JSON per economy: the override, the registered prediction, the
+                       falsifier, and the solve ids precommitted BEFORE solving
+  registry/            one manifest per solve, committed; outlives the artifact it describes
+
+utils_bgn/ utils_kp14/ utils_gs21/ utils_factors/
+                     the published-model implementations, and the reference the variants are
+                     held to
+config.py            the parameter authority. tests/test_config_parity.py asserts the variants
+                     have not drifted from it
+tests/               275 tests. They pin the protocol, the precommitments, the docs against the
+                     data, and the hazards that have cost money
+docs/                the research record (above)
+legacy/              the superseded 7-step pipeline. Produces no reportable number
+archive/             retired diagnostics, notes and validation work
+voc_diagnosis/       the 2026-08 audit that established the K-factor ceiling
 ```
 
-## Installation
+## Install
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-
-# Install dependencies
-pip install -r requirements.txt
+conda env create -f environment.yml && conda activate bop
+# or
+pip install -r requirements.txt pyarrow
 ```
 
-### Dependencies
+Then `python -m pytest tests/ -q` — expect 275 passed.
 
-- numpy (>=1.20.0)
-- pandas (>=1.3.0)
-- scipy (>=1.7.0)
-- statsmodels (>=0.13.0)
-- scikit-learn (>=1.0.0)
-- joblib (>=1.1.0)
-- boto3 (>=1.26.0)
-- requests (>=2.31.0)
+## How the method works, in one pass
 
-## Usage
+1. **Solve the model.** Each parametrization needs its own solve: the exposures, the price of the
+   priced factor, its persistence and the regime multipliers all enter the value functions. Solves
+   are content-addressed — same parameters and same source means the same `solve_id`, so an
+   unchanged spec exits immediately instead of re-solving. Every solve writes a manifest to
+   `experiments/registry/`, which is committed and outlives the artifact.
+2. **Simulate and take the truth.** `run_oracle.py` draws a panel and computes the true conditional
+   mean and covariance every month. From those it reports, for each feature basis, the conditional
+   oracle and the best constant-coefficient population portfolio. The gap between the nonlinear and
+   linear population ceilings is **room**: what a nonlinear method could win if it estimated
+   perfectly.
+3. **Estimate.** `run_estimators.py` runs DKKM and the linear benchmarks on rolling 360-month
+   windows and scores every resulting portfolio against the true moments, so there is no sampling
+   error in the evaluation — only in the estimation.
+4. **Compare.** The headline is the **fair gap**: DKKM minus the best fair linear method. It
+   decomposes exactly as `gap = room − excess estimation loss`, which is the identity most of the
+   findings are about.
 
-### Running Locally
+## Where the result currently stands
 
-```bash
-python main.py <model> [start] [end] [--chars char1,char2,...]
-```
+Of sixteen economies at one protocol, **two have a fair gap distinguishable from zero**: `vyg25`
+(+0.0148, t 5.2) and `g0235f` (+0.0079, t 4.8). Both are loading-shape results at a fixed number of
+priced shocks. Three levers have been tested and closed — the number of priced shocks, estimation
+density, and the width of the cross-section — each by a pre-registered experiment that came back
+against the proposal.
 
-**Examples:**
-```bash
-# Run KP14 model for panel index 0
-python main.py kp14
-
-# Run BGN model for panels 0-9
-python main.py bgn 0 10
-
-# Run GS21 model for panels 5-15
-python main.py gs21 5 16
-
-# Run BGN with a subset of characteristics (size always included)
-python main.py bgn 0 10 --chars bm,agr,roe
-```
-
-**`--chars` flag:**
-- Accepts a comma-separated list of characteristic names: `size`, `bm`, `agr`, `roe`, `mom`, `mkt_lev`
-- Factor names are also accepted and mapped automatically: `hml`→`bm`, `cma`→`agr`, `rmw`→`roe`, `umd`→`mom`
-- `size` is always included regardless of the selection
-- The market factor and SMB are always included in the output
-
-### SLURM Cluster Deployment
-
-```bash
-# Edit run_bop_job.sh to set MODEL, SCRATCH, TEMP, CONDA_ENV, and optionally CHARS_FLAG
-# then submit a job array:
-sbatch --array=0-9 run_bop_job.sh
-```
-
-Key variables in `run_bop_job.sh`:
-- `MODEL` — bgn, kp14, or gs21
-- `SCRATCH` — permanent output directory (e.g. `/scratch/sjpruitt/bop`)
-- `TEMP` — intermediate files directory (e.g. `/scratch/sjpruitt/bop_temp`)
-- `CHARS_FLAG` — optional, e.g. `--chars bm,agr,roe`
-
-### Cloud Deployment (Koyeb)
-
-```bash
-./deploy_koyeb.sh <model> <start> <end> [instance_type] [git_repo] [upload_intermediate]
-```
-
-**Example:**
-```bash
-# Deploy KP14 panels 0-10 on 5xlarge instance
-./deploy_koyeb.sh kp14 0 10 5xlarge
-```
-
-## Workflow Pipeline
-
-The framework executes a 7-step pipeline for each panel:
-
-```
-Step 1: Panel Generation
-    └── Simulate N=1000 firms over T=720 months
-    └── Uses: utils_bgn/panel_functions_bgn.py (BGN model simulation)
-              utils_kp14/panel_functions_kp14.py (KP14 model simulation)
-              utils_gs21/panel_functions_gs21.py (GS21 model simulation)
-    └── Creates: {id}_panel.pkl, {id}_arr/ (memmap arrays)
-
-Step 2: Conditional Moments
-    └── Compute expected returns and covariances (run immediately after Step 1 while arr/ is fresh)
-    └── Uses: utils_bgn/sdf_compute_bgn.py, utils_kp14/sdf_compute_kp14.py, utils_gs21/sdf_compute_gs21.py
-    └── Reads: {id}_arr/ (memmap arrays)
-    └── Creates: {id}_moments.pkl
-    └── Note: {id}_arr/ is deleted after this step to free disk space
-
-Step 3: Portfolio Construction
-    └── Create 5×5 double-sorted portfolios (size × book-to-market)
-    └── Uses: utils_factors/factor_utils.py (portfolio sorting utilities)
-    └── Reads: {id}_panel.pkl
-    └── Creates: {id}_25_portfolios.pkl
-
-Step 4: Fama-French Factors
-    └── Compute factor returns via 2×3 sorts and Fama-MacBeth
-    └── Uses: utils_factors/fama_functions.py, utils_factors/factor_utils.py
-    └── Reads: {id}_panel.pkl
-    └── Creates: {id}_fama.pkl
-
-Step 5: DKKM Factors
-    └── Generate Random Fourier Features factors
-    └── Uses: utils_factors/dkkm_functions.py, utils_factors/factor_utils.py
-    └── Reads: {id}_panel.pkl
-    └── Creates: {id}_dkkm.pkl
-
-Step 6a: Fama SDF Estimation
-    └── Ridge regression for Fama/CAPM SDF weights
-    └── Uses: utils_factors/fama_functions.py, utils_factors/factor_utils.py
-    └── Reads: {id}_panel.pkl, {id}_fama.pkl
-    └── Creates: {id}_stock_weights_fama.pkl
-
-Step 6b: DKKM SDF Estimation
-    └── Ridge regression for DKKM SDF weights
-    └── Uses: utils_factors/dkkm_functions.py, utils_factors/factor_utils.py
-    └── Reads: {id}_panel.pkl, {id}_fama.pkl, {id}_dkkm.pkl, {id}_stock_weights_fama.pkl
-    └── Creates: {id}_stock_weights_dkkm.pkl
-
-Step 7: Evaluation
-    └── Calculate Sharpe ratios and portfolio statistics
-    └── Uses: utils_factors/factor_utils.py, utils_factors/sdf_utils.py
-    └── Reads: {id}_panel.pkl, {id}_stock_weights_fama.pkl, {id}_stock_weights_dkkm.pkl
-    └── Creates: {id}_results.pkl
-```
-
-## Configuration
-
-Key parameters in `config.py`:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `N` | 1000 | Number of firms |
-| `T` | 720 | Time periods (months) |
-| `MODEL_N_JOBS` | dict | Parallel workers per model and step (e.g. `bgn moments: 8, dkkm: 16`) |
-| `MODEL_CHUNK_SIZE` | dict | Chunk size for parallel loops per model |
-| `KEEP_PANEL` | True | Copy panel pkl to output dir and retain after run |
-| `KEEP_MOMENTS` | True | Copy moments pkl to output dir and retain after run |
-| `KEEP_WEIGHTS` | True | Retain stock weights pkl after run |
-| `N_DKKM_FEATURES_LIST` | [6, 36, 360, 3600] | DKKM feature counts |
-| `ALPHA_LST` | [0, 0.001, 0.01, 0.05, 0.1, 1] | Ridge regularization (BGN, KP14) |
-| `ALPHA_LST_GS` | [0, 1e-5, 1e-4, 5e-4, 1e-3, 0.01] | Ridge regularization (GS21) |
-| `NMAT` | 5 | Independent DKKM weight matrices |
-
-## Methods
-
-### Factor Construction
-
-**Fama-French Method:**
-- SMB computed the Fama-French way from the 2×3 size × book-to-market sort (small minus big, averaged over the three BM groups)
-- All other factors use 2×3 double sorts on size and the relevant characteristic
-- Value-weighted portfolios
-- Factors: MKT, SMB, HML, CMA, RMW, UMD
-- GS21 includes an additional leverage factor (mkt_lev)
-
-**Fama-MacBeth Method:**
-- Cross-sectional regression each month
-- Estimates risk premiums for each characteristic
-
-**CAPM:**
-- Market factor only
-
-**Random Fourier Features (DKKM):**
-- Rank standardization of characteristics
-- Random weight matrix W ~ N(0, 1)
-- RFF: φ(x) = [sin(Wx + b), cos(Wx + b)]
-- Ridge regression on RFF features
-- Results averaged over NMAT independent weight matrix draws
-
-### SDF Estimation
-
-For each month t:
-```
-min_β ||R_t - β'F_t||² + α||β||²
-```
-
-Where:
-- R_t: Stock returns
-- F_t: Factor returns
-- α: Ridge penalty
-
-## Environment Variables
-
-For SLURM cluster deployment:
-```bash
-export BOP_SCRATCH_DIR=/scratch/sjpruitt/bop        # permanent output directory
-export BOP_TEMP_DIR=/scratch/sjpruitt/bop_temp      # intermediate files (arr/, panel, moments)
-```
-These are set automatically by `run_bop_job.sh`. If `BOP_TEMP_DIR` is omitted, intermediate files go to `BOP_SCRATCH_DIR`.
-
-For AWS S3 integration:
-```bash
-export AWS_ACCESS_KEY_ID=<your-key>
-export AWS_SECRET_ACCESS_KEY=<your-secret>
-export S3_BUCKET=<bucket-name>
-export WORKFLOW_ID=<unique-id>
-```
-
-For Koyeb deployment:
-```bash
-export KOYEB_API_TOKEN=<token>
-```
-
-## Output Files
-
-Each panel generates:
-
-| File | Description |
-|------|-------------|
-| `{model}_{id}_panel.pkl` | Panel data (returns, characteristics) |
-| `{model}_{id}_arr/` | Memory-mapped arrays |
-| `{model}_{id}_fama.pkl` | Fama-French factor returns |
-| `{model}_{id}_dkkm.pkl` | DKKM factor returns |
-| `{model}_{id}_stock_weights_fama.pkl` | Fama SDF weights |
-| `{model}_{id}_stock_weights_dkkm.pkl` | DKKM SDF weights |
-| `{model}_{id}_moments.pkl` | Conditional moments |
-| `{model}_{id}_results.pkl` | Final evaluation results |
-
-## Files Uploaded to AWS S3
-
-When S3 is configured, the following files are uploaded after each step:
-
-| File | Description |
-|------|-------------|
-| `{model}_{id}_panel.pkl` | Panel data |
-| `{model}_{id}_25_portfolios.pkl` | Double-sorted portfolios |
-| `{model}_{id}_stock_weights_fama.pkl` | Fama SDF weights |
-| `{model}_{id}_stock_weights_dkkm.pkl` | DKKM SDF weights |
-| `{model}_{id}_moments.pkl` | Conditional moments |
-| `{model}_{id}_results.pkl` | Final evaluation results |
-
-## Performance Optimization
-
-The framework includes several optimizations:
-- **Memory mapping**: Large arrays stored as .npy files with mmap access
-- **Parallel processing**: Joblib with multiprocessing backend
-- **Chunked computation**: Reduces garbage collection pressure
-- **Per-step worker tuning**: DKKM SDF estimation uses fewer workers for memory
-- **Pre-allocated arrays**: Arrays pre-allocated with `np.empty()` to avoid repeated allocation
-- **C-contiguous layout**: Arrays ensured to be C-contiguous for optimal BLAS performance in matrix operations
-
-
+`docs/RESULTS.md` carries all of it, including what was withdrawn: a solve-level pricing defect
+found on 2026-09-18 took the project's original headline with it, and no pre-fix figure is reported
+as a result.

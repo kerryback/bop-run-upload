@@ -17,7 +17,7 @@ result's provenance is in question**. It is not results (`docs/RESULTS.md`) and 
   re-scoring of saved panels still needs its own results directory; `SEED_STAGE=linear` refuses to
   write into the directory it reads.
 - **`/data/sjpruitt` is shared by both clusters; `/scratch` is per-cluster and purged.** The
-  pre-refactor `run_bop_job.sh` writes every run of a model into the same two scratch directory
+  pre-refactor `legacy/run_bop_job.sh` writes every run of a model into the same two scratch directory
   names, so each run overwrites the last.
 - **SLURM logs carry the cluster**: `outslurm/sol.*` and `outslurm/phx.*`. The two clusters' job ids
   are independent sequences.
@@ -90,6 +90,24 @@ Both clusters share `/data` and have independent job-id sequences, queues and fa
   protocol campaigns skipped it deliberately, for re-runs of economies already measured; it stands for
   anything new.
 
+## Running this somewhere other than ASU
+
+Almost everything here is plain SLURM and portable. These are the parts that are not, so a
+co-author on another cluster knows exactly what to translate. Start at `docs/quickstart.md`.
+
+| what | here | what it means elsewhere |
+|---|---|---|
+| **a shared filesystem across clusters** | Sol and Phoenix both mount `/data/$USER` from `horizon.rc.asu.edu`, so one checkout under `/data` is one working tree seen by both | **not required.** It is a convenience that lets a campaign be split across two clusters. One cluster, one checkout, and the split-campaign machinery is simply unused |
+| **partition, QoS and account** | `-p public -q public -A grp_sjpruitt` on both, `-p highmem` on Sol for the two BGN economies | substitute your site's names. `variants/run_seeds_slurm.sh` takes them from the `sbatch` line, not from inside the script |
+| **the conda env** | `module load mamba/latest; source activate bop` | substitute your module system. **Keep the line after it**: `source activate` sets `CONDA_PREFIX` but does not prepend the env's `bin/` to `PATH` in the non-interactive shell `sbatch` provides, so `python` resolves to the base interpreter and every task dies in about a second with `ModuleNotFoundError: numpy`. `export PATH="$CONDA_PREFIX/bin:$PATH"` (`run_seeds_slurm.sh:504-510`) is the fix, and it cost a full array to find |
+| **4-hour HTC wall** | ASU's `htc` partition caps at 4 h; the seed jobs run on `public`, which does not | a seed is 6-8 h at the protocol, so the partition you choose must allow that |
+| **where results land** | `BOP_RESULTS_DIR` defaults to `variants/results` inside the checkout | unchanged, and portable. The only rule is the off-protocol one: a run that departs from N=500/T=500/window=360 must name its own directory or the runner refuses it |
+| **`variants/cluster_pull.sh`** | assumes the cluster checkout is the one the laptop pushes to | unchanged in logic: it refuses to clobber untracked result copies unless they are byte-identical to what origin carries |
+
+What is NOT site-specific, and matters more: the measurement protocol, the precommitment order, the
+penalty gate, and the content-addressed solve registry. Those are the same on any machine, and
+`solve_id` is deliberately independent of the library stack so two clusters agree on it.
+
 ## What it costs: the measured record
 
 ### Achieved 2026-09-22: all 130 COMPLETED, none failed, none OOM, none walltime-killed
@@ -123,6 +141,7 @@ use for items 1-3 of `docs/NEXTUP.md`, every one of which is a KP14 economy:
 | economy | cluster | request | achieved MaxRSS | achieved Elapsed, min to max | CPU-h |
 |---|---|---|---|---|---|
 | `vym3` (20 types) | Phoenix | 8 cpu, 64G, 2 d | 29.46 GiB | 5.88 to 6.21 h | 481 |
+| `vym3` at **N=1000** (off-protocol) | Phoenix | 8 cpu, 80G, 14 h | 58.2 GiB | 7.56 to 7.70 h | 613 |
 | `vym3t3` (3 types, 3 states) | Phoenix | 8 cpu, 48G, 2 d | 29.26 GiB | 5.86 to 7.05 h | 495 |
 | `kpbase` | Phoenix | 8 cpu, 48G, 2 d | 29.10 GiB | 5.97 to 6.27 h | 487 |
 | `vyx` | Phoenix | 8 cpu, 48G, 3 d | 29.18 GiB | 5.85 to 5.98 h | 474 |
@@ -168,6 +187,7 @@ solve ids untouched; here all fifteen ids moved, which is what makes the skip im
 
 | campaign | what it was | outcome |
 |---|---|---|
+| **N=1000 probe on `vym3`**, 2026-09-29, the N lever | One economy, ten seeds, **off-protocol on purpose**. N touches nothing in the solve, so `vym3`'s committed G `dd23d7300cd54a0d` and integ `01405d3733a85066` were reused unchanged -- no spec, no new solve. `SEED_N=1000` with `BOP_RESULTS_DIR=/data/sjpruitt/probe_n1000`, which is what the off-protocol guard (`run_seeds_slurm.sh:448`) requires and what keeps it out of `variants/results`. Seed 0 ran ALONE first as a sizing probe (Phoenix `21639406`, 110G, 4 d); the other nine were sized from what it achieved (Phoenix `21659003`, 80G, 14 h) | **COMPLETE, 10 of 10**, exit 0:0. **Doubling N cost 1.3x wall and 2.0x memory, not the 4-8x estimated**: 7.56 to 7.70 h each against 5.88 to 6.21 h at N=500, peak 58.2 GiB against 29.46 GiB. Penalty gate 10 of 10 interior. **The registered falsifier did NOT trip**: room rose +0.0360 at t +9.45 in 10 of 10 seeds and the fair gap moved +0.0012 at t +0.17. N is closed as a route (finding 17). 77 node-hours, 613 core-hours |
 | **vym3t3**, 2026-09-26, dimension against density | One economy, ten seeds. `vym3`'s three priced states with THREE types instead of twenty -- types 3, 10 and 19 of `vym3`'s own, at `vyg25`'s shares, so firms per distinct premium goes 25 to 167 with the geometry held. Both ids precommitted and reproduced exactly, G `6386de85717eaa91` / integ `052c029c3bf7210a`. Phoenix `21632381`, public, 48G, 2 days, sized from the 2026-09-25 KP14 measurement | **COMPLETE, 10 of 10**, exit 0:0, 5.86 to 7.05 h each, peak 29.26 GiB against 48G. **The gate is FALSIFIED**: the fair gap is +0.0036 at t 0.76, positive in 6 of 10, against a registered threshold of positive at t >= 2. But the sign flipped from `vym3`'s -0.0032, and clause (d) failed in the informative direction -- room came in at +0.0869, the LARGEST in the file, while DKKM realised 74.9% of its own ceiling, the WORST (finding 16). 62 node-hours, 495 core-hours |
 | **vym3**, 2026-09-25, the K lever | Four economies, forty seeds. `vym3` is new -- KP14 with THREE priced OU states, twenty rank-3 types, total price of y-risk held at `||gamma||` = 2.5 -- and `vyx`, `vyg25` and `kpbase` re-ran because generalising `parameters_kp14.py`, `kp14_fd_vy.py` and `integ_kp14.py` to a vector state re-keyed all six KP14 solve ids. All eight ids precommitted and reproduced exactly; all three existing economies' tables came back byte-identical at `nstates = 1` and their ten-seed numbers reproduced to four decimals. Phoenix `21620602` (vym3, 64G, 2 d), `21620603`-`5` (vyx, vyg25, kpbase, 48G) | **COMPLETE, 40 of 40**, exit 0:0, 5.82 to 6.41 h each (min to max over all forty), peak 29.46 GiB against 64G -- and `vym3`'s twenty types cost 0.36 GiB over `kpbase`'s one, because the footprint is the panel, not the types. **The gate is FALSIFIED**: the fair gap went +0.0148 -> -0.0032, positive in 5 of 10 seeds, against a registered threshold of +0.0148. Raising K from 3 to 5 removed the gap (finding 15). 240 node-hours, 1,918 core-hours |
 | **bgnzr**, 2026-09-23, the gate on BGN's discount channel | One economy, ten seeds. `bgnbase` with `beta_zr` -0.00014 -> -0.00020, a rotation of the price of risk onto the rate channel at constant total, rate share 15.1% -> 20.5%. Stops there because the corrected covariance makes the limiting term spread twice as sensitive to `beta_zr` (finding 13): 3.79%/yr here against BGN's own 2.4%. J\* id `550412fe21ce97a3`, precommitted and reproduced exactly. Phoenix `21609884`, public, 40G, 1 day, sized from `bgnbase`'s achieved 19.9 GiB and 8.3 h | **COMPLETE, 10 of 10**, 5.5-5.9 h each, peak 19.8 GiB against 40G -- the `bgnbase` class it was sized from. **The gate is FALSIFIED**: room rose +0.0274 -> +0.0292, a rise of +0.0018 against a registered +0.005 and a cross-seed se of 0.0055. The multi-factor term structure is withdrawn (finding 14). ~60 node-hours to close a direction that would have cost a new solver |
