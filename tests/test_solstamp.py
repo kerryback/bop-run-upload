@@ -481,3 +481,31 @@ if __name__ == "__main__":
             traceback.print_exc()
     print(f"\n{len(fns) - failed}/{len(fns)} passed")
     sys.exit(1 if failed else 0)
+
+
+def test_every_manifest_committable_matches_the_threshold():
+    """The stored flag must be re-derivable from SMALL_ARTIFACT_BYTES, for every manifest.
+
+    HISTORY (2026-10-05). `committable` is written once, at record time, from whatever
+    the constant was then. Nothing re-derived it, so the field could disagree with the
+    repository: 01405d3733a85066 (vym3's integ stage, 38.1 MB in 420 files) was recorded
+    `false` under the old 32 MB threshold and then committed anyway, all 420 artifacts.
+    A manifest is the durable answer to "where do I find these bytes", so a stale flag
+    there sends a co-author to the publish folder for something the clone already has.
+
+    This pins the flag to the constant, which means raising or lowering the threshold
+    is only half a change -- the existing manifests have to be re-derived with it. That
+    is deliberate.
+    """
+    import glob
+    bad = []
+    for f in sorted(glob.glob(os.path.join(ROOT, "experiments", "registry", "*.json"))):
+        with open(f) as fh:
+            man = json.load(fh)
+        want = man.get("total_bytes", 0) <= solstamp.SMALL_ARTIFACT_BYTES
+        if man.get("committable") != want:
+            bad.append(f"{man['solve_id']}: {man.get('total_bytes', 0):,} B is "
+                       f"committable={want} at the {solstamp.SMALL_ARTIFACT_BYTES:,} B "
+                       f"threshold, but the manifest says {man.get('committable')}")
+    assert not bad, ("manifests whose committable flag no longer follows the threshold "
+                     "(re-derive them):\n  " + "\n  ".join(bad))

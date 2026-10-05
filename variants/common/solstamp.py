@@ -67,7 +67,18 @@ import time
 import sys
 import types
 
-SMALL_ARTIFACT_BYTES = 32 * 1024 * 1024   # <= this may be committed to git
+# The line between "version it in git with its manifest" and "publish it and fetch it".
+# Set to 64 MB on 2026-10-05 to match what the repository actually does. The measured
+# distribution has a wide gap and nothing lives in it: every solve that IS committed is
+# 38.1 MB or less (the largest is vym3's integ stage, 420 files), and every solve that is
+# NOT is 82.4 MB or more (the gs_bx solution.npz files, 82-105 MB each). At the former
+# 32 MB the flag disagreed with reality for exactly one solve -- 01405d3733a85066 was
+# recorded `committable: false` and then committed anyway, all 420 artifacts, so the
+# field misinformed anyone reading the manifest to decide where to look for the bytes.
+# A threshold anywhere in (38.1, 82.4) is correct; 64 leaves room on both sides.
+# `tests/test_solstamp.py` pins the stored flag to this constant, so changing it means
+# re-deriving the existing manifests -- which is the point of pinning it.
+SMALL_ARTIFACT_BYTES = 64 * 1024 * 1024   # <= this may be committed to git
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 VARIANTS_DIR = os.path.dirname(_HERE)
