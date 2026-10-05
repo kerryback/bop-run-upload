@@ -22,7 +22,7 @@ the market, each given the same conditioning information and the same evaluation
 **[`docs/quickstart.md`](docs/quickstart.md)** — what the research documents hold, the measurement
 protocol, and the loop a new economy goes through from proposal to graded result.
 
-| | |
+| document | what it holds |
 |---|---|
 | [`docs/RESULTS.md`](docs/RESULTS.md) | every economy's numbers, and the numbered cross-cutting findings |
 | [`docs/NEXTUP.md`](docs/NEXTUP.md) | the live queue, and every experiment already run with its pre-registration and grade |

@@ -161,7 +161,7 @@ if they total 64 MB or less, and published content-addressed if they do not.
 
 Across the 28 solves the live specs pin:
 
-| | solves | size | what |
+| where | solves | size | what |
 |---|---|---|---|
 | **in git** | 17 | 81 MB | every BGN `Jstar_*.csv` and KP14 `G_*.csv` / `integ_*.npz`; largest single solve 38.1 MB |
 | **published** | 11 | 1,090 MB | the GS21 `solution.npz` files, 92-105 MB each |
