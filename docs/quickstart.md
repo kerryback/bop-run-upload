@@ -124,14 +124,41 @@ python variants/solve_impact.py       # which solves does this change invalidate
 
 ## 5. Getting the solves without paying for them
 
-Manifests are in git; the artifacts they describe mostly are not. They are published,
-content-addressed by `solve_id`, to the shared project folder
-(`ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/`). From the repo root:
+**Solve artifacts live in two places, and one command covers both.**
+
+| | | |
+|---|---|---|
+| **in git** | 17 solves, 81 MB | arrives with the clone: every BGN and KP14 table |
+| **published** | 11 solves, 1,090 MB | the GS21 `solution.npz` files, 92-105 MB each |
+
+The rule is a size threshold — `SMALL_ARTIFACT_BYTES` in `variants/common/solstamp.py`,
+currently 64 MB — and each manifest records which side its solve fell on in
+`committable`. Nothing in the repository sits near the line: the largest committed solve
+is 38.1 MB and the smallest published one is 92.1 MB.
+
+**Why the split rather than one location.** A table committed beside the spec that pins
+it and the manifest that describes it means `git checkout <commit>` gives a tree where
+parameters, solve id, bytes and results all agree — that is what makes an old result
+reproducible rather than merely remembered. Dropbox has no commits and no integrity
+check, so anything kept only there cannot be checked out with an old revision. The GS21
+solutions are published only because at ~100 MB each git would keep every re-solve of
+them forever.
+
+**You do not need to know which is which.** `fetch_solves.py` reads each spec's
+`expected_solves`, resolves them through the manifests, copies whatever is missing and
+verifies the sha256 of everything it copies:
 
 ```bash
 python variants/fetch_solves.py --all                         # what am I missing?
 python variants/fetch_solves.py --all --from "<that folder>"   # get it, sha256-verified
 ```
+
+The published folder is `ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/`.
+**Its path is not configured anywhere** — it is the `--from` argument, so if your
+Dropbox root differs from the maintainer's, pass your own path and nothing else changes.
+
+If you are working on the BGN or KP14 economies, which is where the queue currently
+points, the clone alone is enough and you never need the folder at all.
 
 **Do not re-solve instead.** The five GS21 exposure types are about five hours each on a cluster
 node. A `solve_id` is deliberately independent of the library stack, so two machines that agree on

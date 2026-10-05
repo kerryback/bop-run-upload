@@ -127,13 +127,38 @@ only comments / docstrings / diagnostics. **Do not run bulk `sed` over solver so
 
 ### Getting the artifacts without a cluster
 
-The manifests are in git; the artifacts they describe are not (all eight live solves
-are 504 MB, of which 495 MB is the five `gs_bx` `solution.npz`). They are published,
-content-addressed by `solve_id`, to the shared project folder:
+**The rule, in one line: a solve's artifacts are versioned in git with their manifest
+if they total 64 MB or less, and published content-addressed if they do not.
+`fetch_solves.py` covers both cases, so you do not have to know which is which.**
 
-    ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/
+Across the 28 solves the live specs pin:
 
-From the repo root:
+| | solves | size | what |
+|---|---|---|---|
+| **in git** | 17 | 81 MB | every BGN `Jstar_*.csv` and KP14 `G_*.csv` / `integ_*.npz`; largest single solve 38.1 MB |
+| **published** | 11 | 1,090 MB | the GS21 `solution.npz` files, 92-105 MB each |
+
+Nothing sits between those two groups, and the threshold
+(`SMALL_ARTIFACT_BYTES`, `common/solstamp.py`) is set at 64 MB to sit in the gap. Each
+manifest records which side it fell on in `committable`, and
+`tests/test_solstamp.py` pins that field to the threshold so the two cannot drift --
+change the constant and the existing manifests must be re-derived with it.
+
+**Why not put all of them in one place.** Git is not storage here, it is the thing that
+makes a checkout reproduce: a small table committed beside the spec that pins it and
+the manifest that describes it means `git checkout <commit>` yields a tree where
+parameters, solve id, bytes and results all agree. Dropbox has no commits, so artifacts
+kept only there cannot be checked out with an old revision, and it offers no integrity
+check of its own. The GS21 solutions are out of git only because they are ~100 MB each
+and git would keep every re-solve of them forever.
+
+The published ones live content-addressed in the shared project folder:
+
+    ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/<basename>
+
+The path is **not** configured anywhere -- it is the `--from` argument, so a co-author
+whose Dropbox sits elsewhere passes their own path and nothing else changes. From the
+repo root:
 
 ```bash
 python variants/fetch_solves.py --all                        # what am I missing?
@@ -158,11 +183,6 @@ Publishing (maintainer only, write-once): `--publish "<that folder>"` instead of
     python variants/solfiles.py diff <id_a> <id_b>  # what changed between two
     python variants/solfiles.py check               # are the artifacts still intact
     python variants/solfiles.py gc --dry-run        # what is reclaimable, and how much
-
-Artifacts at or under 32 MB are committed alongside the manifest (BGN tables, KP
-tables). Larger ones are not — a `gs_bx` economy is five ~85 MB solutions, so those
-stay out of git and the manifest is the durable record. `committable` in each
-manifest says which case applies.
 
 To force a re-solve: `BGN_JSTAR_FORCE=1`, `KP_VY_FORCE=1`, `GS_SOLVE_FORCE=1`.
 

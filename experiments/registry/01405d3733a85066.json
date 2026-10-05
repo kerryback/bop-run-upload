@@ -2101,7 +2101,7 @@
       "sha256": "a45d6bff449be6c6eda94af71855e6128d5f6dd1de9a7ac9aaf590627e0add72"
     }
   ],
-  "committable": false,
+  "committable": true,
   "env_params": {},
   "environment": {
     "hostname": "FIN-4227130.local",
