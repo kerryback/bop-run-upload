@@ -375,9 +375,29 @@ def artifacts_ok(manifest, base_dir=None):
 def embedded_solve_id(path):
     """The solve_id the solver wrote INSIDE the artifact, or None.
 
-    Only .npz artifacts carry one (gs_solve_*.py and build_vy_tables.py save
-    `solve_id=` alongside the tables). Returns None for CSVs and anything unreadable --
-    absence is not evidence of a problem, it just means this check cannot help.
+    WHICH ARTIFACTS ACTUALLY CARRY ONE (measured 2026-10-05, all 58 manifests):
+
+        gs_bx    solution.npz   YES -- gs_solve_reg.py / gs_solve_gam.py save `solve_id=`
+        kp_vy    integ_*.npz    no
+        kp_vy    G_*.csv        no   (a CSV never can)
+        bgn_gam  Jstar_*.csv    no   (same)
+
+    This docstring used to claim build_vy_tables.py embedded one too. It does not: it
+    writes the id to a SEPARATE `<artifact>.solveid` checkpoint beside the table, which
+    is gitignored and is restart state, not provenance travelling with the bytes.
+
+    WHAT THAT COSTS. The middle state in artifact_problems -- "digest differs, embedded
+    id matches, so this is an independent reproduction and is USABLE" -- is only
+    reachable for gs_bx. Solve the same KP14 or BGN spec on another machine and its
+    correct tables will differ in the last digits and be reported as possible
+    corruption, which is the 2026-09-08 failure this whole mechanism exists to avoid.
+    It does not arise in normal use, because those tables ship byte-identical in git;
+    it arises if someone re-solves a spec the registry already holds. Closing it means
+    writing solve_id into the integ .npz, which is a producer edit and re-keys every
+    KP14 solve, so price it with variants/solve_impact.py before paying it.
+
+    Returns None for CSVs and anything unreadable -- absence is not evidence of a
+    problem, it just means this check cannot help.
     """
     if not path.endswith('.npz'):
         return None
