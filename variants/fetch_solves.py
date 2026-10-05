@@ -5,8 +5,18 @@ Regenerating is not a viable answer -- it is ~5 h per type on a cluster they do 
 have, and until 2026-09-08 the byte-exact sha256 check would have reported their
 CORRECT reproduction as corruption (see solstamp.artifact_problems).
 
-THE PAYLOAD IS SMALL. All eight live solves are 504 MB total, of which 495 MB is the
-five gs_bx solution.npz files. That is one Dropbox folder.
+MOST OF IT IS ALREADY IN THE CLONE. Of the 28 solves the live specs pin, 17 (81 MB --
+every BGN and KP14 table) are committed to git and arrive with the repository. The
+other 11 are the gs_bx solution.npz files, 92-105 MB each and 1,090 MB together, which
+are too large to version and are published instead. The line is SMALL_ARTIFACT_BYTES in
+common/solstamp.py and each manifest records which side it fell on in `committable`.
+So on a fresh clone this usually has nothing to do unless you work on GS21.
+
+WHERE THE PUBLISHED ONES LIVE IS NOT BAKED IN. It is the --from argument, or
+BOP_SOLVES_DIR in the environment, because the same shared folder appears at a
+different absolute path on every machine that syncs it. Set it once:
+
+    export BOP_SOLVES_DIR="$HOME/<Your Org> Dropbox/<Your Name>/BGN and Kelly Malamud/solves"
 
 WHY THIS IS ~100 LINES: the manifests already ARE the distribution index. Each records
 every artifact's path, bytes and sha256; each spec names its expected_solves. So this
@@ -14,10 +24,15 @@ walks spec -> manifests -> artifacts, copies what is missing, and verifies what 
 copied. Nothing new had to be built to make sharing work.
 
 usage:
+    python variants/fetch_solves.py --all               # fetch, using BOP_SOLVES_DIR
+    python variants/fetch_solves.py --all --check       # report only, fetch nothing
+    python variants/fetch_solves.py --all --from "/path/to/publish"   # explicit source
     python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "/path/to/publish"
-    python variants/fetch_solves.py --all --from "/path/to/publish"
-    python variants/fetch_solves.py --spec var-gs_bx-bx7-v4            # check only
     python variants/fetch_solves.py --all --publish "/path/to/publish" # push, don't pull
+
+With neither --from nor BOP_SOLVES_DIR set it reports and fetches nothing, which is the
+old check-only behaviour and still what you get on a machine that has never been told
+where the folder is.
 
 The publish layout is content-addressed, mirroring the registry:
     <publish>/<solve_id>/<basename of each artifact>
@@ -71,9 +86,30 @@ def main():
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--spec", help="spec_id, e.g. var-gs_bx-bx7-v4")
     g.add_argument("--all", action="store_true", help="every live (non-superseded) spec")
-    ap.add_argument("--from", dest="src", help="publish folder to copy artifacts FROM")
+    ap.add_argument("--from", dest="src",
+                    help="publish folder to copy artifacts FROM "
+                         "(default: $BOP_SOLVES_DIR)")
     ap.add_argument("--publish", help="publish folder to copy artifacts INTO")
+    ap.add_argument("--check", action="store_true",
+                    help="report what is missing and fetch nothing, ignoring "
+                         "$BOP_SOLVES_DIR")
     args = ap.parse_args()
+
+    # The shared folder sits at a different absolute path on every machine that syncs
+    # it, so the location is configuration, not code. --from wins; BOP_SOLVES_DIR is the
+    # set-once fallback; --check suppresses both so a plain report is always reachable.
+    env_src = os.environ.get("BOP_SOLVES_DIR")
+    if args.check:
+        args.src = None
+    elif not args.src and not args.publish and env_src:
+        args.src = env_src
+    if args.src and not os.path.isdir(args.src):
+        sys.exit(f"not a directory: {args.src}\n"
+                 f"Set BOP_SOLVES_DIR, or pass --from, pointing at the shared "
+                 f"'solves' folder. On a machine that syncs it the path usually ends "
+                 f"'.../BGN and Kelly Malamud/solves'.")
+    if args.src and args.src == env_src:
+        print(f"source: {env_src}  (from BOP_SOLVES_DIR)")
 
     want = specs_wanted(args)
     if not want:

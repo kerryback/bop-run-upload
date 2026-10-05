@@ -167,16 +167,38 @@ them forever.
 
 **You do not need to know which is which.** `fetch_solves.py` reads each spec's
 `expected_solves`, resolves them through the manifests, copies whatever is missing and
-verifies the sha256 of everything it copies:
+verifies the sha256 of everything it copies.
+
+### Telling it where the shared folder is
+
+The published artifacts are in a Dropbox folder shared with you, laid out as
+`<folder>/<solve_id>/<basename>`. **That folder sits at a different absolute path on
+every machine that syncs it**, so the location is configuration, not code. Set it once,
+in `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-python variants/fetch_solves.py --all                         # what am I missing?
-python variants/fetch_solves.py --all --from "<that folder>"   # get it, sha256-verified
+export BOP_SOLVES_DIR="$HOME/<Your Org> Dropbox/<Your Name>/BGN and Kelly Malamud/solves"
 ```
 
-The published folder is `ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/`.
-**Its path is not configured anywhere** — it is the `--from` argument, so if your
-Dropbox root differs from the maintainer's, pass your own path and nothing else changes.
+To find yours: the folder is shared as **BGN and Kelly Malamud**, and Dropbox puts it
+under your own account root — on macOS usually `~/<Org> Dropbox/<Your Name>/`, on Linux
+or a personal account usually `~/Dropbox/`. Confirm with:
+
+```bash
+find ~ -maxdepth 4 -type d -name solves -path "*BGN and Kelly Malamud*" 2>/dev/null
+```
+
+Then:
+
+```bash
+python variants/fetch_solves.py --all            # fetches, using $BOP_SOLVES_DIR
+python variants/fetch_solves.py --all --check    # report only, fetch nothing
+python variants/fetch_solves.py --all --from "/some/other/path"   # override for one run
+```
+
+`--from` beats the environment variable, and with neither set the command reports what
+is missing and fetches nothing. If the path is wrong the tool says so and stops rather
+than reporting everything as missing.
 
 If you are working on the BGN or KP14 economies, which is where the queue currently
 points, the clone alone is enough and you never need the folder at all.
