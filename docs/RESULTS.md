@@ -7,8 +7,10 @@ protocol-v3 campaign of 2026-09-21 to 2026-09-22 (thirteen economies, ten seeds 
 across Sol and Phoenix, all COMPLETED) or from the two single-economy runs that have joined it under
 the same protocol: `bgnzr` on 2026-09-23 and `vym3` on 2026-09-25, each a pre-registered GATE and
 each FALSIFIED (findings 14 and 15), and `vym3t3` on 2026-09-26, likewise a GATE and likewise
-falsified (finding 16). Sixteen economies, 160 seeds. Where each job ran and what it cost: `docs/RUNS.md`. What to
-run next, and why: `docs/NEXTUP.md`.
+falsified (finding 16). Sixteen economies, 160 seeds. One further run sits outside that count on
+purpose: `vym3` rerun at N=1000 on 2026-09-29, which is off-protocol, has no economy row, and is
+reported as finding 17. Where each job ran and what it cost: `docs/RUNS.md`. What to
+run next, and why: `docs/NEXTUP.md`. New here: `docs/quickstart.md`.
 
 Every table below is checked cell by cell against `variants/results/economy_table.csv`
 (`variants/aggregate_seeds.py`) by `tests/test_results_md_matches_table.py`, so this file cannot
@@ -894,6 +896,60 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
     middling ones). It still does not track the GAP. Any proposal that wants a gap has to argue it
     raises room WITHOUT raising the variance of estimating it, and nothing in this file yet shows
     how.
+
+17. **Room moved nine sigma and the gap did not move at all. N is closed as a route, and this is
+    the strongest evidence in the file that room and gap are different quantities.** Finding 16
+    left room as the one population statistic a design change had ever moved, and left open whether
+    moving it further would eventually pay. `vym3` rerun at **N=1000** answers that without
+    building anything: N touches nothing in the solve, so this is `vym3`'s own committed G and
+    integ tables with a wider cross-section and nothing else changed. Ten seeds, 2026-09-29,
+    penalty gate clean at 10 of 10 interior.
+
+    **The comparison is exactly paired.** The aggregate state path is bit-identical across N --
+    `rf` matches seed for seed and month for month to 0.000e+00 -- so each seed is its own control
+    and the difference is the cross-section, not the economy.
+
+    | | N=500 | N=1000 | paired d | t |
+    |---|---|---|---|---|
+    | SR_max | 0.4261 | 0.5145 | **+0.0884** | **+9.03** |
+    | population LINEAR ceiling | 0.3046 | 0.3256 | +0.0209 | +2.35 |
+    | population NONLINEAR ceiling | 0.3640 | 0.4210 | +0.0570 | +5.50 |
+    | **room** | 0.0594 | 0.0954 | **+0.0360** | **+9.45** |
+    | DKKM | 0.2856 | 0.3143 | +0.0287 | +1.62 |
+    | best fair linear | 0.2888 | 0.3163 | +0.0275 | +1.22 |
+    | **fair gap** | -0.0032 | -0.0021 | **+0.0012** | **+0.17** |
+    | DKKM, % of its own ceiling | 78.4% | 74.5% | -3.9 pts | -1.33 |
+
+    **Room rose in 10 of 10 seeds. The gap rose in 5 of 10.** On the identity
+    `gap = room - excess estimation loss`, which holds to 0.00e+00 on every seed, room rose +0.0360
+    and excess loss rose **+0.0349** (t +4.19). That is a **slope of 0.968 along N**, against the
+    0.887 slope measured across the sixteen economies. Doubling the cross-section buys 61% more
+    room and the estimators hand back 97% of it.
+
+    **The registered falsifier did not trip.** The pre-registration (`docs/NEXTUP.md`, committed at
+    `5778843` before the run) said that if DKKM's share of its own ceiling rose more than 5 points,
+    or the gap by more than +0.006, then the estimation loss is not mostly time-series, N is a
+    lever, and the 0.887 slope is an artifact of N=500. DKKM's share FELL 3.9 points and the gap
+    moved +0.0012. So the slope is structural, and raising N reopens nothing.
+
+    **Two of the five registered clauses failed, and their premise is withdrawn.** Room was
+    predicted to rise under 5% and rose 61%; SR_max under 1% and rose 21% (t +9.03). The argument
+    behind both -- that idiosyncratic risk is 0.26% of a diversified portfolio's variance at N=500,
+    so diversification is spent -- is wrong. Measured directly by subsampling the N=1000 moments
+    back to its own first 457 firms, same realization and same premium level, SR_max goes 0.4507 to
+    0.5424 on firm count alone. **Diversification is a large live lever at N=500. It buys no gap.**
+
+    **A caveat for any future N experiment: N does not nest.**
+    `ftype = rng_bx.choice(ntypes, size=N)` consumes N draws before the idiosyncratic shocks, so
+    changing N offsets the entire firm-level stream and redraws the run's premium level. At seed 0
+    that moved mean premium 21%, which a single-seed reading would have taken for a diversification
+    effect. Paired over ten seeds it is -0.0000 (t -0.04). A single-seed N comparison in this
+    codebase is not interpretable; per-firm substreams would be needed to make one so.
+
+    **Why there is no table row.** N=1000 departs from the measurement protocol, so
+    `run_seeds_slurm.sh` refused to write it into `variants/results` and it went to
+    `/data/sjpruitt/probe_n1000` instead. It is not an economy and has none of the standing of the
+    sixteen. Cost and sizing are in `docs/RUNS.md`.
 
 10. **Fama-MacBeth beats the equal-weighted market exactly where the market is a minority of the
     attainable Sharpe, and the split is clean.** FMR holds the market (finding 8) yet loses to it in

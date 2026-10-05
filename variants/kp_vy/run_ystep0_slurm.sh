@@ -31,7 +31,7 @@ mkdir -p "$OUT"
 module load mamba/latest
 source activate bop
 # `source activate` sets CONDA_PREFIX but does not prepend the env's bin/ in a
-# non-interactive shell -- see run_bop_job.sh for the failure this avoids.
+# non-interactive shell -- see legacy/run_bop_job.sh for the failure this avoids.
 export PATH="$CONDA_PREFIX/bin:$PATH"
 echo "python: $(which python)"
 python -c "import numpy, pandas, scipy" || { echo "ERROR: env 'bop' not usable here"; exit 1; }

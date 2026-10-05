@@ -4,29 +4,56 @@ A running to-do list. Experiments first, ranked by what each one settles; everyt
 already decided, and all history, is at the bottom. Numbers and their provenance are
 `docs/RESULTS.md`; cost and cluster procedure are `docs/RUNS.md`.
 
+**Where the project stands, as of 2026-09-29.** Four pre-registered gates have now been run and
+all four came back against the proposal: `bgnzr` (2026-09-23), `vym3` (2026-09-25), `vym3t3`
+(2026-09-26) and the N=1000 probe (2026-09-29). Between them they close **three levers**, and
+saying which are closed is the most useful thing this file can do for whoever picks it up next.
+
+| lever | tested by | verdict |
+|---|---|---|
+| **K**, the number of priced aggregate shocks | `vym3` (K 3→5), `vym3t3` | closed as a route to a MEASURED gap. It raises population room and raises the variance of capturing it by more (findings 15, 16) |
+| **estimation density**, firms per distinct premium | `vym3t3` (25 → 167) | real and insufficient: worth +0.0068 of gap, a quarter of `vyg25`'s, and indistinguishable from zero (finding 16) |
+| **N**, the width of the cross-section | the N=1000 probe | closed. Room rose +0.0360 at t +9.45 in 10 of 10 seeds and the gap moved +0.0012 at t +0.17. A slope of 0.968 along N (finding 17) |
+
 **What used to set the ranking, and why it no longer does.** All three models are frictionless
 exact K-factor economies, so `mu_t = -cov_t(R, m)` holds by construction and the population ceiling
-on DKKM-over-linear is set by **K, the number of priced aggregate shocks** (finding 11). This list
-was ordered by that ceiling. **On 2026-09-25 `vym3` tested it directly -- the first economy in the
-project to raise K, from 3 to 5 -- and the gap went from +0.0148 to -0.0032** (finding 15). The
-ceiling survives as an upper bound and fails as a guide to where to build.
+on DKKM-over-linear is set by K (finding 11). This list was ordered by that ceiling. `vym3` tested
+it directly -- the first economy in the project to raise K -- and the gap went from +0.0148 to
+-0.0032. The ceiling survives as an upper bound and fails as a guide to where to build.
 
 Nor does the loading nonlinearity `theta` replace it. Measured on the panels rather than inverted
 from the synthetic surface, `vyg25` and `vym3` are indistinguishable -- per-month theta 0.196 vs
-0.197, and 0.293 vs 0.301 pooled, so the same share of premium variance sits in month-to-month
-movement of the linear map -- while their fair gaps are +0.0148 and -0.0032
-(`variants/diagnostics/premium_shape.py`). **This project has no
-measured statistic of the premium that predicts which economy has a gap.**
+0.197, and 0.293 vs 0.301 pooled -- while their fair gaps are +0.0148 and -0.0032
+(`variants/diagnostics/premium_shape.py`). The time-variation share does better: it separates
+`vym3t3` and it tracks ROOM. It still does not track the GAP. **This project has no measured
+statistic of the premium that predicts which economy has a gap.**
 
-So the queue below is no longer ranked by a predicted ceiling. Predicted ceilings have now failed
-twice, on `bgnzr` and on `vym3`, and in both cases the number was read off a row the file had
-already qualified. **It is ranked by what each experiment DISCRIMINATES, cheapest first**, with
-priority to the ones that are the same experiment in more than one model.
+**The one relation that does hold, and it is the constraint everything must now clear.**
+`gap = room - excess estimation loss` is an identity, exact to 1e-16 on every seed of every
+economy. Across the sixteen economies `excess_loss = 0.0024 + 0.887 x room` at corr 0.99, so a
+room increase returns about 11% of itself; along N the slope is 0.968 and it returns almost
+nothing. **Room is not the prize.** Any proposal that wants a measured gap has to argue it raises
+room WITHOUT raising the variance of estimating it, and nothing in this file yet shows how. A
+room-only argument is not sufficient and should not be accepted as one.
 
-What is actually known: two economies have a gap, `vyg25` (+0.0148, KP14, one priced state at
-`gamma_v` 2.5, three types) and `g0235f` (+0.0079, BGN, a fast regime on the price of risk). Both
-are LOADING-SHAPE results at fixed K. Everything below either tests what separates them from the
-thirteen that have no gap, or is parked.
+So the queue below is no longer ranked by a predicted ceiling -- predicted ceilings have now failed
+three times, and in each case the number was read off a row the file had already qualified. **It is
+ranked by what each experiment DISCRIMINATES, cheapest first**, with priority to the ones that are
+the same experiment in more than one model.
+
+**Where to try next, and why it is item 1.** What is actually known is that two economies have a
+gap: `vyg25` (+0.0148, KP14, one priced state at `gamma_v` 2.5, three types) and `g0235f` (+0.0079,
+BGN, a fast regime on the price of risk). Both are LOADING-SHAPE results at fixed K, and only one
+of them has a mechanism attached -- finding 12's switching-speed ladder in BGN, where holding the
+stationary stress share fixed and scaling both switch probabilities together moves the fair gap
+monotonically, -0.0038 -> +0.0025 -> +0.0079, with seeds positive 4 -> 8 -> 10 of 10. That is the
+only knob in this project that has ever produced a gap on purpose, and it has never been tried in
+a second model. **K3 does exactly that**: `kappa_y` is the speed at which KP14's priced state
+mean-reverts, the same question one model over, for 30 minutes of solve and 20 seeds. If the
+ladder replicates, the project has a mechanism that holds across two models with different
+plumbing, which is worth more than either result alone. If it does not, `g0235f` is a BGN artifact
+and this file should say so. Either outcome is worth the cost, which is the property the last four
+experiments lacked.
 
 ---
 
@@ -38,6 +65,7 @@ thirteen that have no gap, or is parked.
 | 2 | K7 — a third `gamma_v` point | KP14 | whether the gap is smooth or a threshold between `vyx` (+0.0009) and `vyg25` (+0.0148) | 20 min + 10 seeds | ready |
 | 3 | K1 — a continuum of exposure types | KP14 | — | 1.7 h + 30 h seeds | **parked — finding 16 shows density is real but not sufficient, so a continuum buys the density problem back for nothing** |
 | 4 | A second priced shock in GS21 | GS21 | — | new solver | **withdrawn — a pure K lever, and K is what findings 15 and 16 closed** |
+| ~~0~~ | ~~PROBE — `vym3` at N=1000~~ | KP14 | — | done | **RUN 2026-09-29 — falsifier did NOT trip (finding 17); room +9 sigma, gap flat, N closed** |
 | ~~1~~ | ~~`vym3t3` — three priced states at three types~~ | KP14 | — | done | **RUN 2026-09-26 — GATE FALSIFIED (finding 16), but room is the largest in the file** |
 | ~~1~~ | ~~Decide the BGN regime closure~~ | BGN | — | none | **DONE 2026-09-23 — it does not stand** |
 | ~~1a~~ | ~~`g0235ff` — one more 4x on the switch speed~~ | BGN | — | — | **DROPPED — a price of risk cannot switch on a 1.5-month spell** |
@@ -45,7 +73,42 @@ thirteen that have no gap, or is parked.
 | ~~4~~ | ~~Multiple priced states in KP14~~ | KP14 | — | done | **RUN 2026-09-25 — GATE FALSIFIED (finding 15)** |
 | ~~—~~ | ~~Multi-factor term structure~~ | BGN | — | — | **WITHDRAWN — its premise is what `bgnzr` falsified** |
 
-### 0. PROBE — `vym3` at N=1000: is the density channel worth anything on its own?
+### 1. K3 — `kappa_y` at 0.15 and 0.70
+**Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
+established the only loading-shape result that has ever produced a gap: in BGN, holding the
+stationary stress share fixed and scaling both switch probabilities together, the fair gap is
+MONOTONE in switching speed — -0.0038 → +0.0025 → **+0.0079**, seeds positive 4 → 8 → **10 of 10**.
+`kappa_y` is the same knob one model over: the speed at which KP14's priced state mean-reverts. If
+the ladder replicates, the project has a mechanism that holds across two models with different
+plumbing, which is worth more than either result alone; if it does not, `g0235f` is a BGN artifact
+and the file should say so.
+
+More interesting after the pricing fix, not less: the corrected Girsanov adjustment saturates at
+`b gamma_v sigma_y / kappa_y`, so `kappa_y` scales the whole correction. Note `sigma_y` is locked to
+`sqrt(2 kappa_y)`. Two solves of about 15 minutes, then twenty seeds.
+
+### 2. K7 — a third point in `gamma_v`
+`vyx`'s parameters at `gamma_v` 2.1 or 2.2, nothing else changed. One G solve plus integrals is
+about 20 minutes on the Mac; then ten Phoenix seeds, ~60 node-hours. `vyx` and `vyg25` differ ONLY
+in `gamma_v` and their fair gaps are +0.0009 and +0.0148, so a middle point says whether the gap is
+smooth in the price of risk or a threshold — which is the shape of the one KP14 effect that has
+survived. **Its old framing as a theta probe is dead**: the implied thetas it was to map (roughly 0
+and 0.81) were inverted from the synthetic surface and withdrawn in finding 11; measured directly
+both economies sit near 0.19. Register the falsification clause before building.
+
+### 3-4. Parked and withdrawn
+**K1, a continuum of exposure types** (fifteen types over [0, 0.14]; ~1.7 h of integrals then 30 h of
+seeds): PARKED. It was ranked on raising theta, and `vym3` has now shown that more types at fixed N
+does not raise measured theta while it does thin the cross-section — fifteen types is 33 firms each.
+It is item 1's confound taken further, so item 1 comes first and this is re-ranked on the answer.
+
+**A second priced shock in GS21** (K 1 → 2): WITHDRAWN. It was the only way GS21 gets off a ceiling
+of exactly 1.000, and it is a pure K lever, which is what finding 15 falsified. There was never a
+natural candidate shock either. Reopening it needs a reason that is not the ceiling table.
+
+## Struck: run, dropped or withdrawn
+
+### ~~0. PROBE — `vym3` at N=1000~~ — RUN 2026-09-29, FALSIFIER DID NOT TRIP, and N is closed
 **OFF-PROTOCOL and not reportable.** N=1000 departs from 500/500/360, so the runner refuses it
 unless it names its own `BOP_RESULTS_DIR` (`variants/run_seeds_slurm.sh:448`). It writes to
 `/data/sjpruitt/probe_n1000`, never to `variants/results`, and produces no economy row. N touches
@@ -131,40 +194,6 @@ per-firm substreams would be needed to make one so.
 Grading harness: `_scratch/probe_n1000/grade.py`, run as
 `python variants/penalty_gate.py --results _scratch/probe_n1000` then `python _scratch/probe_n1000/grade.py`.
 
-### 1. K3 — `kappa_y` at 0.15 and 0.70
-**Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
-established the only loading-shape result that has ever produced a gap: in BGN, holding the
-stationary stress share fixed and scaling both switch probabilities together, the fair gap is
-MONOTONE in switching speed — -0.0038 → +0.0025 → **+0.0079**, seeds positive 4 → 8 → **10 of 10**.
-`kappa_y` is the same knob one model over: the speed at which KP14's priced state mean-reverts. If
-the ladder replicates, the project has a mechanism that holds across two models with different
-plumbing, which is worth more than either result alone; if it does not, `g0235f` is a BGN artifact
-and the file should say so.
-
-More interesting after the pricing fix, not less: the corrected Girsanov adjustment saturates at
-`b gamma_v sigma_y / kappa_y`, so `kappa_y` scales the whole correction. Note `sigma_y` is locked to
-`sqrt(2 kappa_y)`. Two solves of about 15 minutes, then twenty seeds.
-
-### 2. K7 — a third point in `gamma_v`
-`vyx`'s parameters at `gamma_v` 2.1 or 2.2, nothing else changed. One G solve plus integrals is
-about 20 minutes on the Mac; then ten Phoenix seeds, ~60 node-hours. `vyx` and `vyg25` differ ONLY
-in `gamma_v` and their fair gaps are +0.0009 and +0.0148, so a middle point says whether the gap is
-smooth in the price of risk or a threshold — which is the shape of the one KP14 effect that has
-survived. **Its old framing as a theta probe is dead**: the implied thetas it was to map (roughly 0
-and 0.81) were inverted from the synthetic surface and withdrawn in finding 11; measured directly
-both economies sit near 0.19. Register the falsification clause before building.
-
-### 3-4. Parked and withdrawn
-**K1, a continuum of exposure types** (fifteen types over [0, 0.14]; ~1.7 h of integrals then 30 h of
-seeds): PARKED. It was ranked on raising theta, and `vym3` has now shown that more types at fixed N
-does not raise measured theta while it does thin the cross-section — fifteen types is 33 firms each.
-It is item 1's confound taken further, so item 1 comes first and this is re-ranked on the answer.
-
-**A second priced shock in GS21** (K 1 → 2): WITHDRAWN. It was the only way GS21 gets off a ceiling
-of exactly 1.000, and it is a pure K lever, which is what finding 15 falsified. There was never a
-natural candidate shock either. Reopening it needs a reason that is not the ceiling table.
-
-## Struck: run, dropped or withdrawn
 
 ### ~~1. `vym3t3`~~ — RUN 2026-09-26, GATE FALSIFIED (and the most informative failure yet)
 Finding 16 has the tables. `vym3`'s three priced states with THREE types instead of twenty — types

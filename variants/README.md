@@ -1,13 +1,18 @@
 # variants — engineered economies with room for a nonlinear SDF method
 
-These are the experiments behind `REPORT.md` ("why does DKKM barely beat FMR/FFC in the simulated
-economies, and what would change that"). Of the 24 economies in that study, the three flagships that give
-a complexity method the most to find are kept here, each fully reproducible. The other 21 are gone;
-their numbers survive in `REPORT.md`. The machine-readable copies of that study
+**This is the live pipeline.** Sixteen engineered economies, each a parameter override on one of the
+three published models, run at one measurement protocol and scored against the model's own true
+conditional moments. **Results, and which economies are current, are
+[`docs/RESULTS.md`](../docs/RESULTS.md); start at [`docs/quickstart.md`](../docs/quickstart.md).**
+
+This directory began as the experiments behind `REPORT.md` ("why does DKKM barely beat FMR/FFC in
+the simulated economies, and what would change that"), and that framing is now history rather than
+a guide. `REPORT.md` predates both the measurement protocol and the 2026-09-18 pricing fix, **no
+live document may cite it**, and the economies it called flagships have not all survived — `vyx`,
+its largest claim, is +0.0009 and withdrawn. The machine-readable copies of that study
 (`results/grid_summary.csv`, `results/oracle_summary.csv`, `results/summary_grid.xlsx`) were
 deleted on 2026-09-10: single-seed measurements of code that is either gone or since corrected,
-which no one could reproduce or check. They are recoverable at 23f9380; see
-[`docs/RESULTS.md`](../docs/RESULTS.md) for what is current.
+which no one could reproduce or check. They are recoverable at 23f9380.
 
 Everything here is self-contained: nothing imports from the main pipeline (`utils_*`, `config.py`),
 and nothing in the main pipeline imports from here. The simulators are modified copies of the Dropbox
