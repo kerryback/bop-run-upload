@@ -124,3 +124,43 @@ if __name__ == "__main__":
             traceback.print_exc()
     print(f"\n{len(fns) - failed}/{len(fns)} passed")
     sys.exit(1 if failed else 0)
+
+
+def test_fetch_solves_skips_retired_specs_too():
+    """`--all` must mean every LIVE spec, and retired is the second way to not be live.
+
+    HISTORY (2026-10-05). `fetch_solves.specs_wanted` skipped `lineage.superseded_by`
+    and nothing else, so `--all` kept asking for `var-kp_vy-vyxT860-v1`, retired with
+    the measurement protocol on 2026-09-15. That spec reused vyx's G and integ tables;
+    vyx has re-solved since, so the paths now hold newer bytes than the retired
+    manifest records and the check reported 66 artifacts as problems on every clean
+    clone. A co-author following docs/quickstart.md hit that on day one.
+
+    The two flags are not interchangeable and must not be collapsed: a superseded spec
+    names its successor (`tests/test_spec_refusal.py` asserts the refusal prints it), a
+    retired one has none. `runstamp.live_solves` has always excluded both.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "variants"))
+    import fetch_solves
+
+    class _Args:
+        all, spec = True, None
+
+    wanted = set(fetch_solves.specs_wanted(_Args()))
+    retired = {sid: d for sid, d in specs() if (d.get("lineage") or {}).get("retired")}
+    assert retired, "no spec carries lineage.retired; this test has lost its subject"
+
+    leaked = []
+    for sid, d in retired.items():
+        for stage, solve_id in (d.get("expected_solves") or {}).items():
+            # a retired spec's solve may legitimately be wanted if a LIVE spec also
+            # pins it; only an id no live spec names should be absent
+            live_too = any(solve_id in ((o.get("expected_solves") or {}).values())
+                           for osid, o in specs()
+                           if osid != sid
+                           and not (o.get("lineage") or {}).get("superseded_by")
+                           and not (o.get("lineage") or {}).get("retired"))
+            if solve_id in wanted and not live_too:
+                leaked.append(f"{sid} {stage}={solve_id}")
+    assert not leaked, ("--all still asks for solves only a retired spec pins:\n  "
+                        + "\n  ".join(leaked))

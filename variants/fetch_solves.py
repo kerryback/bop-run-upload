@@ -45,8 +45,20 @@ def specs_wanted(args):
             if not fn.endswith(".json"):
                 continue
             d = json.load(open(os.path.join(SPECS, fn)))
-            if d.get("lineage", {}).get("superseded_by"):
+            lin = d.get("lineage") or {}
+            if lin.get("superseded_by"):
                 continue                       # a superseded spec names a dead economy
+            if lin.get("retired"):
+                # RETIRED is the other way a spec stops being live, and it is NOT the
+                # same as superseded: a superseded spec has a successor, a retired one
+                # has none ("nothing supersedes this spec, because nothing replaces it"
+                # -- var-kp_vy-vyxT860-v1). `runstamp.live_solves` has always excluded
+                # both; this function checked only the first, so --all asked for
+                # vyxT860's two solves and reported their 66 artifacts as problems on
+                # every clean clone. They are not problems: vyxT860 reused vyx's tables
+                # and vyx has re-solved since, so the paths hold newer bytes than the
+                # retired manifest records.
+                continue
             out.update(d.get("expected_solves") or {})
         return out
     d = json.load(open(os.path.join(SPECS, args.spec + ".json")))
