@@ -147,7 +147,7 @@ python variants/solve_impact.py       # which solves does this change invalidate
 
 **Solve artifacts live in two places, and one command covers both.**
 
-| | | |
+| where | how much | what |
 |---|---|---|
 | **in git** | 17 solves, 81 MB | arrives with the clone: every BGN and KP14 table |
 | **published** | 11 solves, 1,090 MB | the GS21 `solution.npz` files, 92-105 MB each |
