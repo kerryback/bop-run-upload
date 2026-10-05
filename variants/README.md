@@ -180,19 +180,21 @@ kept only there cannot be checked out with an old revision, and it offers no int
 check of its own. The GS21 solutions are out of git only because they are ~100 MB each
 and git would keep every re-solve of them forever.
 
-The published ones live content-addressed in the shared project folder:
-
-    ASU Dropbox / BGN and Kelly Malamud / solves /<solve_id>/<basename>
-
-The path is **not** configured anywhere -- it is the `--from` argument, so a co-author
-whose Dropbox sits elsewhere passes their own path and nothing else changes. From the
-repo root:
+The published ones live content-addressed in the shared project folder, laid out as
+`<folder>/<solve_id>/<basename>`. That folder syncs to a **different absolute path on
+every machine**, so its location is configuration rather than code: set `BOP_SOLVES_DIR`
+once and every command below works, or pass `--from` to override it for one run.
 
 ```bash
-python variants/fetch_solves.py --all                        # what am I missing?
-python variants/fetch_solves.py --all --from "<that folder>" # get it, verified
+export BOP_SOLVES_DIR="$HOME/<Org> Dropbox/<Name>/BGN and Kelly Malamud/solves"
+
+python variants/fetch_solves.py --all              # fetch what is missing, verified
+python variants/fetch_solves.py --all --check      # report only, fetch nothing
 python variants/fetch_solves.py --spec var-gs_bx-bx7-v4 --from "<that folder>"
 ```
+
+With neither `--from` nor `BOP_SOLVES_DIR` set it reports and fetches nothing; a path
+that does not exist is refused outright rather than reported as everything missing.
 
 It reads each spec's `expected_solves`, resolves them through the manifests, copies
 only what is missing, and checks the sha256 of everything it copies. **Do not re-solve
