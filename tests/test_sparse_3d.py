@@ -14,8 +14,10 @@ import tempfile
 import shutil
 from scipy.sparse import csr_matrix
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# legacy/ holds the superseded 7-step pipeline, which is where the `utils` package went
+# on 2026-10-05. Put legacy/ on the path, not the repo root, so `utils` still resolves.
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "legacy"))
 
 from utils.sparse_3d import save_sparse_3d, load_sparse_3d, Sparse3D
 

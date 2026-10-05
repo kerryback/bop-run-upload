@@ -47,7 +47,7 @@ _SOLFILES_DIR = os.path.join(os.path.dirname(__file__), 'KP14_solfiles')
 # producer edited without regenerating, or a stale G_func.csv paired with fresh
 # integrals. All three have happened. Regenerate with:
 #     python utils_kp14/regen_solfiles.py
-# See utils/solfile_stamp.py and kp14_crash_20260826.md.
+# See legacy/utils/solfile_stamp.py and docs/kp14_crash_20260826.md.
 from .solfile_spec import verify as _verify_solfiles
 _verify_solfiles(mode='error')
 

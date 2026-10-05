@@ -14,7 +14,7 @@ one-line fix passes a mass check the current code never performs.
 
 Runs locally, no cluster, no panel data. ~10 seconds.
 
-Usage:  python diag_integ_kp14.py
+Usage:  python archive/diagnostics/diag_integ_kp14.py
 """
 import os
 import numpy as np

@@ -66,9 +66,14 @@ def fmt(s):
 def now():
     return datetime.now().astimezone().strftime('%a %d %b %Y, %I:%M%p %Z')
 
-# Add this directory and utils/ to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'utils'))
+# Add this directory, utils/ and the REPO ROOT to path. The root is where config.py
+# and the model trees (utils_bgn/, utils_kp14/, utils_gs21/, utils_factors/) live; this
+# file moved down into legacy/ on 2026-10-05, so the root is one level up from here.
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, 'utils'))
+sys.path.insert(0, ROOT)
 
 import config
 
@@ -192,7 +197,11 @@ def run_script(script_name, args, description):
     print(f"{description}")
     print(f"{'='*70}\n")
 
-    cmd = [sys.executable, script_name] + args
+    # script_name is given relative to THIS file ("utils/generate_panel.py"), not to the
+    # caller's cwd. Resolving it here is what lets main.py be run from anywhere -- it used
+    # to require being run from the repo root, which stopped being its own directory when
+    # this file moved into legacy/ on 2026-10-05.
+    cmd = [sys.executable, os.path.join(HERE, script_name)] + args
     start_time = time.time()
 
     # Use Popen with PIPE to handle TeeOutput (which lacks fileno())

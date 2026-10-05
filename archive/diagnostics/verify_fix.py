@@ -7,7 +7,7 @@ previously produced garbage (max_sr ~1e57).
 Run on Sol (bop env), repo root, AFTER pulling the fix:
     BOP_SCRATCH_DIR=/scratch/sjpruitt/bop_kp14 \
     BOP_TEMP_DIR=/scratch/sjpruitt/bop_temp_kp14 \
-    python verify_fix.py kp14_0 560 561 575
+    python archive/diagnostics/verify_fix.py kp14_0 560 561 575
 
 Expected for kp14_0 month 560: sdf_ret ~ -0.0859, max_sr ~ 9.07, warnings=none.
 """

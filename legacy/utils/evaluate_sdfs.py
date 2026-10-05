@@ -24,6 +24,11 @@ import os
 # Add current directory and parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# ...and the repo root, one level further up: config.py and the model trees
+# (utils_bgn/, utils_kp14/, utils_gs21/, utils_factors/) stayed there when this
+# tree moved into legacy/ on 2026-10-05. The line above now resolves to legacy/,
+# which is what `from utils.<mod> import ...` needs.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import numpy as np
 import pandas as pd

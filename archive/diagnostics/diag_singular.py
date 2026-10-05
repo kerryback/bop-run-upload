@@ -10,7 +10,7 @@ cause of the rank deficiency.
 Usage (on Sol, in the `bop` conda env, from the repo root):
     BOP_SCRATCH_DIR=/scratch/sjpruitt/bop_kp14 \
     BOP_TEMP_DIR=/scratch/sjpruitt/bop_temp_kp14 \
-    python diag_singular.py kp14_0 560
+    python archive/diagnostics/diag_singular.py kp14_0 560
 
     # extra trailing args = more months to check, e.g. ... kp14_0 560 561 575
 Output is a few hundred bytes of text — safe to copy back over slow wifi.
