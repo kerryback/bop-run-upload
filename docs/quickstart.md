@@ -62,9 +62,30 @@ came back against the proposal, and they were worth running because each one had
 falsifier and so each one closed something.
 
 **2 — Precommit the solve ids WITHOUT solving.** Compute the ids the spec expects, commit the spec,
-*then* build. This is what makes a result a prediction rather than a description. A chained stage's
-id hashes its upstream tables' raw bytes, so it cannot be known until those exist — read it in a
-throwaway git worktree and discard that worktree's registry.
+*then* build. This is what makes a result a prediction rather than a description, and
+`tests/test_precommitment_is_real.py` checks the order by git dates — an id read off an existing
+manifest and pasted in proves nothing.
+
+```bash
+python variants/precommit_spec.py experiments/specs/var-kp_vy-foo-v1.json
+python variants/precommit_spec.py <spec> --build-chained --write    # writes expected_solves
+```
+
+It runs each producer inside a throwaway git worktree, so the registry and tables it creates are
+discarded and never touch your tree. Most ids are free: a `solve_id` is
+`sha256(parameters + source digests)` and every producer prints it with `flush=True` *before* it
+starts solving, so the tool reads it and stops. That is how all five GS21 ids come back in seconds
+instead of five hours each.
+
+**One stage genuinely cannot be free.** KP14's `integ` id hashes the G tables' **raw bytes**
+(`build_vy_tables.py`, `inputs=solstamp.artifact_digests(G_ARTIFACTS)`) — that is what makes the
+chain tamper-evident — so it is unknowable until G exists. `--build-chained` pays for that build
+inside the throwaway tree. The practical consequence: **whoever builds G must be the one who ships
+it.** Derive the integ id from your own G bytes, commit those exact tables, and everyone downstream
+verifies against them. If someone later rebuilds G elsewhere, that integ id moves, through no error.
+
+The tool refuses to run if `variants/` has uncommitted changes to tracked files — an id computed
+from code that is not what lands is not a precommitment.
 
 **3 — Build, and verify every printed id against its pin.** If an id does not match, stop: either
 the parameters are not what the spec says or a producer changed. Clear `solves_pending`, commit the
