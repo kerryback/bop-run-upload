@@ -107,6 +107,34 @@ sha256. **The manifest outlives the artifact**: after scratch is purged you can
 still say exactly which parameters produced a number, and re-running the producer
 reproduces the same `solve_id`.
 
+### Precommitting a new economy's ids
+
+The order is: pin the ids the spec expects, commit the spec, then build and check each
+printed id against its pin. `variants/precommit_spec.py` does the first step without
+leaving anything behind:
+
+```bash
+python variants/precommit_spec.py experiments/specs/var-<model>-<tag>-v1.json
+python variants/precommit_spec.py <spec> --build-chained --write
+```
+
+It runs the real producer inside a throwaway git worktree, so the manifests and tables
+it makes are discarded with the tree. Every producer prints its `solve_id` with
+`flush=True` before it begins solving, so the tool reads the id and terminates it --
+the five `gs_bx` ids come back in seconds rather than ~5 h each.
+
+The exception is KP14's `integ` stage, whose id hashes the G tables' raw bytes
+(`inputs=solstamp.artifact_digests(G_ARTIFACTS)` in `kp_vy/build_vy_tables.py`). It
+cannot be known until G exists; `--build-chained` pays for that build inside the
+throwaway tree. So **whoever builds G ships it**: derive integ from your own G bytes and
+commit those exact tables, and everyone downstream verifies against them.
+
+The tool refuses to run while `variants/` has uncommitted changes to tracked files,
+because an id computed from code that is not what gets committed is not a
+precommitment. `tests/test_precommitment_is_real.py` checks the spec-before-manifest
+order by git dates; `tests/test_precommit_spec.py` checks that every live spec can
+still be turned into a producer command.
+
 ### Before you edit a producer
 
 `solve_id` digests a producer's whole source file, so a comment or a `print()` string
