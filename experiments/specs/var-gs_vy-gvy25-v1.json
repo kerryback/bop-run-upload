@@ -1,0 +1,167 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvy25-v1",
+ "title": "GS21 with a priced y chain and three exposure types: vyg25's construction in GS21",
+ "question": "Does a priced second factor with heterogeneous firm exposures create a fair complexity gap in GS21, where exposure to the existing state (gx7, bx7) did not?",
+ "notes": "THE KP14 CONSTRUCTION ONE MODEL OVER (2026-10-07). vyg25 is the project's only KP14 economy with a fair gap positive in ten seeds of ten (+0.0148), and its mechanism -- a priced stationary state y, three firm types loading cash flows as e^{b_f y}, a y=0 level compensation bv_comp 1.2, price gamma_v 2.5, kappa_y 0.35 -- had never been built in BGN or GS21: BGN has no firm type at all (its project-beta continuum is the same distribution for every firm) and GS21's exposure path (gx7, bx7) loaded types on the EXISTING state x, not on a new priced one. This spec adds exactly vyg25's ingredients.\n\nLADDER. gs_bv on the unit-sd y: production exp(x + z + gs_bv y + gs_ashift); KP14's (0.02, 0.07, 0.14) scaled by 0.7. Low-resolution calibration (xnum 41, znum 50, bnum 10, NY 9, 150-firm panel, validate_gs_vy.py, 2026-10-07 22:35 CDT): type premia at gs_bv 0 / 0.05 / 0.1 / 0.2 are 3.2 / 7.6 / 10.5 / 12.9 %/yr (gsbase's is 3.2), the derived gs_ashift 0 / 0.275 / 0.538 / 1.030 and mean log size 4.12 / 4.30 / 4.69 / 5.57: the compensation is a strong LEVEL sort, as KP14's measured footprint is. The ladder (0, 0.05, 0.1) gives SR_max 0.39 / 0.49 / 0.60 by y-tercile, about 0.49 on average -- vyg25's 0.495 and bvy25's 0.49 -- while (0, 0.1, 0.2) gives 0.61 / 0.76 / 0.90 and a 13 %/yr top premium. So the top two exposures are 0.05 and 0.1 and the bottom type gets 0.015 so that, as in KP14, every type loads. NY 9 nodes over +-2.5 sd (spacing 0.625 against s_y 0.238); E[M R] = 1 to 1e-15 on the calibration economies.\\n\\nCHECKS BEFORE SUBMISSION. gs_solve_vy at NY=1 against gs_solve_reg at gmreg [1,1], low resolution: every table within 7e-12, identical policies (check_parity.py). The smoothing convolution is evaluated in its exact cumulative form (1e-13 against the broadcast form); a full-resolution NY=9 solve runs at ~2 s/sweep, 1.5 GB.\\n\\nPRECOMMITMENT STATUS: precommitted=false (new producer, dirty tree); ids are read from the Quest solve logs by fill_gs_vy_ids.py (verify_gs_vy_klc.sh) before any seed runs; this spec was written before the solves.\\n\\nPREDICTION (2026-10-07, before the run). GS21's exposure path on x (gx7, bx7) made room of +0.008 and no gap; a PRICED new state is the one ingredient those lacked, and the compensation makes the type a level sort of size. Expect room +0.01 to +0.05 with the market still spanning most of SR_max (finding 8), room_s well below room, fair gap between -0.005 and +0.008. FALSIFIED as 'the KP mechanism ports' if the fair gap exceeds +0.010 in 8 of 10 seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_bx-gsbase-v3",
+  "changes": [
+   "new model directory variants/gs_vy (gs_solve_reg's regime replaced by a PRICED NY-node y chain; NY=1 reproduces gsbase)",
+   "y: 9-node Tauchen chain over +-2.5 sd of an AR(1) with kappa_y 0.35/yr, priced at gamma_v 2.5",
+   "three types in shares [0.34, 0.33, 0.33] with exposures gs_bv [0.015, 0.05, 0.1], bv_comp 1.2 -> gs_ashift derived and applied in solver AND simulator"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.2
+ },
+ "types": {
+  "share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.015,
+    0.05,
+    0.1
+   ]
+  },
+  "soldirs": [
+   "sol_gvy25a",
+   "sol_gvy25b",
+   "sol_gvy25c"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvy25a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.015
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvy25b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvy25c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvy25a,sol_gvy25b,sol_gvy25c",
+  "GS_VY_BV": "0.015,0.05,0.1",
+  "GS_VY_SHARES": "0.34,0.33,0.33"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-07 (docs/NEXTUP.md addendum); solves by variants/klc/solve_gs_vy_klc.sh (three tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvy25",
+  "verified_by": "variants/klc/verify_solves.py gvy",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvy25a": "fa095a231f5ad418",
+  "sol_gvy25b": "254459e817068530",
+  "sol_gvy25c": "99f5d4b3b73b35da"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "95d8d3ce304467c06596ed325d7d01675dae512f2757fb184cff4df81460a71e"
+}

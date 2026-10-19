@@ -93,8 +93,9 @@ def test_slope_zero_is_the_documented_identity():
     """The copy must state, and structurally support, that slope 0 is a no-op."""
     src = open(GAM).read()
     assert "gs_gamma_slope = 0.0" in src, "the default slope must be 0"
-    assert re.search(r"np\.clip\(gamma_x - gs_gamma_slope \* xgrid / sd_x,", src), \
-        "the gamma(x) formula is not in the expected form"
+    assert "gs_gamma_quad = 0.0" in src, "the default quadratic term must be 0"
+    assert re.search(r"np\.clip\(gamma_x \* \(1\.0 \+ gs_gamma_quad \* \(xgrid / sd_x\) \*\* 2\) - gs_gamma_slope \* xgrid / sd_x,", src), \
+        "the gamma(x) formula is not in the expected form (at slope 0 and quad 0 it must reduce to gamma_x)"
     assert "sqrt(sigma_x ** 2 / (1 - rho_x ** 2))" in src, (
         "sd_x must be the STATIONARY sd; xgrid.std() is 2.32x larger and would give "
         "an economy with far less gamma variation than intended")

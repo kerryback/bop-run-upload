@@ -1,0 +1,113 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-kpq-v1",
+ "title": "KP14 with a QUADRATIC price of productivity risk: gamma_x x min(1 + 0.25 y^2, 3), y an unpriced stationary state no firm is exposed to",
+ "question": "Group 2, harmonized with gq25 (GS21): does a price of risk that rises quadratically with the distance of an aggregate state from its mean create room or a gap?",
+ "notes": "Campaign 2026-10-14. KP14's own states x and z are random walks, so a quadratic in their level is not stationary; the multiplier is a function of the outside state y (kappa 0.35, unit sd), as in kpgam. Form 1 + q s^2 (never below the baseline price) because KP14's growth-option discount turns negative once gamma_x falls below ~0.82 of its value.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-kpgam-v1",
+  "changes": [
+   "params {'type_share': [1.0], 'type_bv': [0.0], 'gamma_v': 0.0, 'bv_comp': 0.0, 'g_quad': 0.25} (parent: {'type_share': [1.0], 'type_bv': [0.0], 'gamma_v': 0.0, 'bv_comp': 0.0, 'g_lo': 1.0, 'g_hi': 3.0, 'g_steep': -2.0}); own tables under prefix kpq"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true,
+  "kp_price_of_risk": "constant: gamma_x 0.69, gamma_z -0.35; no priced state (gamma_v 0, type_bv [0])"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.0
+  ],
+  "gamma_v": 0.0,
+  "bv_comp": 0.0,
+  "g_quad": 0.25
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "kpq"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.0
+     ],
+     "gamma_v": 0.0,
+     "bv_comp": 0.0,
+     "g_quad": 0.25
+    },
+    "args": {
+     "prefix": "kpq"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=kpq",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.3646260.kpq.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "e0c5231363714d61",
+  "integ": "da5f99b39caeeca0"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "38ce4f149964285454b4c19b3bf9b3637e6c21a99e043633a553bff0d1cd279a"
+}

@@ -81,6 +81,10 @@ gs_ashift = 0.0
 gs_gamma_slope = 0.0
 gs_gamma_lo = 0.05
 gs_gamma_hi = 1.0
+# 2026-10-14: a QUADRATIC term in the standardised state, gamma_x * gs_gamma_quad * (x/sd)^2: the price rises with the
+# distance of x from its mean and never falls below gamma_x (the form shared with KP14 and BGN, where a mean-one
+# quadratic would push the price below KP14's feasibility bound). 0 = the linear/clipped form above.
+gs_gamma_quad = 0.0
 ov = json.loads(os.environ.get("GS_PARAM_OVERRIDES", "{}"))
 globals().update(ov)
 gmreg = np.array(gmreg, float)
@@ -167,7 +171,7 @@ bgrid = np.linspace(0.0, 1.0, bnum)
 # not a backdoor change in the riskless rate: the conditional mean of the kernel is
 # pinned at e^{-r} for every x, only its covariance with the shock moves.
 sd_x = np.sqrt(sigma_x ** 2 / (1 - rho_x ** 2))
-gam_x = np.clip(gamma_x - gs_gamma_slope * xgrid / sd_x, gs_gamma_lo, gs_gamma_hi)
+gam_x = np.clip(gamma_x * (1.0 + gs_gamma_quad * (xgrid / sd_x) ** 2) - gs_gamma_slope * xgrid / sd_x, gs_gamma_lo, gs_gamma_hi)
 gam_s = gamma_x * gmreg          # regime multiplier retained; gmreg=[1,1] leaves it inert
 Mx_s, MP_s = [], []
 for s in (0, 1):
@@ -176,7 +180,7 @@ for s in (0, 1):
                - g_cur * (xgrid[None, :] - (1 - rho_x) * x_bar - rho_x * xgrid[:, None]) / sigma_x)
     M = M * (np.exp(-r) / (M * pr_x).sum(axis=1))[:, None]
     Mx_s.append(M); MP_s.append(M * pr_x)
-print(f"gamma(x): slope {gs_gamma_slope}, range {gam_x.min():.4f}-{gam_x.max():.4f}, "
+print(f"gamma(x): slope {gs_gamma_slope}, quad {gs_gamma_quad}, range {gam_x.min():.4f}-{gam_x.max():.4f}, "
       f"sd_x {sd_x:.6f}; regime mult {gmreg}; switch probs {psw}", flush=True)
 
 mn = np.linspace(-4 * sigma_m, 4 * sigma_m, 161)

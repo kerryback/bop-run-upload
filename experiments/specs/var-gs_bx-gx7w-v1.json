@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-gs_bx-gx7w-v1",
+  "title": "GS21 gx7 with a steeper and wider countercyclical price of risk",
+  "question": "Does more time-variation in the price of risk widen DKKM's lead over the classical FMR and FF benchmarks in GS21, where the structure rules out a fair gap?",
+  "notes": "gx7w. gx7's economy -- five exposure types beta in {1, 2.5, 4, 5.5, 7} in equal shares, no regime, gs_ashift 0 -- with the price of risk gamma(x) = clip(0.5 - 0.28 x/sd(x), 0.05, 1.0) replaced by clip(0.5 - 0.40 x/sd(x), 0.05, 1.5). Two parameters move: gs_gamma_slope 0.28 -> 0.40 and gs_gamma_hi 1.0 -> 1.5. Under the stationary distribution gamma's sd rises from about 0.26 to about 0.38 with its mean still near 0.5; the upper clip now binds below -2.5 sd of x instead of -1.79.\n\nWHAT THIS IS AND IS NOT. GS21 has ONE priced shock, so finding 11's ceiling on DKKM over a FAIR linear benchmark is exactly 1.000 at any loading shape, and the market carries 94-97% of SR_max in every GS21 economy. This economy is NOT expected to have a fair gap and a fair gap here would contradict finding 11. It is built for the comparison a reader of the DKKM paper makes: DKKM against Fama-MacBeth and Fama-French. On that comparison GS21 holds the file's largest absolute gap -- gx7, DKKM - max(FMR, FF) = +0.0717 (t 2.7, 10 of 10), against g28's +0.0395 and gsbase's +0.0153 (computed 2026-10-05 from the committed seed files) -- and finding 8 says why: FMR and FF must estimate the market's weight in an unshrunk MVE while DKKM holds it unpenalised. Going gsbase -> g28 (adding the slope) and g28 -> gx7 (adding the ladder) each widened it; this pushes the slope dimension further.\n\nPREDICTION (2026-10-05, before any solve).\n(a) DKKM - max(FMR, FF) at least +0.05 and positive in at least 9 of 10 seeds.\n(b) fair gap within 0.005 of zero.\n(c) the EW market above 90% of SR_max; room below +0.02.\n(d) winning DKKM penalty interior in at least 8 of 10 seeds, or a flat tail on materiality (gx7 is a flat-tail row).\nFALSIFIED IF DKKM - max(FMR, FF) comes in below g28's +0.0395: then more price-of-risk variation does not widen the classical gap. A fair gap above +0.01 would instead falsify finding 11's K=1 ceiling and should be treated as a probable defect until shown otherwise.\n\nFIVE NEW SOLVES, none reused: sol_g28 and the gx7 solves are published in a shared folder this cluster cannot reach, and the slope differs anyway.\n\nSOLVE CORRECTNESS GATE, required before any seed, enforced by the verify job the seed array depends on: every one of the five solves must exit on the TOLERANCE test, not the 5600-sweep cycle cap (manifest achieved.exit == 'tolerance'; the solver prints 'converged' on both); and max |E[M R] - 1| over simulated months must be below 1e-10 on the five-type economy, the identity tests/test_risk_neutral_pricing.py asserts for gsbase and g28.\n\nPRECOMMITMENT STATUS, STATED HONESTLY. Authored 2026-10-05 on Northwestern's Quest (kellogg partition) by Alexander Ober's Claude session. The free solve ids were computed WITHOUT solving (variants/precommit_spec.py) before any build. But this spec was NOT committed before its solve -- no commit was authorised in that session -- so git cannot certify the order and `precommitted` is false. The prediction and falsifier below were written before any solve or seed existed.\n\nRESULTS LOCATION. Seeds write to their own BOP_RESULTS_DIR (/kellogg/proj/axa3203/bop_runs/results), NOT to variants/results, so docs/RESULTS.md and economy_table.csv are untouched until the co-authors decide to adopt the row.\n\nRE-SOLVE 2026-10-06 (Quest). sol_gw25 at tol 1e-6 (id 53a03d3739678c34) hit the 5600-sweep cap with qerr_rel 2.01e-5 against the 2.0e-5 enforced, so verify rejected it. sol_gw25 alone is re-solved at tol 2e-6 (enforced 4e-5), id 2230cba30bee2e09; the other four solves keep their ids.",
+  "lineage": {
+    "parent_spec": "var-gs_bx-gx7-v3",
+    "supersedes": null,
+    "superseded_by": null,
+    "changes": [
+      "gs_gamma_slope 0.28 -> 0.4",
+      "gs_gamma_hi 1.0 -> 1.5",
+      "five new solves sol_gw10..sol_gw70; nothing reused"
+    ]
+  },
+  "engine": "oracle",
+  "model": "gs_bx",
+  "method": {
+    "gs21_discretization": "tauchen_exact",
+    "zero_book_in_sdf_solve": true,
+    "gs21_calibration": "table_I_corrected_2026_09_06",
+    "gs_ashift_ladder": "none (gs_ashift = 0 for all five types)",
+    "gs_price_of_risk": "gamma_x_linear_clipped"
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+    "type_seed": 910
+  },
+  "params": {
+    "gmreg": [
+      1.0,
+      1.0
+    ],
+    "gs_gamma_slope": 0.4,
+    "gs_gamma_hi": 1.5
+  },
+  "types": {
+    "share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+    ],
+    "exposure": {
+      "gs_bx": [
+        1.0,
+        2.5,
+        4.0,
+        5.5,
+        7.0
+      ],
+      "gs_ashift": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "soldirs": [
+      "sol_gw10",
+      "sol_gw25",
+      "sol_gw40",
+      "sol_gw55",
+      "sol_gw70"
+    ]
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "sol_gw10",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.4,
+          "gs_gamma_hi": 1.5,
+          "gs_bx": 1.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 0
+      },
+      {
+        "name": "sol_gw25",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.4,
+          "gs_gamma_hi": 1.5,
+          "gs_bx": 2.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 2e-06
+        },
+        "type_index": 1
+      },
+      {
+        "name": "sol_gw40",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.4,
+          "gs_gamma_hi": 1.5,
+          "gs_bx": 4.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 2
+      },
+      {
+        "name": "sol_gw55",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.4,
+          "gs_gamma_hi": 1.5,
+          "gs_bx": 5.5,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 3
+      },
+      {
+        "name": "sol_gw70",
+        "producer": "variants/gs_bx/gs_solve_gam.py",
+        "param_env": "GS_PARAM_OVERRIDES",
+        "params": {
+          "gmreg": [
+            1.0,
+            1.0
+          ],
+          "gs_gamma_slope": 0.4,
+          "gs_gamma_hi": 1.5,
+          "gs_bx": 7.0,
+          "gs_ashift": 0.0
+        },
+        "args": {
+          "xnum": 161,
+          "tol": 1e-06
+        },
+        "type_index": 4
+      }
+    ]
+  },
+  "env": {
+    "GS_BX_SOLDIRS": "sol_gw10,sol_gw25,sol_gw40,sol_gw55,sol_gw70",
+    "GS_BX_BETAS": "1.0,2.5,4.0,5.5,7.0",
+    "GS_BX_SHARES": "0.2,0.2,0.2,0.2,0.2"
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom",
+      "lev"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": "variants/klc/solve_gs_klc.sh",
+    "source_script_note": "the five-task solve array on Quest",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=gx7w",
+    "verified_by": "tests/test_specs_match_shell.py"
+  },
+  "expected_solves": {
+    "sol_gw10": "25fbd556f3f6def9",
+    "sol_gw25": "2230cba30bee2e09",
+    "sol_gw40": "856040479616acb5",
+    "sol_gw55": "77e0de0dccc9674a",
+    "sol_gw70": "6dbb3ee70cccf2c4"
+  },
+  "spec_hash": "30b7fa1c0b21dbb0ee89cd232d1ba72c28632ecf82fccded1a0bbaca2d7557bb",
+  "precommitted": false,
+  "solves_pending": [
+    "sol_gw10",
+    "sol_gw25",
+    "sol_gw40",
+    "sol_gw55",
+    "sol_gw70"
+  ],
+  "reused_solves": null
+}

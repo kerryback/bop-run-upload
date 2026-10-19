@@ -1,0 +1,208 @@
+{
+ "name": "lfh_L5_K10_n1",
+ "seed": 2,
+ "params": {
+  "N": 500,
+  "T": 500,
+  "burnin": 100,
+  "state": "ou",
+  "halflife": 24.0,
+  "p01": 0.020833333333333332,
+  "p10": 0.041666666666666664,
+  "sigma_f": 0.04,
+  "lam_m": 0.002,
+  "lam_s": 0.02,
+  "g_kind": "const",
+  "g_slope": 0.0,
+  "g_lo": 0.05,
+  "g_hi": 1.5,
+  "gmult": [
+   1.0,
+   1.0
+  ],
+  "J": 1,
+  "b_ladder": [
+   0.0
+  ],
+  "b_scale": 0.3,
+  "shares": [
+   1.0
+  ],
+  "u1": 0.0,
+  "a": [
+   0.0,
+   0.3,
+   0.0,
+   0.3,
+   0.3
+  ],
+  "r": 0.5,
+  "lev": 1.0,
+  "s0": 0.0,
+  "q": 1.0,
+  "sig_eps": 0.1,
+  "sig_eps_disp": 0.0,
+  "mve_base": 7.0,
+  "nf": 0,
+  "fac_shape": "tanh",
+  "fac_amp": 1.0,
+  "lam_f": 0.01,
+  "fac_center": true,
+  "fac_dirseed": 20261008,
+  "nlat": 5,
+  "obs_noise": 1.0,
+  "nf_lat": 10,
+  "lam_lat": 0.00758946638440411,
+  "lat_center": true
+ },
+ "describe": "state=ou halflife=24.0 g=const lam_m/sf=0.050 lam_s/sf=0.500 J=1 b=(0.0,) r=0.5 q=1.0 lev=1.0 s0=0.0 a=(0.0, 0.3, 0.0, 0.3, 0.3) sig_eps=0.1 N=500 T=500 nlat=5 obs_noise=1.0 nf_lat=10 lam_lat/sf=0.190",
+ "oracle": {
+  "sr_max": 0.5979958583632623,
+  "sr_max_eval": 0.5982303327353696,
+  "sr_ew_eval": 0.04969039949999533,
+  "sr_orth_eval": 0.596163059767392,
+  "mkt_share": 0.08306232028187067,
+  "mean_mu": 0.002,
+  "sd_mu": 0.023520807180181534,
+  "ann_excess_pct": 2.4,
+  "lin_ceiling_eval": 0.07411271823679516,
+  "lin_rf_ceiling_eval": 0.07396117685031713,
+  "nonlin_ceiling_eval": 0.5559140759044021,
+  "room_eval": 0.48180135766760696,
+  "room_s_eval": 0.481952899054085,
+  "room_all": 0.5023529966502418,
+  "bases": {
+   "fmr_raw": {
+    "P": 6,
+    "const_best": 0.05662097011955973,
+    "const_best_eval": 0.07827133188400485
+   },
+   "lin_rank": {
+    "P": 6,
+    "const_best": 0.05355488463006172,
+    "const_best_eval": 0.07411271823679516
+   },
+   "lin_rank_rf": {
+    "P": 12,
+    "const_best": 0.0646797778937792,
+    "const_best_eval": 0.07396117685031713
+   },
+   "poly2": {
+    "P": 27,
+    "const_best": 0.5559078812803036,
+    "const_best_eval": 0.5559140759044021
+   },
+   "bins": {
+    "P": 301,
+    "const_best": 0.5526247736006191,
+    "const_best_eval": 0.553045056692734
+   },
+   "rff36": {
+    "P": 37,
+    "const_best": 0.39577121316208086,
+    "const_best_eval": 0.4177424978888368
+   },
+   "rff360": {
+    "P": 361,
+    "const_best": 0.5542045467783645,
+    "const_best_eval": 0.5538402821492404
+   },
+   "bins_n": {
+    "P": 306,
+    "const_best": 0.5526258976634806,
+    "const_best_eval": 0.553033189490501
+   }
+  },
+  "months": 485,
+  "eval_months": 125,
+  "theta_month": 0.9867620901910183,
+  "theta_wtd": 0.9867506207520723,
+  "theta_pooled": 0.9958297215967022,
+  "time_variation": 0.009079100844629928
+ },
+ "estimators": {
+  "dkkm": 0.47603442193263346,
+  "dkkm_P": 360,
+  "dkkm_kappa": 0.1,
+  "dkkm_at_edge": false,
+  "fm": 0.04071304248633597,
+  "ff": 0.20288733776509688,
+  "linrank": 0.0839786027321188,
+  "linrank_m": 0.05226380978608418,
+  "linrank_s": 0.04969027807320756,
+  "mkt_est": 0.04969039949999533,
+  "ew": 0.04969039949999533,
+  "classical_gap": 0.2731470841675366,
+  "gap": 0.2731470841675366,
+  "fair_gap": 0.2731470841675366,
+  "fair_s_gap": 0.2731470841675366,
+  "fair_method": "ff",
+  "dkkm_pct_ceiling": 0.8563093516892615,
+  "fair_pct_ceiling": 2.737550889941158,
+  "excess_loss": 0.20865427350007038,
+  "best": {
+   "ew": {
+    "sharpe": 0.04969039949999533,
+    "P": 1,
+    "kappa": 0.0
+   },
+   "ff": {
+    "sharpe": 0.20288733776509688,
+    "P": 6,
+    "kappa": 0.0
+   },
+   "fm": {
+    "sharpe": 0.04071304248633597,
+    "P": 6,
+    "kappa": 0.0
+   },
+   "linrank": {
+    "sharpe": 0.0839786027321188,
+    "P": 6,
+    "kappa": 10.0
+   },
+   "linrank_m": {
+    "sharpe": 0.05226380978608418,
+    "P": 6,
+    "kappa": 1.0
+   },
+   "linrank_s": {
+    "sharpe": 0.04969027807320756,
+    "P": 12,
+    "kappa": 100000.0
+   },
+   "mkt_est": {
+    "sharpe": 0.04969039949999533,
+    "P": 1,
+    "kappa": 0.0
+   },
+   "rff": {
+    "sharpe": 0.47603442193263346,
+    "P": 360,
+    "kappa": 0.1
+   }
+  },
+  "eval_months": 125,
+  "window": 360,
+  "rff": [
+   36,
+   360
+  ],
+  "nmat": 1,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "stride": 1
+ },
+ "seconds": 121.26916861534119
+}

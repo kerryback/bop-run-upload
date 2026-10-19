@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-bgn_gam-g0235df-v1",
+  "title": "BGN regime-gamma at g0235's multipliers: stress two thirds of months AND switching 4x faster",
+  "question": "Does the switching-speed lever (finding 12) compound with the stress-heavy mix that gives BGN its largest DKKM-over-FMR/FF gap?",
+  "notes": "g0235df. g0235d's economy with BOTH switch probabilities times four: p01 (calm->stress) 0.5/12 -> 2/12 and p10 (stress->calm) 0.25/12 -> 1/12. gmult is unchanged at [0.2, 3.5] and the stationary stress share is unchanged at exactly 2/3 (p01/(p01+p10)), so this is g0235d seen at g0235f's speed: stress spells 12 months instead of 48, calm spells 6 instead of 24, about 80 switches inside a 360-month window instead of 20. Those are g0235f's two spell lengths mirrored, so it sits at, not beyond, the fastest timescale finding 12 calls defensible for a price of risk.\n\nWHY THIS ONE. Two measured facts are combined. (1) Finding 12: holding the stationary share fixed, the fair gap is monotone in switching speed, -0.0038 -> +0.0025 -> +0.0079, and g0235f is one of the file's two surviving fair gaps. (2) g0235d has the largest DKKM-minus-market of any BGN economy (+0.2190) and the largest BGN gap against the classical benchmarks: DKKM - max(FMR, FF) = +0.0488 per seed-mean, t 6.0, 10 of 10 (computed 2026-10-05 from the committed seed files), because its market carries only 26% of SR_max. Its fair gap is +0.0025 at t 1.1. The share dimension was read as flat on the fair gap, but only at the SLOW speed; the speed lever has never been tried at the stress-heavy mix.\n\nREFERENCES (protocol v3, ten seeds). g0235d: SR_max 0.3435, EW market 0.0894, FMR 0.2467, FF 0.2506, DKKM 0.3085, fair gap +0.0025, room +0.0311. g0235f: SR_max 0.2375, FMR 0.1406, FF 0.1309, DKKM 0.1690, fair gap +0.0079, room +0.0447.\n\nPREDICTION (2026-10-05, before any solve).\n(a) DKKM - max(FMR, FF) is at least +0.03 and positive in at least 9 of 10 seeds.\n(b) fair gap positive at t >= 2 and at least +0.005, i.e. speed lifts g0235d's +0.0025 as it lifted g0235's.\n(c) room rises above g0235d's +0.0311, as it rose along the speed ladder at the 1/3 mix.\n(d) the EW market stays below 40% of SR_max.\n(e) winning DKKM penalty interior in at least 8 of 10 seeds, or a flat tail on materiality.\nFALSIFIED IF the fair gap is not positive at t >= 2. Then the speed lever does NOT transfer across the mix and g0235f's gap is specific to the 1/3 share. Clause (a) failing would be the bigger surprise: it would mean fast switching lets the classical methods catch DKKM at the stress-heavy mix.\n\nSOLVE CORRECTNESS GATE, required before any seed: J* exits on its tolerance test; the project-value Euler equation of tests/test_risk_neutral_pricing.py holds below 1e-6 AT THESE PARAMETERS (p01/p10 included); validate_bgn_gam.py shows realised and expected excess returns agreeing by regime within sampling error.\n\nPRECOMMITMENT STATUS, STATED HONESTLY. Authored 2026-10-05 on Northwestern's Quest (kellogg partition) by Alexander Ober's Claude session. The free solve ids were computed WITHOUT solving (variants/precommit_spec.py) before any build. But this spec was NOT committed before its solve -- no commit was authorised in that session -- so git cannot certify the order and `precommitted` is false. The prediction and falsifier below were written before any solve or seed existed.\n\nRESULTS LOCATION. Seeds write to their own BOP_RESULTS_DIR (/kellogg/proj/axa3203/bop_runs/results), NOT to variants/results, so docs/RESULTS.md and economy_table.csv are untouched until the co-authors decide to adopt the row.",
+  "lineage": {
+    "parent_spec": "var-bgn_gam-g0235d-v3",
+    "supersedes": null,
+    "superseded_by": null,
+    "changes": [
+      "p01 0.041666666666666664 -> 0.16666666666666666 and p10 0.020833333333333332 -> 0.08333333333333333: both x4, stationary stress share unchanged at 2/3",
+      "jstar_gam_file Jstar_g0235d.csv -> Jstar_g0235df.csv"
+    ]
+  },
+  "engine": "oracle",
+  "model": "bgn_gam",
+  "method": {
+    "kp_regime_labels": "n/a",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "gmult": [
+      0.2,
+      3.5
+    ],
+    "p01": 0.16666666666666666,
+    "p10": 0.08333333333333333,
+    "jstar_gam_file": "Jstar_g0235df.csv"
+  },
+  "param_env": "BGN_PARAM_OVERRIDES",
+  "solve": {
+    "stages": [
+      {
+        "name": "jstar",
+        "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+        "param_env": "BGN_PARAM_OVERRIDES",
+        "params": {
+          "gmult": [
+            0.2,
+            3.5
+          ],
+          "p01": 0.16666666666666666,
+          "p10": 0.08333333333333333,
+          "jstar_gam_file": "Jstar_g0235df.csv"
+        },
+        "args": {},
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-10-05 on Quest; runner variants/klc/submit_klc.sh",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=g0235df",
+    "verified_by": "tests/test_specs_match_shell.py",
+    "solve_note": "built on Quest 2026-10-05 (job 8731761, variants/klc/solve_small_klc.sh); every printed id matched its pin and variants/klc/verify_solves.py passed (log /kellogg/proj/axa3203/bop_runs/logs/solve_small.8731761.log)"
+  },
+  "spec_hash": "d2021dacc4b1f3bfebff4063028641b255b3062406ea97727691b29afbf961d9",
+  "expected_solves": {
+    "jstar": "e89cc2b9381e73bc"
+  },
+  "precommitted": false,
+  "solves_pending": null,
+  "reused_solves": null
+}

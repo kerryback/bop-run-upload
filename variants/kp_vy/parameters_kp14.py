@@ -21,6 +21,10 @@ alpha = 0.85
 # heterogeneous exposure map while every level stays STATIONARY (harvestability clause iii).
 # type_bv = [0] reproduces the kp_gamy unit economy exactly.
 g_lo, g_hi, g_steep = 1.0, 1.0, 1.5      # optional gamma_x multiplier in y (1,1 = off)
+# 2026-10-14: a QUADRATIC gamma_x multiplier in y, 1 + g_quad y^2, capped at g_qhi; multiplies the logistic one above.
+# It never falls below 1: KP14's growth-option discount turns negative once gamma_x drops below ~0.82 of its value.
+# g_quad = 0 = off.
+g_quad, g_qhi = 0.0, 3.0
 kappa_y = 0.35
 NY = 21
 y_max = 3.5
@@ -161,8 +165,12 @@ dy = y_grid[1] - y_grid[0]
 sigma_y = _np.sqrt(2.0 * kappa_y)                      # stationary sd 1
 
 def gmult_y(y):
-    z = _np.clip(g_steep * _np.asarray(y, float), -40, 40)
-    return g_lo + (g_hi - g_lo) / (1.0 + _np.exp(-z))
+    y = _np.asarray(y, float)
+    z = _np.clip(g_steep * y, -40, 40)
+    g = g_lo + (g_hi - g_lo) / (1.0 + _np.exp(-z))
+    if g_quad:
+        g = g * _np.minimum(1.0 + g_quad * y ** 2, g_qhi)
+    return g
 
 # OU generator on the y-grid (upwind drift, reflecting boundaries)
 def _build_Qy():

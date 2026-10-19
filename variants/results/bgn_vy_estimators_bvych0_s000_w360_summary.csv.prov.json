@@ -1,0 +1,72 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_estimators.py",
+  "--model",
+  "bgn_vy",
+  "--tag",
+  "bvych0",
+  "--seed",
+  "0",
+  "--window",
+  "360",
+  "--levels",
+  "--include_mkt",
+  "--kappas",
+  "1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0",
+  "--fair_linear",
+  "--n_jobs",
+  "4"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "env": {
+  "BGN_PARAM_OVERRIDES": "{\"type_share\": [0.34, 0.33, 0.33], \"type_bv\": [0.01, 0.035, 0.07], \"gamma_v\": 2.5, \"kappa_y\": 0.35, \"bv_comp\": 1.2, \"y_kind\": \"chain\", \"jstar_vy_file\": \"Jstar_vy_bvych0.npz\"}",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "bvych0",
+  "SLURMD_NODENAME": "qhimem0501",
+  "SLURM_ARRAY_JOB_ID": "9588089",
+  "SLURM_ARRAY_TASK_ID": "0",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "9588652",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-12T13:43:02-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qhimem0501",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "sklearn": "1.9.1",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_estimators.py --model bgn_vy --tag bvych0 --seed 0 --window 360 --levels --include_mkt --kappas 1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0 --fair_linear --n_jobs 4",
+ "inputs": [
+  {
+   "stage": "jstar",
+   "solve_id": "eb3a5bc57086bfde",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 599602
+  }
+ ],
+ "extra": {
+  "engine": "estimators",
+  "window": 360,
+  "linear_only": false,
+  "fair_linear": true,
+  "inputs_from": null,
+  "spec_id": "var-bgn_vy-bvych0-v1",
+  "oracle_eval_window": 360,
+  "panel": "bgn_vy_panel_bvych0_s000.parquet"
+ }
+}

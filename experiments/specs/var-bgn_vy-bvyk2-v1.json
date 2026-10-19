@@ -1,0 +1,134 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyk2-v1",
+ "title": "BGN with TWO independent priced chains (K 1 -> 2 priced states beyond the rate) and three types whose loading vectors span them, at bvych0's loading sizes and total price",
+ "question": "Group 4 (larger factor models): does a second priced state, with types loading on both, raise the room and the fair gap in BGN as the latent-product reduced form predicts, or lower the gap as KP's vym3 did?",
+ "notes": "Campaign 2026-10-12, group 4 cell for BGN (docs/CAMPAIGN_REPORT_2026-10-11). The control is bvych0 (one 21-node chain, type_bv (0.01, 0.035, 0.07), gamma_v 2.5). Here y2 is a second 21-node Tauchen chain, independent of y1, with the same kappa; the state is the joint node (441 nodes), the J* programme and every table run on it, and the panel exports y2_stand beside y_stand so the fair linear benchmark sees both states. Loading VECTORS: type 0 0.01 (1, 0), type 1 0.035 (0, 1), type 2 0.07 (1, 1)/sqrt(2): the same sizes as bvych0 in three directions, so the cross-section of exposures is two-dimensional. Total price of y-risk unchanged, ||gamma|| = 2.5 split as 2.5/sqrt(2) per chain (vym3's convention). Validation: with a dead second chain (type_bv2 0, gamma_v2 0) the joint-chain code reproduces the single chain's bases to 2e-13; at these parameters the Euler check on the joint chain is 2.3e-14 and type_theta (1, 1.0744, 1.287).",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.01, 0.0, 0.04949747], bv_comp 1.2, gamma_v 1.76776695, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.01,
+   0.0,
+   0.04949747
+  ],
+  "gamma_v": 1.76776695,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "NY2": 21,
+  "type_bv2": [
+   0.0,
+   0.035,
+   0.04949747
+  ],
+  "gamma_v2": 1.76776695,
+  "kappa_y2": 0.35,
+  "jstar_vy_file": "Jstar_vy_bvyk2.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.01,
+      0.0,
+      0.04949747
+     ],
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "NY2": 21,
+     "type_bv2": [
+      0.0,
+      0.035,
+      0.04949747
+     ],
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "jstar_vy_file": "Jstar_vy_bvyk2.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyk2",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.9589956.Jstar_vy_bvyk2.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "822ce822fef06369"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "9fa128e759780b0b2783b30441ffd451f78bf8de476be2076accc422e65ad45e"
+}

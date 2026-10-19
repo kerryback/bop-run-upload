@@ -1,0 +1,48 @@
+{
+ "model": "kp_vy",
+ "tag": "kpq",
+ "seed": 6,
+ "prov": "kp_vy_estimators_kpq_s006_w360_summary@nogit",
+ "spec_id": "var-kp_vy-kpq-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "e0c5231363714d61",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 798037
+  },
+  {
+   "stage": "integ",
+   "solve_id": "da5f99b39caeeca0",
+   "files": 21,
+   "files_expected": 21,
+   "bytes": 1907220
+  }
+ ],
+ "panel": "kp_vy_panel_kpq_s006.parquet"
+}

@@ -52,6 +52,8 @@ ROOT = os.path.dirname(HERE)
 #   [solstamp] kp_vy prefix=vym3 stage=G solve_id=dd23d7300cd54a0d
 #   [solstamp] bgn_gam Jstar_bgnbase.csv solve_id=cb6340649eace098
 #   [solstamp] gs_bx sol_reg solve_id=63fa7ebbc2db49ea
+#   [solstamp] bgn_vy Jstar_vy_bvy25.npz solve_id=...   (rebuild_jstar_vy.py, no argv)
+#   [solstamp] gs_vy sol_vy25a solve_id=...              (gs_solve_vy.py xnum tol outdir)
 _ID = re.compile(r"solve_id=([0-9a-f]{16})\b")
 _STAGE = re.compile(r"\bstage=(\w+)")
 
@@ -75,8 +77,10 @@ def _argv_for(producer, stage, spec):
         return [str(prefix)]
     if base in ("gs_solve_reg.py", "gs_solve_gam.py"):
         return [str(args.get("xnum", 161)), str(args.get("tol", 1e-6)), stage["name"]]
-    if base == "rebuild_jstar_gam.py":
+    if base in ("rebuild_jstar_gam.py", "rebuild_jstar_vy.py"):
         return []
+    if base == "gs_solve_vy.py":
+        return [str(args.get("xnum", 161)), str(args.get("tol", 1e-6)), stage["name"]]
     raise SystemExit(f"precommit_spec does not know how to invoke {base}. Add it to "
                      f"_argv_for() rather than guessing.")
 

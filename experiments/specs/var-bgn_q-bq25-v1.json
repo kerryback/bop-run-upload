@@ -1,0 +1,112 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_q-bq25-v1",
+ "title": "BGN with a QUADRATIC price of market risk in the rate: sigma_z x min(1 + 0.25 s^2, 3), s the standardized rate, binned to 7 levels (group 2, harmonized)",
+ "question": "Group 2, harmonized with gq25 (GS21) and kpq (KP14): does a price of market risk that rises quadratically with the distance of the rate from its mean create room or a gap in BGN?",
+ "notes": "Campaign 2026-10-17 (open item 4). variants/bgn_q: bgn_vy with the two-state regime replaced by NB = 7 equiprobable bins of the stationary rate, g_j = E[g(r) | bin j] = 1.00 / 1.03 / 1.17 / 1.68 (outer bins); the date-k cash flow is priced at e^{-beta g(r_{t+k-1})} through NB bases D_j(r) whose discount-weighted bin shares come from the J* grid's Q-transition, with the bond price exact per horizon (q_price = 0 reduces to bgn_vy to 3e-16). One type, no y exposure (gamma_v 0, b 0): the BGN BASELINE with the quadratic price. The gate's Euler tolerance is 1e-4 here (the shares' discretisation, 7e-6 measured).",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.0], bv_comp 0.0, gamma_v 0.0, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_q",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.0
+  ],
+  "gamma_v": 0.0,
+  "kappa_y": 0.35,
+  "bv_comp": 0.0,
+  "q_price": 0.25,
+  "NB": 7,
+  "jstar_vy_file": "Jstar_vy_bq25.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_q/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.0
+     ],
+     "gamma_v": 0.0,
+     "kappa_y": 0.35,
+     "bv_comp": 0.0,
+     "q_price": 0.25,
+     "NB": 7,
+     "jstar_vy_file": "Jstar_vy_bq25.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bq25",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bq (BOP_VERIFY_BQ_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.4232251.Jstar_vy_bq25.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "3cbba3e6ce920c1c"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "f2b108ded38ee82126a886982648cb2a1044a396f0912ab3d1e9a5c28f3e02dc"
+}

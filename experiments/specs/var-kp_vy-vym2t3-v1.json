@@ -1,0 +1,141 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vym2t3-v1",
+ "title": "KP14 with TWO independent priced states and three types loading (0.02,0), (0,0.07), (0.099,0.099): vyg25's ladder in three directions, total price 2.5",
+ "question": "Group 4, harmonized with bvyk2 and gvypk3: does a second priced state with exposures spanning both raise room and gap over vyg25?",
+ "notes": "Campaign 2026-10-14. K = 2 to match BGN (bvyk2) and GS21 (gvypk3); vym3t3 (K = 3) moves to the appendix. Loadings are vyg25's ladder in the bvyk2 pattern (b1, 0), (0, b2), (b3, b3)/sqrt(2); price 2.5/sqrt(2) per state.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vym3t3-v2",
+  "changes": [
+   "params {'type_share': [0.34, 0.33, 0.33], 'type_bv': [[0.02, 0.0], [0.0, 0.07], [0.0989949, 0.0989949]], 'gamma_v': [1.76776695, 1.76776695], 'bv_comp': 1.2} (parent: {'type_share': [0.34, 0.33, 0.33], 'type_bv': [[-0.0103478274, 0.0121021169, 0.0121021169], [0.0577350269, 0.0577350269, 0.0577350269], [0.0161658075, -0.0808290377, 0.1131606528]], 'gamma_v': [1.443375673, 1.443375673, 1.443375673], 'bv_comp': 1.2}); own tables under prefix vym2t3"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_regime_labels": "corrected (docs/kp14_regime_labels.md)",
+  "zero_book_in_sdf_solve": true,
+  "kp_priced_states": "three independent unit-variance OU states sharing kappa_y, priced at 2.5/sqrt(3) each; each type loads with a 3-vector and is solved at its own scalar projection. Three types at vyg25's shares"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   [
+    0.02,
+    0.0
+   ],
+   [
+    0.0,
+    0.07
+   ],
+   [
+    0.0989949,
+    0.0989949
+   ]
+  ],
+  "gamma_v": [
+   1.76776695,
+   1.76776695
+  ],
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vym2t3"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      [
+       0.02,
+       0.0
+      ],
+      [
+       0.0,
+       0.07
+      ],
+      [
+       0.0989949,
+       0.0989949
+      ]
+     ],
+     "gamma_v": [
+      1.76776695,
+      1.76776695
+     ],
+     "bv_comp": 1.2
+    },
+    "args": {
+     "prefix": "vym2t3"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vym2t3",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.3641121.vym2t3.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "195421619bc6f50d",
+  "integ": "b58492dc11e112de"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "eab8ee99424bcb2fc60df37af5b2c9e9515ca526a8f6521af85cbd8e584e7b83"
+}

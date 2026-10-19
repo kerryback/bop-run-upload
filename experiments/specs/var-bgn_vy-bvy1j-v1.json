@@ -1,0 +1,114 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvy1j-v1",
+ "title": "BGN with a CRASH-ONLY cash-flow factor: one type, project cash flows x e^{0.035 y}, y's Gaussian shocks unpriced, a priced crash of y to -3.5 sd at 1%/month (weight e^2)",
+ "question": "Group 1, harmonized: does a priced crash in a factor every firm is exposed to create room or a gap on its own, with no interaction?",
+ "notes": "Campaign 2026-10-14. Built on the single-type 3a economy bvy1ch with gamma_v 2.5 -> 0. Pairs with vy1j (KP14) and gvy1j (GS21).",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.035], bv_comp 1.2, gamma_v 0.0, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.035
+  ],
+  "gamma_v": 0.0,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "pj": 0.01,
+  "gj": 2.0,
+  "jstar_vy_file": "Jstar_vy_bvy1j.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.035
+     ],
+     "gamma_v": 0.0,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "pj": 0.01,
+     "gj": 2.0,
+     "jstar_vy_file": "Jstar_vy_bvy1j.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvy1j",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.3644269.Jstar_vy_bvy1j.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "d6c16e9fe946cd01"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "72ed70f6729d3657a17a622337097aeaa798c163e1acbc6f7d184752befef1fb"
+}

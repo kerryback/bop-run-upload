@@ -1,0 +1,260 @@
+"""The campaign report's main tables: per group of experiments, the theoretical room for nonlinearity
+relative to the linear ceiling, and the Sharpe of each standard estimator.
+
+For every economy and seed, the ORACLE file gives the ceilings over the evaluation window: the best linear
+(lin_rank) and the best nonlinear (rff / bins / poly2) conditional Sharpe a population investor reaches, and
+room = nonlinear - linear (the room % column is room / linear). The ESTIMATORS summary gives each method's
+out-of-sample Sharpe at the protocol window: DKKM (best of the rff variants), FMR (Fama-MacBeth), FF
+(Fama-French factors), the linear model (best of linrank / linlev, with and without the market), CAPM
+(mkt_est, the estimated market line), and the fair gap = DKKM - best of (FMR, FF, linear, CAPM), the
+project's headline statistic (aggregate_seeds.py's definition).
+
+Rows are averages over seeds; '+' is the number of seeds with a positive fair gap. A dagger marks an
+economy whose oracle predates the evaluation-window ceilings (room over all months instead).
+
+usage: python variants/campaign_tables.py --out docs/campaign_tables   (writes .md and .tex)
+"""
+import argparse, glob, json, os, re, sys
+import numpy as np
+import pandas as pd
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from aggregate_seeds import RFF, FAIR, _nonlin_keys          # noqa: E402
+
+LEGACY = os.path.join(HERE, "results")
+# the campaign's results live on Quest and are committed, same files and names, in variants/results (the panels and
+# moments stay on Quest; variants/results/README_quest.md); the reduced-form screens in variants/reduced/screen
+CAMPAIGN = next(d for d in ("/kellogg/proj/axa3203/bop_runs/results", LEGACY) if os.path.isdir(d))
+SCREEN = next(d for d in ("/kellogg/proj/axa3203/bop_runs/screen", os.path.join(HERE, "reduced", "screen")) if os.path.isdir(d))
+LINEAR = ("linrank", "linlev", "linrank_m", "linlev_m")
+
+# (tag, model, results dir, what) in the order the tables print them
+E = {
+    "bgnbase": ("BGN", LEGACY, "baseline, no priced state beyond the rate"),
+    "gsbase": ("GS21", LEGACY, "baseline"),
+    "kpbase": ("KP14", LEGACY, "baseline, one type, no priced state"),
+    # group 1: distributions
+    "bvych0": ("BGN", CAMPAIGN, "y as a 21-node chain, three types (control)"),
+    "bvyj25": ("BGN", CAMPAIGN, "the chain with a priced crash (1\\%/month to $-y_{\\max}$, priced $e^2$)"),
+    "gvyp10": ("GS21", CAMPAIGN, "product exposure $\\tilde z\\tilde b$ at 0.10 (control)"),
+    "gvyp10j": ("GS21", CAMPAIGN, "the product exposure with a priced crash"),
+    "vyg25": ("KP14", LEGACY, "three types on y, price 2.5 (control)"),
+    "vyj25": ("KP14", CAMPAIGN, "the same with a priced crash in y"),
+    # group 2: prices of risk
+    "g0235f": ("BGN", LEGACY, "regime price $\\times$0.2 / $\\times$3.5, spells 4$\\times$ faster"),
+    "g0235df": ("BGN", CAMPAIGN, "stress 2/3 of the time, 4$\\times$ faster"),
+    "g28": ("GS21", LEGACY, "countercyclical $\\gamma(x)$, clipped"),
+    "bx7": ("GS21", LEGACY, "two-state regime on $\\gamma$, five types on x"),
+    "kpgam": ("KP14", CAMPAIGN, "$\\gamma_x \\times$ logistic(y), 1 to 3"),
+    # group 3a: single-characteristic exposures
+    "gx7": ("GS21", LEGACY, "five types on productivity x"),
+    "gvy25": ("GS21", CAMPAIGN, "production-level exposure to y, three types"),
+    "gvys25": ("GS21", CAMPAIGN, "signed fixed-cost exposure to y"),
+    "bvysg": ("BGN", CAMPAIGN, "signed exposure ladder ($-0.07$ / 0 / $+0.07$)"),
+    "vyx": ("KP14", LEGACY, "three types on y, price 1.8"),
+    # group 3b: interactions
+    "bvy25": ("BGN", CAMPAIGN, "three types on y, level-compensated (1.2)"),
+    "bvyc0": ("BGN", CAMPAIGN, "the same without compensation"),
+    "gvyp05": ("GS21", CAMPAIGN, "product $\\tilde z\\tilde b$ at 0.05"),
+    "gvyp075": ("GS21", CAMPAIGN, "product at 0.075"),
+    "gvyp15": ("GS21", CAMPAIGN, "product at 0.15"),
+    "gvyp20": ("GS21", CAMPAIGN, "product at 0.20"),
+    "gvyp10x": ("GS21", CAMPAIGN, "product at 0.10 plus a curvature loading on x"),
+    # group 4: larger factor models
+    "vym3": ("KP14", LEGACY, "three priced states, twenty rank-3 types"),
+    "vym3t3": ("KP14", LEGACY, "three priced states, three types"),
+    "bvyk2": ("BGN", CAMPAIGN, "two priced chains, three loading vectors"),
+    "gvypk2": ("GS21", CAMPAIGN, "two priced chains, two product types"),
+    # harmonized representatives (2026-10-14): one type exposed to y, the crash-only factor, the quadratic price, two states
+    "vy1": ("KP14", CAMPAIGN, "one type, cash flows $\\times e^{0.07y}$"),
+    "bvy1ch": ("BGN", CAMPAIGN, "one type, project cash flows $\\times e^{0.035y}$"),
+    "gvy1": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.05y}$"),
+    "vy1j": ("KP14", CAMPAIGN, "crash-only factor: $e^{0.07y}$, y unpriced except a 1\\%/month jump to $-3.5$ (weight $e^2$)"),
+    "bvy1j": ("BGN", CAMPAIGN, "crash-only factor: $e^{0.035y}$, the same crash"),
+    "gvy1j": ("GS21", CAMPAIGN, "crash-only factor: $e^{0.05y}$, the same crash"),
+    "kpq": ("KP14", CAMPAIGN, "$\\gamma_x \\times \\min(1 + 0.25\\,y^2, 3)$, y unpriced"),
+    "gq25": ("GS21", CAMPAIGN, "$\\gamma_x \\times \\min(1 + 0.25\\,\\tilde x^2, 3)$"),
+    "vym2t3": ("KP14", CAMPAIGN, "two priced states, three loading vectors"),
+    "gvypk3": ("GS21", CAMPAIGN, "two priced chains, three product types"),
+    # the 2026-10-17 fixes
+    "gvyz10": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.10\\,\\tilde z\\,y}$: the product economy without the coupon"),
+    "gvyz10j": ("GS21", CAMPAIGN, "crash-only factor on $0.10\\,\\tilde z\\,y$: y unpriced except the 1\\%/month jump to $-3.5$ (weight $e^2$)"),
+    "bq25": ("BGN", CAMPAIGN, "$\\sigma_z \\times \\min(1 + 0.25\\,s^2, 3)$, s the standardized rate, 7 bins"),
+    "bvych41": ("BGN", CAMPAIGN, "bvych0 on a 41-node chain"),
+}
+
+GROUPS = [
+    # ---- the main tables: one representative per model per group, the same construction across models ----
+    ("g0", "Baselines", "The three models as published, one type each: the floor every group is read against.",
+     ["bgnbase", "gsbase", "kpbase"]),
+    ("g1", "Group 1. A different distribution of shocks: a crash-only factor",
+     "Every firm's cash flows load on a factor y whose only priced shock is a rare crash (1\\% a month to $-3.5$ sd, kernel weight $e^2$).",
+     ["bvy1j", "gvyz10j", "vy1j"]),
+    ("g2", "Group 2. A quadratic price of the model's own risk",
+     "The price of the baseline's aggregate risk becomes $1 + 0.25 s^2$ times its value, capped at 3, $s$ a standardized aggregate state.",
+     ["bq25", "gq25", "kpq"]),
+    ("g3a", "Group 3a. Exposure captured by a single characteristic",
+     "A priced state y with one type: a firm's exposure varies only through one firm state (project mix, operating leverage, growth-option share).",
+     ["bvy1ch", "gvyz10", "vy1"]),
+    ("g3b", "Group 3b. Exposure as an interaction of characteristics",
+     "The same y with three types (BGN, KP14) or a product written into production (GS21): exposure = type or productivity $\\times$ how levered the claim is.",
+     ["bvych0", "gvyp10", "vyg25"]),
+    ("g4", "Group 4. Larger factor models: two priced states",
+     "Two independent priced states, three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$, total price held at 2.5.",
+     ["bvyk2", "gvypk3", "vym2t3"]),
+    # ---- the appendix: everything else that was run, grouped by what it tested ----
+    ("xa", "Additional economies", "Everything else that was run, by model; each is described in the appendix against its parent.",
+     ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
+      "gvyp10x", "gvyp10j", "gvypk2", "kpgam", "vyx", "vyj25", "vym3t3", "vym3"]),
+]
+
+
+def seed_rows(tag):
+    model, d, _ = E[tag]
+    rows = []
+    for f in sorted(glob.glob(os.path.join(d, f"*_oracle_{tag}_s[0-9][0-9][0-9].json"))):
+        o = json.load(open(f)); b = o["bases"]
+        seed = int(re.search(r"_s(\d{3})\.json$", f).group(1))
+        have_eval = "const_best_eval" in b["lin_rank"] and "sr_max_eval" in o
+        key = "const_best_eval" if have_eval else "const_best"
+        lin = b["lin_rank"][key]; nl = max(b[k][key] for k in _nonlin_keys(b))
+        srm = o["sr_max_eval"] if have_eval else o["sr_max_mean"]
+        mkt = o["sr_ew_eval"] / o["sr_max_eval"] if "sr_ew_eval" in o else np.nan
+        r = dict(tag=tag, seed=seed, eval=have_eval, sr_max=srm, lin_ceiling=lin, nonlin_ceiling=nl, room=nl - lin,
+                 room_pct=100 * (nl - lin) / lin if lin > 1e-6 else np.nan, mkt_share=mkt)
+        est = glob.glob(os.path.join(d, f"*_estimators_{tag}_s{seed:03d}_w360_summary.csv"))
+        if est:
+            s = pd.read_csv(est[0]); best = s.loc[s.groupby("method").sharpe.idxmax()].set_index("method").sharpe
+            r.update(dkkm=best[[k for k in RFF if k in best.index]].max(), fmr=best.get("fm", np.nan), ff=best.get("ff", np.nan),
+                     linear=best[[k for k in LINEAR if k in best.index]].max(), capm=best.get("mkt_est", np.nan))
+            r["fair_gap"] = r["dkkm"] - best[[k for k in FAIR if k in best.index]].max()
+        rows.append(r)
+    return pd.DataFrame(rows)
+
+
+def economy(tag):
+    s = seed_rows(tag)
+    if s.empty:
+        return None
+    e = s[s.get("dkkm", pd.Series(dtype=float)).notna()] if "dkkm" in s else s.iloc[0:0]
+    out = dict(tag=tag, model=E[tag][0], what=E[tag][2], n_oracle=len(s), n=len(e), eval=bool(s["eval"].all()),
+               sr_max=s.sr_max.mean(), lin_ceiling=s.lin_ceiling.mean(), room=s.room.mean(), room_pct=s.room_pct.mean(), mkt_share=s.mkt_share.mean())
+    for c in ("dkkm", "fmr", "ff", "linear", "capm", "fair_gap"):
+        out[c] = e[c].mean() if len(e) else np.nan
+    out["fair_gap_sd"] = e.fair_gap.std(ddof=1) if len(e) > 1 else np.nan
+    out["pos"] = int((e.fair_gap > 0).sum()) if len(e) else 0
+    return out
+
+
+def fmt(v, p=3, sign=False):
+    if v is None or (isinstance(v, float) and np.isnan(v)):
+        return "--"
+    return f"{v:+.{p}f}" if sign else f"{v:.{p}f}"
+
+
+HEAD = ["model", "economy", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear",
+        "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
+HEAD_MD = ["model", "economy", "SR_max", "market %", "linear ceiling", "room", "room % lin",
+           "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
+
+
+def row_cells(r, md=False):
+    dag = "" if r["eval"] else ("†" if md else "$^\\dagger$")
+    what = r["what"] if not md else re.sub(r"\$|\\%|\\times|\\tilde |\\max|\\gamma|\\|_\{|\}|\{", lambda m: {"$": "", "\\%": "%", "\\times": "x", "\\tilde ": "", "\\max": "max", "\\gamma": "gamma", "\\,": " ", "\\": "", "_{": "_", "}": "", "{": ""}[m.group(0)], r["what"].replace("\\,", " "))
+    name = f"`{r['tag']}`" if md else f"\\texttt{{{r['tag']}}}"
+    return [r["model"], f"{name}{dag} -- {what}", fmt(r["sr_max"]), fmt(100 * r["mkt_share"], 0) + ("%" if md else "\\%"),
+            fmt(r["lin_ceiling"], 3),
+            fmt(r["room"], 3, True), fmt(r["room_pct"], 0), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]),
+            fmt(r["capm"]), fmt(r["fair_gap"], 4, True) + (f" ({fmt(r['fair_gap_sd'], 3)})" if not np.isnan(r["fair_gap_sd"]) else ""),
+            f"{r['pos']}/{r['n']}" if r["n"] else "--"]
+
+
+def reduced_rows():
+    sys.path.insert(0, os.path.join(HERE, "reduced"))
+    import rf_table                                                   # noqa: E402
+    df = rf_table.load(SCREEN)
+    # the FIXED-TOTAL-PRICE ladders (kfh_ / lfh_: lam ~ 1/sqrt(K), SR_max held); K = 1 is the same economy under both normalisations
+    pick = [("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
+            ("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
+            ("kfh_sq_1", "K=1, pure curvature (squares) of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
+            ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
+            ("lfh_L5_K1_n0", "K=1 product of latent states, no observation noise"), ("lfh_L5_K2_n0", "K=2"), ("lfh_L5_K3_n0", "K=3"), ("lfh_L5_K5_n0", "K=5"), ("lfh_L5_K10_n0", "K=10"),
+            ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10")]
+    out = []
+    for name, what in pick:
+        sub = df[df.name == name]
+        if sub.empty:
+            continue
+        m = sub.mean(numeric_only=True)
+        out.append(dict(name=name, what=what, n=len(sub), sr_max=m["sr_max_eval"], mkt=m["mkt_share"], lin=m["lin_ceiling_eval"],
+                        room=m["room_eval"], room_pct=100 * m["room_eval"] / m["lin_ceiling_eval"], dkkm=m["dkkm"], fmr=m["fm"], ff=m["ff"],
+                        linear=max(m["linrank"], m["linrank_m"]), capm=m["mkt_est"], gap=m["fair_gap"], gap_sd=sub["fair_gap"].std(ddof=1),
+                        pos=int((sub["fair_gap"] > 0).sum())))
+    return out
+
+
+def inject(path, key, block):
+    """replace the text between <!-- TABLE:key --> and <!-- /TABLE:key --> in a markdown file (left alone if absent)"""
+    if not os.path.exists(path):
+        return False
+    t = open(path).read(); m1, m2 = f"<!-- TABLE:{key} -->", f"<!-- /TABLE:{key} -->"
+    if m1 not in t or m2 not in t:
+        return False
+    i, j = t.index(m1) + len(m1), t.index(m2)
+    t = t[:i] + "\n" + block.strip("\n") + "\n" + t[j:]
+    tmp = path + ".tmp"; open(tmp, "w").write(t); os.replace(tmp, path); return True
+
+
+NOTE_MD = ("Columns: SR_max, the linear ceiling and the room are the population "
+           "investor's conditional Sharpe over the evaluation window (room = best nonlinear ceiling minus the linear ceiling, "
+           "and room % lin = room as a percentage of the linear ceiling); DKKM, FMR, FF, linear (the best of rank and level "
+           "regressions, with and without the market) and CAPM (the estimated market line) are out-of-sample Sharpe ratios at "
+           "the 360-month window; fair gap = DKKM minus the best of (FMR, FF, linear, CAPM), mean (sd) across seeds; "
+           "+ = seeds with a positive fair gap. A dagger marks an oracle that predates the evaluation-window ceilings.")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default=os.path.join(os.path.dirname(HERE), "docs", "campaign_tables"), help="directory for the per-group .md/.tex files")
+    ap.add_argument("--report", default=os.path.join(os.path.dirname(HERE), "docs", "CAMPAIGN_REPORT_2026-10-11.md"), help="markdown report whose TABLE markers are filled")
+    a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
+    econ = {t: economy(t) for t in E}
+    allmd = [NOTE_MD, ""]
+    for key, title, blurb, tags in GROUPS:
+        rows = [econ[t] for t in tags if econ.get(t)]
+        md = ["| " + " | ".join(HEAD_MD) + " |", "|" + "---|" * len(HEAD_MD)]
+        md += ["| " + " | ".join(row_cells(r, md=True)) + " |" for r in rows]
+        tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{title}. {blurb}}}",
+               "\\resizebox{\\textwidth}{!}{\\begin{tabular}{ll" + "r" * (len(HEAD) - 2) + "}\\hline",
+               " & ".join(HEAD) + " \\\\\\hline"]
+        tex += [" & ".join(row_cells(r)) + " \\\\" for r in rows]
+        tex += ["\\hline\\end{tabular}}\\end{table}"]
+        open(os.path.join(a.out, key + ".md"), "w").write("\n".join(md) + "\n")
+        open(os.path.join(a.out, key + ".tex"), "w").write("\n".join(tex) + "\n")
+        allmd += [f"### {title}", "", blurb, ""] + md + [""]
+        print(key, "injected" if inject(a.report, key, "\n".join(md)) else "no marker in the report")
+    # the reduced form
+    rr = reduced_rows()
+    h = ["configuration", "SR_max", "market %", "linear ceiling", "room", "room % lin", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
+    md = ["| " + " | ".join(h) + " |", "|" + "---|" * len(h)]
+    tex = ["\\begin{table}[htbp]\\centering\\footnotesize",
+           "\\caption{Reduced form: priced factors on observed characteristics against products of latent states. Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; L = number of latent states, products of their pairs.}\\label{tab:rf}",
+           "\\resizebox{\\textwidth}{!}{\\begin{tabular}{lr" + "r" * (len(h) - 2) + "}\\hline",
+           " & ".join(["configuration", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]) + " \\\\\\hline"]
+    for r in rr:
+        cells = [f"{r['name']} -- {r['what']}", fmt(r["sr_max"]), fmt(100 * r["mkt"], 0), fmt(r["lin"]), fmt(r["room"], 3, True),
+                 fmt(r["room_pct"], 0), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]), fmt(r["capm"]),
+                 fmt(r["gap"], 4, True) + f" ({fmt(r['gap_sd'], 3)})", f"{r['pos']}/{r['n']}"]
+        md.append("| " + " | ".join(cells) + " |")
+        tex.append(" & ".join(c.replace("_", "\\_") if i == 0 else c for i, c in enumerate(cells)) + " \\\\")
+    tex += ["\\hline\\end{tabular}}\\end{table}"]
+    open(os.path.join(a.out, "rf.md"), "w").write("\n".join(md) + "\n"); open(os.path.join(a.out, "rf.tex"), "w").write("\n".join(tex) + "\n")
+    allmd += ["### Reduced form", ""] + md + [""]
+    print("rf", "injected" if inject(a.report, "rf", "\n".join(md)) else "no marker in the report")
+    open(os.path.join(a.out, "ALL.md"), "w").write("\n".join(allmd) + "\n")
+    print("wrote", a.out)
+
+
+if __name__ == "__main__":
+    main()

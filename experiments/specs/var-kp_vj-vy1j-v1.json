@@ -1,0 +1,114 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vj-vy1j-v1",
+ "title": "KP14 with a CRASH-ONLY cash-flow factor: one type, cash flows x e^{0.07 y}, y's Gaussian shocks unpriced, a priced crash of y to -3.5 sd at 1%/month (weight e^2)",
+ "question": "Group 1, harmonized: does a priced crash in a factor every firm is exposed to create room or a gap on its own, with no interaction?",
+ "notes": "Campaign 2026-10-14. Built on the single-type 3a economy vy1 with gamma_v 2.5 -> 0, so the crash is the only priced part of y. Pairs with bvy1j (BGN) and gvy1j (GS21).",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vy1-v1",
+  "changes": [
+   "params {'type_share': [1.0], 'type_bv': [0.07], 'gamma_v': 0.0, 'bv_comp': 1.2, 'pj': 0.01, 'gj': 2.0} (parent: {'type_share': [1.0], 'type_bv': [0.07], 'gamma_v': 2.5, 'bv_comp': 1.2}); own tables under prefix vy1j"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vj",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.07
+  ],
+  "gamma_v": 0.0,
+  "bv_comp": 1.2,
+  "pj": 0.01,
+  "gj": 2.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vy1j"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vj/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.07
+     ],
+     "gamma_v": 0.0,
+     "bv_comp": 1.2,
+     "pj": 0.01,
+     "gj": 2.0
+    },
+    "args": {
+     "prefix": "vy1j"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vy1j",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kpj (BOP_VERIFY_KPJ_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.3644268.vy1j.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "bc672fa7f78b0c56",
+  "integ": "a16d7e643e5efd59"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "2081a7075991123d4949a9faa4a519d720e32f3978ff94be027a8539bbdcebfa"
+}

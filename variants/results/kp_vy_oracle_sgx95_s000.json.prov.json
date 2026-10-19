@@ -1,0 +1,73 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "kp_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "0",
+  "--tag",
+  "sgx95",
+  "--eval_window",
+  "360",
+  "--levels"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants/kp_vy",
+ "env": {
+  "KP_PARAM_OVERRIDES": "{\"type_share\":[0.34,0.33,0.33],\"type_bv\":[0.02,0.07,0.14],\"gamma_v\":2.5,\"bv_comp\":1.2,\"gamma_x\":0.95}",
+  "KP_VY_PREFIX": "sgx95",
+  "MKL_NUM_THREADS": "8",
+  "NUMEXPR_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "SLURMD_NODENAME": "qgpu0604",
+  "SLURM_ARRAY_JOB_ID": "9055168",
+  "SLURM_ARRAY_TASK_ID": "2",
+  "SLURM_CPUS_PER_TASK": "8",
+  "SLURM_JOB_ID": "9055869"
+ },
+ "when": "2026-10-07T19:26:38-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0604",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 0 --tag sgx95 --eval_window 360 --levels",
+ "inputs": [
+  {
+   "stage": "G",
+   "solve_id": "f843790a674670d0",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2383177
+  },
+  {
+   "stage": "integ",
+   "solve_id": "405bd461aa1d0ee4",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "extra": {
+  "spec_id": null,
+  "engine": "oracle",
+  "spec_check": "not requested",
+  "env_check": "not requested",
+  "readback": "verified",
+  "eval_window": 360
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "model": "kp_vj",
+ "tag": "vyj25",
+ "seed": 3,
+ "prov": "kp_vj_estimators_vyj25_s003_w360_summary@nogit",
+ "spec_id": "var-kp_vj-vyj25-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "ebd264bb27c7afb1",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2383964
+  },
+  {
+   "stage": "integ",
+   "solve_id": "fd625cf6b572d1e6",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "panel": "kp_vj_panel_vyj25_s003.parquet"
+}

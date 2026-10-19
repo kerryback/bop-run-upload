@@ -1,0 +1,122 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25k70-v1",
+ "title": "KP14 vyg25 with the priced state's mean reversion kappa_y 0.35 -> 0.7 (half-life 12 months), nothing else changed",
+ "question": "Does the speed of the priced state move the fair gap in KP14 (finding 12's BGN ladder), or is the gap flat in speed as the reduced-form screen predicts?",
+ "notes": "vyg25k70. kappa_y 0.7.\n\nK3 (docs/NEXTUP.md item 1): vyg25 with ONE parameter changed, kappa_y, the mean-reversion speed of the priced state y. sigma_y = sqrt(2 kappa_y) moves with it so the stationary sd stays 1. Types, shares, exposures, bv_comp and gamma_v 2.5 are vyg25's.\n\nWHY NOW. Two predictions disagree about this knob. (i) BGN's finding 12 -- the fair gap monotone in switching speed, -0.0038 -> +0.0025 -> +0.0079 -- says the gap should RISE with kappa_y. (ii) The reduced-form screen (docs/REDUCED_FORM.md, 2026-10-07): across a 60-cell half-life x price x curvature cross and a 10-seed speed ladder, the fair gap is FLAT in the state's half-life from 6 to 120 months and scales with the price of the state's risk and with curvature of the value footprint; vyg30k70 (kappa 0.7 AND gamma 3.0) came back at +0.0159 against vyg25's +0.0148 with room up 24%, which is consistent with price and not speed. This pair isolates kappa_y at vyg25's price.\n\nIS IT CLEAN? Checked from parameters_kp14.py at these parameters before any solve (2026-10-07). The instantaneous premium by type at y = 0, gamma_v sigma_y dlogV/dy, is 1.7 / 6.2 / 13.1 %/yr at kappa 0.15, 1.7 / 6.4 / 13.9 at 0.35 (vyg25) and 1.5 / 5.6 / 12.3 at 0.70: the top-to-bottom spread moves by -7% / 0 / -11%, so the premium ladder is held to within 11% by kappa_y alone. A0 at y = 0 by type (4.06, 4.19, 4.37) / (4.05, 4.20, 4.39) / (4.09, 4.21, 4.39) and type_theta (1, 1.22, 1.57) / (1, 1.23, 1.61) / (1, 1.20, 1.54): the level footprint of the type in value is unchanged to within 4%. rho_ty and const_ty positive for every type, A0 finite and positive. The saturating Girsanov shift gamma_v sigma_y / kappa_y is 9.13 b / 5.98 b / 4.23 b; the W-form solve grid spans the Q-stationary distribution (y_solve -17.2..11.6 at 0.15), so it is inside the solver's domain.\n\nHALF-LIVES. kappa_y 0.15: 55 months, 6.5 half-lives per 360-month window. 0.35 (vyg25): 24 months, 15. 0.70: 12 months, 30. The screen's cross spanned 6 to 120 months.\n\nMEASURED FOOTPRINT OF THE TYPE, vyg30k70's ten saved panels (2026-10-07, scratch): in units of the within-type cross-sectional sd of log size, the type ladder enters log size as +2.28 x standardised exposure plus +0.10 x its square, with no dependence on y (slope +0.001, corr 0.01); type ordering by size is monotone in 100% of months. So KP14's economy is a LEVEL-footprint economy, not the rotating one docs/RESULTS.md:422 describes ('at y = 0 value does not reveal the type monotonically' does not hold at bv_comp 1.2). Whatever produces its gap is not the state-dependent visibility of the type.\n\nPREDICTION (2026-10-07, before any solve; the screen's).\n(a) Both economies have a positive fair gap at t >= 2.\n(b) The fair gap is FLAT in kappa_y: |gap(k70) - gap(k15)| < 0.010 on the paired per-seed difference (same seed = same aggregate path offset and same firm draws), and neither differs from vyg25's +0.0148 by more than 0.010.\n(c) room within 25% of vyg25's +0.0820 in both; SR_max between 0.35 and 0.75; oracle mean expected excess return between 2.5% and 9% a year.\n(d) winning DKKM penalty interior in at least 8 of 10 seeds, or a flat tail on materiality.\nFALSIFIED (the screen's speed claim is wrong in KP14) if the paired difference gap(k70) - gap(k15) exceeds +0.010 at t >= 2 across seeds: that is finding 12's prediction and would mean speed converts room in a structural model as it does not in the toy. If (c) fails the economy is off-calibration and nothing else in it should be read.\n\nSOLVE CORRECTNESS GATE, required before any seed: every G type under the 1e-6 relative-residual gate; the CIR integral stage raises on lost density mass and must not; A(y) matches the risk-neutral closed form of tests/test_risk_neutral_pricing.py below 1e-4 AT THESE PARAMETERS; validate_vy.py shows realised and expected returns agreeing by type within sampling error (variants/klc/verify_solves.py, with BOP_VERIFY_KP_SPEC naming this spec).\n\nPLATFORM. Built as one chain (G then integ) on Quest with variants/klc/solve_kp_klc.sh, so the integ id is the one these G bytes produce here. The G id is printed before the solve; the integ id is filled in after the build.\n\nPRECOMMITMENT STATUS, STATED HONESTLY. Authored 2026-10-07 on Quest by Alexander Ober's Claude session. variants/precommit_spec.py REFUSES to run because two tracked files under variants/ carry uncommitted edits from the 2026-10-05 session (run_seeds_slurm.sh's three new cases, validate_vy.py's vector-state fix), and no commit is authorised, so the ids below were read from the real build's log rather than computed in a throwaway worktree, and `precommitted` is false. The prediction and falsifier above were written before the build was submitted; the job log carries the timestamps.\n\nRESULTS LOCATION. Seeds write to BOP_RESULTS_DIR (/kellogg/proj/axa3203/bop_runs/results), NOT to variants/results.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v4",
+  "supersedes": null,
+  "superseded_by": null,
+  "changes": [
+   "kappa_y 0.35 -> 0.7 (sigma_y = sqrt(2 kappa_y) moves with it)",
+   "prefix vyg25 -> vyg25k70"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2,
+  "kappa_y": 0.7
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25k70"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2,
+     "kappa_y": 0.7
+    },
+    "args": {
+     "prefix": "vyg25k70"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "K3 in docs/NEXTUP.md; proposed 2026-10-07 on Quest",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25k70",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.9036074.vyg25k70.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "1805ea8b974209b4da33d2d89ae70cd0252f90b82aff7397e6bf6af38e7bcf9b",
+ "expected_solves": {
+  "G": "c4309e59cf61afd2",
+  "integ": "d2cae3b84e02db1e"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null
+}

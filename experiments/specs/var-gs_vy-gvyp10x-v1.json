@@ -1,0 +1,148 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyp10x-v1",
+ "title": "GS21 product economy (gvyp10) with a SECOND nonlinear loading, a curvature in productivity on the priced shock x: a larger factor model",
+ "question": "Does a priced second factor make a fair gap in GS21 when the exposure is the PRODUCT of two within-firm states that two different characteristics reveal, so the premium is bilinear in the ranks?",
+ "notes": "GROUP 4 (larger factor models) in GS21, which had no such cell. gvyp10 (exposure = productivity x coupon on the priced state y) plus a second nonlinear loading on the already-priced productivity shock x: the x loading becomes gs_bx + gs_bx2 (z~^2 - 1)/sqrt(2) with gs_bx2 1.0, a curvature in productivity that is a distinct cross-sectional pattern from the y loading's product. No second chain is needed. The reduced-form latent ladder (finding 21) says room and gap rise with the number of interaction-loaded factors; this is its structural test at K = 2.\\n\\nPRE-CHECK (low resolution, 2026-10-12, gsshape.py): ranks R2 0.51 / pairwise products 0.94 / market 49% / cs-sd of the premium 4.9 %/yr, against gvyp10's 0.48 / 0.90 / 51% / 4.6: the second loading adds a little nonlinear dispersion. gs_bx2 0.3 and 0.6 are between.\\n\\nPRECOMMITMENT STATUS: precommitted=false; id read from the Quest solve log before any seed runs. Mechanism probe.\\n\\nPREDICTION (2026-10-12, before the run): room above gvyp10's +0.194 and a fair gap at or above +0.0196; FALSIFIED as 'a second interaction factor adds' if the fair gap is below gvyp10's on the same seeds in 7 of 10.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_bv [0.1] x gs_bzb 1.0 z~ b~: productivity x coupon exposure, single type",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv gs_bzb z~ b~ y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "gs_bzl": 0.0,
+  "gs_bzi": 0.0,
+  "gs_bzb": 1.0,
+  "gs_bx2": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.1
+   ],
+   "gs_bc": [
+    0.0
+   ],
+   "gs_bi": [
+    0.0
+   ],
+   "gs_bk": [
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvyp10xa"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyp10xa",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzi": 0.0,
+     "gs_bzb": 1.0,
+     "gs_bx2": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyp10xa",
+  "GS_VY_BV": "0.1",
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BK": "0.0",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyp10x",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvyp10xa": "8b64c10c154d6c9a"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "6a96267ee7480b60582cdd47c6dfa763e149af1a9fad2f2c0bd32050f4f46928"
+}

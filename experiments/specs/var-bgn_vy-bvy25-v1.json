@@ -1,0 +1,119 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvy25-v1",
+ "title": "BGN with a priced AR(1) state y and three exposure types: vyg25's construction in BGN",
+ "question": "Does a priced second factor with heterogeneous firm exposures create a fair complexity gap in BGN, as it does in KP14?",
+ "notes": "THE KP14 CONSTRUCTION ONE MODEL OVER (2026-10-07). vyg25 is the project's only KP14 economy with a fair gap positive in ten seeds of ten (+0.0148), and its mechanism -- a priced stationary state y, three firm types loading cash flows as e^{b_f y}, a y=0 level compensation bv_comp 1.2, price gamma_v 2.5, kappa_y 0.35 -- had never been built in BGN or GS21: BGN has no firm type at all (its project-beta continuum is the same distribution for every firm) and GS21's exposure path (gx7, bx7) loaded types on the EXISTING state x, not on a new priced one. This spec adds exactly vyg25's ingredients.\n\nLADDER. KP14's type_bv (0.02/0.07/0.14) HALVED. Calibration on a 120-firm panel (validate_bgn_vy.py, 2026-10-07 22:50 CDT): at the literal KP ladder the type premia are 9.0/15.3/26.0 %/yr with SR_max 0.60 and a mean premium of 17 %/yr -- far above the 4-11 %/yr band every reported economy sits in; at the halved ladder they are 8.7/11.7/16.5 %/yr (bgnbase: 8.4 on the same panel, 7.0 over ten seeds) with SR_max 0.49, which is vyg25's 0.495. The halved ladder is the one whose attainable Sharpe matches the economy it copies. type_theta (1, 1.115, 1.293); the regime block is inert at gmult [1,1].\\n\\nCHECKS BEFORE SUBMISSION. Project-value Euler equation with y: worst 2e-14 at every (r, y, beta, s, type). J* fixed-point residual 9e-8. Reduction to bgn_gam at zero exposure on one seed: prices within 1.9e-3 (the DP against the closed form's 950-period truncation), expected returns within 2e-5, SR_max to 1e-4. Realised vs expected by type within 2.3 se on the calibration panel, the same offset the zero-exposure economy shows on that seed.\\n\\nPRECOMMITMENT STATUS: precommitted=false. The producer is new and the working tree is dirty (the other Quest work), so precommit_spec.py refuses; the id is read from the Quest build log by fill_spec_ids.py and this spec is the record of the parameters BEFORE the seeds ran.\\n\\nPREDICTION (2026-10-07, before the run). The reduced-form screen says only static curvature of the premium in the ranks, priced, makes a fair gap; a y-exposure ladder in BGN is a LEVEL sort (type_theta) with a y-rotating premium, i.e. the BGN/GS state signature (room mostly linear-in-state, linrank_s takes it). So: room above bgnbase's +0.027 (expect +0.05 to +0.10, SR_max about 0.49), room_s well below room, fair gap between -0.005 and +0.010, NOT above vyg25's +0.0148. FALSIFIED as 'the KP mechanism ports' if the fair gap exceeds +0.010 in 8 of 10 seeds; CONFIRMED as a BGN-signature economy if room_s/room < 0.5.",
+ "lineage": {
+  "parent_spec": "var-bgn_gam-bgnbase-v3",
+  "changes": [
+   "new model directory variants/bgn_vy (nests bgn_gam at type_bv [0]; gmult [1,1] inert)",
+   "y: AR(1) kappa_y 0.35/yr, unit sd, priced at gamma_v 2.5 (per unit Brownian per sqrt-year, kp_vy's convention)",
+   "three types in shares [0.34, 0.33, 0.33] with exposures [0.01, 0.035, 0.07], bv_comp 1.2",
+   "J*_f(r, y, s) solved as a dynamic programme (321 x dy/4 grid, tol 1e-7)"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "jstar_vy_file": "Jstar_vy_bvy25.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "jstar_vy_file": "Jstar_vy_bvy25.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-07 (docs/NEXTUP.md addendum); built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvy25",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.9073869.Jstar_vy_bvy25.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "9902868399eaa6e9"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "c515fc131af73eaf8c0a6fc511cbe5a6efd215fd5c6d85adfe519fd6c9a99f3b"
+}

@@ -1,0 +1,127 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_bx-gq25-v1",
+ "title": "GS21 with a QUADRATIC price of productivity risk: gamma(x) = min(0.5 (1 + 0.25 (x/sd(x))^2), 1.5), one type",
+ "question": "Group 2, harmonized with kpq (KP14): does a price of risk that rises quadratically with the distance of the aggregate state from its mean create room or a gap?",
+ "notes": "Campaign 2026-10-14. gsbase with gamma_x -> gamma_x (1 + 0.25 x~^2), x~ = x / stationary sd, capped at 3 gamma_x (gs_gamma_hi 1.5); the form 1 + q s^2 is shared with kpq and BGN. Solved by variants/gs_bx/gs_solve_gam.py (gs_gamma_quad).",
+ "lineage": {
+  "parent_spec": "var-gs_bx-g28-v4",
+  "changes": [
+   "gs_gamma_slope 0.28 -> 0",
+   "gs_gamma_quad 0.25, gs_gamma_hi 1.0 -> 1.5"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_bx",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_ashift_ladder": "none (single type, gs_bx = 1.0)",
+  "gs_price_of_risk": "gamma_x_linear_clipped"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": 910
+ },
+ "params": {
+  "gmreg": [
+   1.0,
+   1.0
+  ],
+  "gs_gamma_quad": 0.25,
+  "gs_gamma_hi": 1.5
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bx": [
+    1.0
+   ],
+   "gs_ashift": [
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gq25"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gq25",
+    "producer": "variants/gs_bx/gs_solve_gam.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gmreg": [
+      1.0,
+      1.0
+     ],
+     "gs_gamma_quad": 0.25,
+     "gs_gamma_hi": 1.5
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_BX_SOLDIRS": "sol_gq25",
+  "GS_BX_BETAS": "1.0",
+  "GS_BX_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "solve_script": "variants/klc/solve_gs_klc.sh (GSBX_SPEC)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gq25",
+  "verified_by": "variants/klc/verify_solves.py gs (BOP_VERIFY_GS_SPEC)"
+ },
+ "expected_solves": {
+  "sol_gq25": "a4d1b1e283f3d66c"
+ },
+ "precommitted": false,
+ "reused_solves": {
+  "sol_g28": "var-gs_bx-g28-v3"
+ },
+ "solves_pending": null,
+ "spec_hash": "54f08020a8efbf3dac3b20d9ea40c4ca34d6a7f0976f068192466539530b93d9"
+}

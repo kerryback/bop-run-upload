@@ -1,0 +1,86 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "perr_rel": 3.27502733280442e-06,
+    "qerr_rel": 6.533413084904988e-06,
+    "sweeps": 3324,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 204.68799314940384
+  },
+  "artifacts": [
+    {
+      "bytes": 402496040,
+      "path": "variants/gs_vy/sol_gvy25b/solution.npz",
+      "sha256": "b2b1f18232b942839c4913b56b5f452eccfe160323d559a2fba95994003115a3"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "environment": {
+    "hostname": "qgpu3001",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "4",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_array_job_id": "9083764",
+    "slurm_array_task_id": "1",
+    "slurm_cpus_per_task": "4",
+    "slurm_job_id": "9083811"
+  },
+  "extra": {
+    "outdir": "sol_gvy25b"
+  },
+  "inputs": {},
+  "model": "gs_vy",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "NY": 9,
+    "bnum": 20,
+    "bv_comp": "1.2",
+    "delta": "0.006666666666666667",
+    "dt": "0.08333333333333333",
+    "g": "1.14",
+    "gamma_v": "2.5",
+    "gamma_x": "0.5",
+    "gs_ashift": "0.2746986260985246",
+    "gs_bv": "0.05",
+    "gs_bx": "1.0",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "kappa_e": "0.025",
+    "kappa_y": "0.35",
+    "lam_y": "0.7216878364870322",
+    "phi": "0.4",
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_y": "0.9712545752136729",
+    "rho_z": "0.9654893846056297",
+    "s_y": "0.23804316861970193",
+    "sigma_m": 5,
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.2",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "y_mult": "2.5",
+    "znum": 200
+  },
+  "recorded_at": "2026-10-07T23:55:29-0500",
+  "solve_id": "254459e817068530",
+  "sources": {
+    "variants/gs_vy/gs_solve_vy.py": "0184b49ef9fda96239c847c2c23970545d0b668ca93b6b86a0a12a18d03fde25"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_gvy25b"
+  ],
+  "total_bytes": 402496040
+}

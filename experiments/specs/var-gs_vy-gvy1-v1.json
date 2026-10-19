@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvy1-v1",
+ "title": "GS21 with the priced y chain and ONE type, production exposure 0.05 (group 3a: exposure through operating leverage only)",
+ "question": "Does a priced second factor make a fair gap in GS21 when firm exposure runs through operating leverage (convex in profitability) instead of a level sort?",
+ "notes": "Campaign 2026-10-14. gvy25 collapsed to its middle type (gs_bv 0.05); the GS21 analogue of vy1 / bvy1ch. Exposure to y varies across firms only through operating leverage.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_fc 0.0: a fixed operating cost per unit capital (0 in gvy25 and gsbase)",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "cost-side: fixed cost gs_fc * exp(gs_bc y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.2,
+  "gs_fc": 0.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.05
+   ],
+   "gs_bc": [
+    0.0
+   ],
+   "gs_bi": [
+    0.0
+   ],
+   "gs_bk": [
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvy1a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvy1a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvy1a",
+  "GS_VY_BV": "0.05",
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BK": "0.0",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvy1",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvy1a": "7b4de04abee1f745"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "432fef03038860f2c61b42a60c184c650b291d72e90640fcf0eea472ec8848fa"
+}

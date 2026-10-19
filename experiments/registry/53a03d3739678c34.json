@@ -1,0 +1,99 @@
+{
+  "achieved": {
+    "exit": "cycle_capped",
+    "perr_rel": 1.9382648678543655e-05,
+    "qerr_rel": 2.007096176248032e-05,
+    "sweeps": 5600,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 172.31152007918462
+  },
+  "artifacts": [
+    {
+      "bytes": 93877659,
+      "path": "variants/gs_bx/sol_gw25/solution.npz",
+      "sha256": "4ed6042045b1020fc959b9f566bb71d5a58b25b79cc283a64c01ef17e32b9a24"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "environment": {
+    "hostname": "qgpu0518",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "4",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_array_job_id": "8731697",
+    "slurm_array_task_id": "1",
+    "slurm_cpus_per_task": "4",
+    "slurm_job_id": "8731707"
+  },
+  "extra": {
+    "outdir": "sol_gw25"
+  },
+  "inputs": {},
+  "model": "gs_bx",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "bnum": 20,
+    "delta": "0.006666666666666667",
+    "g": "1.14",
+    "gamma_x": "0.5",
+    "gmreg": {
+      "__array__": [
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "gs_ashift": "0.0",
+    "gs_bx": "2.5",
+    "gs_gamma_hi": "1.5",
+    "gs_gamma_lo": "0.05",
+    "gs_gamma_slope": "0.4",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "kappa_e": "0.025",
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "phi": "0.4",
+    "psw": {
+      "__array__": [
+        "0.020833333333333332",
+        "0.041666666666666664"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_z": "0.9654893846056297",
+    "sigma_m": 5,
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.2",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "znum": 200
+  },
+  "recorded_at": "2026-10-06T03:43:59-0500",
+  "solve_id": "53a03d3739678c34",
+  "sources": {
+    "variants/gs_bx/gs_solve_gam.py": "c717306ab23566a96fe40fc115189321eaa095a2a5feb664e571464654b2f99f"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_gw25"
+  ],
+  "total_bytes": 93877659
+}
