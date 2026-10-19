@@ -12,7 +12,8 @@ rets, erets, yreg, ftype = arr[15], arr[16], arr[-2], arr[-1]
 rows = []
 for t in range(burnin + 5, T - 2, 2):
     _, max_sr, mu, Sig, _ = loop(t - 1)
-    rows.append((t, yreg[t], max_sr, np.nanstd(mu), np.linalg.eigvalsh(Sig).min()))
+    # yreg is (T+1, nstates) since the vector-state generalisation; tercile on the first state
+    rows.append((t, float(np.ravel(yreg[t])[0]), max_sr, np.nanstd(mu), np.linalg.eigvalsh(Sig).min()))
 rows = np.array(rows)
 q = np.quantile(rows[:, 1], [1/3, 2/3]); terc = np.digitize(rows[:, 1], q)
 print(f"type_bv={list(type_bv)}")

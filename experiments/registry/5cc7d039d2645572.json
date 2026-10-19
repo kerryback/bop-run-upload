@@ -1,0 +1,357 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "grid": [
+      321,
+      21
+    ],
+    "iters": 1403,
+    "rel_change": 9.934319780255828e-08,
+    "tol_requested": 1e-07
+  },
+  "artifacts": [
+    {
+      "bytes": 593777,
+      "path": "variants/bgn_vy/Jstar_vy_bvyj25.npz",
+      "sha256": "8c412e8f0b52669915a49b80d53ec851b08cdae621dfeb224538f7367d1eafc6"
+    }
+  ],
+  "committable": true,
+  "env_params": {
+    "JSTAR_TOL": "1e-07"
+  },
+  "environment": {
+    "hostname": "qgpu3001",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "8",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_cpus_per_task": "8",
+    "slurm_job_id": "9588088"
+  },
+  "extra": {
+    "out": "Jstar_vy_bvyj25.npz"
+  },
+  "inputs": {},
+  "model": "bgn_vy",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "CHAIN": true,
+    "Cbar": "-3.7",
+    "Chat": "np.float64(0.024723526470339388)",
+    "I": 1,
+    "M_y": {
+      "__array_sha256__": "60d76ea16c23a5b982d376a0dd29bc1885826449f889cffca180cffe49303793",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "NY": 21,
+    "PQ_y": {
+      "__array_sha256__": "0772b6646b491ee2bea734eb501825e5dc1bdfe0e02de0be9cef116a1207caba",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "P_y": {
+      "__array_sha256__": "f8dc5e2da84b062849e0bcf6594f923acf02d7129ab61af778aa9fe40b6fffe3",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "Preg": {
+      "__array__": [
+        "0.9791666666666666",
+        "0.020833333333333332",
+        "0.041666666666666664",
+        "0.9583333333333334"
+      ],
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "_NORMALISED": {
+      "__set__": [
+        "\"type_share\""
+      ]
+    },
+    "_discarded": [],
+    "_eta": {
+      "__array_sha256__": "09199264c751aac2505f827bad1fc0842179e8f25e0d3735f92899e2e8df247d",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "_ginc": "np.float64(0.3500000000000001)",
+    "_i": 20,
+    "_jump": {
+      "__array_sha256__": "505a3cb585b5177826128ef46fca4e62dd85a5a3b58d0dbf21f7f039c130346c",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "_mu": "np.float64(3.399391013247855)",
+    "_ov": {
+      "bv_comp": "1.2",
+      "gamma_v": "2.5",
+      "gj": "2.0",
+      "jstar_vy_file": "Jstar_vy_bvyj25.npz",
+      "kappa_y": "0.35",
+      "pj": "0.01",
+      "type_bv": [
+        "0.01",
+        "0.035",
+        "0.07"
+      ],
+      "type_share": [
+        "0.34",
+        "0.33",
+        "0.33"
+      ],
+      "y_kind": "chain"
+    },
+    "_pre_override_names": {
+      "__set__": [
+        "\"Cbar\"",
+        "\"I\"",
+        "\"NY\"",
+        "\"__builtins__\"",
+        "\"__cached__\"",
+        "\"__doc__\"",
+        "\"__file__\"",
+        "\"__loader__\"",
+        "\"__name__\"",
+        "\"__package__\"",
+        "\"__spec__\"",
+        "\"beta_zr\"",
+        "\"burnin\"",
+        "\"bv_comp\"",
+        "\"bx_seed\"",
+        "\"chars\"",
+        "\"dt\"",
+        "\"gam_seed\"",
+        "\"gamma_grid\"",
+        "\"gamma_v\"",
+        "\"gj\"",
+        "\"gmult\"",
+        "\"json\"",
+        "\"jstar_file\"",
+        "\"jstar_tol\"",
+        "\"jstar_vy_file\"",
+        "\"kappa\"",
+        "\"kappa_y\"",
+        "\"n_quad_r\"",
+        "\"n_quad_y\"",
+        "\"n_r_solve\"",
+        "\"names\"",
+        "\"np\"",
+        "\"os\"",
+        "\"p01\"",
+        "\"p10\"",
+        "\"pi\"",
+        "\"pj\"",
+        "\"prob_in_money_targets\"",
+        "\"rbar\"",
+        "\"sigma_r\"",
+        "\"sigma_z\"",
+        "\"sigmaj_scale_cap\"",
+        "\"sigmaj_size_elast\"",
+        "\"sigmaj_width\"",
+        "\"type_bv\"",
+        "\"type_share\"",
+        "\"y_kind\"",
+        "\"y_max\"",
+        "\"y_seed_tag\"",
+        "\"y_sub_solve\""
+      ]
+    },
+    "_ptau": {
+      "__array_sha256__": "f11c86b6298c1bedb64c1a926b430830f1127b34e4523c5ac4bc15cb6aa1b912",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "beta_zr": "-0.00014",
+    "burnin": 400,
+    "bv_comp": "1.2",
+    "bx_seed": 777,
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "dt": "0.08333333333333333",
+    "gam_seed": 555,
+    "gamma_grid": {
+      "__array__": [
+        "0.5",
+        "0.6",
+        "0.7",
+        "0.7999999999999999",
+        "0.8999999999999999",
+        "0.9999999999999999",
+        "1.0999999999999999"
+      ],
+      "shape": [
+        7
+      ]
+    },
+    "gamma_v": "2.5",
+    "gj": "2.0",
+    "gmult": {
+      "__array__": [
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "jstar_file": "Jstar.csv",
+    "jstar_tol": "1e-07",
+    "jstar_vy_file": "Jstar_vy_bvyj25.npz",
+    "kappa": "0.95",
+    "kappa_y": "0.35",
+    "lam_y": "0.7216878364870322",
+    "n_quad_r": 100,
+    "n_quad_y": 12,
+    "n_r_solve": 321,
+    "names": [
+      "smb",
+      "hml",
+      "cma",
+      "rmw",
+      "umd"
+    ],
+    "nchars": 5,
+    "ntypes": 3,
+    "p01": "0.020833333333333332",
+    "p10": "0.041666666666666664",
+    "pi": "0.99",
+    "pi_y": {
+      "__array__": [
+        "0.040463676053527124",
+        "0.040241267194436055",
+        "0.04550119821906482",
+        "0.052020042621515356",
+        "0.06040182000604588",
+        "0.07038160307015098",
+        "0.08095464207414753",
+        "0.0902508493519572",
+        "0.09587839958727801",
+        "0.0957141840955542",
+        "0.08883053502071896",
+        "0.07604173652461212",
+        "0.05969923058148594",
+        "0.042808351926348784",
+        "0.02795376920412204",
+        "0.016586848130619565",
+        "0.008929280591411976",
+        "0.0043564122731206524",
+        "0.0019252623667849456",
+        "0.0007702009061574937",
+        "0.00029069020103513447"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "pj": "0.01",
+    "prob_calm": "0.6666666666666666",
+    "prob_in_money_targets": [
+      "0.1",
+      "0.05"
+    ],
+    "rbar": "0.006236",
+    "rho_y": "0.9712545752136729",
+    "s_y": "0.23804316861970193",
+    "sigma_r": "0.002",
+    "sigma_z": "0.4",
+    "sigmaj_scale_cap": "2.0",
+    "sigmaj_size_elast": "0.0",
+    "sigmaj_width": "0.3",
+    "type_bv": {
+      "__array__": [
+        "0.01",
+        "0.035",
+        "0.07"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "type_share": {
+      "__array__": [
+        "0.34",
+        "0.33",
+        "0.33"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "y_grid": {
+      "__array__": [
+        "-3.5",
+        "-3.15",
+        "-2.8",
+        "-2.45",
+        "-2.1",
+        "-1.75",
+        "-1.4000000000000004",
+        "-1.0500000000000003",
+        "-0.7000000000000002",
+        "-0.3500000000000001",
+        "0.0",
+        "0.34999999999999964",
+        "0.6999999999999993",
+        "1.0499999999999998",
+        "1.3999999999999995",
+        "1.75",
+        "2.0999999999999996",
+        "2.4499999999999993",
+        "2.8",
+        "3.1499999999999995",
+        "3.5"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "y_kind": "chain",
+    "y_max": "3.5",
+    "y_mean_Q": "-3.3589445153440676",
+    "y_seed_tag": 1,
+    "y_sub_solve": 4
+  },
+  "recorded_at": "2026-10-12T09:36:30-0500",
+  "solve_id": "5cc7d039d2645572",
+  "sources": {
+    "variants/bgn_vy/parameters.py": "700017658f052aefa5a515c12755b9090032a042ee1ef00d808ab76c5f1cabe8",
+    "variants/bgn_vy/vasicek_vy.py": "494499c2cff3f455fb797e7c486c5043a4ac170a1ec1a0efb251216f3bc2604a"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "Jstar_vy_bvyj25"
+  ],
+  "total_bytes": 593777
+}

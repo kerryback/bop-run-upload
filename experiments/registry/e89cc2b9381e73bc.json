@@ -1,0 +1,132 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "grid_points": 81,
+    "tol_requested": 0.0003
+  },
+  "artifacts": [
+    {
+      "bytes": 4705,
+      "path": "variants/bgn_gam/Jstar_g0235df.csv",
+      "sha256": "0e3c49ee9ff8703f19e3c3edd259601185c2e06f0a95447f34ae797a94e482e8"
+    }
+  ],
+  "committable": true,
+  "env_params": {
+    "JSTAR_TOL": "0.0003"
+  },
+  "environment": {
+    "hostname": "qgpu0518",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "8",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_cpus_per_task": "8",
+    "slurm_job_id": "8731761"
+  },
+  "extra": {
+    "out": "Jstar_g0235df.csv"
+  },
+  "inputs": {},
+  "model": "bgn_gam",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "Cbar": "-3.7",
+    "Chat": "np.float64(0.024723526470339388)",
+    "I": 1,
+    "Preg": {
+      "__array__": [
+        "0.8333333333333334",
+        "0.16666666666666666",
+        "0.08333333333333333",
+        "0.9166666666666666"
+      ],
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "_ov": {
+      "gmult": [
+        "0.2",
+        "3.5"
+      ],
+      "jstar_gam_file": "Jstar_g0235df.csv",
+      "p01": "0.16666666666666666",
+      "p10": "0.08333333333333333"
+    },
+    "beta_zr": "-0.00014",
+    "burnin": 400,
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "gam_seed": 555,
+    "gamma_grid": {
+      "__array__": [
+        "0.5",
+        "0.6",
+        "0.7",
+        "0.7999999999999999",
+        "0.8999999999999999",
+        "0.9999999999999999",
+        "1.0999999999999999"
+      ],
+      "shape": [
+        7
+      ]
+    },
+    "gmult": {
+      "__array__": [
+        "0.2",
+        "3.5"
+      ],
+      "shape": [
+        2
+      ]
+    },
+    "jstar_file": "Jstar.csv",
+    "jstar_gam_file": "Jstar_g0235df.csv",
+    "kappa": "0.95",
+    "names": [
+      "smb",
+      "hml",
+      "cma",
+      "rmw",
+      "umd"
+    ],
+    "nchars": 5,
+    "p01": "0.16666666666666666",
+    "p10": "0.08333333333333333",
+    "pi": "0.99",
+    "prob_calm": "0.3333333333333333",
+    "prob_in_money_targets": [
+      "0.1",
+      "0.05"
+    ],
+    "rbar": "0.006236",
+    "sigma_r": "0.002",
+    "sigma_z": "0.4",
+    "sigmaj_scale_cap": "2.0",
+    "sigmaj_size_elast": "0.0",
+    "sigmaj_width": "0.3"
+  },
+  "recorded_at": "2026-10-05T19:21:00-0500",
+  "solve_id": "e89cc2b9381e73bc",
+  "sources": {
+    "variants/bgn_gam/parameters.py": "d0a53f4f901ac8927178015b307f4eea98522475a96b5f4a022fed388676aa63",
+    "variants/bgn_gam/vasicek.py": "a9d3a6a5161d6913ec5dd08c4f96b454a740a844b341dc10dea3a3ea34af2679"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "Jstar_g0235df"
+  ],
+  "total_bytes": 4705
+}

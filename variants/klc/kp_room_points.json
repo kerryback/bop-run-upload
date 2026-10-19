@@ -1,0 +1,12 @@
+{
+ "_about": "KP14 oracle-only ROOM screen, 2026-10-07. Each point is vyg25 (var-kp_vy-vyg25-v4: three types 0.02/0.07/0.14, gamma_v 2.5, bv_comp 1.2, kappa_y 0.35) with ONE parameter changed. Only the population ceilings are measured (run_oracle.py, no estimators), seeds 0 and 1, so nothing here is a gap and nothing goes in RESULTS.md: it ranks candidate economies by room_s, the part of room that is nonlinear in the ranks GIVEN the state, which is what converts to a fair gap in KP14 (docs/REDUCED_FORM.md). Feasibility (rho_ty > 0, const_ty > 0, A0 finite) was checked from parameters_kp14.py before submission; gamma_z -0.60 FAILS it (rho_ty min -0.017, the K5 wall), -0.45 is the edge (+0.013).",
+ "base": {"type_share": [0.34, 0.33, 0.33], "type_bv": [0.02, 0.07, 0.14], "gamma_v": 2.5, "bv_comp": 1.2},
+ "points": [
+  {"prefix": "sgz45", "override": {"gamma_z": -0.45}, "why": "price of the IST shock z, which only growth options load on: the premium spread between assets in place and options, i.e. the price of the within-type option-share curvature"},
+  {"prefix": "sgz15", "override": {"gamma_z": -0.15}, "why": "the same knob the other way: a sign check on gamma_z"},
+  {"prefix": "sgx95", "override": {"gamma_x": 0.95}, "why": "price of the common productivity shock x (0.69 in KP14): scales every premium, options more than assets"},
+  {"prefix": "ssl30", "override": {"sigma_lambda": 3.0}, "why": "dispersion of project arrival rates across firms (2.0): widens the within-type spread of the option share"},
+  {"prefix": "sal75", "override": {"alpha": 0.75}, "why": "project returns to scale (0.85): alpha/(1-alpha) 5.67 -> 3.00, flattens the option value's convexity"},
+  {"prefix": "sg30",  "override": {"gamma_v": 3.0}, "why": "the clean price-of-y point: vyg30k70 moved gamma_v AND kappa_y; this is gamma_v 3.0 at kappa_y 0.35"}
+ ]
+}

@@ -17,7 +17,7 @@ import runstamp
 import provenance
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx"], required=True)
+ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx", "bgn_vy", "gs_vy", "kp_vj", "bgn_q"], required=True)
 ap.add_argument("--tag", type=str, default="baseline")
 ap.add_argument("--window", type=int, default=120)
 ap.add_argument("--rff", type=str, default="36,360,3600")
@@ -126,8 +126,9 @@ start, end = int(months_m.min()), int(months_m.max())
 eval_months = [m for m in range(start + args.window, end + 1) if m in midx]
 t0 = time.time()
 model_for_rff = "bgn"   # all three economies pass conditioning variables to the RFF (see common/dkkm_functions.py)
-_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"]}
-dkkm.RF_COLS = list(_RF_ALL[args.model])
+_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"],
+           "bgn_vy": ["rf_stand", "y_stand", "y2_stand"], "gs_vy": ["rf_stand", "y_stand", "y2_stand"], "kp_vj": ["rf_stand"], "bgn_q": ["rf_stand", "y_stand", "y2_stand"]}
+dkkm.RF_COLS = [c for c in _RF_ALL[args.model] if c in panel.columns]   # y2_stand exists only on a two-chain economy
 if args.rf_cols is not None:
     dkkm.RF_COLS = ([] if args.rf_cols.strip().lower() in ("", "none")
                     else [c.strip() for c in args.rf_cols.split(",") if c.strip()])

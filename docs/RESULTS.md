@@ -1044,6 +1044,123 @@ which leaves gaps. Finding 10 sits beside finding 8 because it is the same mecha
    not a ladder in plausibility, and the economy that would settle this is a third point between
    1.8 and 2.5 rather than one above it.
 
+## The 2026-10 Quest campaign: a priced state with exposure types in all three models, and what makes it work
+
+Full write-up: `docs/CAMPAIGN_REPORT_2026-10-11.md` (and `.tex`). Results live in `/kellogg/proj/axa3203/bop_runs/results`
+(aggregate with `aggregate_seeds.py --results <that dir>`), NOT in `variants/results`, so the tables above are unchanged;
+the specs are in `experiments/specs/` (`var-bgn_vy-*`, `var-gs_vy-*`, `var-kp_vy-vyg25k15/k70`, `var-kp_vy-kpgam`). The
+first column below is written `model tag` with a space on purpose: these rows are not in `economy_table.csv` and the
+unified-table parser must not read them as such. Ten seeds unless marked.
+
+| economy | what | SR_max | market | room | room_s | fair gap | + |
+|---|---|---|---|---|---|---|---|
+| kp_vy vyg25k15 | vyg25 with kappa_y 0.15 (K3) | 0.51 | 13% | +0.076 | +0.072 | +0.0072 | |
+| kp_vy vyg25k70 | vyg25 with kappa_y 0.70 (K3) | 0.51 | 10% | +0.083 | +0.080 | +0.0094 | |
+| bgn_vy bvy25 | BGN with a priced AR(1) state y, three types (0.01/0.035/0.07), bv_comp 1.2 | 0.60 | 41% | +0.062 | +0.059 | +0.0148 | 9/10 |
+| bgn_vy bvyc0 | bvy25 with the compensation off | 0.47 | 41% | +0.066 | +0.063 | +0.0104 | 9/10 |
+| bgn_vy bvyc10 | bvy25 with exact compensation | 0.61 | 39% | +0.071 | +0.068 | +0.0096 | 7/10 |
+| bgn_vy bvysg | signed ladder -0.07/0/+0.07, no compensation | 0.50 | 28% | +0.120 | +0.110 | -0.0199 | 2/10 |
+| gs_vy gvy25 | GS21 with a priced 9-node y chain, three types on production (0.015/0.05/0.1), compensated | 0.73 | 86% | +0.014 | +0.013 | -0.0041 | 2/10 |
+| gs_vy gvyc25 | the y factor on a fixed operating cost (3 seeds) | 0.68 | 92% | +0.005 | +0.005 | -0.0024 | |
+| gs_vy gvys25 | signed cost exposure +0.4/0/-0.4 (6 seeds) | 0.62 | 69% | +0.014 | +0.012 | -0.0032 | 2/6 |
+| gs_vy gvyi25 / gvyk25 / gvyj25 | investment cost / floating coupon / 4x larger option + investment cost (oracle only) | | 93-94% | +0.004 to +0.008 | = room | stopped | |
+| gs_vy gvyp10 | exposure = productivity x coupon, 0.1, no type | 0.65 | 8% | +0.194 | +0.189 | +0.0196 | 9/10 |
+| gs_vy gvyp20 | the same at 0.2 | 0.78 | hedge | +0.039 | +0.033 | +0.0215 | 9/10 |
+| kp_vy vyg25 | vyg25 re-run on Quest (the tables rebuilt here) | 0.50 | 11% | +0.082 | +0.079 | +0.0136 | 9/10 |
+| bgn_vy bvych0 | bvy25 with y as a 21-node Tauchen chain (the chain control) | 0.58 | 37% | +0.055 | +0.051 | +0.0076 | 8/10 |
+| bgn_vy bvyj25 | bvych0 plus a priced crash of y (1%/month to -3.5 sd, weight e^2) | 0.54 | 38% | +0.054 | +0.046 | +0.0066 | 9/10 |
+| gs_vy gvyp10j | gvyp10 plus the same priced crash | 0.54 | 21% | +0.197 | +0.178 | +0.0301 | 10/10 |
+| kp_vj vyj25 | vyg25 plus the same priced crash (Poisson) | 0.55 | 10% | +0.104 | +0.094 | +0.0080 | 8/10 |
+| gs_vy gvyp05 / gvyp075 / gvyp15 | the product exposure at 0.05 / 0.075 / 0.15 | 0.42 / 0.56 / 0.74 | 60% / 28% / hedge | +0.128 / +0.287 / +0.119 | +0.127 / +0.280 / +0.108 | +0.0194 / +0.0765 / +0.0780 | 10/10 / 10/10 / 10/10 |
+| gs_vy gvyp10x | gvyp10 plus a curvature loading on x | 0.59 | 17% | +0.215 | +0.207 | +0.0486 | 10/10 |
+| bgn_vy bvyk2 | bvych0 with a SECOND priced chain, three loading vectors (1,0),(0,1),(1,1)/sqrt2, price 2.5/sqrt2 each | 0.64 | 36% | +0.071 | +0.065 | +0.0152 | 10/10 |
+| gs_vy gvypk2 | gvyp10 with a second chain, two product types (one per chain) | 0.48 | 27% | +0.212 | +0.197 | +0.0510 | 9/10 |
+| gs_vy gvypk3 | gvypk2 plus a third type loading on both | 0.58 | 6% | +0.212 | +0.205 | +0.0470 | 9/10 |
+| kp_vy vym2t3 | vyg25 with two priced states, three loading vectors | 0.47 | 12% | +0.090 | +0.088 | +0.0075 | 8/10 |
+| kp_vy vy1 | HARMONIZED 3a: one type exposed to y (0.07) | 0.47 | 12% | +0.019 | +0.018 | -0.0050 | 1/10 |
+| bgn_vy bvy1ch | HARMONIZED 3a: one type, chain (0.035) | 0.34 | 54% | +0.029 | +0.027 | +0.0017 | 7/10 |
+| gs_vy gvy1 | HARMONIZED 3a: one type on production (0.05) | 0.64 | 95% | +0.002 | +0.002 | -0.0036 | 1/10 |
+| kp_vj vy1j | HARMONIZED group 1: crash-only factor (vy1 with gamma_v 0 + the crash) | 0.34 | 21% | +0.012 | +0.010 | -0.0057 | 2/10 |
+| bgn_vy bvy1j | HARMONIZED group 1: crash-only factor (bvy1ch with gamma_v 0 + the crash) | 0.32 | 50% | +0.033 | +0.030 | +0.0003 | 6/10 |
+| gs_vy gvy1j | HARMONIZED group 1: crash-only factor (gvy1 with gamma_v 0 + the crash) | 0.38 | 96% | +0.001 | +0.001 | -0.0027 | 0/10 |
+| kp_vy kpq | HARMONIZED group 2: gamma_x x min(1 + 0.25 y^2, 3), y unpriced | 0.26 | 53% | +0.003 | +0.003 | -0.0021 | 4/10 |
+| gs_bx gq25 | HARMONIZED group 2: gamma(x) = min(0.5(1 + 0.25 x~^2), 1.5) | 0.34 | 95% | +0.002 | +0.002 | -0.0038 | 0/10 |
+| gs_vy gvyz10 | HARMONIZED 3a (replaces gvy1): one type, output x exp(0.10 z~ y), the product economy without the coupon | 0.85 | 50% | +0.043 | +0.042 | -0.0170 | 1/10 |
+| gs_vy gvyz10j | HARMONIZED group 1 (replaces gvy1j): gvyz10 with gamma_v 0 + the crash, same +-3.5 grid | 0.39 | 82% | +0.011 | +0.005 | -0.0047 | 1/10 |
+| bgn_q bq25 | HARMONIZED group 2: BGN baseline with sigma_z x min(1 + 0.25 s^2, 3), s the standardized rate, 7 bins (variants/bgn_q) | 0.41 | 36% | +0.049 | +0.041 | +0.0034 | 4/10 |
+| bgn_vy bvych41 | bvych0 on a 41-node chain (resolution probe) | 0.56 | 38% | +0.052 | +0.049 | +0.0086 | 8/10 |
+| kp_vy kpgam | gamma_x x logistic(y) 1..3, y unpriced (now 10 seeds) | 0.39 | 65% | +0.005 | +0.004 | -0.0053 | 1/10 |
+| gs_vy gvypk3 | two chains, three product types (20 seeds) | 0.61 | 8% | +0.226 | +0.218 | +0.0563 | 19/20 |
+
+18. **The KP14 construction ports to BGN at the same gap and with the same signature; it does not port to GS21 through
+    any level exposure.** `bvy25` is vyg25's economy in BGN (variants/bgn_vy: the J* table is a dynamic programme on an
+    (r, y) grid because Jamshidian's decomposition needs one factor; the moments take the y'-expectation first and the
+    r'-expectation second) and returns +0.0148, 9/10, with 96% of its room nonlinear given the state and the
+    ranks-times-state benchmark taking 14% of the gap. The visibility ladder (bvyc0, bvyc10) is flat within noise:
+    hiding the type is not the lever. In GS21 (variants/gs_vy: gs_solve_reg's regime replaced by a PRICED Tauchen chain)
+    seven wirings of the same state -- production, fixed cost, signed cost, investment cost, floating coupon, a four
+    times larger option, and fundamentals-driven default with a state-dependent recovery -- leave the premium 82-89%
+    linear in the ranks with the market spanning 69-94% of SR_max, because every GS21 state (productivity, leverage,
+    capital) is revealed one-for-one by a characteristic and a single-project firm has nothing to multiply a type with.
+
+19. **The condition for a capturable gap: the exposure must be a PRODUCT of two firm variables that different
+    characteristics reveal.** The eighth GS21 wiring writes it in the open -- exposure = standardized productivity x
+    standardized coupon, no type (`gvyp10`) -- and gives room +0.194 with the market at 8% and a fair gap of +0.0196,
+    9/10, the largest of any structural economy. KP14's gap is type x growth-option share (finding 12's measured
+    footprint: within-type corr(mu, bm) 0.70, ranks x state adding nothing); BGN's is type x project portfolio (a
+    linear fit on the ranks explains 44-59% of the premium, type dummies 94%). A product of two monotone functions of
+    different ranks is the smallest non-additive structure; a linear model in the ranks fits only additive functions.
+    Room is necessary, not sufficient: `bvysg` doubles bvy25's room and un-spans the market and returns -0.0199.
+
+20. **The speed of the priced state does not move the gap (K3).** vyg25k15 +0.0072, vyg25k70 +0.0094, paired per seed
+    +0.0021, t 0.6, 5/10: the reduced-form screen's prediction, against finding 12's reading of the BGN regime ladder.
+    Both sit below vyg25's +0.0148; re-run on Quest (2026-10-13, tables rebuilt there) vyg25 returns +0.0136, 9/10,
+    so the hump at kappa 0.35 holds on one platform.
+
+21. **More priced factors raise the gap only when they load on interactions of partly hidden firm states.** Two
+    reduced-form ladders (`variants/reduced`, rf_model.py nf / nlat): factors loaded by nonlinear functions of the
+    OBSERVED characteristics make the fair gap more negative as K grows (K 1 -> 8: -0.011 -> -0.043 at fixed total
+    price), and a fixed amount of curvature split over more shocks is harder to learn (squares: +0.52 at K=1 ->
+    +0.12 at K=8); factors loaded by PRODUCTS of latent AR(1) states that the characteristics see only up to
+    observation noise make room and gap rise monotonically with K (+0.031 at K=1 -> +0.257 at K=10 at fixed total
+    price) and further with the noise (+0.093 -> +0.285 at noise 1). Finding 15 (vym3) is the first row structurally.
+
+22. **One change at a time, the same in every model (2026-10-14 to 17; `docs/CAMPAIGN_REPORT_2026-10-11.md` is now
+    organised around it).** Each model's spine is its baseline and one interaction economy (3b: `bvych0`, `gvyp10`,
+    `vyg25`). Collapsing the interaction economy to ONE type (`bvy1ch`, `gvy1`, `vy1`: every firm has the middle
+    exposure to the same priced y, so exposure varies only through one firm state; in GS21 the product economy's
+    productivity exposure without the coupon, `gvyz10`) leaves room of 10% / 5% / 5% of the linear ceiling and gaps of
+    +0.002 / -0.017 / -0.005: the 3a-to-3b step changes nothing but the second dimension of
+    heterogeneity, and that is what makes the gap in all three models.
+
+23. **A crash and a quadratic price of risk create no room on their own.** A crash-only cash-flow factor (the one-type
+    economy with y's Gaussian shocks unpriced and a 1%/month jump to -3.5 sd weighted e^2: `bvy1j`, `gvyz10j`, `vy1j`)
+    gives room of 12% / 3% / 4% of the linear ceiling and gaps of +0.000 / -0.005 / -0.006. The same crash added to the
+    interaction economies (`bvyj25`, `gvyp10j`, `vyj25`) leaves their gaps at the control's in BGN and GS21 and halves
+    KP14's (+0.0080 against +0.0136). A quadratic price of the model's own risk, gamma x min(1 + 0.25 s^2, 3) with s the
+    standardised state (`gq25` on GS21's x; `kpq` on an unpriced outside state, since KP14's own states are random
+    walks), gives room under 1% and gaps of -0.004 / -0.002; in BGN (`bq25`, variants/bgn_q: the price of the market
+    shock binned to seven equiprobable levels of the rate, g_j 1.00 to 1.68, seven bases in place of the regime's two,
+    exact at q = 0) room is 14% and the gap +0.003 (4/10). The regime economy g0235f (+0.0079) is the group's one small
+    positive number and a ranks-times-state benchmark takes it. A price that moves with the state rotates the premium and leaves it
+    linear in the ranks within a state.
+
+24. **A second priced state scales the gap where exposures are interactions and not where they are sorts.** Two
+    independent priced states, three types with loading vectors (1,0), (0,1), (1,1)/sqrt2 at the 3b sizes, total price
+    held at 2.5: BGN `bvyk2` doubles the gap (+0.0152, 10/10, room 18%); GS21 `gvypk3` raises it from +0.0196 to
+    +0.0560 (19/20 seeds, sd 0.053, room 65%; the two-type `gvypk2` +0.0510); KP14 `vym2t3` raises room from 24% to 28% and
+    lowers the gap from +0.0136 to +0.0075, as three states did (finding 16). In BGN and GS21 the second state
+    multiplies the same interaction; in KP14 each type's exposure to a given state is a sort within that state. The
+    reduced form's latent-product ladder (finding 21) is the same statement with the structure controlled. The GS21
+    product ladder: room is hump-shaped in the product's size (45% / 111% / 47% / 22% / 6% of the linear ceiling at
+    0.05 / 0.075 / 0.10 / 0.15 / 0.20) while the gap is +0.019 / +0.077 / +0.020 / +0.078 / +0.022; a second nonlinear
+    loading on x (`gvyp10x`) gives +0.049. The chain's resolution is not what separates `bvych0` (+0.0076) from the
+    Gaussian `bvy25` (+0.0148): `bvych41` on 41 nodes returns +0.0086, and the difference is within noise (sd 0.016).
+    Reduced form: with loading directions orthogonal to size (rf_configs `kfo_`), the square ladder's gap is +0.52 /
+    +0.48 / +0.50 at K = 1 / 4 / 16, so finding 21's 'curvature split over more shocks is harder to learn' was
+    Fama-French's value-weighted legs picking up size^2 (market value is exp(size)); pure curvature neither grows nor
+    shrinks with K.
+
 ## Open proposals
 
 | proposal | scope | what it would decide | status |

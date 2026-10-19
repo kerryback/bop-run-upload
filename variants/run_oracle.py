@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "common"))
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx"], required=True)
+ap.add_argument("--model", choices=["bgn_gam", "kp_vy", "gs_bx", "bgn_vy", "gs_vy", "kp_vj", "bgn_q"], required=True)
 ap.add_argument("--N", type=int, default=300)
 ap.add_argument("--T", type=int, default=360, help="months after burn-in")
 ap.add_argument("--seed", type=int, default=0)
@@ -58,12 +58,22 @@ if args.model == "bgn_gam":
     import panel_functions as mod
     import sdf_compute as sdf
     ov_env = "BGN_PARAM_OVERRIDES"
-elif args.model == "kp_vy":
+elif args.model in ("kp_vy", "kp_vj"):
     from parameters_kp14 import *         # noqa
     import panel_functions_kp14 as mod
     import sdf_compute_kp14 as sdf
     chars = ["size", "bm", "agr", "roe", "mom"]; gamma_grid = np.arange(0.5, 1.1, 0.1)
     ov_env = "KP_PARAM_OVERRIDES"
+elif args.model in ("bgn_vy", "bgn_q"):
+    from parameters import *              # noqa
+    import panel_functions as mod
+    import sdf_compute as sdf
+    ov_env = "BGN_PARAM_OVERRIDES"
+elif args.model == "gs_vy":
+    import gs_sim_vy as mod
+    import gs_sim_vy as sdf
+    from gs_sim_vy import burnin, chars, gamma_grid
+    ov_env = "GS_SIM_OVERRIDES"
 else:  # gs_bx
     import gs_sim_bx as mod
     import gs_sim_bx as sdf
@@ -107,7 +117,7 @@ if args.spec:
 # misspelling against the names the module's source assigns, not against hasattr(),
 # which is useless once update() has created the key.
 import readback
-_pmod = {"bgn_gam": "parameters", "kp_vy": "parameters_kp14", "gs_bx": "gs_sim_bx"}[args.model]
+_pmod = {"bgn_gam": "parameters", "kp_vy": "parameters_kp14", "gs_bx": "gs_sim_bx", "bgn_vy": "parameters", "gs_vy": "gs_sim_vy", "kp_vj": "parameters_kp14", "bgn_q": "parameters"}[args.model]
 _rok, _rlines = readback.overrides_took_from_env(sys.modules[_pmod], ov_env)
 print("\n".join(_rlines), flush=True)
 if _rok is False:
@@ -190,8 +200,10 @@ d = len(chars)
 # (bgn_gam and gs_bx: the standardised rate/productivity state and the regime; kp_vy: the priced
 # state y); --rf_cols narrows that for a run whose economy does not use one of them, and the
 # choice travels in the oracle summary as `rf_cols` so a re-scoring can reproduce it.
-_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"]}
-rf_cols = list(_RF_ALL[args.model])
+_RF_ALL = {"bgn_gam": ["rf_stand", "gam_stand"], "gs_bx": ["rf_stand", "gam_stand"], "kp_vy": ["rf_stand"],
+           # bgn_vy / gs_vy: the model's own state (rate / productivity x) and the priced state y
+           "bgn_vy": ["rf_stand", "y_stand", "y2_stand"], "gs_vy": ["rf_stand", "y_stand", "y2_stand"], "kp_vj": ["rf_stand"], "bgn_q": ["rf_stand", "y_stand", "y2_stand"]}
+rf_cols = [c for c in _RF_ALL[args.model] if c in panel.columns]   # y2_stand exists only on a two-chain economy
 if args.rf_cols is not None:
     rf_cols = [] if args.rf_cols.strip().lower() in ("", "none") else [c.strip() for c in args.rf_cols.split(",") if c.strip()]
     _bad = [c for c in rf_cols if c not in _RF_ALL[args.model]]

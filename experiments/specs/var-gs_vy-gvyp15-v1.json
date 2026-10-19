@@ -1,0 +1,146 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyp15-v1",
+ "title": "GS21 with the priced y factor on a fixed OPERATING COST, three cost-exposure types",
+ "question": "Does a priced second factor make a fair gap in GS21 when the exposure is the PRODUCT of two within-firm states that two different characteristics reveal, so the premium is bilinear in the ranks?",
+ "notes": "MAGNITUDE LADDER of the product exposure (2026-10-12): see var-gs_vy-gvyp10-v1 for the construction (exposure gs_bv z~ b~, productivity x coupon, no type). Points 0.05 / 0.075 / 0.1 / 0.15 / 0.2; gvyp10 came back at fair gap +0.0196 (10 seeds, 9/10; room +0.194, market 8%) and gvyp20 at +0.0215 (9/10; room +0.039, the market a hedge). At low resolution gs_bv 0.15 gave ranks R2 0.30 / products 0.84 / market 34% / mean premium -1.8 %/yr. This point: gs_bv 0.15.\\n\\nPRECOMMITMENT STATUS: precommitted=false; id read from the Quest solve log by verify_gs_vy_klc.sh before any seed runs. Mechanism probe.\\n\\nPREDICTION (2026-10-12, before the run): room and the market's un-spanning rise with the exposure up to about 0.1 and the mean premium falls through zero beyond it; the fair gap is positive in at least 7 of 10 seeds at 0.075 and 0.15, and smaller at 0.05 (room below +0.10). FALSIFIED as a ladder if the gap is not monotone-then-flat in the exposure.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_bv [0.15] x gs_bzb 1.0 z~ b~: productivity x coupon exposure, single type",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv gs_bzb z~ b~ y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "gs_bzl": 0.0,
+  "gs_bzi": 0.0,
+  "gs_bzb": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.15
+   ],
+   "gs_bc": [
+    0.0
+   ],
+   "gs_bi": [
+    0.0
+   ],
+   "gs_bk": [
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvyp15a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyp15a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.15,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzi": 0.0,
+     "gs_bzb": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyp15a",
+  "GS_VY_BV": "0.15",
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BK": "0.0",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyp15",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvyp15a": "2fc8a7338900473e"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "4a68d7b426eb32c06ab975b1780bf3b93e6539bf5366bd0dc8d79bc83651d961"
+}

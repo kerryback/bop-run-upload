@@ -1,0 +1,78 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "kp_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "1",
+  "--tag",
+  "vym2t3",
+  "--spec",
+  "var-kp_vy-vym2t3-v1",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants/kp_vy",
+ "env": {
+  "KP_PARAM_OVERRIDES": "{\"type_share\": [0.34, 0.33, 0.33], \"type_bv\": [[0.02, 0.0], [0.0, 0.07], [0.0989949, 0.0989949]], \"gamma_v\": [1.76776695, 1.76776695], \"bv_comp\": 1.2}",
+  "KP_VY_PREFIX": "vym2t3",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "vym2t3",
+  "SLURMD_NODENAME": "qhimem0501",
+  "SLURM_ARRAY_JOB_ID": "3648810",
+  "SLURM_ARRAY_TASK_ID": "1",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "3649761",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-14T23:21:57-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qhimem0501",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_oracle.py --model kp_vy --N 500 --T 500 --seed 1 --tag vym2t3 --spec var-kp_vy-vym2t3-v1 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "G",
+   "solve_id": "195421619bc6f50d",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2385997
+  },
+  {
+   "stage": "integ",
+   "solve_id": "b58492dc11e112de",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "extra": {
+  "spec_id": "var-kp_vy-vym2t3-v1",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "verified",
+  "eval_window": 360
+ }
+}

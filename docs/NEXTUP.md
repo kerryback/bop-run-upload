@@ -55,16 +55,113 @@ plumbing, which is worth more than either result alone. If it does not, `g0235f`
 and this file should say so. Either outcome is worth the cost, which is the property the last four
 experiments lacked.
 
+**Addendum, 2026-10-07 (Quest).** Three things happened between the paragraph above and this line,
+and together they change what item 1 is for and what should follow it.
+
+1. **A reduced-form screen now exists** (`variants/reduced/`, `docs/REDUCED_FORM.md`): an exact
+   two-factor conditional economy scored with the project's own estimators, 137 s a seed. Across
+   a 10-seed validation ladder, a 60-cell cross, a 48-cell footprint grid at five seeds and a
+   round of regime x curvature, market-share, type-density and exposure-ladder configs, ONE thing
+   makes a fair gap: static curvature of the premium in the ranked characteristics, and its size
+   scales with the price of the curved component (q = 2: +0.01 at price 0.10, +0.05 at 0.30).
+   The state's speed (OU half-life 6 to 120 months, regime x0.2 to x4) does nothing; more types,
+   a larger market share, a steeper level footprint (`lev` 2) and more idiosyncratic noise all
+   subtract. In every positive cell `room_s` equals `room`: the gap is nonlinear in the ranks
+   GIVEN the state, which is KP14's `room_s` signature and not BGN's or GS21's.
+2. **vyg30k70's type footprint was measured** on its ten saved panels (`kp_footprint.py`, scratch):
+   the type enters log size as a monotone LEVEL (+2.28 within-type sd per standardised exposure,
+   no dependence on y), the true premium is DEcreasing in exposure (4.7 / 3.6 / 2.1 %/yr), ranks x y
+   adds nothing to the cross-sectional R^2 of the premium on five ranks (0.745 either way), and
+   within type corr(mu, bm) is 0.70. So KP14's gap is a static rank-nonlinearity of the
+   growth-option share, not the state-dependent visibility of the type that RESULTS.md:422
+   describes. `vyg25` and `vyg30k70` have it; `kpbase` has the same option share and no room,
+   because without y every premium is spanned by the market.
+3. **K3 is running** (jobs 9036074 solve, 9036076 seeds; both gates passed 15:35 and 15:56).
+   Its registered prediction is now the SCREEN's, not finding 12's: flat in `kappa_y`. It also
+   de-confounds `vyg30k70`, which moved `gamma_v` and `kappa_y` together and came back flat
+   against `vyg25` (+0.0159 vs +0.0148) while room rose 24%.
+
+What follows from the three. The levers the screen says subtract -- speed, regime timing, type
+density, exposure spacing, market share -- are struck below, which retires K1 for good and leaves
+K7 as a smoothness question rather than a lever. The lever the screen says works, the PRICE of the
+curved component, has in KP14 two candidates: `gamma_v` (the only one tried; vyx -> vyg25 moved
+the gap +0.0009 -> +0.0148) and the prices that set the spread between assets in place and growth
+options within a type, `gamma_z` and `gamma_x`, which have never been moved. A six-point
+ORACLE-ONLY room screen on `vyg25` (`variants/klc/kp_room_klc.sh`, job 9055168: `gamma_z` -0.45 and
+-0.15, `gamma_x` 0.95, `sigma_lambda` 3.0, `alpha` 0.75, and the clean `gamma_v` 3.0 at `kappa_y`
+0.35) ranks them by `room_s` at about an hour a point, and only the best point gets seeds. The
+room-is-not-the-prize constraint above still binds: KP14 has converted `room_s` to gap at 0.16 to
+0.18 in every economy that had any, so a point needs `room_s` near +0.15 to promise +0.025.
+
+A protocol note that is now on the critical path: only DKKM's features see the conditioning
+column in `run_estimators.py`; every linear method sees characteristics alone, so finding 12's
+"`linrank_m` carries interactions" is wrong per the code. `linrank_s` (ranks, state, ranks x state,
+unpenalised market; `variants/reduced/rescore_state.py`) must join the fair benchmark before any
+widened gap is written up. On the saved panels it costs KP14 little (vyg30k70 +0.0161 -> +0.0149)
+and takes BGN's gap below zero (g0235df -0.0051 -> -0.0060).
+
 ---
+
+
+**Addendum 2, 2026-10-07 evening (Quest): the KP14 construction ported to BGN and GS21.** `vyg25`'s
+ingredients -- a priced stationary state y, three firm types loading cash flows as `e^{b_f y}`, the y=0
+level compensation `bv_comp` 1.2, `gamma_v` 2.5, `kappa_y` 0.35 -- had never been built in the other two
+models (BGN has no firm type; GS21's ladder loaded types on its EXISTING state x). Two new model
+directories do exactly that, leaving every bgn_gam / gs_bx producer and id untouched:
+
+- `variants/bgn_vy/` -- y an AR(1) with `rho_y = exp(-kappa_y/12)`, priced at `lam_y = gamma_v sqrt(1/12)`
+  per monthly innovation; the bases `DA_f(r, y, s)`, `DB_f` carry the closed-form y factor
+  `E^Q[e^{b y_{t+k}}] = exp(b rho^k y + m_k)`; `J*_f(r, y, s)` is a dynamic programme on a 321 x (dy/4) grid
+  (Jamshidian needs one factor); the true moments take the y'-expectation first and the r'-expectation
+  second, so every table is 2-D. Checks: the project-value Euler equation WITH y holds to 2e-14 at every
+  (r, y, beta, s, type); the DP's fixed-point residual is 8e-8; at zero exposure the DP is within 1.9e-3 of
+  `Jstar_bgnbase.csv` (the closed form's own 950-period / 400-maturity truncation) and the panel reduces to
+  bgn_gam's on the same seed (prices 1.9e-3, expected returns 2e-5, SR_max 1e-4; `check_reduction.py`).
+- `variants/gs_vy/` -- gs_solve_reg's unpriced regime replaced by a PRICED 9-node Tauchen chain for y
+  (`My = exp(-lam_y eta - lam_y^2/2)`, renormalised); production `exp(x + z + gs_bv y + gs_ashift)` with
+  `gs_ashift = -bv_comp log W(gs_bv)` derived and applied in solver AND simulator (gs_bx's old ashift was
+  solver-only, which is why bx7 was flagged). At NY = 1 the solver reproduces gs_solve_reg at gmreg [1,1] to
+  4e-13 (`check_parity.py`). The smoothing convolution is evaluated in its exact cumulative form (1e-13
+  against the (z, x, b, 161) broadcast), which is what makes nine y-nodes cost ~5 s a sweep rather than 25.
+- Plumbing: `run_oracle.py` / `run_estimators.py` know `bgn_vy` and `gs_vy` (conditioning columns
+  `rf_stand`, `y_stand`); `runstamp._PATHS`, `precommit_spec._argv_for`, the protocol test's burn-in sites
+  and per-model precision keys; `klc/solve_bgn_vy_klc.sh`, `solve_gs_vy_klc.sh`, `verify_gs_vy_klc.sh`,
+  `verify_solves.py bvy|gvy`, seed cases `bvy25` / `gvy25`.
+
+**Calibration, and why the ladders are not KP14's literal numbers.** In BGN the y-exposure premium is
+large and increasing in b: at KP14's (0.02, 0.07, 0.14) the type premia are 9.0 / 15.3 / 26.0 %/yr with
+SR_max 0.60 and a 17 %/yr mean, far above the 4-11 %/yr band every reported economy sits in. At the
+HALVED ladder (0.01, 0.035, 0.07) they are 8.7 / 11.7 / 16.5 %/yr (bgnbase 8.4 on the same panel, 7.0 over
+ten seeds) and SR_max is 0.49 -- `vyg25`'s 0.495 -- so that is `bvy25`. GS21's ladder was set from a
+low-resolution calibration (xnum 41, znum 50, bnum 10, NY 9; the numbers are in the spec notes).
+
+**Registered predictions** are in the specs (`var-bgn_vy-bvy25-v1`, `var-gs_vy-gvy25-v1`): per the
+screen, a y-exposure ladder is a LEVEL sort with a y-rotating premium -- the BGN/GS state signature --
+so room should rise well above the baselines while `room_s` stays well below room and the fair gap stays
+between -0.005 and +0.010; a fair gap above +0.010 in 8 of 10 seeds falsifies that and says the KP
+mechanism ports. Jobs: BGN 9073869 (build + gate) -> 9073871 (seeds 0-9%3); GS 9083764 (three solves) -> 9083765 (ids + gate) -> 9083766 (seeds 0-9%3).
+Neither spec is precommitted (new producers, dirty tree); the ids are read from the build logs before any
+seed runs, and both specs were written before the solves.
 
 ## The queue
 
 | # | experiment | models | what it settles | cost | status |
 |---|---|---|---|---|---|
-| **1** | **K3 — `kappa_y` at 0.15 and 0.70** | **KP14** | **whether BGN's switching-speed ladder (finding 12) — the only loading-shape effect that has ever produced a gap — replicates in a second model** | **2 × 15 min + 20 seeds** | **ready; the cross-model twin, and now the only live item with a mechanism behind it** |
-| 2 | K7 — a third `gamma_v` point | KP14 | whether the gap is smooth or a threshold between `vyx` (+0.0009) and `vyg25` (+0.0148) | 20 min + 10 seeds | ready |
-| 3 | K1 — a continuum of exposure types | KP14 | — | 1.7 h + 30 h seeds | **parked — finding 16 shows density is real but not sufficient, so a continuum buys the density problem back for nothing** |
-| 4 | A second priced shock in GS21 | GS21 | — | new solver | **withdrawn — a pure K lever, and K is what findings 15 and 16 closed** |
+| ~~1~~ | ~~K3 — `kappa_y` at 0.15 and 0.70~~ | KP14 | — | done | **DONE 2026-10-08: k15 +0.0072, k70 +0.0094, paired +0.0021 t 0.6 5/10 — FLAT (finding 20). vyg25 re-run on Quest 2026-10-12 (job 9586694): DONE 2026-10-13, 10 seeds +0.0136 (sd 0.008, 9/10) against the original +0.0148 -- the hump at kappa 0.35 (k15 +0.0072, k70 +0.0094) holds on one platform** |
+| ~~2~~ | ~~K8 — the price of the curved channel: oracle-only room screen on `vyg25`~~ | KP14 | — | done | **DONE 2026-10-07: room_s gamma_z -0.15 +0.113, gamma_v 3.0 +0.106, sigma_lambda 3.0 +0.095, gamma_x 0.95 +0.089, alpha 0.75 +0.058; gamma_z -0.45 infeasible. None reaches the +0.15 bar; no seeds run** |
+| **B7 / G8** | **`bvyj25` / `gvyp10j` -- the priced crash in BGN's chain economy and in GS21's product economy (group 1)** | **BGN, GS21** | **whether a different distribution of the state's shocks moves the gap** | **done / running** | **bvyj25 DONE 2026-10-13: 10 seeds +0.0066 (9/10), room_s +0.046 = the control's (bvych0 +0.0076 / +0.051): nothing. gvyp10j at 7 seeds +0.034 (7/7) vs gvyp10 +0.020** |
+| ~~B5 / G5~~ | ~~`bvy25` / `gvy25` -- the KP14 construction in BGN and GS21~~ | BGN, GS21 | — | done | **DONE 2026-10-10: bvy25 +0.0148 (9/10, KP signature); gvy25 -0.0041 and six more GS21 level wirings null; the GS21 PRODUCT exposure `gvyp10` +0.0196 (9/10, room +0.194) — findings 18-19, docs/CAMPAIGN_REPORT_2026-10-11.md** |
+| **G6** | **GS21 product exposure: magnitude ladder 0.05 / 0.075 / 0.15 (`gvyp05`, `gvyp075`, `gvyp15`) and a SECOND nonlinear loading on x (`gs_bx2`, a curvature in productivity)** | **GS21** | **whether room and gap are monotone in the product's size, and whether a second interaction factor adds (finding 21 structurally)** | **4 single solves (~1 h) + 40 seeds** | **RUNNING 2026-10-12 (jobs 9586671-9586693); bx2 calibrating** |
+| **K9** | **`kpgam` — a counter-cyclical price of x-risk in KP14 (gamma_x x logistic(y), 1 to 3), the group-2 cell KP14 never had** | **KP14** | **whether a nonlinear price of risk makes a gap in KP14 as it marginally did in BGN (g0235f) and did not in GS21 (g28)** | **25 min + 10 seeds** | **RUNNING 2026-10-12: the first gate (9586999) failed only on the OU closed form for A(y), which does not hold when the price of risk moves with y; the gate now checks the A solve's own linear system (residual 1.5e-11); re-gated 9588533, seeds 9588534. ORACLE 3 seeds: SR_max 0.38, market 61%, room +0.006, room_s +0.005, mu 15.6%/yr -> NULL at the oracle stage (stop rule +0.02), seeds 3-9 cancelled, 0-2 kept as the record. Seeds 0-2 FINAL: fair gap -0.0018 (sd 0.0035, 1/3). Group 2 is null in all three models** |
+| -- | **Report restructured 2026-10-12 (user): per group, one table of the theoretical room vs the linear ceiling and the Sharpe of DKKM / FMR / FF / linear / CAPM, plus one reduced-form table; generated by `variants/campaign_tables.py` into `docs/campaign_tables/` and injected into the .md (markers) and .tex (\input). Re-run it and pdflatex when the seeds below finish.** | all | — | — | **standing** |
+| **F1-F7** | **Fixes of 2026-10-17: GS21 3a as the product without the coupon `gvyz10` and its crash twin `gvyz10j`; BGN quadratic price `bq25` (new `variants/bgn_q`); 41-node chain `bvych41`; reduced-form square ladder orthogonal to size (`kfo_`); `kpgam` to 10 seeds; `gvypk3` to 20** | **all three** | **close the seven defects of the harmonized design** | **4 solves + 50 seeds + a screen** | **DONE 2026-10-19: gvyz10 room 5% gap -0.017; gvyz10j 3% / -0.005; bq25 14% / +0.003; bvych41 +0.009 (= bvych0, chain resolution is not the lever); kfo square gap +0.5 at every K (the fall with K was the FF value-weighting artefact); kpgam -0.005 (10); gvypk3 +0.056 (19/20). Report final.** |
+| **H1-H5** | **Harmonized representatives (2026-10-14..17): 3a one type `vy1`/`bvy1ch`/`gvy1`; crash-only factor `vy1j`/`bvy1j`/`gvy1j`; quadratic price `kpq`/`gq25`; two states `vym2t3`/`gvypk3` (+ existing `bvyk2`)** | **all three** | **one change to a common spine per group, the same in every model** | **10 solves + 100 seeds** | **DONE 2026-10-17: 3a and crash-only null in every model (room 0-12%, gaps -0.006..+0.002); quadratic price null (room <1%); two states double BGN's gap (+0.015) and GS21's (+0.047, sd 0.045) and lower KP14's (+0.008 vs +0.014). Report restructured around these; docs/CAMPAIGN_REPORT_2026-10-11.{md,tex,pdf}** |
+| **K10** | **`vyj25` — a priced CRASH in KP14's state (`variants/kp_vj`: vyg25 with a Poisson jump of y to -y_max, 1%/month, priced e^2), the group-1 cell KP14 never had; the twin of `bvyj25` and `gvyp10j`** | **KP14** | **whether a different distribution of the priced state's shocks moves the gap in the one model whose gap is established** | **25 min + 10 seeds** | **DONE 2026-10-13: 10 seeds fair gap +0.0080 (sd 0.011, 8/10), room_s +0.094 (vyg25 Quest +0.0147 / +0.089): the crash adds room and HALVES the gap** |
+| **B6** | **`bvyk2` — TWO independent priced chains in BGN (21 x 21 joint nodes), three types whose loading vectors span them at bvych0's sizes, total price 2.5 split 2.5/sqrt(2) per chain; the group-4 cell BGN never had** | **BGN** | **whether a second priced state with a two-dimensional cross-section of exposures raises room and gap (the latent-product reduced form says yes; KP14's vym3 said no)** | **2 min + 10 seeds** | **DONE 2026-10-13: 10 seeds fair gap +0.0152 (sd 0.011, 10/10), room_s +0.065 vs bvych0 +0.0076 / +0.051: a second chain doubles BGN's gap** |
+| **G7** | **`gvypk2` — TWO independent priced chains in GS21 (5 x 5 joint nodes), two types each with the product exposure z~ b~ (0.1) to one chain; the group-4 cell GS21 never had (row 4 below, un-withdrawn now that the product exposure gives GS21 room)** | **GS21** | **the structural test of finding 21's monotonicity in K, in the model with the largest product room** | **2 solves of ~4 h + 10 seeds** | **RUNNING 2026-10-13 (seeds 9625199 after a gate re-run): 6 seeds fair gap +0.056 (sd 0.068, 5/6), room_s +0.196 (gvyp10 +0.020 / +0.189)** |
+| 3 | K7 — a third `gamma_v` point | KP14 | whether the gap is smooth or a threshold between `vyx` (+0.0009) and `vyg25` (+0.0148) | 20 min + 10 seeds | ready, but a smoothness question, not a lever: the screen's price ladder is linear |
+| ~~4~~ | ~~K1 — a continuum of exposure types~~ | KP14 | — | — | **STRUCK 2026-10-07 — the screen's density ladder is monotone negative (J 2 → 20: fair gap −0.016 → −0.024 at J 10, dense20 −0.009) on top of finding 16; more types at fixed N is a lever that subtracts** |
+| ~~4~~ | ~~A second priced shock in GS21~~ | GS21 | — | new solver | **withdrawn 2026-10-07 as a pure K lever; REVIVED 2026-10-12 as G7 above once the product exposure gave GS21 room: the joint-chain solver exists now (`NY2`, `gs_bv2`)** |
 | ~~0~~ | ~~PROBE — `vym3` at N=1000~~ | KP14 | — | done | **RUN 2026-09-29 — falsifier did NOT trip (finding 17); room +9 sigma, gap flat, N closed** |
 | ~~1~~ | ~~`vym3t3` — three priced states at three types~~ | KP14 | — | done | **RUN 2026-09-26 — GATE FALSIFIED (finding 16), but room is the largest in the file** |
 | ~~1~~ | ~~Decide the BGN regime closure~~ | BGN | — | none | **DONE 2026-09-23 — it does not stand** |
@@ -74,7 +171,11 @@ experiments lacked.
 | ~~—~~ | ~~Multi-factor term structure~~ | BGN | — | — | **WITHDRAWN — its premise is what `bgnzr` falsified** |
 
 ### 1. K3 — `kappa_y` at 0.15 and 0.70
-**Now the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
+**Running (2026-10-07). Its registered prediction is the screen's, flat in `kappa_y`, with finding 12's
+monotone rise as the falsifier; the spec files carry both** (`experiments/specs/var-kp_vy-vyg25k15-v1.json`,
+`vyg25k70`). The paragraph below is the motivation as written before the screen existed.
+
+**Was the best-motivated experiment in the file, and it is a cross-model replication.** Finding 12
 established the only loading-shape result that has ever produced a gap: in BGN, holding the
 stationary stress share fixed and scaling both switch probabilities together, the fair gap is
 MONOTONE in switching speed — -0.0038 → +0.0025 → **+0.0079**, seeds positive 4 → 8 → **10 of 10**.
@@ -305,6 +406,13 @@ it beat DKKM anyway. The 25-firms-per-type note in the old text ("worth checking
 committing") was the right worry and was not acted on; it is now item 1.
 
 ## Housekeeping, not experiments
+- **Add `linrank_s` to the fair benchmark in `run_estimators.py --fair_linear`** (ranks, the state, ranks x state,
+  unpenalised market, as `variants/reduced/rescore_state.py` scores it). Only DKKM's features see the conditioning
+  column today, so finding 12's "`linrank_m` carries interactions" is wrong per the code and the fair gap is
+  against a benchmark that is blind to what DKKM sees. Cheap, linear, and it changes BGN's sign.
+- `variants/reduced/rf_screen.py --full` used to write under the reduced run's file stem and overwrote 21 reduced-grid
+  records on 2026-10-07; it now writes `<name>_full`. The overwritten records were renamed to `_full` (they were
+  full-grid runs) and the reduced seeds re-run (job 9055069).
 - `zero_book_in_sdf_solve: true` is declared in all sixteen live specs and **read by nothing** — the same
   shape as the `burnin` field that said 200 while the code ran 400. `sdf_compute_kp14.py` still
   solves `ER` over all N firms with a ridge fallback that fires only on an exception, which is the

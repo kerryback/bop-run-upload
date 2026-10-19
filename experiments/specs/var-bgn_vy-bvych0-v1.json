@@ -1,0 +1,118 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvych0-v1",
+ "title": "bvy25 with y as a 21-node Tauchen chain, no crash: the control for the crash economy",
+ "question": "Does discretising the priced state change bvy25's gap? (The chain is the state the crash economy bvyj25 adds a jump to.)",
+ "notes": "GROUP 1 CONTROL (2026-10-12). bvy25's economy with the priced state y carried as a 21-node Tauchen chain over +-3.5 sd (parameters.py y_kind 'chain'): every y-expectation -- the bases' E^Q, the DP's transition, the moments' y'-sums, the panel's path -- runs on the chain, and the validator's Euler check is exact on it. Low-resolution comparison on a 120-firm panel: type premia 8.6 / 10.7 / 14.3 %/yr against the Gaussian economy's 8.7 / 11.7 / 16.5, SR_max by y-tercile 0.41-0.45 against 0.48-0.50: the discretisation shaves the top type's premium. This economy exists so that bvyj25 (the same chain with a rare priced crash) is compared like for like.\\n\\nPRECOMMITMENT STATUS: precommitted=false; id read from the Quest build log before any seed runs.\\n\\nPREDICTION (2026-10-12): the same room and gap family as bvy25 (+0.010 to +0.015), 7+ of 10 positive.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.01, 0.035, 0.07], bv_comp 1.2, gamma_v 2.5, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvych0.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvych0.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvych0",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.9588088.Jstar_vy_bvych0.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "eb3a5bc57086bfde"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "aee1aab12a17b72356896ef3265d50c423e87a686adea4a0eced90077b1cb25e"
+}

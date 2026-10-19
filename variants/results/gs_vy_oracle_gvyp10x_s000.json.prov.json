@@ -1,0 +1,75 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "gs_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "0",
+  "--tag",
+  "gvyp10x",
+  "--spec",
+  "var-gs_vy-gvyp10x-v1",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants/gs_vy",
+ "env": {
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BK": "0.0",
+  "GS_VY_BV": "0.1",
+  "GS_VY_SHARES": "1.0",
+  "GS_VY_SOLDIRS": "sol_gvyp10xa",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "gvyp10x",
+  "SLURMD_NODENAME": "qgpu0604",
+  "SLURM_ARRAY_JOB_ID": "9587689",
+  "SLURM_ARRAY_TASK_ID": "0",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "9595907",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-12T12:36:55-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0604",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_oracle.py --model gs_vy --N 500 --T 500 --seed 0 --tag gvyp10x --spec var-gs_vy-gvyp10x-v1 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "sol_gvyp10xa",
+   "solve_id": "8b64c10c154d6c9a",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 429690941
+  }
+ ],
+ "extra": {
+  "spec_id": "var-gs_vy-gvyp10x-v1",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "not requested",
+  "eval_window": 360
+ }
+}

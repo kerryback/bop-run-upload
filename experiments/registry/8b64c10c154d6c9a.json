@@ -1,0 +1,97 @@
+{
+  "achieved": {
+    "exit": "tolerance",
+    "perr_rel": 1.0600169056087846e-06,
+    "qerr_rel": 2.271198880570992e-06,
+    "sweeps": 2674,
+    "threshold_enforced": 1.9999999999999998e-05,
+    "tol_requested": 1e-06,
+    "vscale": 727.7002467682803
+  },
+  "artifacts": [
+    {
+      "bytes": 429690941,
+      "path": "variants/gs_vy/sol_gvyp10xa/solution.npz",
+      "sha256": "fb3e9e3272163f0698c8b7694ba6838783859a71dcaa6fb3d8becd2960c7ef36"
+    }
+  ],
+  "committable": false,
+  "env_params": {},
+  "environment": {
+    "hostname": "qhimem0501",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "4",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_array_job_id": "9587687",
+    "slurm_array_task_id": "0",
+    "slurm_cpus_per_task": "4",
+    "slurm_job_id": "9587687"
+  },
+  "extra": {
+    "outdir": "sol_gvyp10xa"
+  },
+  "inputs": {},
+  "model": "gs_vy",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "NY": 9,
+    "bnum": 20,
+    "bv_comp": "0.0",
+    "delta": "0.006666666666666667",
+    "dt": "0.08333333333333333",
+    "g": "1.14",
+    "gamma_v": "2.5",
+    "gamma_x": "0.5",
+    "gs_ashift": "0.0",
+    "gs_bc": "0.0",
+    "gs_bi": "0.0",
+    "gs_bk": "0.0",
+    "gs_bphi": "0.0",
+    "gs_bv": "0.1",
+    "gs_bx": "1.0",
+    "gs_bx2": "1.0",
+    "gs_bzb": "1.0",
+    "gs_bzi": "0.0",
+    "gs_bzl": "0.0",
+    "gs_fc": "0.0",
+    "gs_gj": "0.0",
+    "gs_pj": "0.0",
+    "imax": "2000.0",
+    "imin": "0.0",
+    "kappa_b": "0.004",
+    "kappa_e": "0.025",
+    "kappa_y": "0.35",
+    "lam_y": "0.7216878364870322",
+    "phi": "0.4",
+    "r": "0.008333333333333333",
+    "rho_x": "0.9830475724915585",
+    "rho_y": "0.9712545752136729",
+    "rho_z": "0.9654893846056297",
+    "s_y": "0.23804316861970193",
+    "sigma_m": 5,
+    "sigma_x": "np.float64(0.00704630524128845)",
+    "sigma_z": "np.float64(0.09559933809158556)",
+    "tau": "0.2",
+    "tol": "1e-06",
+    "x_bar": "0.0",
+    "xi": "0.01",
+    "xnum": 161,
+    "y_mult": "2.5",
+    "znum": 200
+  },
+  "recorded_at": "2026-10-12T10:32:38-0500",
+  "solve_id": "8b64c10c154d6c9a",
+  "sources": {
+    "variants/gs_vy/gs_solve_vy.py": "0998a3435adc4f3cf91938c05c0ed9b0ea525254abe1db9e7634db4adfc1d7b3"
+  },
+  "spec_ids": [],
+  "stage": null,
+  "tags": [
+    "sol_gvyp10xa"
+  ],
+  "total_bytes": 429690941
+}

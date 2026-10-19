@@ -1,0 +1,117 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-kpgam-v1",
+ "title": "KP14 baseline with a COUNTER-CYCLICAL price of the productivity shock: gamma_x times a logistic of the state y, 1 to 3",
+ "question": "Does a nonlinear, state-dependent price of risk make a fair gap in KP14, as BGN's regime (g0235f) marginally did and GS21's gamma(x) did not?",
+ "notes": "GROUP 2 (price of risk as a function of an aggregate state) in KP14, which had never been tried: the matrix of groups x models (docs/CAMPAIGN_REPORT_2026-10-11.md) was missing this cell. kp_vy carries the machinery already (parameters_kp14.py gmult_y: gamma_x * (g_lo + (g_hi - g_lo) logistic(g_steep y)), the kp_gamy path), switched off in every live economy. Here the state y is UNPRICED (gamma_v 0) and no firm loads on it (type_bv [0], one type), so y does one thing: it moves the price of x-risk, from 1x at y = +2.5 sd to 3x at y = -2.5 sd (g_steep negative: counter-cyclical), 2x at y = 0. The analogue of BGN's gmult [0.2, 3.5] regime and GS21's gamma(x).\\n\\nFEASIBILITY (parameters_kp14 at these overrides, 2026-10-12): the growth-option discount rho_ty stays positive (min 0.0159, the baseline's own margin: a multiplier BELOW 1 at the low end turns it negative, which is why g_lo is 1.0), const_ty min 0.23, A0 finite.\\n\\nPRECOMMITMENT STATUS: precommitted=false (dirty tree); ids filled from the Quest build log by solve_kp_klc.sh before any seed runs.\\n\\nPREDICTION (2026-10-12, before the run). The premium rotates with y but stays affine in the growth-option share within a state: room above kpbase's +0.004 but mostly state-linear (room_s well below room), a fair gap between -0.005 and +0.008, and the ranks-times-state benchmark takes whatever appears. FALSIFIED as 'a nonlinear price of risk makes a gap in KP14' if the fair gap exceeds +0.010 in 8 of 10 seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-kpbase-v4",
+  "changes": [
+   "params {'type_share': [1.0], 'type_bv': [0.0], 'gamma_v': 0.0, 'bv_comp': 0.0, 'g_lo': 1.0, 'g_hi': 3.0, 'g_steep': -2.0} (parent: {'type_share': [1.0], 'type_bv': [0.0], 'gamma_v': 0.0, 'bv_comp': 0.0}); own tables under prefix kpgam"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true,
+  "kp_price_of_risk": "constant: gamma_x 0.69, gamma_z -0.35; no priced state (gamma_v 0, type_bv [0])"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.0
+  ],
+  "gamma_v": 0.0,
+  "bv_comp": 0.0,
+  "g_lo": 1.0,
+  "g_hi": 3.0,
+  "g_steep": -2.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "kpgam"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.0
+     ],
+     "gamma_v": 0.0,
+     "bv_comp": 0.0,
+     "g_lo": 1.0,
+     "g_hi": 3.0,
+     "g_steep": -2.0
+    },
+    "args": {
+     "prefix": "kpgam"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=kpgam",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.9588533.kpgam.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "467be1506b77e2b2",
+  "integ": "574bf34d8f474fb9"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "51b4afe808c268b0c2f37c63e7bb2191f030feb7097b636df6a8642bf7c6f4dd"
+}

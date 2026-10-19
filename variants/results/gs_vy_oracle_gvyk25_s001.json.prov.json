@@ -1,0 +1,89 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "gs_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "1",
+  "--tag",
+  "gvyk25",
+  "--spec",
+  "var-gs_vy-gvyk25-v1",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants/gs_vy",
+ "env": {
+  "GS_VY_BC": "0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,0.0,0.0",
+  "GS_VY_BK": "-0.03,-0.1,-0.15",
+  "GS_VY_BV": "0.0,0.0,0.0",
+  "GS_VY_SHARES": "0.34,0.33,0.33",
+  "GS_VY_SOLDIRS": "sol_gvyk25a,sol_gvyk25b,sol_gvyk25c",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "gvyk25",
+  "SLURMD_NODENAME": "qgpu0604",
+  "SLURM_ARRAY_JOB_ID": "9407217",
+  "SLURM_ARRAY_TASK_ID": "1",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "9408224",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-10T10:24:18-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0604",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_oracle.py --model gs_vy --N 500 --T 500 --seed 1 --tag gvyk25 --spec var-gs_vy-gvyk25-v1 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "sol_gvyk25a",
+   "solve_id": "e482140c9b68cc62",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 420877916
+  },
+  {
+   "stage": "sol_gvyk25b",
+   "solve_id": "e4b498810a122f1f",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 428569358
+  },
+  {
+   "stage": "sol_gvyk25c",
+   "solve_id": "7229676f0f65b8f5",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 429962773
+  }
+ ],
+ "extra": {
+  "spec_id": "var-gs_vy-gvyk25-v1",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "not requested",
+  "eval_window": 360
+ }
+}

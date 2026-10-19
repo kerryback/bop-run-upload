@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "spec_id": "var-kp_vy-vyg30k70-v1",
+  "title": "KP14 vyg25 with the priced state mean-reverting twice as fast, its price raised to hold the premium spread",
+  "question": "Does the switching-speed mechanism that produced BGN's gap (finding 12) replicate in KP14 when the priced state is made faster at an unchanged premium spread?",
+  "notes": "vyg30k70. vyg25 with TWO parameters changed: kappa_y 0.35 -> 0.70 and gamma_v 2.5 -> 3.0. Types, shares, exposures and bv_comp are vyg25's.\n\nWHY. docs/NEXTUP.md item 1 (K3) asks whether BGN's speed ladder replicates in a second model, with kappa_y as the analogous knob. But kappa_y alone is not a clean speed knob here: sigma_y is locked to sqrt(2 kappa_y), and the corrected Girsanov adjustment saturates at b gamma_v sigma_y / kappa_y = b gamma_v sqrt(2/kappa_y), so doubling kappa_y at fixed gamma_v cuts the long-run pricing shift by 29% (5.98 b -> 4.23 b, which is vyx's 4.30 b, the economy with no gap). gamma_v 3.0 is chosen to offset that on the INSTANTANEOUS premium: with an effective discount near 0.23 the y-loading of a type-f claim's return is roughly b sigma_y rho/(rho + kappa_y), so the premium spread per unit b is about gamma_v x 0.332 = 0.83 in vyg25 and gamma_v x 0.293 = 0.88 here. That arithmetic is a back-of-envelope motivation, NOT a measured identity; clause (c) is what checks it. The saturating shift is 5.07 b, between vyx and vyg25.\n\nSo the design intent is vyg25's premium spread at twice the state's speed: half-life about 12 months instead of 24, roughly 30 half-lives per 360-month window instead of 15. It deliberately does NOT follow K3's one-parameter form, and so cannot attribute an outcome to kappa_y alone; it is built to be likely to show a gap, not to isolate a lever. gamma_v 3.0 is above the 2.5 that docs/NEXTUP.md calls near the top of what the calibration tolerates; clause (c) is the guard.\n\nREFERENCES (protocol v3, ten seeds). vyg25: SR_max 0.4952, EW market 0.0529, FMR 0.2921, FF 0.3203, DKKM 0.3503, fair gap +0.0148 (t 5.2, 10 of 10), room +0.0820, oracle mean excess return 3.9%/yr. vyx: fair gap +0.0009, room +0.0545.\n\nPREDICTION (2026-10-05, before any solve).\n(a) fair gap positive at t >= 2 and at least +0.007 (half of vyg25's).\n(b) DKKM - max(FMR, FF) at least +0.02, positive in at least 8 of 10 seeds.\n(c) SR_max between 0.35 and 0.75 and the oracle's mean expected excess return between 2.5% and 9% a year.\n(d) room at least vyx's +0.0545.\n(e) winning DKKM penalty interior in at least 8 of 10 seeds, or a flat tail on materiality.\nFALSIFIED IF the fair gap is not positive at t >= 2: then speed does not buy a gap in KP14 even with the premium spread held, and vyg25's gap is a level effect of gamma_v at kappa_y 0.35. If (c) fails the economy is off-calibration and nothing else in it should be read.\n\nSOLVE CORRECTNESS GATE, required before any seed: every G type passes its 1e-6 relative-residual gate; the CIR integral stage raises on lost density mass and must not; A(y) matches the risk-neutral closed form of tests/test_risk_neutral_pricing.py below 1e-4 AT THESE PARAMETERS; validate_vy.py shows realised and expected returns agreeing by type within sampling error.\n\nPLATFORM. The whole chain (G then integ) is built on Quest, so the integ id is the one these G bytes produce here (docs/RUNS.md, chained-id hazard). The integ id cannot be known before G exists and is filled in after the build.\n\nPRECOMMITMENT STATUS, STATED HONESTLY. Authored 2026-10-05 on Northwestern's Quest (kellogg partition) by Alexander Ober's Claude session. The free solve ids were computed WITHOUT solving (variants/precommit_spec.py) before any build. But this spec was NOT committed before its solve -- no commit was authorised in that session -- so git cannot certify the order and `precommitted` is false. The prediction and falsifier below were written before any solve or seed existed.\n\nRESULTS LOCATION. Seeds write to their own BOP_RESULTS_DIR (/kellogg/proj/axa3203/bop_runs/results), NOT to variants/results, so docs/RESULTS.md and economy_table.csv are untouched until the co-authors decide to adopt the row.",
+  "lineage": {
+    "parent_spec": "var-kp_vy-vyg25-v4",
+    "supersedes": null,
+    "superseded_by": null,
+    "changes": [
+      "kappa_y 0.35 -> 0.7 (sigma_y = sqrt(2 kappa_y) moves with it: 0.837 -> 1.183)",
+      "gamma_v 2.5 -> 3.0",
+      "prefix vyg25 -> vyg30k70"
+    ]
+  },
+  "engine": "oracle",
+  "model": "kp_vy",
+  "method": {
+    "kp_interpolation": "linear",
+    "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+    "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+    "zero_book_in_sdf_solve": true
+  },
+  "panel": {
+    "N": 500,
+    "T": 500,
+    "burnin": 400
+  },
+  "seeds": {
+    "base": 0,
+    "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+  },
+  "params": {
+    "type_share": [
+      0.34,
+      0.33,
+      0.33
+    ],
+    "type_bv": [
+      0.02,
+      0.07,
+      0.14
+    ],
+    "gamma_v": 3.0,
+    "kappa_y": 0.7,
+    "bv_comp": 1.2
+  },
+  "param_env": "KP_PARAM_OVERRIDES",
+  "env": {
+    "KP_VY_PREFIX": "vyg30k70"
+  },
+  "solve": {
+    "stages": [
+      {
+        "name": "vy_tables",
+        "producer": "variants/kp_vy/build_vy_tables.py",
+        "param_env": "KP_PARAM_OVERRIDES",
+        "params": {
+          "type_share": [
+            0.34,
+            0.33,
+            0.33
+          ],
+          "type_bv": [
+            0.02,
+            0.07,
+            0.14
+          ],
+          "gamma_v": 3.0,
+          "kappa_y": 0.7,
+          "bv_comp": 1.2
+        },
+        "args": {
+          "prefix": "vyg30k70"
+        },
+        "type_index": null
+      }
+    ]
+  },
+  "estimation": {
+    "chars": [
+      "size",
+      "bm",
+      "agr",
+      "roe",
+      "mom"
+    ],
+    "window": 360,
+    "levels": true,
+    "include_mkt": true,
+    "kappas": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0,
+      1000.0
+    ],
+    "fair_linear": true
+  },
+  "provenance": {
+    "source_script": null,
+    "source_script_note": "proposed 2026-10-05 on Quest; cf. K3 in docs/NEXTUP.md",
+    "runner": "variants/run_seeds_slurm.sh",
+    "runner_note": "SEED_SPEC=vyg30k70",
+    "verified_by": "tests/test_specs_match_shell.py",
+    "solve_note": "built on Quest 2026-10-05 (job 8731761, variants/klc/solve_small_klc.sh); every printed id matched its pin and variants/klc/verify_solves.py passed (log /kellogg/proj/axa3203/bop_runs/logs/solve_small.8731761.log)"
+  },
+  "spec_hash": "603d41245444974f0858546228250b28c33122cfca979936eea7dfd5b092b29a",
+  "expected_solves": {
+    "G": "4fa7a44af46b5367",
+    "integ": "664ea77dbba8dfe2"
+  },
+  "precommitted": false,
+  "solves_pending": null,
+  "reused_solves": null
+}

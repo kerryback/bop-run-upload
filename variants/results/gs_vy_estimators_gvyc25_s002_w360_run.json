@@ -1,0 +1,56 @@
+{
+ "model": "gs_vy",
+ "tag": "gvyc25",
+ "seed": 2,
+ "prov": "gs_vy_estimators_gvyc25_s002_w360_summary@nogit",
+ "spec_id": "var-gs_vy-gvyc25-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand",
+  "y_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_gvyc25a",
+   "solve_id": "0b4053a702bf34eb",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 439313476
+  },
+  {
+   "stage": "sol_gvyc25b",
+   "solve_id": "39f7d314c200a636",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 450636714
+  },
+  {
+   "stage": "sol_gvyc25c",
+   "solve_id": "0125aa3bc6db4729",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 469341180
+  }
+ ],
+ "panel": "gs_vy_panel_gvyc25_s002.parquet"
+}

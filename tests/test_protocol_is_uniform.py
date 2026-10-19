@@ -60,6 +60,10 @@ BURNIN_SITES = {
     "bgn_gam": os.path.join(ROOT, "variants", "bgn_gam", "parameters.py"),
     "kp_vy": os.path.join(ROOT, "variants", "kp_vy", "parameters_kp14.py"),
     "gs_bx": os.path.join(ROOT, "variants", "gs_bx", "gs_sim_bx.py"),
+    "bgn_vy": os.path.join(ROOT, "variants", "bgn_vy", "parameters.py"),
+    "gs_vy": os.path.join(ROOT, "variants", "gs_vy", "gs_sim_vy.py"),
+    "kp_vj": os.path.join(ROOT, "variants", "kp_vj", "parameters_kp14.py"),
+    "bgn_q": os.path.join(ROOT, "variants", "bgn_q", "parameters.py"),
 }
 
 
@@ -231,10 +235,19 @@ PRECISION_KEYS = {
     "kp": ("NY", "_i0"),
     "gs": ("bnum", "znum", "xnum", "imin", "imax", "tol"),
     "bgn": ("I", "JSTAR_TOL"),
+    # the two y-factor models (2026-10-07) carry their own grids: the J* dynamic programme's
+    # (r, y) resolution and quadrature in bgn_vy, the y-chain size and width in gs_vy
+    "bgn_vy": ("I", "JSTAR_TOL", "NY", "n_r_solve", "y_sub_solve", "n_quad_r", "n_quad_y"),
+    # imax is a CALIBRATION knob in gs_vy (the investment-cost ceiling moved to 500 in gvyj25 as an economy, not a grid)
+    "gs_vy": ("bnum", "znum", "xnum", "imin", "tol", "NY", "y_mult"),
+    "kp_vj": ("NY", "_i0"),
+    "bgn_q": ("I", "JSTAR_TOL", "NY", "n_r_solve", "y_sub_solve", "n_quad_r", "n_quad_y", "NB"),
 }
 
 
-def _family(params):
+def _family(params, model=None):
+    if model in PRECISION_KEYS:
+        return model
     return "kp" if "NY" in params else ("gs" if "bnum" in params else "bgn")
 
 
@@ -251,12 +264,24 @@ def test_solve_precision_is_uniform_within_each_model():
             continue
         man = json.load(open(os.path.join(REGISTRY, fn)))
         params = man.get("params") or {}
-        if not params:
+        if not params or man.get("retired"):
+            # a retired id can never recur (solfiles.py retire): it is not a live precision setting
             continue
-        fam = _family(params)
+        fam = _family(params, man.get("model"))
+        if man.get("model") == "bgn_vy" and params.get("y_kind") == "chain" and int(params.get("NY") or 21) != 21:
+            # the 41-node chain probe (2026-10-17, bvych41) tests the chain's resolution; it is its own family
+            fam = fam + f":chain{int(params['NY'])}"
+        if man.get("model") == "gs_vy" and float(params.get("y_mult") or 2.5) != 2.5:
+            # the crash economies and their controls span the chain over +-3.5 sd so the crash lands at -3.5 (2026-10-14/17);
+            # the span is an economy choice there, compared only among themselves
+            fam = fam + f":span{params['y_mult']}"
+        if int(params.get("NY2") or 1) > 1:
+            # a two-chain economy (2026-10-12, group 4) solves on the JOINT node set: its NY is not the single
+            # chain's precision setting, so it is compared with other two-chain solves of its model only
+            fam = fam + ":two-chain"
         env = man.get("env_params") or {}
         view = {}
-        for k in PRECISION_KEYS[fam]:
+        for k in PRECISION_KEYS[fam.split(":")[0]]:
             v = params.get(k, env.get(k))
             if v is not None:
                 view[k] = str(v)

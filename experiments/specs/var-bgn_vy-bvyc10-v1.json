@@ -1,0 +1,116 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyc10-v1",
+ "title": "bvy25 with exact level compensation (bv_comp 1.0): the type is invisible in value at y = 0",
+ "question": "Does an exactly hidden type carry more or less gap than bvy25's slightly over-compensated one?",
+ "notes": "VISIBILITY LADDER (2026-10-10), point 2 of 2; see var-bgn_vy-bvyc0-v1 for the ladder's logic. At bv_comp 1.0 the three types' unit-project values coincide at (rbar, y = 0), so value does not reveal the type there and only the y-dependence of value and the types' different investment behaviour can.\\n\\nPREDICTION (2026-10-10, before the run): room_s close to room and a fair gap between bvy25's +0.0148 and bvyc0's; if the gap EXCEEDS bvy25's, hiding the type is the lever and over-compensation costs some of it. FALSIFIED as a visibility story if bvyc0, bvyc10 and bvy25 are indistinguishable.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.01, 0.035, 0.07], bv_comp 1.0, gamma_v 2.5, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "jstar_vy_file": "Jstar_vy_bvyc10.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "jstar_vy_file": "Jstar_vy_bvyc10.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyc10",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.9417239.Jstar_vy_bvyc10.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "8f2f986f32a8d682"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "17d3e03cc080354ca6eb08335a51a93715040e675711a58b562ed8d9bd8ab715"
+}

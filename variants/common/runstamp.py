@@ -73,7 +73,33 @@ def _gs_paths(mod):
             for s in dirs if s.strip()]
 
 
-_PATHS = {"kp_vy": _kp_paths, "bgn_gam": _bgn_paths, "gs_bx": _gs_paths}
+def _kpj_paths(mod):
+    prefix = os.environ.get("KP_VY_PREFIX", "vys")
+    d = os.path.join(VARIANTS_DIR, "kp_vj")
+    ntypes, NY = int(mod.ntypes), int(mod.NY)
+    return [("G", [os.path.join(d, f"G_{prefix}{f}.csv") for f in range(ntypes)]),
+            ("integ", [os.path.join(d, f"integ_{prefix}{f}_{iy}.npz") for f in range(ntypes) for iy in range(NY)])]
+
+
+def _bgn_vy_paths(mod):
+    d = os.path.join(VARIANTS_DIR, "bgn_vy")
+    return [("jstar", [os.path.join(d, mod.jstar_vy_file)])]
+
+
+def _bgn_q_paths(mod):
+    d = os.path.join(VARIANTS_DIR, "bgn_q")
+    return [("jstar", [os.path.join(d, mod.jstar_vy_file)])]
+
+
+def _gs_vy_paths(mod):
+    d = os.path.join(VARIANTS_DIR, "gs_vy")
+    dirs = os.environ.get("GS_VY_SOLDIRS", "sol_vy").split(",")
+    return [(s.strip(), [os.path.join(d, s.strip(), "solution.npz")])
+            for s in dirs if s.strip()]
+
+
+_PATHS = {"kp_vy": _kp_paths, "bgn_gam": _bgn_paths, "gs_bx": _gs_paths,
+          "bgn_vy": _bgn_vy_paths, "gs_vy": _gs_vy_paths, "kp_vj": _kpj_paths, "bgn_q": _bgn_q_paths}
 
 
 def _match(paths):

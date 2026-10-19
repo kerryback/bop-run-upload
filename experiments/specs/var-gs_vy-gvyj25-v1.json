@@ -1,0 +1,202 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyj25-v1",
+ "title": "GS21 RECALIBRATED to a larger investment option (imax 500) with the priced y factor on the INVESTMENT COST, three exposure types",
+ "question": "Does a priced second factor make a fair gap in GS21 when firm exposure runs through the investment option, as KP14's does through its growth options?",
+ "notes": "WHY (2026-10-10). At the Table I calibration the investment option is a modest, leverage-like share of GS21 equity (16-34%), and five y-factor constructions left the premium linear in the ranks with the market spanning 69-94% of SR_max. KP14's gap is a rank-nonlinearity of the growth-option share, so this spec first RECALIBRATES GS21 to a larger option -- the investment-cost ceiling imax 2000 -> 500, which quadruples the option's share of equity (optshare.py on low-res solves: mean 0.18 -> 0.75 by the crude per-period-surplus capitalisation) while the solve still converges (imax 200 and 100 make the firm's value explode: the option is then cheaper than the growth it buys) -- and then puts the priced y factor on the investment cost with three exposure types, exp(gs_bi y), gs_bi <= 0. Everything else is gvy25's (9-node priced y chain, gamma_v 2.5, kappa_y 0.35). No level compensation.\\n\\nCALIBRATION (low resolution, xnum 41, znum 50, bnum 10, NY 9, 150 firms, 2026-10-10 14:00). imax 500 with gs_bi 0 / -0.25 / -0.5: type premia 1.5 / 5.6 / 6.7 %/yr, SR_max 0.26 / 0.33 / 0.48 by y-tercile, mean log size 7.60 / 6.13 / 6.14 -- the unexposed type invests most and is the largest, so the footprint is large and NON-monotone in exposure. gs_bi -1.0 pushes the high-y-tercile SR_max to 0.62 with a 9.6% top premium; the shallower ladder is used. The baseline premium at imax 500 is 1.5 %/yr (3.2 at imax 2000): a larger option lowers the equity premium.\\n\\nCHECKS. E[M R] = 1 to 1e-15 on the calibration economies; imax enters the solve stage params and the simulator reads it from the solution. gs_bi = 0 and imax 2000 reproduce gvy25's solver.\\n\\nPRECOMMITMENT STATUS: precommitted=false; ids read from the Quest solve logs by verify_gs_vy_klc.sh before any seed runs. NOTE this economy is OFF Table I (imax); it is a mechanism probe, not a calibrated GS21.\\n\\nPREDICTION (2026-10-10, before the run). Market share of SR_max 60-85%; room +0.01 to +0.05; the decisive read is room_s against room. The premium dispersion is strongly y-dependent at low resolution (cs-sd of mu 0.0015 at low y vs 0.0033 at high y), the state-rotation pattern, so the risk is room without room_s. FALSIFIED as 'a larger option lets the KP mechanism port to GS21' if room_s is below +0.02 at the oracle stage or the fair gap is below +0.005.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_bi [0.0, -0.25, -0.5]: each type's drawn investment cost x exp(gs_bi y); production and cost exposures 0",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0, 0.0, 0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "investment cost x exp(gs_bi y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "imax": 500.0
+ },
+ "types": {
+  "share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bc": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bi": [
+    0.0,
+    -0.25,
+    -0.5
+   ],
+   "gs_bk": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvyj25a",
+   "sol_gvyj25b",
+   "sol_gvyj25c"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyj25a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.0,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "imax": 500.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvyj25b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.0,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": -0.25,
+     "gs_bk": 0.0,
+     "imax": 500.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvyj25c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.0,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": -0.5,
+     "gs_bk": 0.0,
+     "imax": 500.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyj25a,sol_gvyj25b,sol_gvyj25c",
+  "GS_VY_BV": "0.0,0.0,0.0",
+  "GS_VY_BC": "0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,-0.25,-0.5",
+  "GS_VY_BK": "0.0,0.0,0.0",
+  "GS_VY_SHARES": "0.34,0.33,0.33"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyj25",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvyj25a": "e7725025c1f71072",
+  "sol_gvyj25b": "79320e7605cbc846",
+  "sol_gvyj25c": "9c63da3fcb03c9e6"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "d16d6de16f11914174eae7d50910c1b5752a099e89d51b67b57b72cefdee1f86"
+}

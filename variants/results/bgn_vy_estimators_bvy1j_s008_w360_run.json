@@ -1,0 +1,42 @@
+{
+ "model": "bgn_vy",
+ "tag": "bvy1j",
+ "seed": 8,
+ "prov": "bgn_vy_estimators_bvy1j_s008_w360_summary@nogit",
+ "spec_id": "var-bgn_vy-bvy1j-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand",
+  "y_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "jstar",
+   "solve_id": "d6c16e9fe946cd01",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 203684
+  }
+ ],
+ "panel": "bgn_vy_panel_bvy1j_s008.parquet"
+}

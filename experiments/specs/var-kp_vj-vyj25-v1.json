@@ -1,0 +1,122 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vj-vyj25-v1",
+ "title": "KP14 vyg25 with a CRASH in the priced state: a jump of y to -y_max at rate 1% a month, priced at e^2",
+ "question": "Group 1 (different distributions): does a priced crash in the state widen vyg25's gap, as bvyj25 asks of BGN and gvyp10j of GS?",
+ "notes": "Campaign 2026-10-12, group 1 cell for KP (docs/CAMPAIGN_REPORT_2026-10-11). IDENTICAL to var-kp_vy-vyg25-v4 except the model directory variants/kp_vj, a copy of kp_vy with a Poisson jump of y to -y_max in the physical generator (pj 0.01 a month, jump_rate 0.12 a year) and in the risk-neutral one (jump_rate_Q = jump_rate e^{gj} = 0.887 a year), in the A(y) solves, in the FD generator for G, in the simulated path and in the y' quadrature of the moments (an eighth node at -y_max with weight pj). The OU closed form for A(y) does not apply with the jump, so the gate checks the A solve's own linear system instead (residual 4.5e-12 at these parameters). Matches bvyj25 (pj 0.01, gj 2.0) and gvyp10j.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v4",
+  "changes": [
+   "params {'type_share': [0.34, 0.33, 0.33], 'type_bv': [0.02, 0.07, 0.14], 'gamma_v': 2.5, 'bv_comp': 1.2, 'pj': 0.01, 'gj': 2.0} (parent: {'type_share': [0.34, 0.33, 0.33], 'type_bv': [0.02, 0.07, 0.14], 'gamma_v': 2.5, 'bv_comp': 1.2}); own tables under prefix vyj25"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vj",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2,
+  "pj": 0.01,
+  "gj": 2.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyj25"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vj/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2,
+     "pj": 0.01,
+     "gj": 2.0
+    },
+    "args": {
+     "prefix": "vyj25"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyj25",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kpj (BOP_VERIFY_KPJ_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.9588531.vyj25.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "ebd264bb27c7afb1",
+  "integ": "fd625cf6b572d1e6"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "509603eb6b200708e85ee824fa518c9cdb3272355e886542796174eadba1784e"
+}

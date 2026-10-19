@@ -92,3 +92,12 @@ gap_experiments/
 
 # single-builder lock (runtime state)
 .build_vy_tables.*.lock
+
+# solve artifacts the registry (experiments/registry) records but git must not carry (2026-10-19):
+# GS21 solutions are ~500 MB each; per-type checkpoints are rebuilt from the tables; LaTeX byproducts
+variants/gs_vy/sol_*/
+variants/gs_bx/sol_*/
+*.solveid
+docs/*.aux
+docs/*.log
+docs/*.out

@@ -212,7 +212,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vym3 | vym3t3 | g0235d | bgnbase | kpbase | gsbase) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vym3 | vym3t3 | g0235d | bgnbase | kpbase | gsbase | g0235df | vyg30k70 | gx7w | vyg25k15 | vyg25k70 | kpgam | vyj25 | vy1 | vym2t3 | vy1j | kpq | bvy25 | bvyc0 | gvy25 | gvyc25) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -425,8 +425,442 @@ case "$SEED_SPEC" in
     # (run_gsbase_slurm.sh).
     SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gsbase-v3 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
+  g0235df)
+    # g0235d's economy at g0235f's speed (2026-10-05, Quest): both switch probabilities x4, so the
+    # stationary stress share stays at exactly 2/3 while stress spells go 48 -> 12 months and calm
+    # 24 -> 6. Combines finding 12's speed lever with the mix that has BGN's largest DKKM-over-FMR/FF
+    # gap. Its own J* table, because p01/p10 enter the solve through Preg.
+    MODEL=bgn_gam; TAG=g0235df; SPEC=var-bgn_gam-g0235df-v1; SOLVE_TAG=Jstar_g0235df
+    export BGN_PARAM_OVERRIDES='{"gmult": [0.2, 3.5], "p01": 0.16666666666666666, "p10": 0.08333333333333333, "jstar_gam_file": "Jstar_g0235df.csv"}'
+    SOLVE_HINT='sbatch variants/klc/solve_small_klc.sh   # Quest; or cd variants/bgn_gam && BGN_PARAM_OVERRIDES=<the blob above> python rebuild_jstar_gam.py'
+    ;;
+  vyg30k70)
+    # vyg25 with the priced state twice as fast (kappa_y 0.35 -> 0.70) and its price raised 2.5 -> 3.0
+    # to hold the premium spread (2026-10-05, Quest; cf. K3 in docs/NEXTUP.md). NOT a one-parameter
+    # experiment: built to be likely to show a gap, not to isolate kappa_y. Its own tables under
+    # prefix vyg30k70, built as one chain on Quest so the integ id is the one those G bytes give.
+    MODEL=kp_vy; TAG=vyg30k70; SPEC=var-kp_vy-vyg30k70-v1; SOLVE_TAG=vyg30k70
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":3.0,"kappa_y":0.7,"bv_comp":1.2}'
+    export KP_VY_PREFIX=vyg30k70
+    SOLVE_HINT='sbatch variants/klc/solve_small_klc.sh   # Quest; or cd variants/kp_vy && KP_PARAM_OVERRIDES=<the blob above> python build_vy_tables.py vyg30k70'
+    ;;
+  vyg25k15)
+    # K3 (docs/NEXTUP.md item 1), 2026-10-07 on Quest: vyg25 with ONE parameter changed, kappa_y 0.35 -> 0.15
+    # (half-life 24 -> 55 months; sigma_y = sqrt(2 kappa_y) moves with it). gamma_v stays 2.5. Paired with
+    # its twin to test whether the fair gap moves with the speed of the priced state (finding 12) or is
+    # flat in it (the reduced-form screen's prediction, docs/REDUCED_FORM.md). Own tables under prefix vyg25k15.
+    MODEL=kp_vy; TAG=vyg25k15; SPEC=var-kp_vy-vyg25k15-v1; SOLVE_TAG=vyg25k15
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2,"kappa_y":0.15}'
+    export KP_VY_PREFIX=vyg25k15
+    SOLVE_HINT='sbatch --export=ALL,KSPECS=var-kp_vy-vyg25k15-v1 variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyg25k70)
+    # K3 (docs/NEXTUP.md item 1), 2026-10-07 on Quest: vyg25 with ONE parameter changed, kappa_y 0.35 -> 0.7
+    # (half-life 24 -> 12 months; sigma_y = sqrt(2 kappa_y) moves with it). gamma_v stays 2.5. Paired with
+    # its twin to test whether the fair gap moves with the speed of the priced state (finding 12) or is
+    # flat in it (the reduced-form screen's prediction, docs/REDUCED_FORM.md). Own tables under prefix vyg25k70.
+    MODEL=kp_vy; TAG=vyg25k70; SPEC=var-kp_vy-vyg25k70-v1; SOLVE_TAG=vyg25k70
+    export KP_PARAM_OVERRIDES='{"type_share":[0.34,0.33,0.33],"type_bv":[0.02,0.07,0.14],"gamma_v":2.5,"bv_comp":1.2,"kappa_y":0.7}'
+    export KP_VY_PREFIX=vyg25k70
+    SOLVE_HINT='sbatch --export=ALL,KSPECS=var-kp_vy-vyg25k70-v1 variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  gx7w)
+    # gx7 with a steeper and wider price of risk: gamma(x) = clip(0.5 - 0.40 x/sd(x), 0.05, 1.5)
+    # against gx7's slope 0.28 and ceiling 1.0 (2026-10-05, Quest). Same five-type ladder. GS21 is
+    # K=1, so no FAIR gap is expected; this targets DKKM against FMR/FF, where gx7 holds the file's
+    # largest absolute gap. FIVE new solves, none reused. GS_SIM_OVERRIDES stays UNSET.
+    MODEL=gs_bx; TAG=gx7w; SPEC=var-gs_bx-gx7w-v1
+    SOLVE_TAG=sol_gw10,sol_gw25,sol_gw40,sol_gw55,sol_gw70
+    export GS_BX_SOLDIRS=sol_gw10,sol_gw25,sol_gw40,sol_gw55,sol_gw70
+    export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
+    export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7w-v1 --from "<the shared solves folder>"   # or, on Quest, re-solve: sbatch variants/klc/solve_gs_klc.sh (five ~5 h solves)'
+    ;;
+  bvy25)
+    # The KP14 construction in BGN (2026-10-07): a priced AR(1) state y, three exposure types, bv_comp 1.2,
+    # gamma_v 2.5, kappa_y 0.35 -- vyg25's ingredients, nothing else changed from bgnbase. variants/bgn_vy/.
+    MODEL=bgn_vy; TAG=bvy25; SPEC=var-bgn_vy-bvy25-v1; SOLVE_TAG=Jstar_vy_bvy25
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "jstar_vy_file": "Jstar_vy_bvy25.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvy25-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest, ~2 min + gate'
+    ;;
+  gvy25)
+    # The KP14 construction in GS21 (2026-10-07): a priced 9-node y chain, three exposure types on it with
+    # a derived level compensation, gamma_v 2.5, kappa_y 0.35. variants/gs_vy/. Three solves, hours each.
+    MODEL=gs_vy; TAG=gvy25; SPEC=var-gs_vy-gvy25-v1
+    SOLVE_TAG=sol_gvy25a,sol_gvy25b,sol_gvy25c
+    export GS_VY_SOLDIRS=sol_gvy25a,sol_gvy25b,sol_gvy25c
+    export GS_VY_BV=0.015,0.05,0.1
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyc25)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyc25; SPEC=var-gs_vy-gvyc25-v1
+    SOLVE_TAG=sol_gvyc25a,sol_gvyc25b,sol_gvyc25c
+    export GS_VY_SOLDIRS=sol_gvyc25a,sol_gvyc25b,sol_gvyc25c
+    export GS_VY_BV=0.0,0.0,0.0
+    export GS_VY_BC=-0.05,-0.2,-0.4
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyc25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvys25)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvys25; SPEC=var-gs_vy-gvys25-v1
+    SOLVE_TAG=sol_gvys25a,sol_gvys25b,sol_gvyc25c
+    export GS_VY_SOLDIRS=sol_gvys25a,sol_gvys25b,sol_gvyc25c
+    export GS_VY_BV=0.0,0.0,0.0
+    export GS_VY_BC=0.4,0.0,-0.4
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvys25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyi25)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyi25; SPEC=var-gs_vy-gvyi25-v1
+    SOLVE_TAG=sol_gvyi25a,sol_gvyi25b,sol_gvyi25c
+    export GS_VY_SOLDIRS=sol_gvyi25a,sol_gvyi25b,sol_gvyi25c
+    export GS_VY_BV=0.0,0.0,0.0
+    export GS_VY_BC=0.0,0.0,0.0
+    export GS_VY_BI=-0.2,-0.6,-1.0
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyi25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyk25)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyk25; SPEC=var-gs_vy-gvyk25-v1
+    SOLVE_TAG=sol_gvyk25a,sol_gvyk25b,sol_gvyk25c
+    export GS_VY_SOLDIRS=sol_gvyk25a,sol_gvyk25b,sol_gvyk25c
+    export GS_VY_BV=0.0,0.0,0.0
+    export GS_VY_BC=0.0,0.0,0.0
+    export GS_VY_BI=0.0,0.0,0.0
+    export GS_VY_BK=-0.03,-0.1,-0.15
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyk25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  bvyc0)
+    # bgn_vy follow-up (2026-10-10): bvy25 with the type's level compensation OFF (bv_comp 0): the type is a plain value sort
+    MODEL=bgn_vy; TAG=bvyc0; SPEC=var-bgn_vy-bvyc0-v1; SOLVE_TAG=Jstar_vy_bvyc0
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 0.0, "jstar_vy_file": "Jstar_vy_bvyc0.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyc0-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyc10)
+    # bgn_vy follow-up (2026-10-10): bvy25 with exact level compensation (bv_comp 1.0): the type is invisible in value at y = 0
+    MODEL=bgn_vy; TAG=bvyc10; SPEC=var-bgn_vy-bvyc10-v1; SOLVE_TAG=Jstar_vy_bvyc10
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "jstar_vy_file": "Jstar_vy_bvyc10.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyc10-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvysg)
+    # bgn_vy follow-up (2026-10-10): BGN y-factor with a SIGNED exposure ladder (-0.07, 0, +0.07), no compensation
+    MODEL=bgn_vy; TAG=bvysg; SPEC=var-bgn_vy-bvysg-v1; SOLVE_TAG=Jstar_vy_bvysg
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [-0.07, 0.0, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 0.0, "jstar_vy_file": "Jstar_vy_bvysg.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvysg-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  gvyj25)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyj25; SPEC=var-gs_vy-gvyj25-v1
+    SOLVE_TAG=sol_gvyj25a,sol_gvyj25b,sol_gvyj25c
+    export GS_VY_SOLDIRS=sol_gvyj25a,sol_gvyj25b,sol_gvyj25c
+    export GS_VY_BV=0.0,0.0,0.0
+    export GS_VY_BC=0.0,0.0,0.0
+    export GS_VY_BI=0.0,-0.25,-0.5
+    export GS_VY_BK=0.0,0.0,0.0
+    export GS_VY_SHARES=0.34,0.33,0.33
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyj25-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp20)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp20; SPEC=var-gs_vy-gvyp20-v1
+    SOLVE_TAG=sol_gvyp20a
+    export GS_VY_SOLDIRS=sol_gvyp20a
+    export GS_VY_BV=0.2
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp20-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp10)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp10; SPEC=var-gs_vy-gvyp10-v1
+    SOLVE_TAG=sol_gvyp10a
+    export GS_VY_SOLDIRS=sol_gvyp10a
+    export GS_VY_BV=0.1
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp10-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp05)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp05; SPEC=var-gs_vy-gvyp05-v1
+    SOLVE_TAG=sol_gvyp05a
+    export GS_VY_SOLDIRS=sol_gvyp05a
+    export GS_VY_BV=0.05
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp05-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp075)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp075; SPEC=var-gs_vy-gvyp075-v1
+    SOLVE_TAG=sol_gvyp075a
+    export GS_VY_SOLDIRS=sol_gvyp075a
+    export GS_VY_BV=0.075
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp075-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp15)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp15; SPEC=var-gs_vy-gvyp15-v1
+    SOLVE_TAG=sol_gvyp15a
+    export GS_VY_SOLDIRS=sol_gvyp15a
+    export GS_VY_BV=0.15
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp15-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  kpgam)
+    # kp_vy (2026-10-12): KP14 baseline with a COUNTER-CYCLICAL price of the productivity shock: gamma_x times a logistic of the state y, 1 to 3
+    MODEL=kp_vy; TAG=kpgam; SPEC=var-kp_vy-kpgam-v1; SOLVE_TAG=kpgam
+    export KP_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.0], "gamma_v": 0.0, "bv_comp": 0.0, "g_lo": 1.0, "g_hi": 3.0, "g_steep": -2.0}'
+    export KP_VY_PREFIX=kpgam
+    SOLVE_HINT='export KSPECS=var-kp_vy-kpgam-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  gvyp10x)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp10x; SPEC=var-gs_vy-gvyp10x-v1
+    SOLVE_TAG=sol_gvyp10xa
+    export GS_VY_SOLDIRS=sol_gvyp10xa
+    export GS_VY_BV=0.1
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp10x-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyp10j)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyp10j; SPEC=var-gs_vy-gvyp10j-v1
+    SOLVE_TAG=sol_gvyp10ja
+    export GS_VY_SOLDIRS=sol_gvyp10ja
+    export GS_VY_BV=0.1
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyp10j-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  bvych0)
+    # bgn_vy follow-up (2026-10-10): bvy25 with y as a 21-node Tauchen chain, no crash: the control for the crash economy
+    MODEL=bgn_vy; TAG=bvych0; SPEC=var-bgn_vy-bvych0-v1; SOLVE_TAG=Jstar_vy_bvych0
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvych0.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvych0-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyj25)
+    # bgn_vy follow-up (2026-10-10): BGN y-factor economy with a rare priced CRASH in the state y: a different distribution of shocks
+    MODEL=bgn_vy; TAG=bvyj25; SPEC=var-bgn_vy-bvyj25-v1; SOLVE_TAG=Jstar_vy_bvyj25
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "pj": 0.01, "gj": 2.0, "jstar_vy_file": "Jstar_vy_bvyj25.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyj25-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  vyj25)
+    # kp_vy (2026-10-12): KP14 vyg25 with a CRASH in the priced state: a jump of y to -y_max at rate 1% a month, priced at e^2
+    MODEL=kp_vj; TAG=vyj25; SPEC=var-kp_vj-vyj25-v1; SOLVE_TAG=vyj25
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.02, 0.07, 0.14], "gamma_v": 2.5, "bv_comp": 1.2, "pj": 0.01, "gj": 2.0}'
+    export KP_VY_PREFIX=vyj25
+    SOLVE_HINT='export KSPECS=var-kp_vj-vyj25-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  bvyk2)
+    # bgn_vy follow-up (2026-10-10): BGN with TWO independent priced chains (K 1 -> 2 priced states beyond the rate) and three types whose loading vectors span them, at bvych0's loading sizes and total price
+    MODEL=bgn_vy; TAG=bvyk2; SPEC=var-bgn_vy-bvyk2-v1; SOLVE_TAG=Jstar_vy_bvyk2
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.0, 0.04949747], "gamma_v": 1.76776695, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "NY2": 21, "type_bv2": [0.0, 0.035, 0.04949747], "gamma_v2": 1.76776695, "kappa_y2": 0.35, "jstar_vy_file": "Jstar_vy_bvyk2.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyk2-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  gvypk2)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvypk2; SPEC=var-gs_vy-gvypk2-v1
+    SOLVE_TAG=sol_gvypk2a,sol_gvypk2b
+    export GS_VY_SOLDIRS=sol_gvypk2a,sol_gvypk2b
+    export GS_VY_BV=0.1,0.0
+    export GS_VY_BC=0.0,0.0
+    export GS_VY_BI=0.0,0.0
+    export GS_VY_BK=0.0,0.0
+    export GS_VY_SHARES=0.5,0.5
+    export GS_VY_BV2=0.0,0.1
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvypk2-v1; sbatch --export=ALL --array=0-1 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  vy1)
+    # kp_vy (2026-10-12): KP14 with the priced state y and ONE type, exposure 0.07 (group 3a: exposure through a single firm state)
+    MODEL=kp_vy; TAG=vy1; SPEC=var-kp_vy-vy1-v1; SOLVE_TAG=vy1
+    export KP_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.07], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vy1
+    SOLVE_HINT='export KSPECS=var-kp_vy-vy1-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vym2t3)
+    # kp_vy (2026-10-12): KP14 with TWO independent priced states and three types loading (0.02,0), (0,0.07), (0.099,0.099): vyg25's ladder in three directions, total price 2.5
+    MODEL=kp_vy; TAG=vym2t3; SPEC=var-kp_vy-vym2t3-v1; SOLVE_TAG=vym2t3
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [[0.02, 0.0], [0.0, 0.07], [0.0989949, 0.0989949]], "gamma_v": [1.76776695, 1.76776695], "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vym2t3
+    SOLVE_HINT='export KSPECS=var-kp_vy-vym2t3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  bvy1ch)
+    # bgn_vy follow-up (2026-10-10): BGN with the priced y chain and ONE type, exposure 0.035 (group 3a: exposure through a single firm state)
+    MODEL=bgn_vy; TAG=bvy1ch; SPEC=var-bgn_vy-bvy1ch-v1; SOLVE_TAG=Jstar_vy_bvy1ch
+    export BGN_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.035], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvy1ch.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvy1ch-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  gvy1)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvy1; SPEC=var-gs_vy-gvy1-v1
+    SOLVE_TAG=sol_gvy1a
+    export GS_VY_SOLDIRS=sol_gvy1a
+    export GS_VY_BV=0.05
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy1-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvypk3)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvypk3; SPEC=var-gs_vy-gvypk3-v1
+    SOLVE_TAG=sol_gvypk2a,sol_gvypk2b,sol_gvypk3c
+    export GS_VY_SOLDIRS=sol_gvypk2a,sol_gvypk2b,sol_gvypk3c
+    export GS_VY_BV=0.1,0.0,0.0707107
+    export GS_VY_BC=0.0,0.0,0.0
+    export GS_VY_BI=0.0,0.0,0.0
+    export GS_VY_BK=0.0,0.0,0.0
+    export GS_VY_SHARES=0.34,0.33,0.33
+    export GS_VY_BV2=0.0,0.1,0.0707107
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvypk3-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  vy1j)
+    # kp_vy (2026-10-12): KP14 with a CRASH-ONLY cash-flow factor: one type, cash flows x e^{0.07 y}, y's Gaussian shocks unpriced, a priced crash of y to -3.5 sd at 1%/month (weight e^2)
+    MODEL=kp_vj; TAG=vy1j; SPEC=var-kp_vj-vy1j-v1; SOLVE_TAG=vy1j
+    export KP_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.07], "gamma_v": 0.0, "bv_comp": 1.2, "pj": 0.01, "gj": 2.0}'
+    export KP_VY_PREFIX=vy1j
+    SOLVE_HINT='export KSPECS=var-kp_vj-vy1j-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  bvy1j)
+    # bgn_vy follow-up (2026-10-10): BGN with a CRASH-ONLY cash-flow factor: one type, project cash flows x e^{0.035 y}, y's Gaussian shocks unpriced, a priced crash of y to -3.5 sd at 1%/month (weight e^2)
+    MODEL=bgn_vy; TAG=bvy1j; SPEC=var-bgn_vy-bvy1j-v1; SOLVE_TAG=Jstar_vy_bvy1j
+    export BGN_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.035], "gamma_v": 0.0, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "pj": 0.01, "gj": 2.0, "jstar_vy_file": "Jstar_vy_bvy1j.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvy1j-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  gvy1j)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvy1j; SPEC=var-gs_vy-gvy1j-v1
+    SOLVE_TAG=sol_gvy1ja
+    export GS_VY_SOLDIRS=sol_gvy1ja
+    export GS_VY_BV=0.05
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy1j-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  kpq)
+    # kp_vy (2026-10-12): KP14 with a QUADRATIC price of productivity risk: gamma_x x min(1 + 0.25 y^2, 3), y an unpriced stationary state no firm is exposed to
+    MODEL=kp_vy; TAG=kpq; SPEC=var-kp_vy-kpq-v1; SOLVE_TAG=kpq
+    export KP_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.0], "gamma_v": 0.0, "bv_comp": 0.0, "g_quad": 0.25}'
+    export KP_VY_PREFIX=kpq
+    SOLVE_HINT='export KSPECS=var-kp_vy-kpq-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  gq25)
+    # GS21, one type, gamma(x) = min(0.5 (1 + 0.25 (x/sd(x))^2), 1.5): the group-2 quadratic price (2026-10-14)
+    MODEL=gs_bx; TAG=gq25; SPEC=var-gs_bx-gq25-v1; SOLVE_TAG=sol_gq25
+    export GS_BX_SOLDIRS=sol_gq25
+    export GS_BX_BETAS=1.0
+    export GS_BX_SHARES=1.0
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSBX_SPEC=var-gs_bx-gq25-v1; sbatch --export=ALL --array=0 variants/klc/solve_gs_klc.sh   # Quest'
+    ;;
+  gvyz10)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyz10; SPEC=var-gs_vy-gvyz10-v1
+    SOLVE_TAG=sol_gvyz10a
+    export GS_VY_SOLDIRS=sol_gvyz10a
+    export GS_VY_BV=0.1
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyz10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyz10j)
+    # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
+    # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
+    MODEL=gs_vy; TAG=gvyz10j; SPEC=var-gs_vy-gvyz10j-v1
+    SOLVE_TAG=sol_gvyz10ja
+    export GS_VY_SOLDIRS=sol_gvyz10ja
+    export GS_VY_BV=0.1
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyz10j-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  bvych41)
+    # bgn_vy follow-up (2026-10-10): bvych0 on a 41-node chain: does the 21-node discretization halve bvy25's gap?
+    MODEL=bgn_vy; TAG=bvych41; SPEC=var-bgn_vy-bvych41-v1; SOLVE_TAG=Jstar_vy_bvych41
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "NY": 41, "jstar_vy_file": "Jstar_vy_bvych41.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvych41-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bq25)
+    # bgn_vy follow-up (2026-10-10): BGN with a QUADRATIC price of market risk in the rate: sigma_z x min(1 + 0.25 s^2, 3), s the standardized rate, binned to 7 levels (group 2, harmonized)
+    MODEL=bgn_q; TAG=bq25; SPEC=var-bgn_q-bq25-v1; SOLVE_TAG=Jstar_vy_bq25
+    export BGN_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.0], "gamma_v": 0.0, "kappa_y": 0.35, "bv_comp": 0.0, "q_price": 0.25, "NB": 7, "jstar_vy_file": "Jstar_vy_bq25.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_q-bq25-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vym3, vym3t3, g0235d, bgnbase, kpbase or gsbase)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vym3, vym3t3, g0235d, bgnbase, kpbase, gsbase, g0235df, vyg30k70, gx7w, vyg25k15, vyg25k70, bvy25, gvy25 or gvyc25)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked
@@ -500,8 +934,14 @@ RESULTS=${BOP_RESULTS_DIR:-results}
 INPUTS=${BOP_INPUTS_DIR:-results}   # read by SEED_STAGE=linear only
 
 CONDA_ENV=${CONDA_ENV:-bop}
-module load mamba/latest
-source activate "$CONDA_ENV"
+# BOP_ENV_PREFIX: a site without ASU's `mamba/latest` module points this at an existing conda
+# env's prefix instead (Quest: variants/klc/). Everything below is then identical.
+if [ -n "${BOP_ENV_PREFIX:-}" ]; then
+  export CONDA_PREFIX="$BOP_ENV_PREFIX"
+else
+  module load mamba/latest
+  source activate "$CONDA_ENV"
+fi
 # `source activate` sets CONDA_PREFIX but does NOT prepend the env's bin/ to PATH in the
 # non-interactive shell sbatch provides. Without this, `python` resolves to the mamba
 # BASE interpreter and every task dies in ~1 s with ModuleNotFoundError: numpy (the
