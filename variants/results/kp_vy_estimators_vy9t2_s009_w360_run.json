@@ -1,0 +1,48 @@
+{
+ "model": "kp_vy",
+ "tag": "vy9t2",
+ "seed": 9,
+ "prov": "kp_vy_estimators_vy9t2_s009_w360_summary@nogit",
+ "spec_id": "var-kp_vy-vy9t2-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "0f6bdf7574d65dec",
+   "files": 9,
+   "files_expected": 9,
+   "bytes": 7147524
+  },
+  {
+   "stage": "integ",
+   "solve_id": "44a0cca0b5434acf",
+   "files": 189,
+   "files_expected": 189,
+   "bytes": 17164980
+  }
+ ],
+ "panel": "kp_vy_panel_vy9t2_s009.parquet"
+}

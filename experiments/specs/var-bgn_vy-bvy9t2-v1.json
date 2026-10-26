@@ -1,0 +1,170 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvy9t2-v1",
+ "title": "BGN with TWO independent priced chains and NINE types: bvych0's ladder (0.01, 0.035, 0.07) on each chain, the two type indices independent, total price 2.5 (2.5/sqrt(2) per chain)",
+ "question": "Group 4 redone (2026-10-20), harmonized with vy9t2: does a second chain carrying its own type-by-leverage interaction, with exposures independent across the chains, raise room and gap over bvych0 and over bvyk2's three-direction design?",
+ "notes": "Every firm draws a type for each chain independently from bvych0's ladder; exposure to chain k is type_k x leverage. Same price convention as bvyk2 (1.7678 per chain).",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvy25-v1",
+  "changes": [
+   "type_bv [0.01, 0.01, 0.01, 0.035, 0.035, 0.035, 0.07, 0.07, 0.07], bv_comp 1.2, gamma_v 1.76776695, kappa_y 0.35 (bvy25: (0.01, 0.035, 0.07), 1.2, 2.5, 0.35); everything else bvy25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1112,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111
+  ],
+  "type_bv": [
+   0.01,
+   0.01,
+   0.01,
+   0.035,
+   0.035,
+   0.035,
+   0.07,
+   0.07,
+   0.07
+  ],
+  "gamma_v": 1.76776695,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "NY2": 21,
+  "type_bv2": [
+   0.01,
+   0.035,
+   0.07,
+   0.01,
+   0.035,
+   0.07,
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v2": 1.76776695,
+  "kappa_y2": 0.35,
+  "jstar_vy_file": "Jstar_vy_bvy9t2.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1112,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111
+     ],
+     "type_bv": [
+      0.01,
+      0.01,
+      0.01,
+      0.035,
+      0.035,
+      0.035,
+      0.07,
+      0.07,
+      0.07
+     ],
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "NY2": 21,
+     "type_bv2": [
+      0.01,
+      0.035,
+      0.07,
+      0.01,
+      0.035,
+      0.07,
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "jstar_vy_file": "Jstar_vy_bvy9t2.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-10 as a bvy25 follow-up; built on Quest by variants/klc/solve_bgn_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvy9t2",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.4700012.Jstar_vy_bvy9t2.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "de459cbcc06fbb44"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "6c1db753318bb50c2d9001b17498a2b19e7194f66afc7e65e7812db5ef15b250"
+}

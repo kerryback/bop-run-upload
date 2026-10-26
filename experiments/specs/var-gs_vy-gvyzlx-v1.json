@@ -1,0 +1,224 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyzlx-v1",
+ "title": "GS21 with the priced y factor on production, exposure = standardized PRODUCTIVITY (gvyz10), and a FIXED capital structure: three leverage types with the coupon per unit capital held at 0.158, 0.421, 0.684 by monthly costless refinancing (xi = 1, kappa_b = 0), drawn independently of productivity",
+ "question": "Does a priced second factor make a fair gap in GS21 when the exposure is a PRODUCT of a hidden type and a within-firm state, so the premium is an interaction the ranks cannot span?",
+ "notes": "2026-10-22. gvyzl's five finished seeds showed the fixed-coupon types leak: the coupon is diluted by 1/g at every investment and resets only at a refinancing opportunity (xi = 1% a month), so the realized coupon per unit capital had median 0.17 and p90 0.36 against set-points 0.16/0.42/0.68, and leverage still rank-correlated 0.94 with book-to-market. Here the firm refinances every month (xi = 1) at its type's coupon with no issuance cost (kappa_b = 0), so debt scales with capital and leverage is the type: the capital structure is exogenous and fixed. Everything else gvyz10's.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_bv [0.1, 0.1, 0.1] x (gs_bzl 0.0 + gs_bzi 1.0 z~): type x productivity exposure, bv_comp 0.0",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0, 0.0, 0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "gs_bzl": 0.0,
+  "gs_bzi": 1.0,
+  "xi": 1.0,
+  "kappa_b": 0.0
+ },
+ "types": {
+  "share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "gs_bc": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bi": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bk": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bfix": [
+    0.15,
+    0.4,
+    0.7
+   ]
+  },
+  "soldirs": [
+   "sol_gvyzlxa",
+   "sol_gvyzlxb",
+   "sol_gvyzlxc"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyzlxa",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzi": 1.0,
+     "gs_blo": 0.15,
+     "gs_bhi": 0.15,
+     "xi": 1.0,
+     "kappa_b": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvyzlxb",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzi": 1.0,
+     "gs_blo": 0.4,
+     "gs_bhi": 0.4,
+     "xi": 1.0,
+     "kappa_b": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvyzlxc",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzi": 1.0,
+     "gs_blo": 0.7,
+     "gs_bhi": 0.7,
+     "xi": 1.0,
+     "kappa_b": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyzlxa,sol_gvyzlxb,sol_gvyzlxc",
+  "GS_VY_BV": "0.1,0.1,0.1",
+  "GS_VY_BC": "0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,0.0,0.0",
+  "GS_VY_BK": "0.0,0.0,0.0",
+  "GS_VY_SHARES": "0.34,0.33,0.33"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyzlx",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvyzlxa",
+  "sol_gvyzlxb",
+  "sol_gvyzlxc"
+ ],
+ "reused_solves": null,
+ "spec_hash": "45c14be2234a9be45a199611fc805cc8ece2a91fb273360b6c80e77a8332b325"
+}

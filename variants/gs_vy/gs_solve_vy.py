@@ -80,6 +80,10 @@ gs_bzi = 0.0
 # and leverage) with no additive part, and its cross-sectional mean is about zero -- the reduced-form latent-product
 # factor, in GS21's own states, with no firm type needed.
 gs_bzb = 0.0
+# gs_bzc (2026-10-24): a leverage-LEVEL term gs_bv * gs_bzc * b~ beside the product, so the exposure is gs_bv b~ (z~ + gs_bzc) when
+# gs_bzb = 1: it keeps the sign of leverage for every firm whose z~ > -gs_bzc (the market-share reading: levered firms lose
+# demand in tight-credit states, in proportion to how productive the gainers are), and adds an additive leverage part.
+gs_bzc = 0.0
 # ---- a SECOND nonlinear loading, on the existing priced productivity shock x (2026-10-12, "larger factor model"):
 # the x loading becomes gs_bx + gs_bx2 * (z~^2 - 1)/sqrt(2), a curvature in productivity that is distinct from the
 # y loading's product z~ b~. No second chain is needed: x is already priced at gamma_x.
@@ -99,6 +103,22 @@ NY2 = 1
 gs_bv2 = 0.0
 gamma_v2 = 0.0
 kappa_y2 = 0.35
+# ---- an EXOGENOUS capital structure (2026-10-21): the coupon the firm may choose at a refinancing event is restricted
+# to the grid nodes in [gs_blo, gs_bhi]. gs_blo = gs_bhi = b_f fixes this type's coupon per unit capital at b_f (a
+# debt capacity drawn independently of productivity, so leverage varies across firms independently of z); gs_bhi < 1
+# alone is a debt-capacity cap with the choice free below it. (0, 1) is the unrestricted choice of GS21.
+gs_blo = 0.0
+gs_bhi = 1.0
+# ---- a FIXED capital structure (2026-10-22): gs_fixcs = 1 removes refinancing altogether (xi must be 0) and makes debt
+# scale with capital: at investment the firm issues new debt pari passu with the old at the same coupon per unit
+# capital, so b' = b instead of b/g, equity receives (1 - kappa_b)(g - 1) Q(b) for the new debt, and the old debt's
+# value per old unit of capital is unchanged (Q(b), not g Q(b/g)). The coupon per unit capital is then the type's
+# gs_blo = gs_bhi for the firm's whole life. gs_fixcs = 0 is GS21's debt dynamics.
+gs_fixcs = 0
+# ---- RISKLESS debt (2026-10-23): gs_riskless = 1 values the debt claim at its riskless coupon value in every state,
+# b / (e^r - 1) per unit coupon, as if creditors were made whole on default. Equity then bears the whole exposure of the
+# assets to y and x: its premium is the asset premium times (assets / equity). gs_riskless = 0 is GS21's risky debt.
+gs_riskless = 0
 ov = json.loads(os.environ.get("GS_PARAM_OVERRIDES", "{}"))
 globals().update(ov)
 rho_y = float(np.exp(-kappa_y * dt))
@@ -165,6 +185,23 @@ def tauchen(sigma, rho, multiple, n):
 xgrid, pr_x = tauchen(sigma_x, rho_x, 4, xnum)
 zgrid, pr_z = tauchen(sigma_z, rho_z, 4, znum)
 bgrid = np.linspace(0.0, 1.0, bnum)
+_bh = 0.5 * (bgrid[1] - bgrid[0])                                      # half a grid step: [lo, hi] snaps to the nearest nodes
+_bmask = (bgrid >= gs_blo - _bh) & (bgrid <= gs_bhi + _bh)            # coupons the firm may refinance to
+assert _bmask.any(), f"no coupon node within half a step of [{gs_blo}, {gs_bhi}]"
+def restrict_b(obj):
+    """obj (z, x, b, b'): -inf outside the allowed b' nodes, so argmax picks within the capital-structure set"""
+    if not _bmask.all():
+        obj[..., ~_bmask] = -np.inf
+    return obj
+if gs_fixcs:
+    assert xi == 0.0, "a fixed capital structure (gs_fixcs = 1) has no refinancing: set xi = 0"
+    assert _bmask.sum() == 1, "a fixed capital structure needs one coupon node: gs_blo = gs_bhi"
+def qi_no(Q0):
+    """old debt's value per OLD unit of capital after an investment without refinancing"""
+    return Q0 if gs_fixcs else at_bg(g * Q0)
+def pi_dn(iy, Q0, EPI):
+    """equity's payoff when investing without refinancing: cash flow (+ new-debt proceeds under gs_fixcs) + continuation"""
+    return issue(pi_R[iy] + (1 - kappa_b) * (g - 1) * Q0) + EPI if gs_fixcs else pi_R_e[iy] + at_bg(EPI)
 ygrid, pr_y = tauchen(s_y, rho_y, y_mult, NY)
 if gs_pj > 0 and NY > 1:
     _jump = np.zeros((NY, NY)); _jump[:, 0] = 1.0
@@ -198,7 +235,7 @@ if NY2 > 1:
 else:
     ygrid2 = np.zeros(NY)
 MPy = My * pr_y                                             # (NY, NY): priced y-transition weights
-print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}", flush=True)
+print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}, coupon set [{gs_blo}, {gs_bhi}] -> nodes {np.round(bgrid[_bmask], 4).tolist()}", flush=True)
 
 mn = np.linspace(-4 * sigma_m, 4 * sigma_m, 161)
 mw = np.exp(-0.5 * (mn / sigma_m) ** 2)
@@ -218,8 +255,8 @@ def smooth(P):
 # per-y-node production: (NY, znum, xnum, bnum)
 _ztil = zgrid / np.sqrt(sigma_z ** 2 / (1 - rho_z ** 2))                           # z in stationary-sd units
 _btil = (bgrid - 0.5) / 0.29                                                       # coupon in grid-sd units
-_expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :])   # (znum, bnum)
-_expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :])  # the second chain's
+_expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :])   # (znum, bnum)
+_expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :])  # the second chain's
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)                          # (znum,) x loading by productivity
 _prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift)
 _cost = delta + gs_fc * np.exp(gs_bc * ygrid)[:, None, None, None]            # (NY, 1, 1, 1)
@@ -269,7 +306,7 @@ for it in range(60000):
     pre = []
     for iy in range(NY):
         v = S[iy]
-        QI = g * v["Q0"]; QI_no = at_bg(QI)
+        QI = g * v["Q0"]; QI_no = qi_no(v["Q0"])
         Qn_up = v["prob_up"] * QI_no + (1 - v["prob_up"]) * v["Q0"]
         Qn_dn = v["prob_dn"] * QI_no + (1 - v["prob_dn"]) * v["Q0"]
         Pu_pert, ind_up = smooth(v["P_up"])
@@ -283,6 +320,8 @@ for it in range(60000):
     for iy in range(NY):
         v = S[iy]
         Q0_new = xi * iu_mix[iy] + (1 - xi) * idn_mix[iy]
+        if gs_riskless:
+            Q0_new = np.broadcast_to((ky[iy] * bgrid / (np.exp(r) - 1.0))[None, None, :], Q0_new.shape).copy()
         qerr = max(qerr, np.abs(Q0_new - v["Q0"]).max())
         v["Q0"] = 0.5 * Q0_new + 0.5 * v["Q0"]
     # ---- equity sweep ----
@@ -290,23 +329,23 @@ for it in range(60000):
     Pd_mix = mix_y([discount(p["Pd"]) for p in pre])
     for iy in range(NY):
         v = S[iy]
-        QI = g * v["Q0"]; QI_no = at_bg(QI)
+        QI = g * v["Q0"]; QI_no = qi_no(v["Q0"])
         EP0 = xi * Pu_mix[iy] + (1 - xi) * Pd_mix[iy]
         EPI = g * EP0
         if it % 25 == 0 or it < 50:
             obj0 = issue((pi_R[iy] - v["Q0"])[..., None] + (1 - kappa_b) * v["Q0"][..., None, :])
             obj0 += EP0[..., None, :]
-            b0new = obj0.argmax(axis=3)
+            b0new = restrict_b(obj0).argmax(axis=3)
             P0_up = np.take_along_axis(obj0, b0new[..., None], 3)[..., 0]
             del obj0
             objI = issue((pi_R[iy] - QI_no)[..., None] + (1 - kappa_b) * QI[..., None, :])
             objI += EPI[..., None, :]
-            bInew = objI.argmax(axis=3)
+            bInew = restrict_b(objI).argmax(axis=3)
             PI_up = np.take_along_axis(objI, bInew[..., None], 3)[..., 0]
             del objI
             v["b0idx"], v["bIidx"] = b0new, bInew
             P0_dn = pi_R_e[iy] + EP0
-            PI_dn = pi_R_e[iy] + at_bg(EPI)
+            PI_dn = pi_dn(iy, v["Q0"], EPI)
             v["icut_up"] = np.clip((PI_up - P0_up) / cy[iy], imin, imax)
             v["icut_dn"] = np.clip((PI_dn - P0_dn) / cy[iy], imin, imax)
             pu_new = (v["icut_up"] - imin) / (imax - imin)
@@ -319,7 +358,7 @@ for it in range(60000):
             PI_up = (issue(pi_R[iy] - QI_no + (1 - kappa_b) * np.take_along_axis(QI, v["bIidx"], 2))
                      + np.take_along_axis(EPI, v["bIidx"], 2))
             P0_dn = pi_R_e[iy] + EP0
-            PI_dn = pi_R_e[iy] + at_bg(EPI)
+            PI_dn = pi_dn(iy, v["Q0"], EPI)
         P_up_new = v["prob_up"] * (PI_up - cy[iy] * 0.5 * (v["icut_up"] + imin)) + (1 - v["prob_up"]) * P0_up
         P_dn_new = v["prob_dn"] * (PI_dn - cy[iy] * 0.5 * (v["icut_dn"] + imin)) + (1 - v["prob_dn"]) * P0_dn
         perr = max(perr, np.abs(P_up_new - v["P_up"]).max(), np.abs(P_dn_new - v["P_down"]).max())
@@ -352,20 +391,20 @@ for it in range(60000):
         Pd_mix = mix_y([discount(p["Pd"]) for p in pre])
         for iy in range(NY):
             v = S[iy]
-            QI = g * v["Q0"]; QI_no = at_bg(QI)
+            QI = g * v["Q0"]; QI_no = qi_no(v["Q0"])
             EP0 = xi * Pu_mix[iy] + (1 - xi) * Pd_mix[iy]
             EPI = g * EP0
             obj0 = issue((pi_R[iy] - v["Q0"])[..., None] + (1 - kappa_b) * v["Q0"][..., None, :])
             obj0 += EP0[..., None, :]
-            v["b0idx"] = obj0.argmax(axis=3)
+            v["b0idx"] = restrict_b(obj0).argmax(axis=3)
             v["_P0_up"] = np.take_along_axis(obj0, v["b0idx"][..., None], 3)[..., 0]
             del obj0
             objI = issue((pi_R[iy] - QI_no)[..., None] + (1 - kappa_b) * QI[..., None, :])
             objI += EPI[..., None, :]
-            v["bIidx"] = objI.argmax(axis=3)
+            v["bIidx"] = restrict_b(objI).argmax(axis=3)
             v["_PI_up"] = np.take_along_axis(objI, v["bIidx"][..., None], 3)[..., 0]
             del objI
-            v["_P0_dn"] = pi_R_e[iy] + EP0; v["_PI_dn"] = pi_R_e[iy] + at_bg(EPI)
+            v["_P0_dn"] = pi_R_e[iy] + EP0; v["_PI_dn"] = pi_dn(iy, v["Q0"], EPI)
             v["icut_up"] = np.clip((v["_PI_up"] - v["_P0_up"]) / cy[iy], imin, imax)
             v["icut_dn"] = np.clip((v["_PI_dn"] - v["_P0_dn"]) / cy[iy], imin, imax)
         print(f"cycle-averaged; stopping", flush=True)
@@ -385,7 +424,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     PI_down=np.stack([S[iy]["_PI_dn"] for iy in range(NY)]),
                     Q0=np.stack([S[iy]["Q0"] for iy in range(NY)]),
                     QI=np.stack([g * S[iy]["Q0"] for iy in range(NY)]),
-                    QI_no=np.stack([at_bg(g * S[iy]["Q0"]) for iy in range(NY)]),
+                    QI_no=np.stack([qi_no(S[iy]["Q0"]) for iy in range(NY)]),
                     icut_up=np.stack([S[iy]["icut_up"] for iy in range(NY)]),
                     icut_dn=np.stack([S[iy]["icut_dn"] for iy in range(NY)]),
                     b_refin_0=np.stack([bgrid[S[iy]["b0idx"]] for iy in range(NY)]),
@@ -393,7 +432,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     params=np.array([g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
                                      kappa_b, xi, imin, imax, sigma_m]),
                     solve_id=_snap.solve_id,
-                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj,
+                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
                     gamma_v=gamma_v, kappa_y=kappa_y, NY=NY, y_mult=y_mult, lam_y=lam_y, rho_y=rho_y, s_y=s_y,
                     ygrid2=ygrid2, NY1=NY1, NY2=NY2, gs_bv2=gs_bv2, gamma_v2=gamma_v2, kappa_y2=kappa_y2,
                     kappa_e=kappa_e, xnum=xnum, bnum=bnum, znum=znum, tol=tol,

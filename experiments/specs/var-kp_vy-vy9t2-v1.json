@@ -1,0 +1,202 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vy9t2-v1",
+ "title": "KP14 with TWO independent priced states and NINE types: vyg25's ladder (0.02, 0.07, 0.14) on each state, the two type indices independent, total price 2.5 (2.5/sqrt(2) per state)",
+ "question": "Group 4 redone (2026-10-20): does a second priced state carrying its own type-by-leverage interaction, with exposures independent across the two states, raise room and gap over vyg25? Replaces vym2t3, whose three types were sorts in three directions and under-priced two of them.",
+ "notes": "Every firm draws a type for each state independently from vyg25's ladder, so exposure to state k is type_k x leverage: two interactions where vyg25 has one. Setting the second ladder to zero recovers vyg25 (up to the price split). Total price held at 2.5 as in bvyk2 and gvypk3: per-type effective price 2.0 to 2.5, premium b.gamma 0.07 to 0.50 (vyg25: 0.05 to 0.35). Feasibility from parameters_kp14: rho_ty min 0.040, const_ty min 0.254, A0 finite.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v4",
+  "changes": [
+   "params {'type_share': [0.1112, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111], 'type_bv': [[0.02, 0.02], [0.02, 0.07], [0.02, 0.14], [0.07, 0.02], [0.07, 0.07], [0.07, 0.14], [0.14, 0.02], [0.14, 0.07], [0.14, 0.14]], 'gamma_v': [1.76776695, 1.76776695], 'bv_comp': 1.2} (parent: {'type_share': [0.34, 0.33, 0.33], 'type_bv': [0.02, 0.07, 0.14], 'gamma_v': 2.5, 'bv_comp': 1.2}); own tables under prefix vy9t2"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1112,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111
+  ],
+  "type_bv": [
+   [
+    0.02,
+    0.02
+   ],
+   [
+    0.02,
+    0.07
+   ],
+   [
+    0.02,
+    0.14
+   ],
+   [
+    0.07,
+    0.02
+   ],
+   [
+    0.07,
+    0.07
+   ],
+   [
+    0.07,
+    0.14
+   ],
+   [
+    0.14,
+    0.02
+   ],
+   [
+    0.14,
+    0.07
+   ],
+   [
+    0.14,
+    0.14
+   ]
+  ],
+  "gamma_v": [
+   1.76776695,
+   1.76776695
+  ],
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vy9t2"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1112,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111,
+      0.1111
+     ],
+     "type_bv": [
+      [
+       0.02,
+       0.02
+      ],
+      [
+       0.02,
+       0.07
+      ],
+      [
+       0.02,
+       0.14
+      ],
+      [
+       0.07,
+       0.02
+      ],
+      [
+       0.07,
+       0.07
+      ],
+      [
+       0.07,
+       0.14
+      ],
+      [
+       0.14,
+       0.02
+      ],
+      [
+       0.14,
+       0.07
+      ],
+      [
+       0.14,
+       0.14
+      ]
+     ],
+     "gamma_v": [
+      1.76776695,
+      1.76776695
+     ],
+     "bv_comp": 1.2
+    },
+    "args": {
+     "prefix": "vy9t2"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-12; built on Quest by variants/klc/solve_kp_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vy9t2",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.4700011.vy9t2.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "G": "0f6bdf7574d65dec",
+  "integ": "44a0cca0b5434acf"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "f96a9190faae67d7354a1d363e2c158e7e0b69a423f303abbadf5bd18b868076"
+}

@@ -46,9 +46,12 @@ gs_bphi = float(_s["gs_bphi"]) if "gs_bphi" in _s.files else 0.0     # recovery 
 gs_bzl = float(_s["gs_bzl"]) if "gs_bzl" in _s.files else 1.0
 gs_bzi = float(_s["gs_bzi"]) if "gs_bzi" in _s.files else 0.0
 gs_bzb = float(_s["gs_bzb"]) if "gs_bzb" in _s.files else 0.0
+gs_bzc = float(_s["gs_bzc"]) if "gs_bzc" in _s.files else 0.0
 gs_bx2 = float(_s["gs_bx2"]) if "gs_bx2" in _s.files else 0.0
 gs_pj = float(_s["gs_pj"]) if "gs_pj" in _s.files else 0.0
 ashift_ts = [float(d["gs_ashift"]) for d in _sols]  # applied in production below, as the solver does
+gs_fixcs = int(_s["gs_fixcs"]) if "gs_fixcs" in _s.files else 0        # fixed capital structure: see gs_solve_vy.py
+bfix_ts = [float(bgrid[np.argmin(np.abs(bgrid - float(d["gs_blo"])))]) if "gs_blo" in d.files else 0.0 for d in _sols]
 
 _solved_bv = [float(d["gs_bv"]) for d in _sols]
 if _solved_bv != _bv_list:
@@ -74,7 +77,7 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
     if _f == 0:
         continue
     for _k in ("xgrid", "zgrid", "bgrid", "pr_x", "pr_z", "Mx", "ygrid", "pr_y", "MPy", "params", "kappa_e", "gs_bx",
-               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bx2", "gs_pj", "gs_gj",
+               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bzc", "gs_bx2", "gs_pj", "gs_gj",
                "ygrid2", "NY2", "gamma_v2", "kappa_y2"):
         if _k not in _s.files or _k not in _sol.files:
             continue
@@ -88,7 +91,7 @@ _zexpo = gs_bzl + gs_bzi * _ztil                     # (znum,) multiplies each t
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)   # (znum,) x loading by productivity
 def _expo_of(zi, b):
     """exposure multiplier at productivity node zi and coupon b (continuous): gs_bzl + gs_bzi z~ + gs_bzb z~ b~"""
-    return _zexpo[zi] + gs_bzb * _ztil[zi] * (b - 0.5) / 0.29
+    return _zexpo[zi] + (gs_bzb * _ztil[zi] + gs_bzc) * (b - 0.5) / 0.29
 burnin = 400          # the protocol's BURNIN (common/protocol.py)
 alpha_e = 0.2
 reg_seed = 909
@@ -162,6 +165,7 @@ def create_arrays(N, T, seed_offset=0):
     bif = np.array(_bi_list)[ftype]
     bkf = np.array(_bk_list)[ftype]
     bvf2 = np.array(_bv2_list)[ftype]
+    bfixf = np.array(bfix_ts)[ftype]                                  # the type's coupon per unit capital (gs_fixcs)
     statx = np.linalg.matrix_power(pr_x.T, 500) @ np.full(xnum, 1 / xnum)
     statz = np.linalg.matrix_power(pr_z.T, 500) @ np.full(znum, 1 / znum)
     staty = np.linalg.matrix_power(pr_y.T, 500) @ np.full(NY, 1 / NY)
@@ -176,6 +180,8 @@ def create_arrays(N, T, seed_offset=0):
     ix[0] = rng.choice(xnum, p=statx)
     iz[0] = rng.choice(znum, size=N, p=statz)
     b = np.zeros((T + 1, N)); k = np.ones((T + 1, N))
+    if gs_fixcs:
+        b[0] = bfixf                                                  # born with the type's debt
     eta = rng.random((T + 1, N)) < xi
     icost = rng.uniform(imin, imax, size=(T + 1, N))
     mshock = rng.choice(mn, size=(T + 1, N), p=mw)
@@ -195,6 +201,8 @@ def create_arrays(N, T, seed_offset=0):
         b0_star = _by_type(b_refin_0_ts, s, zi, xt, b[t], ftype)
         bp = np.where(eta[t], np.where(invest[t], bI_star, b0_star),
                       np.where(invest[t], b[t] / g, b[t]))
+        if gs_fixcs:
+            bp = b[t]                                                 # debt scales with capital: coupon per unit unchanged
         bprime[t] = bp
         scale[t] = np.where(invest[t], g, 1.0)
         Vc = np.where(invest[t], _by_type(EPI_ts, s, zi, xt, bp, ftype), _by_type(EP0_ts, s, zi, xt, bp, ftype))
@@ -206,6 +214,8 @@ def create_arrays(N, T, seed_offset=0):
                                   (1 - kappa_b) * _by_type(QI_ts, s, zi, xt, bp, ftype) - _by_type(QI_no_ts, s, zi, xt, b[t], ftype),
                                   (1 - kappa_b) * _by_type(Q0_ts, s, zi, xt, bp, ftype) - _by_type(Q0_ts, s, zi, xt, b[t], ftype)),
                          0.0)
+        if gs_fixcs:                                                  # proceeds of the new debt issued pari passu at investment
+            dflow = np.where(invest[t], (1 - kappa_b) * (g - 1) * _by_type(Q0_ts, s, zi, xt, b[t], ftype), 0.0)
         cf = prod + dflow
         div[t] = cf + kappa_e * np.minimum(cf, 0.0) - invest[t] * icost[t] * np.exp(bif * ygrid[s])
         if t == T:
@@ -221,7 +231,7 @@ def create_arrays(N, T, seed_offset=0):
         alive = (Pn + mshock[t + 1]) > 0
         default[t + 1] = ~alive
         payoff[t + 1] = scale[t] * np.where(alive, np.maximum(Pn + mshock[t + 1], 0.0), 0.0)
-        b[t + 1] = np.where(alive, bp, 0.0)
+        b[t + 1] = np.where(alive, bp, bfixf if gs_fixcs else 0.0)
         k[t + 1] = np.where(alive, k[t] * scale[t], np.maximum(alpha_e * k[t].mean(), 1e-3))
         iz[t + 1] = np.where(alive, iz[t + 1], rng.choice(znum, size=N, p=statz))
 

@@ -1,0 +1,431 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvytlg-v1",
+ "title": "GS21 with KP14's 3b recipe: three latent exposure types (output x e^{b_f y}, b_f in 0.015/0.05/0.10, level-compensated) times three fixed leverage types (coupon 0.158/0.421/0.684 per unit capital, no refinancing), nine types, at gamma_x 0.1",
+ "question": "Does a priced second factor make a fair gap in GS21 when firm exposure runs through operating leverage (convex in profitability) instead of a level sort?",
+ "notes": "2026-10-24. vyg25's structure in GS21: exposure type (gvy25's ladder, revealed only through realized returns and the level compensation) times leverage type (exogenous, fixed for life), independent draws, equal shares. gvytlg cuts the price of the aggregate productivity shock from 0.5 to 0.1 so the levered x premium does not dominate the linear ceiling; its benchmark is gsbg1.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "gs_fc 0.0: a fixed operating cost per unit capital (0 in gvy25 and gsbase)",
+   "the y factor moves the COST, exp(gs_bc y), with types gs_bc [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]; production exposure gs_bv 0, no level compensation (at y = 0 every type pays the same cost)",
+   "everything else gvy25's: 9-node priced y chain, gamma_v 2.5, kappa_y 0.35"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "cost-side: fixed cost gs_fc * exp(gs_bc y)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.2,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 1,
+  "gamma_x": 0.1
+ },
+ "types": {
+  "share": [
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1111,
+   0.1112
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.015,
+    0.015,
+    0.015,
+    0.05,
+    0.05,
+    0.05,
+    0.1,
+    0.1,
+    0.1
+   ],
+   "gs_bc": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bi": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bk": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bfix": [
+    0.15,
+    0.4,
+    0.7,
+    0.15,
+    0.4,
+    0.7,
+    0.15,
+    0.4,
+    0.7
+   ]
+  },
+  "soldirs": [
+   "sol_gvytlga",
+   "sol_gvytlgb",
+   "sol_gvytlgc",
+   "sol_gvytlgd",
+   "sol_gvytlge",
+   "sol_gvytlgf",
+   "sol_gvytlgg",
+   "sol_gvytlgh",
+   "sol_gvytlgi"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvytlga",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.015,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.15,
+     "gs_bhi": 0.15,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvytlgb",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.015,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.4,
+     "gs_bhi": 0.4,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvytlgc",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.015,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.7,
+     "gs_bhi": 0.7,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvytlgd",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.15,
+     "gs_bhi": 0.15,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvytlge",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.4,
+     "gs_bhi": 0.4,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   },
+   {
+    "name": "sol_gvytlgf",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.7,
+     "gs_bhi": 0.7,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 5
+   },
+   {
+    "name": "sol_gvytlgg",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.15,
+     "gs_bhi": 0.15,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 6
+   },
+   {
+    "name": "sol_gvytlgh",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.4,
+     "gs_bhi": 0.4,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 7
+   },
+   {
+    "name": "sol_gvytlgi",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.7,
+     "gs_bhi": 0.7,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gamma_x": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 8
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvytlga,sol_gvytlgb,sol_gvytlgc,sol_gvytlgd,sol_gvytlge,sol_gvytlgf,sol_gvytlgg,sol_gvytlgh,sol_gvytlgi",
+  "GS_VY_BV": "0.015,0.015,0.015,0.05,0.05,0.05,0.1,0.1,0.1",
+  "GS_VY_BC": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_BK": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_SHARES": "0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1112"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-08 after the gvy25 footprint diagnosis; solves by variants/klc/solve_gs_vy_klc.sh, ids by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvytlg",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvytlga": "9124840e31898d4d",
+  "sol_gvytlgb": "7987e99ec095b7c6",
+  "sol_gvytlgc": "097030d23aa171ca",
+  "sol_gvytlgd": "f4137bd6175ff8c0",
+  "sol_gvytlge": "03909f403fc2874a",
+  "sol_gvytlgf": "5859a8e367d7f19f",
+  "sol_gvytlgg": "8b39388af4786242",
+  "sol_gvytlgh": "bb85198efecce345",
+  "sol_gvytlgi": "d237fe90f40d4dc0"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "aef306463eb489481e06fe64381cf66a1c1646b66212f486a02f45d8b51d1ea7"
+}
