@@ -1,8 +1,8 @@
 \begin{table}[htbp]\centering\footnotesize
-\caption{Group 4. Larger factor models: two priced states. Two independent priced states, three types with loading vectors (1,0), (0,1), (1,1)/$\sqrt2$, total price held at 2.5.}
-\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrrrrrr}\hline
-model & economy & SR$_{\max}$ & market share & linear ceiling & room & room \% of linear & DKKM & FMR & FF & linear & CAPM & fair gap & + \\\hline
-BGN & \texttt{bvyk2} -- two priced chains, three loading vectors & 0.639 & 36\% & 0.393 & +0.071 & 18 & 0.394 & 0.332 & 0.353 & 0.379 & 0.228 & +0.0152 (0.011) & 10/10 \\
-GS21 & \texttt{gvypk3} -- two priced chains, three product types & 0.612 & 8\% & 0.349 & +0.226 & 65 & 0.465 & 0.245 & 0.306 & 0.407 & 0.050 & +0.0563 (0.053) & 19/20 \\
-KP14 & \texttt{vym2t3} -- two priced states, three loading vectors & 0.475 & 12\% & 0.326 & +0.090 & 28 & 0.317 & 0.280 & 0.301 & 0.308 & 0.049 & +0.0075 (0.011) & 8/10 \\
+\caption{Group 4. Larger factor models: two priced states. Two independent priced states at total price 2.5 ($2.5/\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).}\label{tab:g4}
+\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrrrrrrrr}\hline
+model & economy & SR$_{\max}$ & market share & linear ceiling & room & room \% of linear & interaction SR & DKKM & FMR & FF & linear & CAPM & fair gap & DKKM $\perp$ & + \\\hline
+BGN & \texttt{bvyk2} -- two priced chains, three loading vectors & 0.639 & 36\% & 0.393 & +0.071 & 18 & 0.25 & 0.394 & 0.332 & 0.353 & 0.379 & 0.228 & +0.0152 (t 4.3) & +0.10 & 10/10 \\
+GS21 & \texttt{gvypk3} -- two priced chains, three product types & 0.612 & 8\% & 0.349 & +0.226 & 65 & 0.45 & 0.465 & 0.245 & 0.306 & 0.407 & 0.050 & +0.0563 (t 4.7) & +0.20 & 19/20 \\
+KP14 & \texttt{vy9t2} -- two priced states, nine types (independent ladders), total price 2.5 & 0.506 & 9\% & 0.387 & +0.056 & 15 & 0.21 & 0.378 & 0.326 & 0.337 & 0.373 & 0.031 & +0.0048 (t 2.3) & +0.04 & 7/10 \\
 \hline\end{tabular}}\end{table}

@@ -18,3 +18,14 @@ as the committed `vyg25` record.
 The reduced-form screens (`variants/reduced`) are in `variants/reduced/screen/`: the per-seed json and summary csv
 of every configuration, read by `python variants/reduced/rf_table.py --dir variants/reduced/screen --ladder <name>`.
 The report's tables come from `python variants/campaign_tables.py`, which reads this directory and the screens.
+
+The three benchmarks (`bgnbase`, `kpbase`, `gsbase`) were re-run on Quest on October 19, 2026 (seeds 0-2) only to
+save their panels for the neural-network weight analysis of the report's Section 5 (`variants/mlp/`); their result
+files stay in `bop_runs/results` because their names coincide with the committed baseline record.
+
+Added October 26, 2026: the economies run on Quest after the October 19 staging, with the same file set per seed
+(oracle json, oracle time series, per-month estimator csv, run json, summary csv, provenance json; panels and moment
+files stay on Quest). They are the structural second-state economies `vy9t2`, `vy9t2f` (KP14) and `bvy9t2` (BGN);
+the GS21 benchmark at gamma_x 0.1 (`gsbg1`) and its exposure wirings `gvyz10g`, `gvyzl`, `gvyzl5`, `gvyzlb`, `gvyzlf`,
+`gvyzlg`, `gvyzlp`, `gvyzlr`, `gvyzlrp`, `gvyzlw`; and the product-sign and leverage-type wirings `gvyp10c`, `gvytl`,
+`gvytlg`. Their specs, solve tables and registry manifests were committed with the report sections that cite them.

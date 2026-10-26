@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_oracle.py",
+  "--model",
+  "gs_vy",
+  "--N",
+  "500",
+  "--T",
+  "500",
+  "--seed",
+  "8",
+  "--tag",
+  "gvytlg",
+  "--spec",
+  "var-gs_vy-gvytlg-v1",
+  "--eval_window",
+  "360",
+  "--levels",
+  "--save_panel"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants/gs_vy",
+ "env": {
+  "GS_VY_BC": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_BK": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+  "GS_VY_BV": "0.015,0.015,0.015,0.05,0.05,0.05,0.1,0.1,0.1",
+  "GS_VY_SHARES": "0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1111,0.1112",
+  "GS_VY_SOLDIRS": "sol_gvytlga,sol_gvytlgb,sol_gvytlgc,sol_gvytlgd,sol_gvytlge,sol_gvytlgf,sol_gvytlgg,sol_gvytlgh,sol_gvytlgi",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "gvytlg",
+  "SLURMD_NODENAME": "qgpu0604",
+  "SLURM_ARRAY_JOB_ID": "5193638",
+  "SLURM_ARRAY_TASK_ID": "8",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "5205069",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-24T16:11:10-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0604",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_oracle.py --model gs_vy --N 500 --T 500 --seed 8 --tag gvytlg --spec var-gs_vy-gvytlg-v1 --eval_window 360 --levels --save_panel",
+ "inputs": [
+  {
+   "stage": "sol_gvytlga",
+   "solve_id": "9124840e31898d4d",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 367012883
+  },
+  {
+   "stage": "sol_gvytlgb",
+   "solve_id": "7987e99ec095b7c6",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 369426333
+  },
+  {
+   "stage": "sol_gvytlgc",
+   "solve_id": "097030d23aa171ca",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 371109445
+  },
+  {
+   "stage": "sol_gvytlgd",
+   "solve_id": "f4137bd6175ff8c0",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 352390992
+  },
+  {
+   "stage": "sol_gvytlge",
+   "solve_id": "03909f403fc2874a",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 354936825
+  },
+  {
+   "stage": "sol_gvytlgf",
+   "solve_id": "5859a8e367d7f19f",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 355552381
+  },
+  {
+   "stage": "sol_gvytlgg",
+   "solve_id": "8b39388af4786242",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 347388023
+  },
+  {
+   "stage": "sol_gvytlgh",
+   "solve_id": "bb85198efecce345",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 349673360
+  },
+  {
+   "stage": "sol_gvytlgi",
+   "solve_id": "d237fe90f40d4dc0",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 350444132
+  }
+ ],
+ "extra": {
+  "spec_id": "var-gs_vy-gvytlg-v1",
+  "engine": "oracle",
+  "spec_check": "verified",
+  "env_check": "verified",
+  "readback": "not requested",
+  "eval_window": 360
+ }
+}

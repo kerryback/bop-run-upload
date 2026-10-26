@@ -1,0 +1,98 @@
+{
+ "model": "gs_vy",
+ "tag": "gvytlg",
+ "seed": 1,
+ "prov": "gs_vy_estimators_gvytlg_s001_w360_summary@nogit",
+ "spec_id": "var-gs_vy-gvytlg-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand",
+  "y_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_gvytlga",
+   "solve_id": "9124840e31898d4d",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 367012883
+  },
+  {
+   "stage": "sol_gvytlgb",
+   "solve_id": "7987e99ec095b7c6",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 369426333
+  },
+  {
+   "stage": "sol_gvytlgc",
+   "solve_id": "097030d23aa171ca",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 371109445
+  },
+  {
+   "stage": "sol_gvytlgd",
+   "solve_id": "f4137bd6175ff8c0",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 352390992
+  },
+  {
+   "stage": "sol_gvytlge",
+   "solve_id": "03909f403fc2874a",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 354936825
+  },
+  {
+   "stage": "sol_gvytlgf",
+   "solve_id": "5859a8e367d7f19f",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 355552381
+  },
+  {
+   "stage": "sol_gvytlgg",
+   "solve_id": "8b39388af4786242",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 347388023
+  },
+  {
+   "stage": "sol_gvytlgh",
+   "solve_id": "bb85198efecce345",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 349673360
+  },
+  {
+   "stage": "sol_gvytlgi",
+   "solve_id": "d237fe90f40d4dc0",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 350444132
+  }
+ ],
+ "panel": "gs_vy_panel_gvytlg_s001.parquet"
+}

@@ -66,6 +66,20 @@ E = {
     "vym3t3": ("KP14", LEGACY, "three priced states, three types"),
     "bvyk2": ("BGN", CAMPAIGN, "two priced chains, three loading vectors"),
     "gvypk2": ("GS21", CAMPAIGN, "two priced chains, two product types"),
+    "gvyzl": ("GS21", CAMPAIGN, "productivity exposure, three fixed-coupon leverage types (diluting)"),
+    "gvyzlf": ("GS21", CAMPAIGN, "productivity exposure, three leverage types, capital structure fixed for life"),
+    "gvyzlw": ("GS21", CAMPAIGN, "gvyzlf with coupons 0.05 / 0.45 / 0.85"),
+    "gvyzl5": ("GS21", CAMPAIGN, "gvyzlf with five leverage types"),
+    "gvyzlb": ("GS21", CAMPAIGN, "gvyzlf with the exposure doubled"),
+    "gvyzlr": ("GS21", CAMPAIGN, "gvyzlf with riskless debt"),
+    "gvyzlp": ("GS21", CAMPAIGN, "gvyzlf with a persistent y ($\\kappa_y$ 0.10)"),
+    "gvyzlrp": ("GS21", CAMPAIGN, "gvyzlf with riskless debt and a persistent y"),
+    "gsbg1": ("GS21", CAMPAIGN, "benchmark at $\\gamma_x$ 0.1"),
+    "gvyz10g": ("GS21", CAMPAIGN, "gvyz10 at $\\gamma_x$ 0.1"),
+    "gvyzlg": ("GS21", CAMPAIGN, "gvyzlf at $\\gamma_x$ 0.1"),
+    "gvyp10c": ("GS21", CAMPAIGN, "the product with a leverage-level term, exposure 0.10 $\\tilde b(\\tilde z + 2)$"),
+    "gvytl": ("GS21", CAMPAIGN, "three exposure types $\\times$ three fixed leverage types (KP14's recipe)"),
+    "gvytlg": ("GS21", CAMPAIGN, "the same at $\\gamma_x$ 0.1"),
     # harmonized representatives (2026-10-14): one type exposed to y, the crash-only factor, the quadratic price, two states
     "vy1": ("KP14", CAMPAIGN, "one type, cash flows $\\times e^{0.07y}$"),
     "bvy1ch": ("BGN", CAMPAIGN, "one type, project cash flows $\\times e^{0.035y}$"),
@@ -76,6 +90,9 @@ E = {
     "kpq": ("KP14", CAMPAIGN, "$\\gamma_x \\times \\min(1 + 0.25\\,y^2, 3)$, y unpriced"),
     "gq25": ("GS21", CAMPAIGN, "$\\gamma_x \\times \\min(1 + 0.25\\,\\tilde x^2, 3)$"),
     "vym2t3": ("KP14", CAMPAIGN, "two priced states, three loading vectors"),
+    "vy9t2": ("KP14", CAMPAIGN, "two priced states, nine types (independent ladders), total price 2.5"),
+    "vy9t2f": ("KP14", CAMPAIGN, "two priced states, nine types, each state priced 2.5"),
+    "bvy9t2": ("BGN", CAMPAIGN, "two priced chains, nine types (independent ladders), total price 2.5"),
     "gvypk3": ("GS21", CAMPAIGN, "two priced chains, three product types"),
     # the 2026-10-17 fixes
     "gvyz10": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.10\\,\\tilde z\\,y}$: the product economy without the coupon"),
@@ -101,12 +118,12 @@ GROUPS = [
      "The same y with three types (BGN, KP14) or a product written into production (GS21): exposure = type or productivity $\\times$ how levered the claim is.",
      ["bvych0", "gvyp10", "vyg25"]),
     ("g4", "Group 4. Larger factor models: two priced states",
-     "Two independent priced states, three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$, total price held at 2.5.",
-     ["bvyk2", "gvypk3", "vym2t3"]),
+     "Two independent priced states at total price 2.5 ($2.5/\\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).",
+     ["bvyk2", "gvypk3", "vy9t2"]),
     # ---- the appendix: everything else that was run, grouped by what it tested ----
-    ("xa", "Additional economies", "Everything else that was run, by model; each is described in the appendix against its parent.",
+    ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings.",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "kpgam", "vyx", "vyj25", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 
@@ -122,13 +139,18 @@ def seed_rows(tag):
         srm = o["sr_max_eval"] if have_eval else o["sr_max_mean"]
         mkt = o["sr_ew_eval"] / o["sr_max_eval"] if "sr_ew_eval" in o else np.nan
         r = dict(tag=tag, seed=seed, eval=have_eval, sr_max=srm, lin_ceiling=lin, nonlin_ceiling=nl, room=nl - lin,
-                 room_pct=100 * (nl - lin) / lin if lin > 1e-6 else np.nan, mkt_share=mkt)
+                 room_pct=100 * (nl - lin) / lin if lin > 1e-6 else np.nan, mkt_share=mkt,
+                 # the interaction's Sharpe ORTHOGONAL to the best linear portfolio: Sharpes add in quadrature, so the
+                 # difference nl - lin understates a nonlinearity that sits on a large linear base (GS21's market)
+                 orth=float(np.sqrt(max(nl ** 2 - lin ** 2, 0.0))))
         est = glob.glob(os.path.join(d, f"*_estimators_{tag}_s{seed:03d}_w360_summary.csv"))
         if est:
             s = pd.read_csv(est[0]); best = s.loc[s.groupby("method").sharpe.idxmax()].set_index("method").sharpe
             r.update(dkkm=best[[k for k in RFF if k in best.index]].max(), fmr=best.get("fm", np.nan), ff=best.get("ff", np.nan),
                      linear=best[[k for k in LINEAR if k in best.index]].max(), capm=best.get("mkt_est", np.nan))
             r["fair_gap"] = r["dkkm"] - best[[k for k in FAIR if k in best.index]].max()
+            _lb = best[[k for k in FAIR if k in best.index]].max()
+            r["dkkm_orth"] = float(np.sign(r["dkkm"] - _lb) * np.sqrt(abs(r["dkkm"] ** 2 - _lb ** 2)))   # DKKM's Sharpe orthogonal to the best classical
         rows.append(r)
     return pd.DataFrame(rows)
 
@@ -139,10 +161,12 @@ def economy(tag):
         return None
     e = s[s.get("dkkm", pd.Series(dtype=float)).notna()] if "dkkm" in s else s.iloc[0:0]
     out = dict(tag=tag, model=E[tag][0], what=E[tag][2], n_oracle=len(s), n=len(e), eval=bool(s["eval"].all()),
-               sr_max=s.sr_max.mean(), lin_ceiling=s.lin_ceiling.mean(), room=s.room.mean(), room_pct=s.room_pct.mean(), mkt_share=s.mkt_share.mean())
-    for c in ("dkkm", "fmr", "ff", "linear", "capm", "fair_gap"):
+               sr_max=s.sr_max.mean(), lin_ceiling=s.lin_ceiling.mean(), room=s.room.mean(), room_pct=s.room_pct.mean(), mkt_share=s.mkt_share.mean(),
+               orth=s.orth.mean())
+    for c in ("dkkm", "fmr", "ff", "linear", "capm", "fair_gap", "dkkm_orth"):
         out[c] = e[c].mean() if len(e) else np.nan
     out["fair_gap_sd"] = e.fair_gap.std(ddof=1) if len(e) > 1 else np.nan
+    out["fair_gap_t"] = (e.fair_gap.mean() / (e.fair_gap.std(ddof=1) / np.sqrt(len(e)))) if len(e) > 1 and e.fair_gap.std(ddof=1) > 0 else np.nan
     out["pos"] = int((e.fair_gap > 0).sum()) if len(e) else 0
     return out
 
@@ -153,21 +177,21 @@ def fmt(v, p=3, sign=False):
     return f"{v:+.{p}f}" if sign else f"{v:.{p}f}"
 
 
-HEAD = ["model", "economy", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear",
-        "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
-HEAD_MD = ["model", "economy", "SR_max", "market %", "linear ceiling", "room", "room % lin",
-           "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
+HEAD = ["model", "economy", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear", "interaction SR",
+        "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "DKKM $\\perp$", "+"]
+HEAD_MD = ["model", "economy", "SR_max", "market %", "linear ceiling", "room", "room % lin", "interaction SR",
+           "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "DKKM ⊥", "+"]
 
 
 def row_cells(r, md=False):
     dag = "" if r["eval"] else ("†" if md else "$^\\dagger$")
     what = r["what"] if not md else re.sub(r"\$|\\%|\\times|\\tilde |\\max|\\gamma|\\|_\{|\}|\{", lambda m: {"$": "", "\\%": "%", "\\times": "x", "\\tilde ": "", "\\max": "max", "\\gamma": "gamma", "\\,": " ", "\\": "", "_{": "_", "}": "", "{": ""}[m.group(0)], r["what"].replace("\\,", " "))
-    name = f"`{r['tag']}`" if md else f"\\texttt{{{r['tag']}}}"
+    name = f"`{r['tag']}`" if md else "\\texttt{" + r['tag'].replace("_", "\\_") + "}"
     return [r["model"], f"{name}{dag} -- {what}", fmt(r["sr_max"]), fmt(100 * r["mkt_share"], 0) + ("%" if md else "\\%"),
             fmt(r["lin_ceiling"], 3),
-            fmt(r["room"], 3, True), fmt(r["room_pct"], 0), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]),
-            fmt(r["capm"]), fmt(r["fair_gap"], 4, True) + (f" ({fmt(r['fair_gap_sd'], 3)})" if not np.isnan(r["fair_gap_sd"]) else ""),
-            f"{r['pos']}/{r['n']}" if r["n"] else "--"]
+            fmt(r["room"], 3, True), fmt(r["room_pct"], 0), fmt(r["orth"], 2), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]),
+            fmt(r["capm"]), fmt(r["fair_gap"], 4, True) + (f" (t {r['fair_gap_t']:.1f})" if not np.isnan(r["fair_gap_t"]) else ""),
+            fmt(r["dkkm_orth"], 2, True), f"{r['pos']}/{r['n']}" if r["n"] else "--"]
 
 
 def reduced_rows():
@@ -176,11 +200,16 @@ def reduced_rows():
     df = rf_table.load(SCREEN)
     # the FIXED-TOTAL-PRICE ladders (kfh_ / lfh_: lam ~ 1/sqrt(K), SR_max held); K = 1 is the same economy under both normalisations
     pick = [("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
-            ("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
-            ("kfh_sq_1", "K=1, pure curvature (squares) of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
-            ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
             ("lfh_L5_K1_n0", "K=1 product of latent states, no observation noise"), ("lfh_L5_K2_n0", "K=2"), ("lfh_L5_K3_n0", "K=3"), ("lfh_L5_K5_n0", "K=5"), ("lfh_L5_K10_n0", "K=10"),
             ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10")]
+    # the appendix: bounded and curvature loadings on observed characteristics, and the size-orthogonal curvature ladder
+    pick_x = [("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
+              ("kfh_sq_1", "K=1, pure curvature (squares) of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
+              ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16")]
+    return [_rf_rows(df, pick), _rf_rows(df, pick_x)]
+
+
+def _rf_rows(df, pick):
     out = []
     for name, what in pick:
         sub = df[df.name == name]
@@ -210,7 +239,9 @@ NOTE_MD = ("Columns: SR_max, the linear ceiling and the room are the population 
            "investor's conditional Sharpe over the evaluation window (room = best nonlinear ceiling minus the linear ceiling, "
            "and room % lin = room as a percentage of the linear ceiling); DKKM, FMR, FF, linear (the best of rank and level "
            "regressions, with and without the market) and CAPM (the estimated market line) are out-of-sample Sharpe ratios at "
-           "the 360-month window; fair gap = DKKM minus the best of (FMR, FF, linear, CAPM), mean (sd) across seeds; "
+           "the 360-month window; fair gap = DKKM minus the best of (FMR, FF, linear, CAPM), mean across seeds with its t-statistic (mean over the standard error across seeds); "
+           "interaction SR = the nonlinear ceiling's Sharpe orthogonal to the linear ceiling, sqrt(nl^2 - lin^2), the size of the interaction itself (Sharpes add in quadrature, so the room understates an interaction that sits on a large linear base); "
+           "DKKM perp = DKKM's Sharpe orthogonal to the best classical method, with the sign of the gap; "
            "+ = seeds with a positive fair gap. A dagger marks an oracle that predates the evaluation-window ceilings.")
 
 
@@ -221,11 +252,21 @@ def main():
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
     econ = {t: economy(t) for t in E}
     allmd = [NOTE_MD, ""]
+    rr_main, rr_x = reduced_rows()
+    def rf_as_econ(r):
+        """a reduced-form row in the economy-row format, so the moved ladders sit in the appendix table"""
+        nl = r["lin"] + r["room"]; best = max(r["fmr"], r["ff"], r["linear"], r["capm"])
+        return dict(tag=r["name"], model="RF", what=r["what"], eval=True, n=r["n"], sr_max=r["sr_max"], mkt_share=r["mkt"], lin_ceiling=r["lin"],
+                    room=r["room"], room_pct=r["room_pct"], orth=float(np.sqrt(max(nl ** 2 - r["lin"] ** 2, 0.0))), dkkm=r["dkkm"], fmr=r["fmr"], ff=r["ff"],
+                    linear=r["linear"], capm=r["capm"], fair_gap=r["gap"], fair_gap_t=r["gap"] / (r["gap_sd"] / np.sqrt(r["n"])) if r["gap_sd"] > 0 else np.nan,
+                    dkkm_orth=float(np.sign(r["dkkm"] - best) * np.sqrt(abs(r["dkkm"] ** 2 - best ** 2))), pos=r["pos"])
     for key, title, blurb, tags in GROUPS:
         rows = [econ[t] for t in tags if econ.get(t)]
+        if key == "xa":
+            rows += [rf_as_econ(r) for r in rr_x]        # the bounded, curvature and size-orthogonal reduced-form ladders
         md = ["| " + " | ".join(HEAD_MD) + " |", "|" + "---|" * len(HEAD_MD)]
         md += ["| " + " | ".join(row_cells(r, md=True)) + " |" for r in rows]
-        tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{title}. {blurb}}}",
+        tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{title}. {blurb}}}\\label{{tab:{key}}}",
                "\\resizebox{\\textwidth}{!}{\\begin{tabular}{ll" + "r" * (len(HEAD) - 2) + "}\\hline",
                " & ".join(HEAD) + " \\\\\\hline"]
         tex += [" & ".join(row_cells(r)) + " \\\\" for r in rows]
@@ -234,24 +275,24 @@ def main():
         open(os.path.join(a.out, key + ".tex"), "w").write("\n".join(tex) + "\n")
         allmd += [f"### {title}", "", blurb, ""] + md + [""]
         print(key, "injected" if inject(a.report, key, "\n".join(md)) else "no marker in the report")
-    # the reduced form
-    rr = reduced_rows()
-    h = ["configuration", "SR_max", "market %", "linear ceiling", "room", "room % lin", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
-    md = ["| " + " | ".join(h) + " |", "|" + "---|" * len(h)]
-    tex = ["\\begin{table}[htbp]\\centering\\footnotesize",
-           "\\caption{Reduced form: priced factors on observed characteristics against products of latent states. Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; L = number of latent states, products of their pairs.}\\label{tab:rf}",
-           "\\resizebox{\\textwidth}{!}{\\begin{tabular}{lr" + "r" * (len(h) - 2) + "}\\hline",
-           " & ".join(["configuration", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]) + " \\\\\\hline"]
-    for r in rr:
-        cells = [f"{r['name']} -- {r['what']}", fmt(r["sr_max"]), fmt(100 * r["mkt"], 0), fmt(r["lin"]), fmt(r["room"], 3, True),
-                 fmt(r["room_pct"], 0), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]), fmt(r["capm"]),
-                 fmt(r["gap"], 4, True) + f" ({fmt(r['gap_sd'], 3)})", f"{r['pos']}/{r['n']}"]
-        md.append("| " + " | ".join(cells) + " |")
-        tex.append(" & ".join(c.replace("_", "\\_") if i == 0 else c for i, c in enumerate(cells)) + " \\\\")
-    tex += ["\\hline\\end{tabular}}\\end{table}"]
-    open(os.path.join(a.out, "rf.md"), "w").write("\n".join(md) + "\n"); open(os.path.join(a.out, "rf.tex"), "w").write("\n".join(tex) + "\n")
-    allmd += ["### Reduced form", ""] + md + [""]
-    print("rf", "injected" if inject(a.report, "rf", "\n".join(md)) else "no marker in the report")
+    # the reduced form's main table (linear loadings and latent products); the other ladders are rows of the appendix table
+    for key, rr, cap, title in [
+        ("rf", rr_main, "Reduced form: priced factors loading linearly on observed characteristics against products of latent states. Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).", "Reduced form")]:
+        h = ["configuration", "SR_max", "market %", "linear ceiling", "room", "room % lin", "interaction SR", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
+        md = ["| " + " | ".join(h) + " |", "|" + "---|" * len(h)]
+        tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{cap}}}\\label{{tab:{key}}}",
+               "\\resizebox{\\textwidth}{!}{\\begin{tabular}{lr" + "r" * (len(h) - 2) + "}\\hline",
+               " & ".join(["configuration", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear", "interaction SR", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]) + " \\\\\\hline"]
+        for r in rr:
+            cells = [f"{r['name']} -- {r['what']}", fmt(r["sr_max"]), fmt(100 * r["mkt"], 0), fmt(r["lin"]), fmt(r["room"], 3, True),
+                     fmt(r["room_pct"], 0), fmt(float(np.sqrt(max((r["lin"] + r["room"]) ** 2 - r["lin"] ** 2, 0.0))), 2), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]), fmt(r["capm"]),
+                     fmt(r["gap"], 4, True) + f" (t {r['gap'] / (r['gap_sd'] / np.sqrt(r['n'])):.1f})", f"{r['pos']}/{r['n']}"]
+            md.append("| " + " | ".join(cells) + " |")
+            tex.append(" & ".join(c.replace("_", "\\_") if i == 0 else c for i, c in enumerate(cells)) + " \\\\")
+        tex += ["\\hline\\end{tabular}}\\end{table}"]
+        open(os.path.join(a.out, key + ".md"), "w").write("\n".join(md) + "\n"); open(os.path.join(a.out, key + ".tex"), "w").write("\n".join(tex) + "\n")
+        allmd += [f"### {title}", ""] + md + [""]
+        print(key, "injected" if inject(a.report, key, "\n".join(md)) else "no marker in the report")
     open(os.path.join(a.out, "ALL.md"), "w").write("\n".join(allmd) + "\n")
     print("wrote", a.out)
 
