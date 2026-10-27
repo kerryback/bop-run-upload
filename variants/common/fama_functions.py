@@ -10,11 +10,12 @@ def fama_french(data, chars, **kwargs):
 
     factor_dct = {}
 
-    if len(chars) == 5:
-        names = ["smb", "hml", "cma", "rmw", "umd"]
-    else:
-        names = ["smb", "hml", "umd"]
-    name_dct = dict(zip(chars, names))
+    # one factor per characteristic, named as in Fama-French; a characteristic outside the five (GS21's leverage
+    # "lev", 2026-10-26) gets a high-minus-low factor under its own name. For the five-name list this is the former
+    # positional zip, unchanged.
+    _FF_NAMES = {"size": "smb", "bm": "hml", "agr": "cma", "roe": "rmw", "mom": "umd"}
+    name_dct = {c: _FF_NAMES.get(c, c) for c in chars}
+    names = list(name_dct.values())
 
     # sort on size
     big = data["size"] > data["size"].median()  
@@ -86,10 +87,9 @@ def fama_macbeth(data, chars, **kwargs):
     P = X @ linalg.pinvh(X.T @ X) 
     P = pd.DataFrame(P[:, 1:])
     P *= 2 / P.abs().sum()
-    if len(chars) == 5:
-        P.columns = ["smb", "hml", "cma", "rmw", "umd"]
-    else:
-        P.columns = ["smb", "hml", "umd"]
+    # one column per characteristic, named as in fama_french (the names are cosmetic: the array is returned)
+    _FF_NAMES = {"size": "smb", "bm": "hml", "agr": "cma", "roe": "rmw", "mom": "umd"}
+    P.columns = [_FF_NAMES.get(c, c) for c in chars]
 
     # EW market port
     P['mkt_rf'] = 1 / len(data)

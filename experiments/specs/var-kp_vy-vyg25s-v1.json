@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25s-v1",
+ "title": "KP14 vyg25 with SIGN-SWITCHING types: the ladder mirrored, six types of equal share, loadings -0.14, -0.07, -0.02, 0.02, 0.07, 0.14, level-compensated, price 2.5",
+ "question": "Does a type loading with zero cross-sectional mean raise the interaction share of the premium, and with it room and gap, over vyg25?",
+ "notes": "WHY (2026-10-26). In vyg25 the exposure is b_f x (growth-option share), a product of two POSITIVE factors, so most of the premium is additive in the two and a linear model in the ranks holds it: the interaction share of a product of independent positive factors is CV_b^2 CV_l^2 / ((1 + CV_b^2)(1 + CV_l^2) - 1), about 13% at vyg25's ladder (CV 0.64) and a share of CV 0.5. With E[b] = 0 the additive part in the share vanishes and the interaction share rises to CV_l^2 / (1 + CV_l^2), about 20%; the GS21 product (both factors mean zero) is the limit with no additive part at all. The mirrored ladder nests vyg25's magnitudes exactly; the negative types are firms the shock helps (an input or relative price). Level-compensated as vyg25 (bv_comp 1.2, type 0 = -0.14 the reference: type_theta 1, 1.40, 1.76, 2.09, 2.57, 3.36, because the Q-mean of y is -6 sd and e^{by} with b < 0 is worth more under Q).\n\nFEASIBILITY (parameters_kp14 at these overrides, 2026-10-26, y_risk_neutral): the W-form discount const_base and the G stage's rho0 are type-independent and positive (rho0 min 0.0158); A0 finite for all six types (5.4 to 12.0 pre-compensation). The pre-fix vectors const_ty and rho_ty go negative for b < 0 (-0.24 / -0.46 at -0.14), which is what made K5's signed exposures infeasible in September under the old pricing; nothing on the live path reads them. Premium b.gamma from -0.35 to +0.35.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-26): room rises above vyg25's 24% of the linear ceiling, to 30-40%; fair gap +0.015 to +0.03 (vyg25 +0.0148), 8+ of 10 seeds positive; the market's share stays near zero. FALSIFIED as 'a mean-zero loading raises the interaction share' if room is at or below 24%.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v4",
+  "changes": [
+   "type_share 3 -> 6 equal; type_bv [0.02, 0.07, 0.14] -> [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14]; gamma_v 2.5 and bv_comp 1.2 unchanged; own tables under prefix vyg25s"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.14,
+   -0.07,
+   -0.02,
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25s"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.14,
+      -0.07,
+      -0.02,
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2
+    },
+    "args": {
+     "prefix": "vyg25s"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-26 (sign of the exposure / level compensation); specs written by _scratch/gen_signed_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25s",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5492948.vyg25s.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "ba6c9816cb83ae1711335b1c6f8ed3e031233982a20acfa7b4ad73c476326b9e",
+ "expected_solves": {
+  "G": "34c2f40be70673f1",
+  "integ": "ea73db78687a8285"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null
+}

@@ -50,7 +50,12 @@ args = ap.parse_args()
 dkkm.WINDOW = args.window; fama.WINDOW = args.window
 rng = np.random.default_rng(args.seed + 7)
 
-chars = ["size", "bm", "agr", "roe", "mom"]
+# The characteristics the estimators see: the model's full list, the SAME set the oracle's ceilings are built on
+# (run_oracle.py imports it from the model module; gs_sim_vy/gs_sim_bx export six, with the leverage characteristic
+# "lev" = coupon over the market value of capital). Until 2026-10-26 this was the five-name list for every model,
+# so in GS21 every estimator (FM, FF, DKKM, the fair linear benchmark) was scored WITHOUT leverage while the linear
+# and nonlinear ceilings it is differenced against had it -- a smaller feature set than the room is defined on.
+chars = ["size", "bm", "agr", "roe", "mom"] + (["lev"] if args.model in ("gs_vy", "gs_bx") else [])
 gamma_grid = np.arange(0.5, 1.1, 0.1)
 # BOP_RESULTS_DIR relocates output without touching code. Default unchanged.
 # Measured 2026-09-08: /data/sjpruitt is 1.0 TB with 989 GB free (4% used), and a full
@@ -63,9 +68,9 @@ out = os.environ.get("BOP_RESULTS_DIR") or os.path.join(HERE, "results")
 _st = lambda kind: os.path.join(out, runstamp.stem(args.model, kind, args.tag, args.seed))
 os.makedirs(out, exist_ok=True)
 _in = os.path.abspath(args.inputs_from) if args.inputs_from else out
-if args.linear_only and os.path.realpath(_in) == os.path.realpath(out):
+if args.inputs_from and os.path.realpath(_in) == os.path.realpath(out):
     raise SystemExit(
-        f"--linear_only writes *_estimators_* files under the SAME names as the run that saved this panel, "
+        f"--inputs_from re-scores a saved panel and writes *_estimators_* files under the SAME names as the run that saved it, "
         f"so reading and writing {out} would overwrite the recorded results. Set BOP_RESULTS_DIR to another "
         f"directory and pass --inputs_from {out}.")
 _st_in = lambda kind: os.path.join(_in, runstamp.stem(args.model, kind, args.tag, args.seed))
@@ -83,6 +88,9 @@ if not os.path.exists(_panel_path):
            f"the file deliberately if you know what it is.\n"
            if os.path.exists(legacy) else ""))
 panel = pd.read_parquet(_panel_path)
+_missing = [c for c in chars if c not in panel.columns]
+if _missing:
+    raise SystemExit(f"panel {_panel_path} lacks the characteristics {_missing} that {args.model}'s estimators are scored on")
 mom = np.load(_st_in("moments") + ".npz")
 
 # The oracle summary records which solve built this panel; carry that forward so the

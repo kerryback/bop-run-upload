@@ -15,4 +15,10 @@ source "$REPO/variants/klc/klc_env.sh"
 export SEED_SPEC=$SPEC
 echo "SEED_SPEC=$SEED_SPEC seed=$SLURM_ARRAY_TASK_ID results=$BOP_RESULTS_DIR"
 cd "$REPO"
-exec bash variants/run_seeds_slurm.sh
+# bash reads a script incrementally, so editing run_seeds_slurm.sh in the repo while a task
+# is mid-run garbles that task (2026-10-26: bvychs seeds 0-2 died on "s: command not found"
+# right after their 1.5 h oracle stage). Each task therefore runs its own snapshot; the
+# runner locates the repo through SLURM_SUBMIT_DIR, not its own path.
+_RUNNER=$(mktemp "${SLURM_TMPDIR:-/tmp}/run_seeds_slurm.XXXXXX")
+cp variants/run_seeds_slurm.sh "$_RUNNER"
+exec bash "$_RUNNER"

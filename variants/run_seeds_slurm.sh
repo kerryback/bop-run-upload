@@ -879,6 +879,26 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1112, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111, 0.1111], "type_bv": [0.01, 0.01, 0.01, 0.035, 0.035, 0.035, 0.07, 0.07, 0.07], "gamma_v": 1.76776695, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "NY2": 21, "type_bv2": [0.01, 0.035, 0.07, 0.01, 0.035, 0.07, 0.01, 0.035, 0.07], "gamma_v2": 1.76776695, "kappa_y2": 0.35, "jstar_vy_file": "Jstar_vy_bvy9t2.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvy9t2-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  vyg25s)
+    # kp_vy (2026-10-26): vyg25 with SIGN-SWITCHING types: the ladder mirrored, six types (-0.14, -0.07, -0.02, 0.02, 0.07, 0.14), E[b] = 0, level-compensated, price 2.5
+    MODEL=kp_vy; TAG=vyg25s; SPEC=var-kp_vy-vyg25s-v1; SOLVE_TAG=vyg25s
+    export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vyg25s
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25s-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyg25u)
+    # kp_vy (2026-10-26): vyg25 WITHOUT the level compensation (bv_comp 0): the type shows in value at y = 0
+    MODEL=kp_vy; TAG=vyg25u; SPEC=var-kp_vy-vyg25u-v1; SOLVE_TAG=vyg25u
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.02, 0.07, 0.14], "gamma_v": 2.5, "bv_comp": 0.0}'
+    export KP_VY_PREFIX=vyg25u
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25u-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  bvychs)
+    # bgn_vy (2026-10-26): bvych0 with SIGN-SWITCHING types: the ladder mirrored, six types (-0.07 .. 0.07), E[b] = 0, chain, level-compensated, price 2.5
+    MODEL=bgn_vy; TAG=bvychs; SPEC=var-bgn_vy-bvychs-v1; SOLVE_TAG=Jstar_vy_bvychs
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   gvyzl)
     # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
     # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.
@@ -1218,8 +1238,11 @@ RF_ARGS=()
 # linear = E1: no oracle; re-score the SAVED panel's linear methods and the fair ones
 #          (run_estimators.py --linear_only --fair_linear) from $INPUTS into $RESULTS.
 SEED_STAGE=${SEED_STAGE:-both}
-case "$SEED_STAGE" in both|oracle|linear) ;; *)
-  echo "unknown SEED_STAGE '$SEED_STAGE' (expected both, oracle or linear)" >&2; exit 2 ;;
+# SEED_STAGE=estimators (2026-10-26) re-runs EVERY estimator on a saved panel (the linear stage without
+# --linear_only): what a change to the estimators' inputs needs -- the GS21 leverage characteristic -- without
+# re-simulating. Same inputs/results discipline as the linear stage.
+case "$SEED_STAGE" in both|oracle|linear|estimators) ;; *)
+  echo "unknown SEED_STAGE '$SEED_STAGE' (expected both, oracle, linear or estimators)" >&2; exit 2 ;;
 esac
 
 # run_oracle.py and run_estimators.py both honour BOP_RESULTS_DIR. This script used to
@@ -1274,10 +1297,10 @@ if [ ! -f "$REPO/variants/run_seeds_slurm.sh" ]; then
   exit 2
 fi
 cd "$REPO/variants"
-if [ "$SEED_STAGE" = linear ]; then
+if [ "$SEED_STAGE" = linear ] || [ "$SEED_STAGE" = estimators ]; then
   mkdir -p "$RESULTS"
   if [ "$(cd "$INPUTS" && pwd -P)" = "$(cd "$RESULTS" && pwd -P)" ]; then
-    echo "ABORT: SEED_STAGE=linear writes *_estimators_* files under the SAME names as the run it re-scores." >&2
+    echo "ABORT: SEED_STAGE=$SEED_STAGE writes *_estimators_* files under the SAME names as the run it re-scores." >&2
     echo "Set BOP_RESULTS_DIR to a directory other than its inputs ($INPUTS)." >&2
     exit 2
   fi
@@ -1320,16 +1343,18 @@ elif python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${S
 fi
 
 S=$(date +%s)
-if [ "$SEED_STAGE" = linear ]; then
+if [ "$SEED_STAGE" = linear ] || [ "$SEED_STAGE" = estimators ]; then
   for f in "$INPUTS/${MODEL}_panel_${TAG}_s${SS}.parquet" "$INPUTS/${MODEL}_moments_${TAG}_s${SS}.npz" \
            "$INPUTS/${MODEL}_oracle_${TAG}_s${SS}.json"; do
-    [ -f "$f" ] || { echo "ABORT: SEED_STAGE=linear needs $f" | tee -a "$LOG"; exit 2; }
+    [ -f "$f" ] || { echo "ABORT: SEED_STAGE=$SEED_STAGE needs $f" | tee -a "$LOG"; exit 2; }
   done
+  LIN_ONLY=--linear_only
+  [ "$SEED_STAGE" = estimators ] && LIN_ONLY=
   python -W ignore run_estimators.py --model "$MODEL" --tag "$TAG" --seed "$SEED" \
          --window "$WINDOW" --levels --include_mkt --kappas "$KAPPAS" \
-         --linear_only --fair_linear --inputs_from "$INPUTS" --n_jobs "$NT" ${RF_ARGS[@]+"${RF_ARGS[@]}"} 2>&1 | tee -a "$LOG"
+         $LIN_ONLY --fair_linear --inputs_from "$INPUTS" --n_jobs "$NT" ${RF_ARGS[@]+"${RF_ARGS[@]}"} 2>&1 | tee -a "$LOG"
   E=$(date +%s)
-  echo "=== seed $SEED END $(date '+%F %T') stage=linear estimators=$((E-S))s inputs=$INPUTS ===" | tee -a "$LOG"
+  echo "=== seed $SEED END $(date '+%F %T') stage=$SEED_STAGE estimators=$((E-S))s inputs=$INPUTS ===" | tee -a "$LOG"
   python common/runstamp.py is-current "$RUNJSON" --model "$MODEL" --tag "${SOLVE_TAG:-$TAG}" | tee -a "$LOG"
   exit 0
 fi

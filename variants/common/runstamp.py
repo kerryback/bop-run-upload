@@ -149,6 +149,26 @@ def _match(paths):
     if retired is not None:
         return retired, ("matches only a RETIRED manifest: its solve_id cannot be "
                          "recomputed, so re-solving will not reproduce this id")
+    # Independent reproduction. No manifest records these exact bytes, but the artifact
+    # embeds a solve_id (gs_bx's solution.npz does; see solstamp.embedded_solve_id)
+    # naming a LIVE manifest that records the same paths. solstamp.artifact_problems
+    # already calls that state USABLE ("digest differs, embedded id matches"); here the
+    # run record names the live solve and the warning says the bytes are a reproduction
+    # rather than the recorded ones. The case that needed it (2026-10-27): the Quest
+    # re-solve of gsbase (2026-10-19) recorded its own bytes under c6ae2d52428a7ce5,
+    # and restoring upstream's registry that evening put Sol's digest back, so the
+    # Quest file matched nothing and every stage=both gsbase seed aborted at the spec
+    # check although its tables were the registered solve.
+    emb = {solstamp.embedded_solve_id(p) for p in present}
+    emb.discard(None)
+    if len(emb) == 1:
+        sid = next(iter(emb))
+        man = solstamp.lookup(sid)
+        if man and not man.get("retired") and not man.get("superseded_by"):
+            got = {a["path"] for a in man.get("artifacts", [])}
+            if got and set(want) <= got:
+                return man, ("independent reproduction: the bytes differ from the "
+                             f"manifest's, but every artifact embeds solve_id {sid}")
     return None, ("no manifest describes these bytes -- the artifacts were built by "
                   "an unrecorded parameter/code combination")
 

@@ -93,6 +93,10 @@ E = {
     "vy9t2": ("KP14", CAMPAIGN, "two priced states, nine types (independent ladders), total price 2.5"),
     "vy9t2f": ("KP14", CAMPAIGN, "two priced states, nine types, each state priced 2.5"),
     "bvy9t2": ("BGN", CAMPAIGN, "two priced chains, nine types (independent ladders), total price 2.5"),
+    # the sign of the exposure and the level compensation (2026-10-26)
+    "vyg25s": ("KP14", CAMPAIGN, "vyg25 with sign-switching types: six types, loadings $\\pm 0.02, \\pm 0.07, \\pm 0.14$"),
+    "vyg25u": ("KP14", CAMPAIGN, "vyg25 without the level compensation: the type shows in value at $y = 0$"),
+    "bvychs": ("BGN", CAMPAIGN, "bvych0 with sign-switching types: six types, loadings $\\pm 0.01, \\pm 0.035, \\pm 0.07$"),
     "gvypk3": ("GS21", CAMPAIGN, "two priced chains, three product types"),
     # the 2026-10-17 fixes
     "gvyz10": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.10\\,\\tilde z\\,y}$: the product economy without the coupon"),
@@ -121,9 +125,9 @@ GROUPS = [
      "Two independent priced states at total price 2.5 ($2.5/\\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).",
      ["bvyk2", "gvypk3", "vy9t2"]),
     # ---- the appendix: everything else that was run, grouped by what it tested ----
-    ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings.",
+    ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 
@@ -205,7 +209,12 @@ def reduced_rows():
     # the appendix: bounded and curvature loadings on observed characteristics, and the size-orthogonal curvature ladder
     pick_x = [("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
               ("kfh_sq_1", "K=1, pure curvature (squares) of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
-              ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16")]
+              ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
+              # the sign ladder (2026-10-26): the K=1 latent product with the factors' means shifted, and a one-signed ratio
+              ("lsh_a0_b0_n0", "K=1 product of two mean-zero latent states (sign ladder origin), no noise"), ("lsh_a0_b1_n0", "one factor's mean shifted 1 sd"),
+              ("lsh_a0_b2_n0", "one factor shifted 2 sd"), ("lsh_a1_b1_n0", "both factors shifted 1 sd"), ("lsh_a2_b2_n0", "both 2 sd"), ("lsh_a3_b3_n0", "both 3 sd"),
+              ("lsh_a0_b0_n1", "mean-zero product, observation noise 1.0"), ("lsh_a2_b2_n1", "both shifted 2 sd, noise 1.0"),
+              ("lrt_n0", "one-signed coverage ratio of the two latents, no noise")]
     return [_rf_rows(df, pick), _rf_rows(df, pick_x)]
 
 
