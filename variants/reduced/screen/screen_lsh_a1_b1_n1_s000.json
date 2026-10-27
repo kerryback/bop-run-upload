@@ -1,0 +1,220 @@
+{
+ "name": "lsh_a1_b1_n1",
+ "seed": 0,
+ "params": {
+  "N": 500,
+  "T": 500,
+  "burnin": 100,
+  "state": "ou",
+  "halflife": 24.0,
+  "p01": 0.020833333333333332,
+  "p10": 0.041666666666666664,
+  "sigma_f": 0.04,
+  "lam_m": 0.002,
+  "lam_s": 0.02,
+  "g_kind": "const",
+  "g_slope": 0.0,
+  "g_lo": 0.05,
+  "g_hi": 1.5,
+  "gmult": [
+   1.0,
+   1.0
+  ],
+  "J": 1,
+  "b_ladder": [
+   0.0
+  ],
+  "b_scale": 0.3,
+  "shares": [
+   1.0
+  ],
+  "u1": 0.0,
+  "a": [
+   0.0,
+   0.3,
+   0.0,
+   0.3,
+   0.3
+  ],
+  "r": 0.5,
+  "lev": 1.0,
+  "s0": 0.0,
+  "q": 1.0,
+  "sig_eps": 0.1,
+  "sig_eps_disp": 0.0,
+  "mve_base": 7.0,
+  "nf": 0,
+  "fac_shape": "tanh",
+  "fac_amp": 1.0,
+  "lam_f": 0.01,
+  "fac_center": true,
+  "fac_dirseed": 20261008,
+  "fac_orth_size": false,
+  "nlat": 5,
+  "obs_noise": 1.0,
+  "nf_lat": 1,
+  "lam_lat": 0.024,
+  "lat_center": true,
+  "lat_shift": [
+   1.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "lat_form": "product",
+  "lat_std": true,
+  "lat_ratio_mean": 1.0,
+  "lat_ratio_cap": 5.0
+ },
+ "describe": "state=ou halflife=24.0 g=const lam_m/sf=0.050 lam_s/sf=0.500 J=1 b=(0.0,) r=0.5 q=1.0 lev=1.0 s0=0.0 a=(0.0, 0.3, 0.0, 0.3, 0.3) sig_eps=0.1 N=500 T=500 nlat=5 obs_noise=1.0 nf_lat=1 lam_lat/sf=0.600 lat_form=product lat_shift=(1.0, 1.0, 0.0, 0.0, 0.0) lat_std=True",
+ "oracle": {
+  "sr_max": 0.5983740137173647,
+  "sr_max_eval": 0.5983741302503184,
+  "sr_ew_eval": 0.049690399499995326,
+  "sr_orth_eval": 0.5963073569479515,
+  "mkt_share": 0.08304235926644807,
+  "mean_mu": 0.002,
+  "sd_mu": 0.024241864644879756,
+  "ann_excess_pct": 2.4,
+  "lin_ceiling_eval": 0.5891661274085612,
+  "lin_rf_ceiling_eval": 0.5891499424667428,
+  "nonlin_ceiling_eval": 0.5912945678614607,
+  "room_eval": 0.002128440452899505,
+  "room_s_eval": 0.002144625394717936,
+  "room_all": 0.0021839914582694187,
+  "bases": {
+   "fmr_raw": {
+    "P": 6,
+    "const_best": 0.5889484334906949,
+    "const_best_eval": 0.5892017461309725
+   },
+   "lin_rank": {
+    "P": 6,
+    "const_best": 0.5895784036861464,
+    "const_best_eval": 0.5891661274085612
+   },
+   "lin_rank_rf": {
+    "P": 12,
+    "const_best": 0.589603739740382,
+    "const_best_eval": 0.5891499424667428
+   },
+   "poly2": {
+    "P": 27,
+    "const_best": 0.5916775868235942,
+    "const_best_eval": 0.5912945678614607
+   },
+   "bins": {
+    "P": 301,
+    "const_best": 0.5915194631175312,
+    "const_best_eval": 0.5911809612825606
+   },
+   "rff36": {
+    "P": 37,
+    "const_best": 0.5901448758626487,
+    "const_best_eval": 0.5893013440057375
+   },
+   "rff360": {
+    "P": 361,
+    "const_best": 0.5917623951444159,
+    "const_best_eval": 0.5912355423771697
+   },
+   "bins_n": {
+    "P": 306,
+    "const_best": 0.5917256799012122,
+    "const_best_eval": 0.5914669336035192
+   }
+  },
+  "months": 485,
+  "eval_months": 125,
+  "theta_month": 0.6876093052760518,
+  "theta_wtd": 0.6875928824450951,
+  "theta_pooled": 0.6920787993773555,
+  "time_variation": 0.004485916932260414
+ },
+ "estimators": {
+  "dkkm": 0.58591857438625,
+  "dkkm_P": 360,
+  "dkkm_kappa": 0.1,
+  "dkkm_at_edge": false,
+  "fm": 0.5832277750716423,
+  "ff": 0.5715614092459212,
+  "linrank": 0.5867300300719468,
+  "linrank_m": 0.5882784394176661,
+  "linrank_s": 0.584615800755069,
+  "mkt_est": 0.04969039949999533,
+  "ew": 0.049690399499995326,
+  "classical_gap": 0.0026907993146076947,
+  "gap": -0.0008114556856968491,
+  "fair_gap": -0.002359865031416164,
+  "fair_s_gap": -0.002359865031416164,
+  "fair_method": "linrank_m",
+  "dkkm_pct_ceiling": 0.9909080959518127,
+  "fair_pct_ceiling": 0.9984933146194273,
+  "excess_loss": 0.004488305484315669,
+  "best": {
+   "ew": {
+    "sharpe": 0.049690399499995326,
+    "P": 1,
+    "kappa": 0.0
+   },
+   "ff": {
+    "sharpe": 0.5715614092459212,
+    "P": 6,
+    "kappa": 0.0
+   },
+   "fm": {
+    "sharpe": 0.5832277750716423,
+    "P": 6,
+    "kappa": 0.0
+   },
+   "linrank": {
+    "sharpe": 0.5867300300719468,
+    "P": 6,
+    "kappa": 0.1
+   },
+   "linrank_m": {
+    "sharpe": 0.5882784394176661,
+    "P": 6,
+    "kappa": 1.0
+   },
+   "linrank_s": {
+    "sharpe": 0.584615800755069,
+    "P": 12,
+    "kappa": 0.1
+   },
+   "mkt_est": {
+    "sharpe": 0.04969039949999533,
+    "P": 1,
+    "kappa": 0.0
+   },
+   "rff": {
+    "sharpe": 0.58591857438625,
+    "P": 360,
+    "kappa": 0.1
+   }
+  },
+  "eval_months": 125,
+  "window": 360,
+  "rff": [
+   36,
+   360
+  ],
+  "nmat": 1,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "stride": 1
+ },
+ "seconds": 80.3244137763977
+}

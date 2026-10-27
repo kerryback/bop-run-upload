@@ -29,3 +29,7 @@ files stay on Quest). They are the structural second-state economies `vy9t2`, `v
 the GS21 benchmark at gamma_x 0.1 (`gsbg1`) and its exposure wirings `gvyz10g`, `gvyzl`, `gvyzl5`, `gvyzlb`, `gvyzlf`,
 `gvyzlg`, `gvyzlp`, `gvyzlr`, `gvyzlrp`, `gvyzlw`; and the product-sign and leverage-type wirings `gvyp10c`, `gvytl`,
 `gvytlg`. Their specs, solve tables and registry manifests were committed with the report sections that cite them.
+
+Added October 27, 2026, same file set: the sign-switching type ladders `vyg25s` (KP14) and `bvychs` (BGN), and
+`vyg25u` (KP14 `vyg25` without the level compensation); report Section 3b, "The sign of the type loading". The
+reduced-form sign ladder (`lsh_*`, `lrt_*`) that motivated them is in `variants/reduced/screen`.

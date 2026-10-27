@@ -382,7 +382,8 @@ def test_seed_array_oracle_stage_runs_the_oracle_and_nothing_else():
     body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines()
                      if not l.lstrip().startswith("#"))
     assert re.search(r'SEED_STAGE=\$\{SEED_STAGE:-both\}', body)
-    assert re.search(r'case "\$SEED_STAGE" in both\|oracle\|linear\)', body), "unknown stages must be rejected"
+    # SEED_STAGE=estimators (2026-10-26) re-runs every estimator on a saved panel; it shares the linear branch
+    assert re.search(r'case "\$SEED_STAGE" in both\|oracle\|linear(\|estimators)?\)', body), "unknown stages must be rejected"
     # the early exit sits between the oracle call and the estimator call
     o = body.index("run_oracle.py")
     e = body.index("run_estimators.py", o)
@@ -443,7 +444,8 @@ def test_seed_array_linear_stage_rescores_saved_panels_without_overwriting_them(
     body = "\n".join(l for l in read_script(SEED_ARRAY).splitlines() if not l.lstrip().startswith("#"))
     assert re.search(r'INPUTS=\$\{BOP_INPUTS_DIR:-results\}', body)
     i = body.index("--linear_only")
-    start = body.rfind('if [ "$SEED_STAGE" = linear ]; then', 0, i)
+    start = max(body.rfind('if [ "$SEED_STAGE" = linear ]; then', 0, i),
+                body.rfind('if [ "$SEED_STAGE" = linear ] || [ "$SEED_STAGE" = estimators ]; then', 0, i))
     assert start >= 0, "the --linear_only call must sit inside the linear branch"
     blk = body[start:body.index("exit 0", i)]
     assert "run_oracle.py" not in blk

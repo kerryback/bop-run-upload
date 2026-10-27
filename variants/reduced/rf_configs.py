@@ -131,8 +131,22 @@ for nlat in (3, 5):
             LFAC[f"lfh_L{nlat}_K{nf}_n{on:g}"] = {"J": 1, "nlat": nlat, "obs_noise": on, "nf_lat": nf, "lam_lat": 0.012 * 2.0 / nf ** 0.5}
 CONFIGS.update(LFAC)
 
+# ---- the SIGN ladder (2026-10-26): one latent-product factor (lfh_L5_K1's economy, loading standardised each month)
+# with the two factors of the product shifted by (m_a, m_b): (0, 0) is the mean-zero product, (0, m) a sign-switching
+# type times a one-signed leverage of CV 1/m, (m, m) two one-signed factors as in KP14 and BGN (m = 2: CV 0.5).
+# lrt_ is the debt-service-coverage ratio, one-signed and convex in a single index. Noise 0 and 1 as the latent ladder.
+LSH = {}
+for ma, mb in ((0, 0), (0, 1), (1, 1), (0, 2), (2, 2), (0, 3), (3, 3)):
+    for on in (0.0, 1.0):
+        LSH[f"lsh_a{ma}_b{mb}_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0,
+                                          "lat_shift": (float(ma), float(mb), 0.0, 0.0, 0.0), "lat_std": True}
+for on in (0.0, 1.0):
+    LSH[f"lrt_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "ratio", "lat_std": True}
+CONFIGS.update(LSH)
+
 LADDERS = {
     "lfac": sorted(LFAC),
+    "signs": sorted(LSH),
     "kfac": sorted(KFAC),
     "kfo": sorted(KFO),
     "speed": ["hl120", "hl48", "base", "hl12", "hl6"],

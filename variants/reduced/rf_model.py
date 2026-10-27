@@ -93,6 +93,14 @@ DEFAULTS = dict(
     # lam_lat * g(s) each. The premium is a quadratic form in the latents: nonlinear in the ranks, hidden to the
     # degree the noise hides the states, and richer as nf_lat grows.
     nlat=0, obs_noise=0.0, nf_lat=0, lam_lat=0.012, lat_center=True,
+    # ---- the SIGN of the product's factors (2026-10-26): lat_shift adds a constant to each latent before the product,
+    # so factor k loads as (s_a + m_a)(s_b + m_b). m = 0 is the mean-zero product (GS21's imposed product); m > 0 makes
+    # the factor one-signed with coefficient of variation 1/m (KP14's type ladder has CV 0.64, its growth-option share
+    # ~0.5), and the product then has an additive part m_b s_a + m_a s_b that a linear portfolio holds. lat_form "ratio"
+    # is debt service over profit: coverage c = exp(lat_ratio_mean + (s_a - s_b)/sqrt2), loading 1/max(c - 1, 1/cap),
+    # one-signed and convex in ONE index. lat_std standardises each factor's loading cross-sectionally every month, so
+    # the premium's dispersion is the same in every cell and only its additive share moves.
+    lat_shift=0.0, lat_form="product", lat_std=False, lat_ratio_mean=1.0, lat_ratio_cap=5.0,
 )
 
 
@@ -249,7 +257,18 @@ class Economy:
             cols.append(float(p["fac_amp"]) * h)
         if self.nfl:
             s_lat = self.z[t][:, :self.nlat]                            # the true states, noise-free
-            L = np.column_stack([s_lat[:, a] * s_lat[:, b] for a, b in self.lat_pairs])
+            sh = np.asarray(p["lat_shift"], float).ravel()
+            sh = np.full(self.nlat, float(sh[0])) if sh.size == 1 else np.concatenate([sh, np.zeros(self.nlat - sh.size)])
+            if p["lat_form"] == "product":
+                L = np.column_stack([(s_lat[:, a] + sh[a]) * (s_lat[:, b] + sh[b]) for a, b in self.lat_pairs])
+            elif p["lat_form"] == "ratio":
+                m, cap = float(p["lat_ratio_mean"]), float(p["lat_ratio_cap"])
+                L = np.column_stack([1.0 / np.maximum(np.exp(m + (s_lat[:, a] - s_lat[:, b]) / np.sqrt(2.0)) - 1.0, 1.0 / cap)
+                                     for a, b in self.lat_pairs])
+            else:
+                raise ValueError(p["lat_form"])
+            if p["lat_std"]:
+                L = L / np.where(L.std(0) > 0, L.std(0), 1.0)
             if p["lat_center"]:
                 L = L - L.mean(0)
             cols.append(L)
@@ -306,4 +325,5 @@ class Economy:
                 + f" J={p['J']} b={tuple(round(x*p['b_scale'],3) for x in p['b_ladder'])} r={p['r']} q={p['q']} lev={p['lev']} s0={p['s0']}"
                 + f" a={p['a']} sig_eps={p['sig_eps']} N={p['N']} T={p['T']}"
                 + (f" nf={p['nf']} fac={p['fac_shape']} lam_f/sf={p['lam_f']/sf:.3f} amp={p['fac_amp']}" if int(p['nf']) else "")
-                + (f" nlat={p['nlat']} obs_noise={p['obs_noise']} nf_lat={p['nf_lat']} lam_lat/sf={p['lam_lat']/sf:.3f}" if int(p['nlat']) else ""))
+                + (f" nlat={p['nlat']} obs_noise={p['obs_noise']} nf_lat={p['nf_lat']} lam_lat/sf={p['lam_lat']/sf:.3f}"
+                   f" lat_form={p['lat_form']} lat_shift={p['lat_shift']} lat_std={p['lat_std']}" if int(p['nlat']) else ""))

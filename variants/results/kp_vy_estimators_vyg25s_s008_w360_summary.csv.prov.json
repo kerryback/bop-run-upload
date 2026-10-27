@@ -1,0 +1,80 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_estimators.py",
+  "--model",
+  "kp_vy",
+  "--tag",
+  "vyg25s",
+  "--seed",
+  "8",
+  "--window",
+  "360",
+  "--levels",
+  "--include_mkt",
+  "--kappas",
+  "1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0",
+  "--fair_linear",
+  "--n_jobs",
+  "4"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "env": {
+  "KP_PARAM_OVERRIDES": "{\"type_share\": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], \"type_bv\": [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14], \"gamma_v\": 2.5, \"bv_comp\": 1.2}",
+  "KP_VY_PREFIX": "vyg25s",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "vyg25s",
+  "SLURMD_NODENAME": "qgpu0604",
+  "SLURM_ARRAY_JOB_ID": "5493107",
+  "SLURM_ARRAY_TASK_ID": "8",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "5557716",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-27T04:29:35-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0604",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "sklearn": "1.9.1",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_estimators.py --model kp_vy --tag vyg25s --seed 8 --window 360 --levels --include_mkt --kappas 1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0 --fair_linear --n_jobs 4",
+ "inputs": [
+  {
+   "stage": "G",
+   "solve_id": "34c2f40be70673f1",
+   "files": 6,
+   "files_expected": 6,
+   "bytes": 4776384
+  },
+  {
+   "stage": "integ",
+   "solve_id": "ea73db78687a8285",
+   "files": 126,
+   "files_expected": 126,
+   "bytes": 11443320
+  }
+ ],
+ "extra": {
+  "engine": "estimators",
+  "window": 360,
+  "linear_only": false,
+  "fair_linear": true,
+  "inputs_from": null,
+  "spec_id": "var-kp_vy-vyg25s-v1",
+  "oracle_eval_window": 360,
+  "panel": "kp_vy_panel_vyg25s_s008.parquet"
+ }
+}

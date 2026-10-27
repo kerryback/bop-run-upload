@@ -1,0 +1,118 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25u-v1",
+ "title": "KP14 vyg25 WITHOUT the level compensation (bv_comp 0): a type's exposure shows in its value at y = 0",
+ "question": "Does revealing the type through the level of value (size) change room or the gap? The level compensation hides the type at y = 0; dropping it is equivalent to giving y a nonzero mean.",
+ "notes": "WHY (2026-10-26). vyg25 scales each type's cash flows by type_theta so that A0 at y = 0 is equal across types and the type is revealed only by how value moves with y. Without it, A0 at y = 0 is 4.05 / 3.41 / 2.73 for b = 0.02 / 0.07 / 0.14 (the Q-mean of y is -6 sd, so the more exposed claim is worth less), and the type is a level in size and book-to-market. A y with a positive mean would do the same through e^{b mu}. The premium's functional form, b_f x growth-option share, is unchanged; what changes is how the characteristics identify b_f.\n\nFEASIBILITY: the same tables as vyg25 with type_theta = 1 (A0 min 3.89 / 2.98 / 2.13).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-26): room within 5 points of vyg25's 24%; the linear ceiling and DKKM both rise as the type becomes linearly visible; fair gap between +0.005 and +0.025, direction not called. FALSIFIED as 'the compensation costs nothing' if the gap moves by more than 0.01 either way.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v4",
+  "changes": [
+   "bv_comp 1.2 -> 0.0; everything else vyg25's; own tables under prefix vyg25u"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 0.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25u"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 0.0
+    },
+    "args": {
+     "prefix": "vyg25u"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-26 (sign of the exposure / level compensation); specs written by _scratch/gen_signed_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25u",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5492948.vyg25u.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "ebcaeaf94a36242a708be814d670eb577367c27012674fe653751a2191c9644c",
+ "expected_solves": {
+  "G": "7ec34b6aa6ca064b",
+  "integ": "8b620ed86c60a2aa"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null
+}

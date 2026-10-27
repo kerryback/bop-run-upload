@@ -1,0 +1,48 @@
+{
+ "model": "kp_vy",
+ "tag": "vyg25u",
+ "seed": 8,
+ "prov": "kp_vy_estimators_vyg25u_s008_w360_summary@nogit",
+ "spec_id": "var-kp_vy-vyg25u-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "G",
+   "solve_id": "7ec34b6aa6ca064b",
+   "files": 3,
+   "files_expected": 3,
+   "bytes": 2366590
+  },
+  {
+   "stage": "integ",
+   "solve_id": "8b620ed86c60a2aa",
+   "files": 63,
+   "files_expected": 63,
+   "bytes": 5721660
+  }
+ ],
+ "panel": "kp_vy_panel_vyg25u_s008.parquet"
+}
