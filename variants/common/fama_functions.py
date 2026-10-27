@@ -86,7 +86,11 @@ def fama_macbeth(data, chars, **kwargs):
     X = np.concatenate((np.ones(X.shape[0]).reshape(-1, 1), X), axis=1)
     P = X @ linalg.pinvh(X.T @ X) 
     P = pd.DataFrame(P[:, 1:])
-    P *= 2 / P.abs().sum()
+    # scale each long-short column to unit gross leverage; a characteristic with no cross-sectional variation
+    # (gvyp10c's leverage: every firm at zero coupon, 2026-10-27) has an all-zero column, which stays zero
+    # instead of becoming 0/0 = NaN and emptying the rolling window in mve_data.
+    gross = P.abs().sum()
+    P *= 2 / gross.where(gross > 0, np.inf)
     # one column per characteristic, named as in fama_french (the names are cosmetic: the array is returned)
     _FF_NAMES = {"size": "smb", "bm": "hml", "agr": "cma", "roe": "rmw", "mom": "umd"}
     P.columns = [_FF_NAMES.get(c, c) for c in chars]
