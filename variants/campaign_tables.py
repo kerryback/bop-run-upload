@@ -27,6 +27,11 @@ LEGACY = os.path.join(HERE, "results")
 # moments stay on Quest; variants/results/README_quest.md); the reduced-form screens in variants/reduced/screen
 CAMPAIGN = next(d for d in ("/kellogg/proj/axa3203/bop_runs/results", LEGACY) if os.path.isdir(d))
 SCREEN = next(d for d in ("/kellogg/proj/axa3203/bop_runs/screen", os.path.join(HERE, "reduced", "screen")) if os.path.isdir(d))
+# GS21 estimators re-scored on the oracle's six characteristics (the five plus leverage, 2026-10-26; run_estimators.py).
+# The earlier scores in CAMPAIGN / LEGACY used five, so every GS21 estimator there is read against a room it could not
+# see. A GS21 economy with any re-scored seed takes its estimator columns from here and only from here (never a mix of
+# feature sets); one with none keeps the five-characteristic scores and is marked with a double dagger.
+LEV = next((d for d in ("/kellogg/proj/axa3203/bop_runs/results_lev", os.path.join(HERE, "results_lev")) if os.path.isdir(d)), None)
 LINEAR = ("linrank", "linlev", "linrank_m", "linlev_m")
 
 # (tag, model, results dir, what) in the order the tables print them
@@ -131,8 +136,17 @@ GROUPS = [
 ]
 
 
+def estimator_dir(tag):
+    """where the tag's estimator summaries are read from, and whether those are the five-characteristic GS21 scores"""
+    model, d, _ = E[tag]
+    if model == "GS21" and LEV and glob.glob(os.path.join(LEV, f"*_estimators_{tag}_s[0-9][0-9][0-9]_w360_summary.csv")):
+        return LEV, False
+    return d, model == "GS21"
+
+
 def seed_rows(tag):
     model, d, _ = E[tag]
+    est_dir, five_char = estimator_dir(tag)
     rows = []
     for f in sorted(glob.glob(os.path.join(d, f"*_oracle_{tag}_s[0-9][0-9][0-9].json"))):
         o = json.load(open(f)); b = o["bases"]
@@ -146,8 +160,8 @@ def seed_rows(tag):
                  room_pct=100 * (nl - lin) / lin if lin > 1e-6 else np.nan, mkt_share=mkt,
                  # the interaction's Sharpe ORTHOGONAL to the best linear portfolio: Sharpes add in quadrature, so the
                  # difference nl - lin understates a nonlinearity that sits on a large linear base (GS21's market)
-                 orth=float(np.sqrt(max(nl ** 2 - lin ** 2, 0.0))))
-        est = glob.glob(os.path.join(d, f"*_estimators_{tag}_s{seed:03d}_w360_summary.csv"))
+                 orth=float(np.sqrt(max(nl ** 2 - lin ** 2, 0.0))), five_char=five_char)
+        est = glob.glob(os.path.join(est_dir, f"*_estimators_{tag}_s{seed:03d}_w360_summary.csv"))
         if est:
             s = pd.read_csv(est[0]); best = s.loc[s.groupby("method").sharpe.idxmax()].set_index("method").sharpe
             r.update(dkkm=best[[k for k in RFF if k in best.index]].max(), fmr=best.get("fm", np.nan), ff=best.get("ff", np.nan),
@@ -164,7 +178,7 @@ def economy(tag):
     if s.empty:
         return None
     e = s[s.get("dkkm", pd.Series(dtype=float)).notna()] if "dkkm" in s else s.iloc[0:0]
-    out = dict(tag=tag, model=E[tag][0], what=E[tag][2], n_oracle=len(s), n=len(e), eval=bool(s["eval"].all()),
+    out = dict(tag=tag, model=E[tag][0], what=E[tag][2], n_oracle=len(s), n=len(e), eval=bool(s["eval"].all()), five_char=bool(s["five_char"].any()),
                sr_max=s.sr_max.mean(), lin_ceiling=s.lin_ceiling.mean(), room=s.room.mean(), room_pct=s.room_pct.mean(), mkt_share=s.mkt_share.mean(),
                orth=s.orth.mean())
     for c in ("dkkm", "fmr", "ff", "linear", "capm", "fair_gap", "dkkm_orth"):
@@ -189,6 +203,7 @@ HEAD_MD = ["model", "economy", "SR_max", "market %", "linear ceiling", "room", "
 
 def row_cells(r, md=False):
     dag = "" if r["eval"] else ("†" if md else "$^\\dagger$")
+    dag += "" if not r.get("five_char") else ("‡" if md else "$^\\ddagger$")
     what = r["what"] if not md else re.sub(r"\$|\\%|\\times|\\tilde |\\max|\\gamma|\\|_\{|\}|\{", lambda m: {"$": "", "\\%": "%", "\\times": "x", "\\tilde ": "", "\\max": "max", "\\gamma": "gamma", "\\,": " ", "\\": "", "_{": "_", "}": "", "{": ""}[m.group(0)], r["what"].replace("\\,", " "))
     name = f"`{r['tag']}`" if md else "\\texttt{" + r['tag'].replace("_", "\\_") + "}"
     return [r["model"], f"{name}{dag} -- {what}", fmt(r["sr_max"]), fmt(100 * r["mkt_share"], 0) + ("%" if md else "\\%"),
@@ -251,7 +266,9 @@ NOTE_MD = ("Columns: SR_max, the linear ceiling and the room are the population 
            "the 360-month window; fair gap = DKKM minus the best of (FMR, FF, linear, CAPM), mean across seeds with its t-statistic (mean over the standard error across seeds); "
            "interaction SR = the nonlinear ceiling's Sharpe orthogonal to the linear ceiling, sqrt(nl^2 - lin^2), the size of the interaction itself (Sharpes add in quadrature, so the room understates an interaction that sits on a large linear base); "
            "DKKM perp = DKKM's Sharpe orthogonal to the best classical method, with the sign of the gap; "
-           "+ = seeds with a positive fair gap. A dagger marks an oracle that predates the evaluation-window ceilings.")
+           "+ = seeds with a positive fair gap. A dagger marks an oracle that predates the evaluation-window ceilings. "
+           "GS21 estimators are scored on the oracle's six characteristics (size, book-to-market, asset growth, profitability, momentum, leverage); "
+           "a double dagger marks a GS21 economy still scored on the first five, without leverage (the Sol-era scoring), whose DKKM, FMR, FF, linear and fair gap are not comparable.")
 
 
 def main():
