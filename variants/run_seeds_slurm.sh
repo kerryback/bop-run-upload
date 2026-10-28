@@ -909,6 +909,17 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvy25s-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvy2s)
+    # gs_vy (2026-10-27): gvy25s's SIGNED ladder over TWO priced chains, exposure in cash flows only: twelve hidden types (2-vectors), 5 x 5 nodes, bv_comp 1.2. Twelve solves.
+    MODEL=gs_vy; TAG=gvy2s; SPEC=var-gs_vy-gvy2s-v1
+    SOLVE_TAG=sol_gvy2sa,sol_gvy2sb,sol_gvy2sc,sol_gvy2sd,sol_gvy2se,sol_gvy2sf,sol_gvy2sg,sol_gvy2sh,sol_gvy2si,sol_gvy2sj,sol_gvy2sk,sol_gvy2sl
+    export GS_VY_SOLDIRS=sol_gvy2sa,sol_gvy2sb,sol_gvy2sc,sol_gvy2sd,sol_gvy2se,sol_gvy2sf,sol_gvy2sg,sol_gvy2sh,sol_gvy2si,sol_gvy2sj,sol_gvy2sk,sol_gvy2sl
+    export GS_VY_BV=0.03535534,-0.03535534,0.04949747,-0.04949747,0.04171208,-0.04171208,0.07071068,-0.07071068,0.09899495,-0.09899495,0.08342417,-0.08342417
+    export GS_VY_BV2=0.03535534,-0.03535534,-0.00707107,0.00707107,-0.02756995,0.02756995,0.07071068,-0.07071068,-0.01414214,0.01414214,-0.0551399,0.0551399
+    export GS_VY_SHARES=0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083337
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy2s-v1; sbatch --export=ALL --array=0-11 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   kpsgn)
     # kp_vy (2026-10-27): kpgam with the price of x SWITCHING SIGN with y: gamma_x x (2 logistic(-2y) - 1); y unpriced. A conditioning room (DKKM sees y as rf_stand).
     MODEL=kp_vy; TAG=kpsgn; SPEC=var-kp_vy-kpsgn-v1; SOLVE_TAG=kpsgn
