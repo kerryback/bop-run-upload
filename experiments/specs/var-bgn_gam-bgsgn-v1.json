@@ -1,0 +1,101 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_gam-bgsgn-v1",
+ "title": "BGN with the regime price of the market shock SWITCHING SIGN: sigma_z x (-1 / +1), 12-month expected spells, half the time in each regime",
+ "question": "When the premium on the market shock changes sign by regime, how much of the conditional Sharpe does a constant-weight portfolio keep, and does DKKM (which sees the regime as gam_stand) take the rest?",
+ "notes": "WHY (2026-10-27). The campaign's gaps are small because every economy gives the linear sort a NONZERO correlation with the priced exposure: with one priced factor and N = 500, any such portfolio mimics the factor and diversifies the rest, so it earns the factor's whole Sharpe ratio however curved the exposure is (the 2026-10-26 reduced-form sign screen: room is all or nothing). Room needs the exposure to be orthogonal to every linear function of the characteristics -- in the cross-section (a hidden sign: vyg25s, room 0.35, gap +0.18) or in time (a premium whose sign the constant-weight portfolio cannot follow). g0235f scales the price by 0.2 and 3.5 across regimes and the gap stayed at hundredths, because a constant portfolio long market exposure earns in both regimes. At -1 / +1 with equal stationary shares the unconditional premium of every constant portfolio is near zero. bgn_gam exports the regime as gam_stand, which the random features and DKKM condition on; the linear ceiling and the classical estimators hold constant weights, so this is a CONDITIONING room, to be labelled as such in the report.\n\nFEASIBILITY (vasicek.py at these overrides, 2026-10-27): the regime enters only as e^{-beta gmult[s]} (no square root or log of gmult); rstar_gam finds exercise thresholds in both regimes across the beta grid (e.g. 0.052 / 0.039 at beta 0.72); prob_calm 0.5.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-27): the constant-weight linear ceiling falls to a fraction of bgnbase's while SR_max stays near it; room above 100% of the linear ceiling; DKKM at least 0.10 above the best classical method, 10 of 10 seeds. FALSIFIED as 'DKKM can time a sign-switching premium from the regime column' if DKKM is within 0.02 of the fair linear.",
+ "lineage": {
+  "parent_spec": "var-bgn_gam-g0235f-v3",
+  "changes": [
+   "gmult [0.2, 3.5] -> [-1.0, 1.0]; p01 1/12, p10 2/12 -> 1/12, 1/12 (12-month spells, stationary share 1/2 each); jstar_gam_file Jstar_bgsgn.csv"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_gam",
+ "method": {
+  "kp_regime_labels": "n/a",
+  "zero_book_in_sdf_solve": true,
+  "bgn_price_of_risk": "sigma_z x gmult[s] with gmult [-1, 1]: the price of the market shock is an odd function of the regime, mean zero"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "gmult": [
+   -1.0,
+   1.0
+  ],
+  "p01": 0.08333333333333333,
+  "p10": 0.08333333333333333,
+  "jstar_gam_file": "Jstar_bgsgn.csv"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_gam/rebuild_jstar_gam.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "gmult": [
+      -1.0,
+      1.0
+     ],
+     "p01": 0.08333333333333333,
+     "p10": 0.08333333333333333,
+     "jstar_gam_file": "Jstar_bgsgn.csv"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-27 (three routes to a larger gap); specs written by _scratch/gen_gap_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "verified_by": "variants/klc/verify_solves.py bgn (BOP_VERIFY_BGN_SPEC)",
+  "runner_note": "SEED_SPEC=bgsgn",
+  "solve_runner": "variants/klc/solve_bgn_gam_klc.sh",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_gam_klc.sh; id read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "3b64c140549807f2e5b332950d3fec2b4219678a0b7def13b01d7fdfd39cdc04",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null
+}

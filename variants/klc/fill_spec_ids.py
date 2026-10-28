@@ -12,9 +12,10 @@ from precommit_spec import _spec_hash   # the repo's one hashing rule
 
 spec_path, log_path = sys.argv[1], sys.argv[2]
 s = json.load(open(spec_path))
-if s["model"] in ("bgn_vy", "bgn_q"):
-    # one line: [solstamp] bgn_vy <jstar_vy_file> solve_id=<id>
-    m = re.findall(rf"\[solstamp\] {s['model']} {re.escape(s['params']['jstar_vy_file'])} solve_id=([0-9a-f]{{16}})", open(log_path).read())
+if s["model"] in ("bgn_vy", "bgn_q", "bgn_gam"):
+    # one line: [solstamp] bgn_vy <jstar_vy_file> solve_id=<id>   (bgn_gam: its jstar_gam_file, from rebuild_jstar_gam.py)
+    _jf = s["params"]["jstar_gam_file" if s["model"] == "bgn_gam" else "jstar_vy_file"]
+    m = re.findall(rf"\[solstamp\] {s['model']} {re.escape(_jf)} solve_id=([0-9a-f]{{16}})", open(log_path).read())
     if len(set(m)) != 1:
         sys.exit(f"{s['spec_id']}: found jstar ids {sorted(set(m))} in {log_path}; need exactly one")
     ids = {"jstar": m[0]}

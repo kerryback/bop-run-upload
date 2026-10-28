@@ -1,0 +1,232 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvy25s-v1",
+ "title": "GS21 gvy25 with SIGN-SWITCHING types: the ladder mirrored, six level-exposure types of equal share, gs_bv -0.1, -0.05, -0.015, 0.015, 0.05, 0.1, level-compensated, price 2.5",
+ "question": "Does a type loading with zero cross-sectional mean, hidden at y = 0 by the level compensation, open room in GS21 the way vyg25s did in KP14 (gvy25: room 2%, gap -0.004)?",
+ "notes": "WHY (2026-10-27). The campaign's gaps are small because every economy gives the linear sort a NONZERO correlation with the priced exposure: with one priced factor and N = 500, any such portfolio mimics the factor and diversifies the rest, so it earns the factor's whole Sharpe ratio however curved the exposure is (the 2026-10-26 reduced-form sign screen: room is all or nothing). Room needs the exposure to be orthogonal to every linear function of the characteristics -- in the cross-section (a hidden sign: vyg25s, room 0.35, gap +0.18) or in time (a premium whose sign the constant-weight portfolio cannot follow). gvy25's three positive types are ordered by the same characteristic at every y (the exposed firm is always the cheaper one), so a constant book-to-market sort is always long exposure. With the ladder mirrored, the firm the sort picks at y > 0 has the opposite loading from the one it picks at y < 0, and the constant sort's loading averages to zero. The equity claim multiplies the type by the firm's leverage, which is the product vyg25s has with the growth-option share. The random features condition on y_stand (gs_vy exports it), so the oracle's nonlinear ceiling and DKKM can follow the sign; the linear ceiling and every classical estimator hold constant weights.\n\nFEASIBILITY (gs_solve_vy.py at these overrides, 2026-10-27): gs_ashift derives to -0.580 at gs_bv -0.1 and +0.538 at +0.1 (W(b) is sign-agnostic); the solver starts and sweeps at a negative exposure; gs_sim_vy.py parses negative GS_VY_BV and checks each solution's gs_bv against it.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-27): room 15-30% of the linear ceiling (gvy25 2%); fair gap +0.02 to +0.06, 8+ of 10 seeds positive; the market's share falls from gvy25's 86% toward 40% as the type premia cancel in the index. FALSIFIED as 'a hidden sign opens room in GS21' if room is at or below 5%.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25-v1",
+  "changes": [
+   "type_share 3 -> 6 equal; gs_bv [0.015, 0.05, 0.1] -> [-0.1, -0.05, -0.015, 0.015, 0.05, 0.1]; six solves sol_gvy25sa..f; gamma_v 2.5, kappa_y 0.35, NY 9, y_mult 2.5, bv_comp 1.2 unchanged"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "mirrored level-exposure ladder, E[gs_bv] = 0 across types, each type level-compensated at y = 0"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.2
+ },
+ "types": {
+  "share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.1,
+    -0.05,
+    -0.015,
+    0.015,
+    0.05,
+    0.1
+   ]
+  },
+  "soldirs": [
+   "sol_gvy25sa",
+   "sol_gvy25sb",
+   "sol_gvy25sc",
+   "sol_gvy25sd",
+   "sol_gvy25se",
+   "sol_gvy25sf"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvy25sa",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvy25sb",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.05
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvy25sc",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.015
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvy25sd",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.015
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvy25se",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.05
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   },
+   {
+    "name": "sol_gvy25sf",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 5
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvy25sa,sol_gvy25sb,sol_gvy25sc,sol_gvy25sd,sol_gvy25se,sol_gvy25sf",
+  "GS_VY_BV": "-0.1,-0.05,-0.015,0.015,0.05,0.1",
+  "GS_VY_SHARES": "0.1667,0.1667,0.1667,0.1667,0.1666,0.1666"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-27 (three routes to a larger gap); specs written by _scratch/gen_gap_specs.py; solves by variants/klc/solve_gs_vy_klc.sh (six tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvy25s",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvy25sa",
+  "sol_gvy25sb",
+  "sol_gvy25sc",
+  "sol_gvy25sd",
+  "sol_gvy25se",
+  "sol_gvy25sf"
+ ],
+ "reused_solves": null,
+ "spec_hash": "ee482c1008d8316c8e56b358b41cc6e4af5f3b23dfcbc0be5ffb8be78da24e1d"
+}
