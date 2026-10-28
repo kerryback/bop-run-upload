@@ -1,0 +1,570 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vym3s-v1",
+ "title": "KP14 vyg25s's SIGNED type ladder over K = 3 priced OU states (total price 2.5, 1.4434 each): 24 hidden types = twelve mirrored alignments (+-1, +-.84, +-.68, +-.52, +-.36, +-.20) x magnitudes 0.07, 0.14, level-compensated",
+ "question": "Does spreading a hidden mean-zero type loading over K = 3 priced states raise room and the fair gap above vyg25s's (K = 1: 0.35, +0.18), as the reduced-form latent ladder did?",
+ "notes": "WHY (2026-10-27). The one mechanism that produced a large structural gap is a type loading with zero cross-sectional mean hidden by the level compensation (vyg25s: room 0.35 = 226% of a linear ceiling of 0.17, fair gap +0.18, 10/10): the linear span then has no loading on the priced factor at all (the 2026-10-26 reduced-form sign screen: room is all or nothing). The 2026-10-11 reduced-form latent ladder found room AND the fair gap rising monotonically with the number of mean-zero product factors K, at fixed total price. vym3 / vym6 could not test that in the structural model because their alignments are all positive, so the premium is correlated with the visible magnitude and the linear sort takes it. This pair spreads vyg25s's hidden mean-zero loading over K priced states: each type's premium is magnitude x alignment with the alignments mirrored, E[b_f . gamma] = 0, total price 2.5. By the per-type reduction (parameters_kp14 'several priced states') the economy depends on K only through the Gram matrix of the loading vectors, i.e. how correlated the types' own states are: at K = 1 every type rides one y (vyg25s), at K = 3 the five off-gamma directions share a plane, at K = 6 they are mutually orthogonal.\n\nFEASIBILITY (parameters_kp14 at these overrides, 2026-10-27): a type whose premium is negative is solved at the mirrored projection (b_eff = -||b_f||, gamma_eff = |b_f . gamma|/||b_f|| in 0.5 .. 2.5), so its Q-mass stays on the grid's negative side as vyg25s's negative types do; vym3 / vym6 / vy9t2 / vyg25s rebuild bit-identically under the change. A0 finite for all 24 types; level compensation bv_comp 1.2 as vyg25s.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-27): the linear ceiling stays near vyg25s's 0.17 (the types are hidden), room at least 0.30; if the reduced-form ladder transfers, the fair gap is at least vyg25s's +0.18 and rises from K = 3 to K = 6; if the structural cost of spreading the premium over alignments dominates (vym3 against vyg25), it falls. Called: gap +0.10 to +0.25 at both K, 10/10 positive. FALSIFIED as 'K raises the gap' if the gap is ordered vym6s < vym3s < vyg25s.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vym6-v1",
+  "changes": [
+   "vym6's 24 (magnitude, alignment) grid -> twelve MIRRORED alignments x two magnitudes (0.07, 0.14; vyg25s's larger two): E[b_f . gamma] = 0",
+   "K = 3 priced states at 2.5/sqrt(3) each (total 2.5)",
+   "off-gamma directions at 36-degree spacing in the complement plane",
+   "bv_comp 1.2 and everything else vym6's; own tables under prefix vym3s"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_regime_labels": "corrected (docs/kp14_regime_labels.md)",
+  "zero_book_in_sdf_solve": true,
+  "kp_priced_states": "3 independent unit-variance OU states sharing kappa_y, priced at 2.5/sqrt(3) each; each type loads with a 3-vector and is solved at its own (mirrored where the premium is negative) scalar projection",
+  "kp_sign_ladder": "mirrored alignments, E[b_f . gamma] = 0 across types, hidden by the level compensation at y = 0"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041667,
+   0.041659
+  ],
+  "type_bv": [
+   [
+    0.0404145188,
+    0.0404145188,
+    0.0404145188
+   ],
+   [
+    -0.0404145188,
+    -0.0404145188,
+    -0.0404145188
+   ],
+   [
+    0.0649595916,
+    0.018442498,
+    0.018442498
+   ],
+   [
+    -0.0649595916,
+    -0.018442498,
+    -0.018442498
+   ],
+   [
+    0.0613849942,
+    0.0318623014,
+    -0.0108016772
+   ],
+   [
+    -0.0613849942,
+    -0.0318623014,
+    0.0108016772
+   ],
+   [
+    0.0361016569,
+    0.053682284,
+    -0.0267372915
+   ],
+   [
+    -0.0361016569,
+    -0.053682284,
+    0.0267372915
+   ],
+   [
+    -0.0019283831,
+    0.0667066642,
+    -0.0211306008
+   ],
+   [
+    0.0019283831,
+    -0.0667066642,
+    0.0211306008
+   ],
+   [
+    -0.0372220479,
+    0.0592414494,
+    0.0022293098
+   ],
+   [
+    0.0372220479,
+    -0.0592414494,
+    -0.0022293098
+   ],
+   [
+    0.0808290377,
+    0.0808290377,
+    0.0808290377
+   ],
+   [
+    -0.0808290377,
+    -0.0808290377,
+    -0.0808290377
+   ],
+   [
+    0.1299191832,
+    0.0368849959,
+    0.0368849959
+   ],
+   [
+    -0.1299191832,
+    -0.0368849959,
+    -0.0368849959
+   ],
+   [
+    0.1227699885,
+    0.0637246028,
+    -0.0216033544
+   ],
+   [
+    -0.1227699885,
+    -0.0637246028,
+    0.0216033544
+   ],
+   [
+    0.0722033138,
+    0.1073645679,
+    -0.053474583
+   ],
+   [
+    -0.0722033138,
+    -0.1073645679,
+    0.053474583
+   ],
+   [
+    -0.0038567661,
+    0.1334133284,
+    -0.0422612016
+   ],
+   [
+    0.0038567661,
+    -0.1334133284,
+    0.0422612016
+   ],
+   [
+    -0.0744440958,
+    0.1184828988,
+    0.0044586197
+   ],
+   [
+    0.0744440958,
+    -0.1184828988,
+    -0.0044586197
+   ]
+  ],
+  "gamma_v": [
+   1.443375673,
+   1.443375673,
+   1.443375673
+  ],
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vym3s"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "G",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041659
+     ],
+     "type_bv": [
+      [
+       0.0404145188,
+       0.0404145188,
+       0.0404145188
+      ],
+      [
+       -0.0404145188,
+       -0.0404145188,
+       -0.0404145188
+      ],
+      [
+       0.0649595916,
+       0.018442498,
+       0.018442498
+      ],
+      [
+       -0.0649595916,
+       -0.018442498,
+       -0.018442498
+      ],
+      [
+       0.0613849942,
+       0.0318623014,
+       -0.0108016772
+      ],
+      [
+       -0.0613849942,
+       -0.0318623014,
+       0.0108016772
+      ],
+      [
+       0.0361016569,
+       0.053682284,
+       -0.0267372915
+      ],
+      [
+       -0.0361016569,
+       -0.053682284,
+       0.0267372915
+      ],
+      [
+       -0.0019283831,
+       0.0667066642,
+       -0.0211306008
+      ],
+      [
+       0.0019283831,
+       -0.0667066642,
+       0.0211306008
+      ],
+      [
+       -0.0372220479,
+       0.0592414494,
+       0.0022293098
+      ],
+      [
+       0.0372220479,
+       -0.0592414494,
+       -0.0022293098
+      ],
+      [
+       0.0808290377,
+       0.0808290377,
+       0.0808290377
+      ],
+      [
+       -0.0808290377,
+       -0.0808290377,
+       -0.0808290377
+      ],
+      [
+       0.1299191832,
+       0.0368849959,
+       0.0368849959
+      ],
+      [
+       -0.1299191832,
+       -0.0368849959,
+       -0.0368849959
+      ],
+      [
+       0.1227699885,
+       0.0637246028,
+       -0.0216033544
+      ],
+      [
+       -0.1227699885,
+       -0.0637246028,
+       0.0216033544
+      ],
+      [
+       0.0722033138,
+       0.1073645679,
+       -0.053474583
+      ],
+      [
+       -0.0722033138,
+       -0.1073645679,
+       0.053474583
+      ],
+      [
+       -0.0038567661,
+       0.1334133284,
+       -0.0422612016
+      ],
+      [
+       0.0038567661,
+       -0.1334133284,
+       0.0422612016
+      ],
+      [
+       -0.0744440958,
+       0.1184828988,
+       0.0044586197
+      ],
+      [
+       0.0744440958,
+       -0.1184828988,
+       -0.0044586197
+      ]
+     ],
+     "gamma_v": [
+      1.443375673,
+      1.443375673,
+      1.443375673
+     ],
+     "bv_comp": 1.2
+    },
+    "args": {
+     "KP_VY_PREFIX": "vym3s"
+    },
+    "type_index": null
+   },
+   {
+    "name": "integ",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041667,
+      0.041659
+     ],
+     "type_bv": [
+      [
+       0.0404145188,
+       0.0404145188,
+       0.0404145188
+      ],
+      [
+       -0.0404145188,
+       -0.0404145188,
+       -0.0404145188
+      ],
+      [
+       0.0649595916,
+       0.018442498,
+       0.018442498
+      ],
+      [
+       -0.0649595916,
+       -0.018442498,
+       -0.018442498
+      ],
+      [
+       0.0613849942,
+       0.0318623014,
+       -0.0108016772
+      ],
+      [
+       -0.0613849942,
+       -0.0318623014,
+       0.0108016772
+      ],
+      [
+       0.0361016569,
+       0.053682284,
+       -0.0267372915
+      ],
+      [
+       -0.0361016569,
+       -0.053682284,
+       0.0267372915
+      ],
+      [
+       -0.0019283831,
+       0.0667066642,
+       -0.0211306008
+      ],
+      [
+       0.0019283831,
+       -0.0667066642,
+       0.0211306008
+      ],
+      [
+       -0.0372220479,
+       0.0592414494,
+       0.0022293098
+      ],
+      [
+       0.0372220479,
+       -0.0592414494,
+       -0.0022293098
+      ],
+      [
+       0.0808290377,
+       0.0808290377,
+       0.0808290377
+      ],
+      [
+       -0.0808290377,
+       -0.0808290377,
+       -0.0808290377
+      ],
+      [
+       0.1299191832,
+       0.0368849959,
+       0.0368849959
+      ],
+      [
+       -0.1299191832,
+       -0.0368849959,
+       -0.0368849959
+      ],
+      [
+       0.1227699885,
+       0.0637246028,
+       -0.0216033544
+      ],
+      [
+       -0.1227699885,
+       -0.0637246028,
+       0.0216033544
+      ],
+      [
+       0.0722033138,
+       0.1073645679,
+       -0.053474583
+      ],
+      [
+       -0.0722033138,
+       -0.1073645679,
+       0.053474583
+      ],
+      [
+       -0.0038567661,
+       0.1334133284,
+       -0.0422612016
+      ],
+      [
+       0.0038567661,
+       -0.1334133284,
+       0.0422612016
+      ],
+      [
+       -0.0744440958,
+       0.1184828988,
+       0.0044586197
+      ],
+      [
+       0.0744440958,
+       -0.1184828988,
+       -0.0044586197
+      ]
+     ],
+     "gamma_v": [
+      1.443375673,
+      1.443375673,
+      1.443375673
+     ],
+     "bv_comp": 1.2
+    },
+    "args": {
+     "KP_VY_PREFIX": "vym3s"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-27 (signed ladder over K states); specs written by _scratch/gen_signed_k_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vym3s",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_runner": "variants/klc/solve_kp_klc.sh"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "spec_hash": "9dceb905f3e7f4c505d33d67b6138bf417357653953358f36da3816f418df4c7",
+ "reused_solves": null
+}
