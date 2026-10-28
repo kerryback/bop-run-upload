@@ -137,11 +137,18 @@ if nstates == 1:
     b_eff = _bv[:, 0].copy()
     gamma_eff = _np.full(ntypes, float(gamma_vec[0]))
 else:
-    b_eff = _np.linalg.norm(_bv, axis=1)
-    _safe = _np.where(b_eff > 0, b_eff, 1.0)
+    _norm = _np.linalg.norm(_bv, axis=1)
+    _safe = _np.where(_norm > 0, _norm, 1.0)
+    # 2026-10-27: a type whose premium b_f . gamma is NEGATIVE is solved at the MIRRORED projection
+    # (b_eff = -||b_f||, gamma_eff = |b_f . gamma| / ||b_f||): the same claim e^{b_f . y} in the
+    # coordinate -b_f/||b_f||, so every type has gamma_eff >= 0 and its Q-mass sits on the grid's
+    # negative side, which is what the scalar path does by keeping b < 0 with gamma_v > 0 (vyg25s).
+    # Types with b_f . gamma >= 0 are unchanged (vym3 / vym6 / vy9t2 rebuild identically).
+    _sgn = _np.where(_bv @ gamma_vec < 0, -1.0, 1.0)
+    b_eff = _sgn * _norm
     # at ||b_f|| = 0 the claim is on e^0 and A is 1/(rho0 + theta) whatever the generator, so
     # the value here is arbitrary; gamma_vec[0] keeps it continuous with the scalar path.
-    gamma_eff = _np.where(b_eff > 0, (_bv @ gamma_vec) / _safe, float(gamma_vec[0]))
+    gamma_eff = _np.where(_norm > 0, (_bv @ gamma_vec) / (_sgn * _safe), float(gamma_vec[0]))
 type_bv_mat = _bv          # (ntypes, nstates), star-exported for the panel's projection
 
 
@@ -149,7 +156,8 @@ def project_y(yreg):
     """Each type's normalised projection of a state path: ytil[f] = (b_f . y) / ||b_f||.
 
     That projection is a scalar OU with the same kappa_y and unit stationary sd, so every table
-    lookup downstream is the scalar lookup it always was, at the type's own coordinate. At
+    lookup downstream is the scalar lookup it always was, at the type's own coordinate (mirrored,
+    b_eff < 0, for a type whose premium is negative; e^{b_eff ytil} = e^{b_f . y} either way). At
     nstates = 1 it returns the raw path for every type, sign and all, which is what keeps the
     three live kp_vy economies byte-identical.
     """
