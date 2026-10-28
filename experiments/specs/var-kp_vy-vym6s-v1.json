@@ -780,16 +780,16 @@
   "source_script_note": "proposed 2026-10-27 (signed ladder over K states); specs written by _scratch/gen_signed_k_specs.py",
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=vym6s",
-  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5695101.vym6s.build.log (see PRECOMMITMENT STATUS in notes)",
   "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
   "solve_runner": "variants/klc/solve_kp_klc.sh"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "G": "78e0965267f6f514",
+  "integ": "de3fb58767e3b174"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
- "spec_hash": "5368d92a179145c4c480ccbcc1a328e57b866ec136275461be5bf7b8a783aa25",
+ "solves_pending": null,
+ "spec_hash": "74d56d6448284b2fac86f0f38f0041193d56a9a8579650a40d89d2765d0558bc",
  "reused_solves": null
 }

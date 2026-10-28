@@ -778,16 +778,16 @@
   "source_script_note": "proposed 2026-10-27 (three routes to a larger gap); specs written by _scratch/gen_gap_specs.py",
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=vym6",
-  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5678259.vym6.build.log (see PRECOMMITMENT STATUS in notes)",
   "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
   "solve_runner": "variants/klc/solve_kp_klc.sh"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "G": "3dce3f4b2c4c61bd",
+  "integ": "d189898978584615"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
- "spec_hash": "eee544ef0df38b847e28f4971ea4c21bafa5fee12f5e13dd173cdd7b29e42a8f",
+ "solves_pending": null,
+ "spec_hash": "071a7755bc216dd6ed58c704f534ddad376df7179fda3d539c90b8c3cb8f71c1",
  "reused_solves": null
 }

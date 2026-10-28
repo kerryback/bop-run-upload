@@ -145,7 +145,7 @@
     },
     "args": {
      "xnum": 161,
-     "tol": 1e-06
+     "tol": 2.5e-06
     },
     "type_index": 1
    },
@@ -189,7 +189,7 @@
     },
     "args": {
      "xnum": 161,
-     "tol": 1e-06
+     "tol": 2.5e-06
     },
     "type_index": 3
    },
@@ -233,7 +233,7 @@
     },
     "args": {
      "xnum": 161,
-     "tol": 1e-06
+     "tol": 2.5e-06
     },
     "type_index": 5
    },
@@ -321,7 +321,7 @@
     },
     "args": {
      "xnum": 161,
-     "tol": 1e-06
+     "tol": 2.5e-06
     },
     "type_index": 9
    },

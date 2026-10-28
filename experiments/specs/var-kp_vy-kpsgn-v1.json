@@ -104,14 +104,14 @@
   "runner_note": "SEED_SPEC=kpsgn",
   "solve_runner": "variants/klc/solve_kp_klc.sh",
   "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
-  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5678259.kpsgn.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "G": "1d0c4d4981ce21f4",
+  "integ": "7be5cbc126386b65"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
+ "solves_pending": null,
  "reused_solves": null,
- "spec_hash": "6a2adea0dedcc93c5f8dacbd1cbebed6eb976297d983b8b562a7e9855086a9f5"
+ "spec_hash": "a0b978d5211b73e1a84d171b2fd864ea9d9071e06b8ac1e5bf05d5e5a399fccc"
 }
