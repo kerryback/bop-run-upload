@@ -102,6 +102,11 @@ E = {
     "vyg25s": ("KP14", CAMPAIGN, "vyg25 with sign-switching types: six types, loadings $\\pm 0.02, \\pm 0.07, \\pm 0.14$"),
     "vyg25u": ("KP14", CAMPAIGN, "vyg25 without the level compensation: the type shows in value at $y = 0$"),
     "bvychs": ("BGN", CAMPAIGN, "bvych0 with sign-switching types: six types, loadings $\\pm 0.01, \\pm 0.035, \\pm 0.07$"),
+    # the three routes to a larger gap (2026-10-27): a hidden sign in GS21, sign-switching prices of risk, K past the characteristic count
+    "gvy25s": ("GS21", CAMPAIGN, "gvy25 with sign-switching types: six level-exposure types, $\\pm 0.015, \\pm 0.05, \\pm 0.1$"),
+    "kpsgn": ("KP14", CAMPAIGN, "the price of x switches sign with y: $\\gamma_x (2\\,\\mathrm{logistic}(-2y) - 1)$ (conditioning room)"),
+    "bgsgn": ("BGN", CAMPAIGN, "the regime price of the market shock at $-\\sigma_z$ / $+\\sigma_z$, 12-month spells (conditioning room)"),
+    "vym6": ("KP14", CAMPAIGN, "six priced states, 24 rank-6 types (vym3's construction at K = 6)"),
     "gvypk3": ("GS21", CAMPAIGN, "two priced chains, three product types"),
     # the 2026-10-17 fixes
     "gvyz10": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.10\\,\\tilde z\\,y}$: the product economy without the coupon"),
@@ -132,7 +137,7 @@ GROUPS = [
     # ---- the appendix: everything else that was run, grouped by what it tested ----
     ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 

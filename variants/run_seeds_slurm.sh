@@ -899,6 +899,36 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  gvy25s)
+    # gs_vy (2026-10-27): gvy25 with SIGN-SWITCHING types: the ladder mirrored, six level-exposure types (-0.1 .. 0.1), E[b] = 0, level-compensated, price 2.5. Six solves.
+    MODEL=gs_vy; TAG=gvy25s; SPEC=var-gs_vy-gvy25s-v1
+    SOLVE_TAG=sol_gvy25sa,sol_gvy25sb,sol_gvy25sc,sol_gvy25sd,sol_gvy25se,sol_gvy25sf
+    export GS_VY_SOLDIRS=sol_gvy25sa,sol_gvy25sb,sol_gvy25sc,sol_gvy25sd,sol_gvy25se,sol_gvy25sf
+    export GS_VY_BV=-0.1,-0.05,-0.015,0.015,0.05,0.1
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25s-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  kpsgn)
+    # kp_vy (2026-10-27): kpgam with the price of x SWITCHING SIGN with y: gamma_x x (2 logistic(-2y) - 1); y unpriced. A conditioning room (DKKM sees y as rf_stand).
+    MODEL=kp_vy; TAG=kpsgn; SPEC=var-kp_vy-kpsgn-v1; SOLVE_TAG=kpsgn
+    export KP_PARAM_OVERRIDES='{"type_share": [1.0], "type_bv": [0.0], "gamma_v": 0.0, "bv_comp": 0.0, "g_lo": -1.0, "g_hi": 1.0, "g_steep": -2.0}'
+    export KP_VY_PREFIX=kpsgn
+    SOLVE_HINT='export KSPECS=var-kp_vy-kpsgn-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  bgsgn)
+    # bgn_gam (2026-10-27): the regime price of the market shock SWITCHING SIGN, sigma_z x (-1 / +1), 12-month spells, half the time each. A conditioning room (DKKM sees the regime as gam_stand).
+    MODEL=bgn_gam; TAG=bgsgn; SPEC=var-bgn_gam-bgsgn-v1; SOLVE_TAG=Jstar_bgsgn
+    export BGN_PARAM_OVERRIDES='{"gmult": [-1.0, 1.0], "p01": 0.08333333333333333, "p10": 0.08333333333333333, "jstar_gam_file": "Jstar_bgsgn.csv"}'
+    SOLVE_HINT='export BSPECS=var-bgn_gam-bgsgn-v1; sbatch --export=ALL variants/klc/solve_bgn_gam_klc.sh   # Quest'
+    ;;
+  vym6)
+    # kp_vy (2026-10-27): vym3's construction at K = 6: six priced OU states at 2.5/sqrt(6) each, 24 rank-6 types (six alignments x four magnitudes), bv_comp 1.2.
+    MODEL=kp_vy; TAG=vym6; SPEC=var-kp_vy-vym6-v1; SOLVE_TAG=vym6
+    export KP_PARAM_OVERRIDES='{"type_share":[0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041667,0.041659],"type_bv":[[0.0081649658,0.0081649658,0.0081649658,0.0081649658,0.0081649658,0.0081649658],[0.0167647983,0.0048773259,0.0048773259,0.0048773259,0.0048773259,0.0048773259],[0.0055521768,0.0186682737,0.0022731525,0.0022731525,0.0022731525,0.0022731525],[0.0042457822,0.0042457822,0.0190403758,-0.000685749,-0.000685749,-0.000685749],[0.0029393877,0.0029393877,0.0029393877,0.018174435,-0.004678136,-0.004678136],[0.0016329932,0.0016329932,0.0016329932,0.0016329932,0.0154893996,-0.0122234133],[0.0244948974,0.0244948974,0.0244948974,0.0244948974,0.0244948974,0.0244948974],[0.0502943948,0.0146319776,0.0146319776,0.0146319776,0.0146319776,0.0146319776],[0.0166565303,0.0560048212,0.0068194575,0.0068194575,0.0068194575,0.0068194575],[0.0127373467,0.0127373467,0.0571211275,-0.0020572469,-0.0020572469,-0.0020572469],[0.0088181631,0.0088181631,0.0088181631,0.054523305,-0.0140344079,-0.0140344079],[0.0048989795,0.0048989795,0.0048989795,0.0048989795,0.0464681989,-0.0366702399],[0.040824829,0.040824829,0.040824829,0.040824829,0.040824829,0.040824829],[0.0838239914,0.0243866294,0.0243866294,0.0243866294,0.0243866294,0.0243866294],[0.0277608838,0.0933413687,0.0113657625,0.0113657625,0.0113657625,0.0113657625],[0.0212289111,0.0212289111,0.0952018791,-0.0034287449,-0.0034287449,-0.0034287449],[0.0146969385,0.0146969385,0.0146969385,0.090872175,-0.0233906798,-0.0233906798],[0.0081649658,0.0081649658,0.0081649658,0.0081649658,0.0774469981,-0.0611170665],[0.0571547607,0.0571547607,0.0571547607,0.0571547607,0.0571547607,0.0571547607],[0.1173535879,0.0341412812,0.0341412812,0.0341412812,0.0341412812,0.0341412812],[0.0388652373,0.1306779161,0.0159120675,0.0159120675,0.0159120675,0.0159120675],[0.0297204755,0.0297204755,0.1332826308,-0.0048002429,-0.0048002429,-0.0048002429],[0.0205757138,0.0205757138,0.0205757138,0.127221045,-0.0327469518,-0.0327469518],[0.0114309521,0.0114309521,0.0114309521,0.0114309521,0.1084257974,-0.0855638931]],"gamma_v":[1.0206207262,1.0206207262,1.0206207262,1.0206207262,1.0206207262,1.0206207262],"bv_comp":1.2}'
+    export KP_VY_PREFIX=vym6
+    SOLVE_HINT='export KSPECS=var-kp_vy-vym6-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   gvyzl)
     # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
     # convex in profitability within a type; at y = 0 every type pays the same cost. variants/gs_vy/.

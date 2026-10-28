@@ -1,0 +1,117 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-kpsgn-v1",
+ "title": "KP14 kpgam with the price of the productivity shock SWITCHING SIGN with y: gamma_x times (2 logistic(-2y) - 1), from -0.69 at y >> 0 to +0.69 at y << 0, y unpriced",
+ "question": "When the premium on the model's own risk changes sign with the aggregate state, how much of the conditional Sharpe does a constant-weight portfolio keep, and does DKKM (which sees y as rf_stand) take the rest?",
+ "notes": "WHY (2026-10-27). The campaign's gaps are small because every economy gives the linear sort a NONZERO correlation with the priced exposure: with one priced factor and N = 500, any such portfolio mimics the factor and diversifies the rest, so it earns the factor's whole Sharpe ratio however curved the exposure is (the 2026-10-26 reduced-form sign screen: room is all or nothing). Room needs the exposure to be orthogonal to every linear function of the characteristics -- in the cross-section (a hidden sign: vyg25s, room 0.35, gap +0.18) or in time (a premium whose sign the constant-weight portfolio cannot follow). kpgam moves the price of x from 1x to 3x gamma_x with y and left the gap at hundredths: a constant portfolio long x-exposure earns the premium in both halves of the cycle. With g_lo -1 and g_hi 1 the price is an odd function of y, so the unconditional premium of EVERY constant portfolio is near zero while the conditional premium is as large as kpbase's in magnitude. The KP14 panel exports y as rf_stand (y / 4), which the random features and DKKM condition on; the linear ceiling, FMR, FF and the fair linear hold constant weights, so this is a CONDITIONING room, to be labelled as such in the report (it is not a nonlinearity in the characteristics).\n\nFEASIBILITY (parameters_kp14 at these overrides, 2026-10-27): gm_grid runs 0.998 .. -0.998 over the 21-node y grid; const_base_y = r + gamma_x g(y) sigma_x + delta - mu_x stays positive (min 0.050 at y = 3.5, max 0.230); kpgam's tables were built from the same code path.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-27): the constant-weight linear ceiling falls below 0.10 (kpbase 0.29) while SR_max stays near kpbase's; room above 100% of the linear ceiling; DKKM's Sharpe at least 0.10 above the best classical method, 10 of 10 seeds. FALSIFIED as 'DKKM can time a sign-switching premium from the state column' if DKKM is within 0.02 of the fair linear.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-kpgam-v1",
+  "changes": [
+   "g_lo 1.0 -> -1.0 and g_hi 3.0 -> 1.0 (kpgam's logistic shape, g_steep -2.0, now spans -gamma_x .. +gamma_x); everything else kpgam's; own tables under prefix kpsgn"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true,
+  "kp_price_of_risk": "gamma_x x (g_lo + (g_hi - g_lo) logistic(g_steep y)) with g_lo -1, g_hi 1, g_steep -2: the price of x is an odd function of y, mean zero; gamma_z -0.35; y unpriced"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   1.0
+  ],
+  "type_bv": [
+   0.0
+  ],
+  "gamma_v": 0.0,
+  "bv_comp": 0.0,
+  "g_lo": -1.0,
+  "g_hi": 1.0,
+  "g_steep": -2.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "kpsgn"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      1.0
+     ],
+     "type_bv": [
+      0.0
+     ],
+     "gamma_v": 0.0,
+     "bv_comp": 0.0,
+     "g_lo": -1.0,
+     "g_hi": 1.0,
+     "g_steep": -2.0
+    },
+    "args": {
+     "prefix": "kpsgn"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-27 (three routes to a larger gap); specs written by _scratch/gen_gap_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=kpsgn",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null,
+ "spec_hash": "6a2adea0dedcc93c5f8dacbd1cbebed6eb976297d983b8b562a7e9855086a9f5"
+}
