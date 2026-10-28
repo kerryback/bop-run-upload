@@ -131,7 +131,7 @@ def kp(which="kp", model="kp_vy"):
         check(out["worst"] < 1e-8, f"A(y) solves its risk-neutral system (crash or y-dependent price of risk; relative residual {out['worst']:.2e} < 1e-8); jump_rate_Q {out['rq']:.4f}/yr")
     r = run([sys.executable, "-W", "ignore", "validate_vy.py"], d, ov)
     check(r.returncode == 0 and "VY VALIDATION DONE" in r.stdout, "validate_vy.py ran to completion")
-    rows = re.findall(r"type (\d) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
+    rows = re.findall(r"type (\d+) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
     check(len(rows) == len(s["params"]["type_bv"]), f"all {len(s['params']['type_bv'])} types present in the validation panel")
     for f, re_, ee, se in rows:
         z = (float(re_) - float(ee)) / float(se)
@@ -211,7 +211,7 @@ def bvy(which="bvy", model="bgn_vy", euler_tol=1e-6, done="BGN VY VALIDATION DON
     for g, re_, ee, n, se in rows:
         z = (float(re_) - float(ee)) / float(se)
         check(abs(z) < Z_MAX, f"regime {g}: realised {float(re_):+.5f} vs expected {float(ee):+.5f}, z {z:+.2f} (n={n})")
-    rows = re.findall(r"type (\d) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
+    rows = re.findall(r"type (\d+) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
     check(len(rows) == len(s["params"]["type_bv"]), f"all {len(s['params']['type_bv'])} types present in the validation panel")
     for f, re_, ee, se in rows:
         z = (float(re_) - float(ee)) / float(se)
@@ -242,7 +242,7 @@ def gvy():
     check(r.returncode == 0 and "GSVY VALIDATION DONE" in r.stdout, "validate_gs_vy.py ran to completion")
     mm = re.search(r"max \|E\[MR\]-1\|: ([-\d.eE+]+)", r.stdout)
     check(bool(mm) and float(mm.group(1)) < 1e-10, f"E[M R] = 1 on the typed economy: max |E[MR] - 1| = {mm.group(1) if mm else '?'} (< 1e-10)")
-    rows = re.findall(r"type (\d) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
+    rows = re.findall(r"type (\d+) \(bv=[^)]*\): realized ([-\d.eE+]+)\s+expected ([-\d.eE+]+)\s+\(se ([-\d.eE+]+)\)", r.stdout)
     check(len(rows) == len(s["types"]["soldirs"]), f"all {len(s['types']['soldirs'])} types present in the validation panel")
     for f, re_, ee, se in rows:
         z = (float(re_) - float(ee)) / float(se)
