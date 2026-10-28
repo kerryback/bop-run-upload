@@ -29,7 +29,8 @@ for k, v in ids.items():
     if old and old != v:
         sys.exit(f"{s['spec_id']}: {k} already pinned to {old}, build printed {v}; refusing to overwrite")
 s["expected_solves"] = dict(ids); s["solves_pending"] = None
-s.setdefault("provenance", {})["solve_note"] = f"built on Quest by variants/klc/solve_{'bgn_vy' if s['model'] in ('bgn_vy', 'bgn_q') else 'kp'}_klc.sh; ids read from the build log {os.path.basename(log_path)} (see PRECOMMITMENT STATUS in notes)"
+_runner = {"bgn_vy": "bgn_vy", "bgn_q": "bgn_vy", "bgn_gam": "bgn_gam"}.get(s["model"], "kp")
+s.setdefault("provenance", {})["solve_note"] = f"built on Quest by variants/klc/solve_{_runner}_klc.sh; ids read from the build log {os.path.basename(log_path)} (see PRECOMMITMENT STATUS in notes)"
 s["spec_hash"] = _spec_hash(s)
 json.dump(s, open(spec_path, "w"), indent=1)
 print(f"{s['spec_id']}: expected_solves {s['expected_solves']} spec_hash {s['spec_hash'][:16]}")
