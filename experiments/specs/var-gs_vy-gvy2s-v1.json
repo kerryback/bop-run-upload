@@ -1,0 +1,433 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvy2s-v1",
+ "title": "GS21 gvy25s's SIGNED type ladder over the TWO priced chains (total price 2.5, 2.5/sqrt(2) each), exposure in CASH FLOWS only: twelve hidden types = six mirrored alignments (+-1, +-0.6, +-0.2) x magnitudes 0.05, 0.10, level-compensated, 5 x 5 nodes",
+ "question": "Does spreading GS21's hidden mean-zero cash-flow loading over two priced states raise room and the fair gap above gvy25s's (K = 1), as the reduced-form latent ladder did and as vym3s / vym6s test in KP14?",
+ "notes": "WHY (2026-10-27). The GS21 member of the signed K ladder (KP14: vyg25s -> vym3s -> vym6s). The exposure is the KP14 one -- a type's cash flows are multiplied by exp(b_f . y) and nothing else moves with y (gs_bzl 1; the cost, coupon, investment and recovery knobs at zero) -- so the equity claim's loading is the hidden type times the firm's own leverage, as in vyg25s / bvychs. Alignments mirrored, E[b_f . gamma] = 0, hidden at y = 0 by the level compensation derived from both chains. GS21 supports two chains at most (joint Tauchen nodes), so K = 2 is the GS21 point of the ladder; the five-node chains are gvypk2's resolution (the 9 x 9 solve needs 12+ GB).\n\nFEASIBILITY: the solver accepts negative gs_bv / gs_bv2 (gvy25s: gs_ashift derived at either sign); gs_sim_vy parses GS_VY_BV2 and checks each solution's gs_bv2; the panel exports y_stand AND y2_stand (both chains) to the random features, unlike KP14's state-1-only rf_stand -- note in the report.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-27): room at least gvy25s's (predicted 15-30% of the linear ceiling); fair gap +0.02 to +0.08, 8+ of 10 seeds positive. FALSIFIED as 'K raises GS21's gap' if the gap is below gvy25s's.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25s-v1",
+  "changes": [
+   "six level-exposure types on one chain -> twelve types with 2-vectors (gs_bv, gs_bv2): mirrored alignments +-1, +-0.6, +-0.2 x magnitudes 0.05, 0.10",
+   "second priced chain: NY2 5, gamma_v2 = gamma_v = 2.5/sqrt(2), kappa_y2 0.35; NY 9 -> 5",
+   "bv_comp 1.2, kappa_y 0.35, y_mult 2.5 unchanged; twelve solves sol_gvy2sa..l"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen 5 x 5 joint nodes, 2.5 sd, both chains priced at 2.5/sqrt(2)",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "mirrored alignments over two priced chains, E[b_f . gamma] = 0 across types, each type level-compensated at y = 0 (gs_ashift from both chains)",
+  "gs_vy_exposure": "cash flows only: production x exp(gs_bv y1 + gs_bv2 y2), gs_bzl 1, gs_bzi = gs_bzb = gs_bzc = 0, no cost / coupon / investment / recovery exposure"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 1.76776695,
+  "kappa_y": 0.35,
+  "NY": 5,
+  "y_mult": 2.5,
+  "bv_comp": 1.2,
+  "NY2": 5,
+  "gamma_v2": 1.76776695,
+  "kappa_y2": 0.35
+ },
+ "types": {
+  "share": [
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083333,
+   0.083337
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.03535534,
+    -0.03535534,
+    0.04949747,
+    -0.04949747,
+    0.04171208,
+    -0.04171208,
+    0.07071068,
+    -0.07071068,
+    0.09899495,
+    -0.09899495,
+    0.08342417,
+    -0.08342417
+   ],
+   "gs_bv2": [
+    0.03535534,
+    -0.03535534,
+    -0.00707107,
+    0.00707107,
+    -0.02756995,
+    0.02756995,
+    0.07071068,
+    -0.07071068,
+    -0.01414214,
+    0.01414214,
+    -0.0551399,
+    0.0551399
+   ]
+  },
+  "soldirs": [
+   "sol_gvy2sa",
+   "sol_gvy2sb",
+   "sol_gvy2sc",
+   "sol_gvy2sd",
+   "sol_gvy2se",
+   "sol_gvy2sf",
+   "sol_gvy2sg",
+   "sol_gvy2sh",
+   "sol_gvy2si",
+   "sol_gvy2sj",
+   "sol_gvy2sk",
+   "sol_gvy2sl"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvy2sa",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.03535534,
+     "gs_bv2": 0.03535534
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvy2sb",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.03535534,
+     "gs_bv2": -0.03535534
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvy2sc",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.04949747,
+     "gs_bv2": -0.00707107
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvy2sd",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.04949747,
+     "gs_bv2": 0.00707107
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvy2se",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.04171208,
+     "gs_bv2": -0.02756995
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   },
+   {
+    "name": "sol_gvy2sf",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.04171208,
+     "gs_bv2": 0.02756995
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 5
+   },
+   {
+    "name": "sol_gvy2sg",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.07071068,
+     "gs_bv2": 0.07071068
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 6
+   },
+   {
+    "name": "sol_gvy2sh",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.07071068,
+     "gs_bv2": -0.07071068
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 7
+   },
+   {
+    "name": "sol_gvy2si",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.09899495,
+     "gs_bv2": -0.01414214
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 8
+   },
+   {
+    "name": "sol_gvy2sj",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.09899495,
+     "gs_bv2": 0.01414214
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 9
+   },
+   {
+    "name": "sol_gvy2sk",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": 0.08342417,
+     "gs_bv2": -0.0551399
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 10
+   },
+   {
+    "name": "sol_gvy2sl",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 1.76776695,
+     "kappa_y": 0.35,
+     "NY": 5,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "NY2": 5,
+     "gamma_v2": 1.76776695,
+     "kappa_y2": 0.35,
+     "gs_bv": -0.08342417,
+     "gs_bv2": 0.0551399
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 11
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvy2sa,sol_gvy2sb,sol_gvy2sc,sol_gvy2sd,sol_gvy2se,sol_gvy2sf,sol_gvy2sg,sol_gvy2sh,sol_gvy2si,sol_gvy2sj,sol_gvy2sk,sol_gvy2sl",
+  "GS_VY_BV": "0.03535534,-0.03535534,0.04949747,-0.04949747,0.04171208,-0.04171208,0.07071068,-0.07071068,0.09899495,-0.09899495,0.08342417,-0.08342417",
+  "GS_VY_BV2": "0.03535534,-0.03535534,-0.00707107,0.00707107,-0.02756995,0.02756995,0.07071068,-0.07071068,-0.01414214,0.01414214,-0.0551399,0.0551399",
+  "GS_VY_SHARES": "0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083333,0.083337"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-27 (signed ladder over K states, GS21 at K = 2); spec written by _scratch/gen_gvy2s_spec.py; solves by variants/klc/solve_gs_vy_klc.sh (twelve tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvy2s",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvy2sa",
+  "sol_gvy2sb",
+  "sol_gvy2sc",
+  "sol_gvy2sd",
+  "sol_gvy2se",
+  "sol_gvy2sf",
+  "sol_gvy2sg",
+  "sol_gvy2sh",
+  "sol_gvy2si",
+  "sol_gvy2sj",
+  "sol_gvy2sk",
+  "sol_gvy2sl"
+ ],
+ "reused_solves": null,
+ "spec_hash": "48ed09149977fb83758aaea934abb1185ad6c0fa1df5e74ebf74353f84ea2cc8"
+}
