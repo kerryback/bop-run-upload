@@ -33,3 +33,6 @@ the GS21 benchmark at gamma_x 0.1 (`gsbg1`) and its exposure wirings `gvyz10g`, 
 Added October 27, 2026, same file set: the sign-switching type ladders `vyg25s` (KP14) and `bvychs` (BGN), and
 `vyg25u` (KP14 `vyg25` without the level compensation); report Section 3b, "The sign of the type loading". The
 reduced-form sign ladder (`lsh_*`, `lrt_*`) that motivated them is in `variants/reduced/screen`.
+
+Added October 28, 2026, same file set: `gvy25s` (GS21, the mirrored level-type ladder of `gvy25`); report Section 3b,
+"The sign of the type loading". Room rises from 2% to 11% of the linear ceiling with no gap (-0.012, t -4.4).

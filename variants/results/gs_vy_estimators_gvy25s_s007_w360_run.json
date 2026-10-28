@@ -1,0 +1,77 @@
+{
+ "model": "gs_vy",
+ "tag": "gvy25s",
+ "seed": 7,
+ "prov": "gs_vy_estimators_gvy25s_s007_w360_summary@nogit",
+ "spec_id": "var-gs_vy-gvy25s-v1",
+ "oracle_eval_window": 360,
+ "window": 360,
+ "winsor": 0.0,
+ "kappas": [
+  1e-07,
+  1e-06,
+  1e-05,
+  0.0001,
+  0.001,
+  0.01,
+  0.1,
+  1.0,
+  10.0,
+  100.0,
+  1000.0
+ ],
+ "linear_only": false,
+ "fair_linear": true,
+ "inputs_from": null,
+ "rf_cols": [
+  "rf_stand",
+  "y_stand"
+ ],
+ "eval_months": 125,
+ "N": 500,
+ "solves": [
+  {
+   "stage": "sol_gvy25sa",
+   "solve_id": "b8d93e4d6b101e37",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 435975771
+  },
+  {
+   "stage": "sol_gvy25sb",
+   "solve_id": "c11904e8badf143f",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 427451321
+  },
+  {
+   "stage": "sol_gvy25sc",
+   "solve_id": "44289aec28e9e268",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 420615985
+  },
+  {
+   "stage": "sol_gvy25sd",
+   "solve_id": "f34b72f0bf62631c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 413943960
+  },
+  {
+   "stage": "sol_gvy25se",
+   "solve_id": "d774f918a347ab67",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 402500615
+  },
+  {
+   "stage": "sol_gvy25sf",
+   "solve_id": "b657eccb8e43de26",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 390967358
+  }
+ ],
+ "panel": "gs_vy_panel_gvy25s_s007.parquet"
+}
