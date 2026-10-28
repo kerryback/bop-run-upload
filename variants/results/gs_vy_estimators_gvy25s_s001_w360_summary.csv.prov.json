@@ -1,0 +1,109 @@
+{
+ "schema": 1,
+ "git": {
+  "sha": null,
+  "note": "not a git repository, or git unavailable"
+ },
+ "argv": [
+  "run_estimators.py",
+  "--model",
+  "gs_vy",
+  "--tag",
+  "gvy25s",
+  "--seed",
+  "1",
+  "--window",
+  "360",
+  "--levels",
+  "--include_mkt",
+  "--kappas",
+  "1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0",
+  "--fair_linear",
+  "--n_jobs",
+  "4"
+ ],
+ "run_from": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "cwd_at_write": "/gpfs/kellogg/proj/axa3203/bop-run-upload/variants",
+ "env": {
+  "GS_VY_BV": "-0.1,-0.05,-0.015,0.015,0.05,0.1",
+  "GS_VY_SHARES": "0.1667,0.1667,0.1667,0.1667,0.1666,0.1666",
+  "GS_VY_SOLDIRS": "sol_gvy25sa,sol_gvy25sb,sol_gvy25sc,sol_gvy25sd,sol_gvy25se,sol_gvy25sf",
+  "MKL_NUM_THREADS": "4",
+  "NUMEXPR_NUM_THREADS": "4",
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": "4",
+  "SEED_SPEC": "gvy25s",
+  "SLURMD_NODENAME": "qgpu0518",
+  "SLURM_ARRAY_JOB_ID": "5678256",
+  "SLURM_ARRAY_TASK_ID": "1",
+  "SLURM_CPUS_PER_TASK": "4",
+  "SLURM_JOB_ID": "5707846",
+  "VECLIB_MAXIMUM_THREADS": "4"
+ },
+ "when": "2026-10-28T10:57:54-0500",
+ "environment": {
+  "python": "3.14.7",
+  "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "hostname": "qgpu0518",
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6",
+  "sklearn": "1.9.1",
+  "pyarrow": "25.0.0"
+ },
+ "how_to_reproduce": "git checkout <unknown> && cd /gpfs/kellogg/proj/axa3203/bop-run-upload/variants && <env below> python run_estimators.py --model gs_vy --tag gvy25s --seed 1 --window 360 --levels --include_mkt --kappas 1e-07,1e-06,1e-05,0.0001,0.001,0.01,0.1,1.0,10.0,100.0,1000.0 --fair_linear --n_jobs 4",
+ "inputs": [
+  {
+   "stage": "sol_gvy25sa",
+   "solve_id": "b8d93e4d6b101e37",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 435975771
+  },
+  {
+   "stage": "sol_gvy25sb",
+   "solve_id": "c11904e8badf143f",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 427451321
+  },
+  {
+   "stage": "sol_gvy25sc",
+   "solve_id": "44289aec28e9e268",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 420615985
+  },
+  {
+   "stage": "sol_gvy25sd",
+   "solve_id": "f34b72f0bf62631c",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 413943960
+  },
+  {
+   "stage": "sol_gvy25se",
+   "solve_id": "d774f918a347ab67",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 402500615
+  },
+  {
+   "stage": "sol_gvy25sf",
+   "solve_id": "b657eccb8e43de26",
+   "files": 1,
+   "files_expected": 1,
+   "bytes": 390967358
+  }
+ ],
+ "extra": {
+  "engine": "estimators",
+  "window": 360,
+  "linear_only": false,
+  "fair_linear": true,
+  "inputs_from": null,
+  "spec_id": "var-gs_vy-gvy25s-v1",
+  "oracle_eval_window": 360,
+  "panel": "gs_vy_panel_gvy25s_s001.parquet"
+ }
+}
