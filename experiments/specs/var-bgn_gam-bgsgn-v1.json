@@ -89,13 +89,13 @@
   "verified_by": "variants/klc/verify_solves.py bgn (BOP_VERIFY_BGN_SPEC)",
   "runner_note": "SEED_SPEC=bgsgn",
   "solve_runner": "variants/klc/solve_bgn_gam_klc.sh",
-  "solve_note": "to be built on Quest by variants/klc/solve_bgn_gam_klc.sh; id read from the build log (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_bgn_gam_klc.sh; ids read from the build log solve_bgam.5678257.Jstar_bgsgn.csv.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "spec_hash": "3b64c140549807f2e5b332950d3fec2b4219678a0b7def13b01d7fdfd39cdc04",
- "expected_solves": null,
+ "spec_hash": "3e1b04e224389dc789a1397927d52481860f30e8f100a749cfce47f5182d303a",
+ "expected_solves": {
+  "jstar": "d33b9f4b898c5a77"
+ },
  "precommitted": false,
- "solves_pending": [
-  "jstar"
- ],
+ "solves_pending": null,
  "reused_solves": null
 }
