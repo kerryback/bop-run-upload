@@ -124,10 +124,13 @@ def _match(paths):
         return None, "artifacts absent"
     live, superseded, retired = None, None, None
     want = {}
+    # realpath, not abspath: a soldir that is a symlink to another stage's directory (gvytls's
+    # nine positive-loading types ARE gvytl's solves, 2026-10-28) must be identified by the bytes
+    # the run actually read, which the manifest records under the target's path.
+    root = os.path.realpath(solstamp.REPO_DIR)
     for p in present:
-        ap = os.path.abspath(p)
-        rel = (os.path.relpath(ap, solstamp.REPO_DIR)
-               if ap.startswith(solstamp.REPO_DIR + os.sep) else ap)
+        ap = os.path.realpath(p)
+        rel = (os.path.relpath(ap, root) if ap.startswith(root + os.sep) else ap)
         want[rel] = solstamp.file_digest(ap)
     for man in solstamp.iter_manifests():
         got = {a["path"]: a["sha256"] for a in man.get("artifacts", [])}
