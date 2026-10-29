@@ -144,7 +144,7 @@ def DB(r, y, s, f):
 # unit project's value matches type 0's (bv_comp = 1 exactly, 1.2 over-compensates as kp_vy) ----
 _y0 = i_y0 if CHAIN else 0.0                                   # the y = 0 point: node i_y0 on the chain
 _D0 = np.array([float(DA(rbar, _y0, 0, f) + DB(rbar, _y0, 0, f)) for f in range(ntypes)])
-type_theta = (_D0[0] / _D0) ** bv_comp
+type_theta = (_D0[0] / _D0) ** bv_comp * type_level          # type_level = ones unless the spec sets it
 Chat_f = Chat * type_theta                                      # (ntypes,)
 
 

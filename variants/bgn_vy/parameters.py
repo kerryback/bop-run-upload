@@ -51,6 +51,9 @@ y_max = 3.5
 type_share = [1.0]
 type_bv = [0.0]           # exposure of each type's project cash flows: e^{b_f y}
 bv_comp = 0.0             # y=0 level compensation exponent (kp_vy's bv_comp)
+type_level = None         # (2026-10-29, non-monotone exposures) an EXPLICIT per-type cash-flow level multiplier on top of
+                          # the compensation: Chat_f = Chat x type_theta_f x type_level_f. With it the visible level ladder and
+                          # the loading b are set separately, so b can be hump-shaped across the levels. None = ones (unchanged).
 bx_seed = 777             # firm-type draw (run_oracle.py offsets it by the seed)
 y_seed_tag = 1            # y path: default_rng([gam_seed, y_seed_tag]); the regime keeps gam_seed
 jstar_vy_file = "Jstar_vy.npz"   # the solve artifact: J*_f(r, y, s) per type, written by rebuild_jstar_vy.py
@@ -121,6 +124,8 @@ type_share = np.array(type_share, float); type_share /= type_share.sum()
 type_bv = np.array(type_bv, float)
 ntypes = len(type_share)
 assert len(type_bv) == ntypes
+type_level = np.ones(ntypes) if type_level is None else np.array(type_level, float)
+assert len(type_level) == ntypes
 NY2 = int(NY2)
 type_bv2 = np.zeros(ntypes) if type_bv2 is None else np.array(type_bv2, float)
 assert len(type_bv2) == ntypes

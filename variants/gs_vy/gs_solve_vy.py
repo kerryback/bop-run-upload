@@ -89,6 +89,11 @@ gs_bzb = 0.0
 # gs_bzb = 1: it keeps the sign of leverage for every firm whose z~ > -gs_bzc (the market-share reading: levered firms lose
 # demand in tight-credit states, in proportion to how productive the gainers are), and adds an additive leverage part.
 gs_bzc = 0.0
+# gs_bzq (2026-10-29, 'a firm with extreme leverage should be more exposed to cash-flow risk'): a leverage-CURVATURE term
+# gs_bv * gs_bzq * (b~^2 - 1) in the exposure, b~ = (b - 0.5)/0.29 the standardized coupon, so with gs_bzl = 0 the exposure is
+# U-shaped in leverage with mean about zero: firms at either leverage extreme load on y, mid-leverage firms load the other
+# way. The premium is then non-monotone in the leverage characteristic. gs_bzq = 0 leaves every economy unchanged.
+gs_bzq = 0.0
 # ---- a SECOND nonlinear loading, on the existing priced productivity shock x (2026-10-12, "larger factor model"):
 # the x loading becomes gs_bx + gs_bx2 * (z~^2 - 1)/sqrt(2), a curvature in productivity that is distinct from the
 # y loading's product z~ b~. No second chain is needed: x is already priced at gamma_x.
@@ -260,8 +265,8 @@ def smooth(P):
 # per-y-node production: (NY, znum, xnum, bnum)
 _ztil = zgrid / np.sqrt(sigma_z ** 2 / (1 - rho_z ** 2))                           # z in stationary-sd units
 _btil = (bgrid - 0.5) / 0.29                                                       # coupon in grid-sd units
-_expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :])   # (znum, bnum)
-_expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :])  # the second chain's
+_expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0))   # (znum, bnum)
+_expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0))  # the second chain's
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)                          # (znum,) x loading by productivity
 _prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift)
 _cost = delta + gs_fc * np.exp(gs_bc * ygrid)[:, None, None, None]            # (NY, 1, 1, 1)
@@ -437,7 +442,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     params=np.array([g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
                                      kappa_b, xi, imin, imax, sigma_m]),
                     solve_id=_snap.solve_id,
-                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
+                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bzq=gs_bzq, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
                     gamma_v=gamma_v, kappa_y=kappa_y, NY=NY, y_mult=y_mult, lam_y=lam_y, rho_y=rho_y, s_y=s_y,
                     ygrid2=ygrid2, NY1=NY1, NY2=NY2, gs_bv2=gs_bv2, gamma_v2=gamma_v2, kappa_y2=kappa_y2,
                     kappa_e=kappa_e, xnum=xnum, bnum=bnum, znum=znum, tol=tol,

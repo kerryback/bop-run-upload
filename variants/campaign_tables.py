@@ -121,6 +121,11 @@ E = {
     "bvychs18": ("BGN", CAMPAIGN, "bvychs at bv_comp 1.8"),
     "bvychs25": ("BGN", CAMPAIGN, "bvychs at bv_comp 2.5"),
     "bvychsn5": ("BGN", CAMPAIGN, "bvychs at bv_comp -0.5"),
+    "bvyvee": ("BGN", CAMPAIGN, "V-shaped loading across a visible level ladder: level 0.6..1.4, $b$ = +0.07, +0.00, -0.07, +0.00, +0.07"),
+    "bvyhump": ("BGN", CAMPAIGN, "hump-shaped loading across a visible level ladder: level 0.6..1.4, $b$ = -0.07, +0.00, +0.07, +0.00, -0.07"),
+    "gvyql10": ("GS21", CAMPAIGN, "U-shaped exposure in the firm's own leverage: $+0.1\\,(\\tilde b^2 - 1)$, one type"),
+    "gvyql20": ("GS21", CAMPAIGN, "U-shaped exposure in the firm's own leverage: $+0.2\\,(\\tilde b^2 - 1)$, one type"),
+    "gvyqh10": ("GS21", CAMPAIGN, "hump-shaped exposure in the firm's own leverage: $-0.1\\,(\\tilde b^2 - 1)$, one type"),
     "vyg25sx2": ("KP14", CAMPAIGN, "vyg25s with the loadings doubled: $\\pm$0.04, $\\pm$0.14, $\\pm$0.28"),
     "bvychsx2": ("BGN", CAMPAIGN, "bvychs with the loadings x 2: $\\pm$0.02, $\\pm$0.07, $\\pm$0.14"),
     "bvychsx3": ("BGN", CAMPAIGN, "bvychs with the loadings x 3: $\\pm$0.03, $\\pm$0.105, $\\pm$0.21"),
@@ -162,7 +167,7 @@ GROUPS = [
     # ---- the appendix: everything else that was run, grouped by what it tested ----
     ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "bvychs4", "bvychs6", "bvychs8", "vyg25s6", "vyg25s18", "gvyib", "gvyib5", "gvyib2", "gxq35", "gxq70", "gvy25sq", "gvy25sh", "bvychs18", "bvychs25", "bvychsn5", "vyg25sx2", "bvychsx2", "bvychsx3", "gvy25sx2", "gvy25sx3", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "bvychs4", "bvychs6", "bvychs8", "vyg25s6", "vyg25s18", "gvyib", "gvyib5", "gvyib2", "gxq35", "gxq70", "gvy25sq", "gvy25sh", "bvychs18", "bvychs25", "bvychsn5", "bvyvee", "bvyhump", "gvyql10", "gvyql20", "gvyqh10", "vyg25sx2", "bvychsx2", "bvychsx3", "gvy25sx2", "gvy25sx3", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 

@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyhump-v1",
+ "title": "BGN with a NON-MONOTONE exposure across a visible level ladder: five types, cash-flow level [0.6, 0.8, 1.0, 1.2, 1.4], loadings [-0.07, 0.0, 0.07, 0.0, -0.07] (hump-shaped), 21-node chain, exact compensation, price 2.5",
+ "question": "Does a premium that is hump-shaped across a monotonically visible level ladder give the oracle room in BGN, as the hump in KP14's vyg25s does, and does a gap follow?",
+ "notes": "WHY (2026-10-29). In BGN every channel that reveals the loading b (the compensated level theta_b through roe, the uncompensated value through size and bm) reveals it MONOTONICALLY, and the premium is monotone in b, so the linear ceiling captures it: bvychs room 20%, bvychs18/25/n5 no hump (hump_decomp.py). KP14's room came from a premium that is a hump in a monotonically visible b. Here the visible dimension is an explicit cash-flow level ladder (type_level, new parameter: Chat_f = Chat theta_b level_f) and b is arranged non-monotonically across it, so the premium is non-monotone in size and bm by construction. bv_comp 1 equalises project values at y = 0, so size and bm track the ladder alone; roe tracks level x theta_b.\n\nFEASIBILITY (parameters.py + vasicek_vy.py at these overrides, 2026-10-29): theta_b [1, 1.218, 1.477, 1.218, 1], Chat_f = Chat theta_b level_f; values per project at y = 0 proportional to level_f alone. Chain exponents +-0.245.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): as bvyvee (room 30-60%), the hump and the V differing only through which types' roe is pulled up by theta_b. FALSIFIED as 'a non-monotone exposure opens room in BGN' if room is at or below bvychs's 20%.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs-v1",
+  "changes": [
+   "type_share six -> five equal; type_bv -> [-0.07, 0.0, 0.07, 0.0, -0.07]; type_level [0.6, 0.8, 1.0, 1.2, 1.4] (new); bv_comp 1.2 -> 1.0; jstar_vy_file Jstar_vy_bvyhump.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   -0.07,
+   0.0,
+   0.07,
+   0.0,
+   -0.07
+  ],
+  "type_level": [
+   0.6,
+   0.8,
+   1.0,
+   1.2,
+   1.4
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyhump.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      -0.07,
+      0.0,
+      0.07,
+      0.0,
+      -0.07
+     ],
+     "type_level": [
+      0.6,
+      0.8,
+      1.0,
+      1.2,
+      1.4
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyhump.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (non-monotone exposures in BGN and GS21); specs written by _scratch/gen_nonmono_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyhump",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "f9b20b28570bdce263ab4858c37847fa36b4c67f038d0d299f8b25459c6ec927"
+}
