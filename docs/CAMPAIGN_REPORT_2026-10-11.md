@@ -28,7 +28,9 @@ linear ceiling with no gap; a crash-only factor (1) gives room of 3 to 12% and n
 model's own risk (2) gives room of 0 to 14% and no gap; the interaction economies (3b) have room of 16 to 47% and
 gaps of +0.008 to +0.020 (t 2.7 to 5.2); with the type loading's cross-sectional mean set to zero (`vyg25s`,
 `bvychs`, section 3b) room rises to 226% (KP14) and 20% (BGN) of the linear ceiling and the gap to +0.181 and
-+0.026, while GS21's mirrored ladder (`gvy25s`) gains room (2% to 11%) and no gap (-0.012). Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
++0.026, while GS21's mirrored ladder (`gvy25s`) gains room (2% to 11%) and no gap (-0.012). In KP14 the strength of the level compensation changes only the
+characteristics, and room and gap hold across it (fair gap +0.14 to +0.19 at bv_comp 0.6 to 1.8); weakening it in BGN, or
+fixing GS21's capital structure (`gvytls`), lowers room and leaves no gap. Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
 keeps the linear ceiling at 0.19 and lowers the nonlinear one, so room falls to 110% and the gap to +0.10 (ten of ten
 seeds at either K; K = 3 and K = 6 are identical to the third digit); a price of risk that switches sign with the state
 (`kpsgn`) and six unsigned states (`vym6`) give nothing. More priced
@@ -71,6 +73,7 @@ sort takes it and room stays small.
 | 3a. single-characteristic exposure | one type exposed to y | 5-10 | none |
 | 3b. interaction | three types (a product in GS21) exposed to y | 16-47 | +0.008 to +0.020 |
 | 3b with a mean-zero type loading | the ladder mirrored, six types, level-compensated | 20 (BGN) / 226 (KP14) | +0.026 / +0.181 |
+| the mean-zero ladder at other compensation strengths | bv_comp 0.6 / 1.8 (KP14); 0.4 to 0.8 (BGN) | 147 / 167 (KP14); 7-12 (BGN) | +0.142 / +0.185; none |
 | the mean-zero loading over K = 3 / 6 priced states (KP14) | the signed ladder spread over K states, 24 mean-zero types | 110 / 110 | +0.100 / +0.099 |
 | 4. larger factor model (reduced form) | K factors loading linearly on characteristics / on products of latent states | 0-1 / 190-660 | none / +0.03 to +0.29 |
 | structural second priced state (appendix) | a second chain in each model | 15-65 | +0.005 to +0.056 |
@@ -244,6 +247,30 @@ The earlier conjecture that the firm's chosen leverage reveals the sign is not s
 -0.15 with b_f); the order of the three rooms (226%, 20%, 11%) is the order of how non-monotone the premium is in the
 type, not of how much the firm decides.
 
+**The strength of the level compensation.** Two ladders test whether the compensation, which sets how visible the
+type is, moves room. In KP14 it changes the characteristics and nothing else: `vyg25s6` and `vyg25s18` (bv_comp 0.6
+and 1.8) have vyg25s's returns exactly, seed by seed (SR_max and every type's mean return agree to the digit). The
+type's visibility moves a lot: R² of b_f on the ranks is 0.67 to 0.74 at 0.6 (through book-to-market; size is
+uncorrelated with b_f), 0.88 to 0.92 at 1.2 and 0.95 to 0.97 at 1.8 (size correlation 0.97). The linear ceiling
+barely moves (0.21, 0.17, 0.21), room is 147%, 226% and 167% of it, and the fair gap is +0.142 (t 24), +0.181 and
++0.185 (t 8.7), five of five seeds at both new points (seven and five oracle seeds, five estimator seeds each). The
+premium stays hump-shaped in b_f because the returns do not change, and the hump is the room; how visible the type
+is does not matter. In BGN the compensation does change returns, and weakening it goes the other way: `bvychs4`,
+`bvychs6` and `bvychs8` (bv_comp 0.4, 0.6, 0.8) make the type more visible (R² 0.89 at 0.4 and 0.76 at 0.8, through
+size) with the premium monotone in b_f, room falls from 20% to 12%, 8% and 7% of a linear ceiling that rises from
+0.35 to 0.52 to 0.59, and the fair gap is -0.004, +0.001 and +0.009, none distinguishable from zero (five, three and
+three seeds; the rest were stopped at the oracle). The spec's prediction, a hidden sign near 0.6 lifting room above
+50%, is falsified.
+
+**GS21 with its capital structure fixed.** `gvytls` takes `gvytl`'s chassis (three coupons, 0.15 / 0.40 / 0.70 per
+unit capital, fixed for life and drawn independently of the type) and mirrors the exposure ladder as `gvy25s` does:
+eighteen mean-zero types. It tests whether the firm's coupon choice is what reveals the sign in GS21. It is not: room
+is 8% of the linear ceiling (eight oracle seeds) against gvy25s's 11%, and the fair gap is -0.007 (t -1.0, one of
+three; the other seven were stopped). The type stays visible (R² 0.83 to 0.84; ROE +0.68, size +0.67, book-to-market
+-0.63), and within each coupon the mean return rises with b_f. The most exposed levered firms also select themselves
+out: in each of three seeds none of the b_f = -0.10, coupon-0.70 firms and at most five of about thirty b_f = -0.05,
+coupon-0.70 firms survive into the panel. The prediction (room 15 to 25%) is falsified.
+
 ## 4. Larger factor models
 
 More priced factors are tested where the structure is controlled: the reduced form below adds K priced factors to a
@@ -303,7 +330,8 @@ minutes; probes at ±0.1, ±0.25 and ±0.5 invest 100% of the time in both regim
 acceptance targets refitted on the regime mixture, which is a different economy. GS21's member of the signed ladder
 (`gvy2s`: K = 2, twelve mean-zero cash-flow types over two 5-node chains, DKKM sees both standardized states where
 KP14's DKKM sees only the first) has SR_max 0.625, linear ceiling 0.567 and room 0.046 (8% of the linear ceiling,
-gvy25s's 11%) at two seeds; the other eight were stopped at that number, and the two seeds' estimators are running. One of its twelve solves (stage j) did not
+gvy25s's 11%) at two seeds (the other eight were stopped at that number), and DKKM's fair gap is -0.025 in both
+(DKKM 0.540 against the fair linear model's 0.564). One of its twelve solves (stage j) did not
 reach the policy-stability exit within the sweep cap: the discrete investment policy cycles, with residuals 2.2e-5
 (q) and 1.7e-5 (p) against the gate's 5e-5 threshold, and the cycle-averaged solution was accepted explicitly
 (BOP_ACCEPT_CAPPED in the gate), with E[M R] = 1 to 1e-15 and every type's realized premium within |z| 1.2 of its
@@ -553,7 +581,14 @@ harmonized cells replace.
 | KP14 | `vym6` -- six priced states, 24 rank-6 types (vym3's construction at K = 6) | 0.421 | 15% | 0.300 | +0.056 | 19 | 0.19 | 0.287 | 0.260 | 0.275 | 0.286 | 0.059 | +0.0002 (t 0.1) | -0.01 | 4/10 |
 | KP14 | `vym3s` -- vyg25s's signed ladder over three priced states: 24 mean-zero types, mirrored alignments | 0.503 | 13% | 0.191 | +0.224 | 126 | 0.37 | 0.296 | 0.134 | 0.195 | 0.171 | 0.065 | +0.0998 (t 20.9) | +0.22 | 10/10 |
 | KP14 | `vym6s` -- vyg25s's signed ladder over six priced states: 24 mean-zero types, mirrored alignments, orthogonal off-gamma directions | 0.507 | 13% | 0.192 | +0.225 | 124 | 0.37 | 0.296 | 0.132 | 0.194 | 0.168 | 0.065 | +0.0987 (t 15.0) | +0.22 | 10/10 |
-| GS21 | `gvy2s`‡ -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvy2s`‡ -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | 0.540 | 0.542 | 0.505 | 0.564 | 0.333 | -0.0246 (t -5.1) | -0.16 | 0/2 |
+| GS21 | `gvytls`‡ -- gvytl with the exposure ladder mirrored: six signed exposure types x three fixed coupons, eighteen mean-zero types | 0.627 | 51% | 0.580 | +0.044 | 8 | 0.23 | 0.580 | 0.493 | 0.544 | 0.588 | 0.313 | -0.0074 (t -1.0) | -0.06 | 1/3 |
+| BGN | `bvychs4` -- bvychs at bv_comp 0.4 | 0.612 | 29% | 0.519 | +0.059 | 12 | 0.25 | 0.497 | 0.468 | 0.465 | 0.497 | 0.177 | -0.0035 (t -0.3) | -0.01 | 2/5 |
+| BGN | `bvychs6` -- bvychs at bv_comp 0.6 | 0.656 | 28% | 0.578 | +0.047 | 8 | 0.23 | 0.547 | 0.493 | 0.512 | 0.545 | 0.183 | +0.0013 (t 0.3) | +0.00 | 1/3 |
+| BGN | `bvychs8` -- bvychs at bv_comp 0.8 | 0.684 | 28% | 0.590 | +0.044 | 7 | 0.23 | 0.577 | 0.501 | 0.468 | 0.568 | 0.189 | +0.0086 (t 1.0) | +0.06 | 2/3 |
+| KP14 | `vyg25s6` -- vyg25s at bv_comp 0.6 | 0.576 | 11% | 0.212 | +0.305 | 147 | 0.47 | 0.337 | 0.183 | 0.131 | 0.185 | 0.062 | +0.1424 (t 24.2) | +0.27 | 5/5 |
+| KP14 | `vyg25s18` -- vyg25s at bv_comp 1.8 | 0.574 | 11% | 0.209 | +0.312 | 167 | 0.47 | 0.387 | 0.106 | 0.172 | 0.193 | 0.062 | +0.1854 (t 8.7) | +0.33 | 5/5 |
+| GS21 | `gvyib2`‡ -- gvyib at gs_bib -0.2 (the -1.0 and -0.5 solves diverged: the firm picks the coupon that makes investment near-free) | 0.327 | 96% | 0.326 | +0.001 | 0 | 0.03 | 0.319 | 0.298 | 0.293 | 0.322 | 0.314 | -0.0027 (t -11.0) | -0.04 | 0/10 |
 | KP14 | `kpgam` -- gamma_x x logistic(y), 1 to 3 | 0.390 | 65% | 0.373 | +0.005 | 1 | 0.06 | 0.358 | 0.348 | 0.340 | 0.363 | 0.254 | -0.0053 (t -4.0) | -0.05 | 1/10 |
 | KP14 | `vyx` -- three types on y, price 1.8 | 0.421 | 14% | 0.321 | +0.055 | 17 | 0.19 | 0.313 | 0.284 | 0.302 | 0.310 | 0.054 | +0.0009 (t 0.3) | +0.02 | 7/10 |
 | KP14 | `vyj25` -- the same with a priced crash in y | 0.554 | 10% | 0.323 | +0.104 | 33 | 0.28 | 0.315 | 0.270 | 0.292 | 0.307 | 0.045 | +0.0080 (t 2.2) | +0.06 | 8/10 |
@@ -591,6 +626,7 @@ harmonized cells replace.
 - `bvyc0`: `bvy25` with θ_f = 1, so the type is visible in value.
 - `bvyj25`: `bvych0` (group 3b) plus a crash: each month, with probability 1% whatever y_t, y_{t+1} goes to the lowest node; otherwise the Tauchen transition. The kernel weights the crash transition by e^2, so its risk-neutral probability is about 7.4% a month before renormalization.
 - `bvysg`: `bgnbase` plus y; type f's project cash flows are C_j e^{b_f y_t}, b_f ∈ {-0.07, 0, +0.07}, not level-compensated.
+- `bvychs4`, `bvychs6`, `bvychs8`: `bvychs` at bv_comp 0.4 / 0.6 / 0.8. Five, three and three seeds; stopped.
 - `bvychs`: `bvych0` with the ladder mirrored: six types of equal share, b_f ∈ {-0.07, -0.035, -0.01, 0.01, 0.035, 0.07}, level-compensated (bv_comp 1.2, θ_f 1 to 1.60 with b = -0.07 the reference), 21-node chain, price 2.5.
 
 **GS21**
@@ -601,7 +637,9 @@ harmonized cells replace.
 - `gvy1j`: `gvy1` with γ_v = 0 and the crash, on a chain over ±3.5 sd.
 - `gvy25`: `gsbase` plus y (9-node chain); output e^{x_t + z_it + b_f y_t + a_f} k_it, b_f ∈ {0.015, 0.05, 0.10}, with a_f the level compensation.
 - `gvy25s`: `gvy25` with the ladder mirrored: six types of equal share, b_f ∈ {-0.10, -0.05, -0.015, 0.015, 0.05, 0.10}, level-compensated (bv_comp 1.2) at price 2.5.
-- `gvy2s`: `gvy25s`'s ladder over two independent chains (5 nodes each, 25 joint), cash-flow exposure only: twelve mean-zero types (gs_bv, gs_bv2) of equal share, magnitude 0.05 or 0.10 at cosines ±1, ±0.6, ±0.2 to the price direction, γ_v = 2.5/sqrt(2) on each chain, level-compensated (bv_comp 1.2); DKKM sees both standardized states. Stage j's solve is cycle-averaged (section 4). Two seeds at the oracle stage in the table; estimators running.
+- `gvy2s`: `gvy25s`'s ladder over two independent chains (5 nodes each, 25 joint), cash-flow exposure only: twelve mean-zero types (gs_bv, gs_bv2) of equal share, magnitude 0.05 or 0.10 at cosines ±1, ±0.6, ±0.2 to the price direction, γ_v = 2.5/sqrt(2) on each chain, level-compensated (bv_comp 1.2); DKKM sees both standardized states. Stage j's solve is cycle-averaged (section 4). Two seeds in the table; the other eight were stopped at the oracle stage.
+- `gvytls`: `gvytl`'s fixed-capital-structure chassis (coupons 0.15 / 0.40 / 0.70, no refinancing) with `gvy25s`'s mirrored ladder, b_f ∈ {±0.015, ±0.05, ±0.10}, eighteen types of equal share, level-compensated (bv_comp 1.2), price 2.5. Eight oracle seeds, three estimator seeds; stopped.
+- `gvyib2`: `gsbase` plus y with the investment cost multiplied by e^{-0.2 b̃ y}, b̃ the standardized coupon: investment is dear for a levered firm when y is low. One type, no compensation. At -1.0 (`gvyib`) and -0.5 (`gvyib5`) the solve diverges: the firm picks the coupon that makes investment near-free and invests with certainty.
 - `gvys25`: `gsbase` plus y, entering through an operating cost: 0.2 e^{c_f y_t} per unit capital is subtracted from output, c_f ∈ {+0.4, 0, -0.4}; output itself does not load on y.
 - `gvyp05`, `gvyp075`, `gvyp15`, `gvyp20`: `gvyp10` with the coefficient 0.10 replaced by 0.05, 0.075, 0.15 and 0.20.
 - `gvyp10x`: `gvyp10` with output e^{(1 + (z̃_it² - 1)/sqrt(2)) x_t + z_it + 0.10 z̃_it b̃_it y_t} k_it: the loading on x is also nonlinear in productivity.
@@ -630,6 +668,7 @@ harmonized cells replace.
 - `vym2t3`: `vyg25` with y ∈ R², two independent OU states; three types with loading vectors (0.02, 0), (0, 0.07), (0.099, 0.099), price 2.5/sqrt(2) on each: three sorts in three directions, which prices types 1 and 2 at an effective 1.77 instead of 2.5. The group-4 cell until 2026-10-21.
 - `vy9t2f`: `vy9t2` with each state priced at 2.5 instead of 2.5/sqrt(2); nests `vyg25` exactly.
 - `vyg25s`: `vyg25` with the ladder mirrored: six types of equal share, b_f ∈ {-0.14, -0.07, -0.02, 0.02, 0.07, 0.14}, level-compensated as vyg25 (bv_comp 1.2, θ_f 1 to 3.36 with b = -0.14 the reference), price 2.5.
+- `vyg25s6`, `vyg25s18`: `vyg25s` at bv_comp 0.6 / 1.8. Returns identical to vyg25s; only the characteristics change. Five estimator seeds each; the rest stopped.
 - `vyg25u`: `vyg25` with bv_comp 0: no level compensation, so the type shows in value at y = 0. The returns are vyg25's exactly (SR_max equal to every digit); only the characteristics change.
 - `vym3`: the same three states with twenty types, b_f ∈ R³ of rank 3.
 - `vym6`: vym3's construction at K = 6: 24 types of equal share, b_f = m (c γ̂ + sqrt(1 - c²) e_f) with magnitude m ∈ {0.02, 0.06, 0.10, 0.14}, cosine c ∈ {1, 0.84, 0.68, 0.52, 0.36, 0.20} to the price direction γ̂, price 2.5/sqrt(6) on each state.
@@ -658,7 +697,8 @@ What they add to the main results:
   down. `bvychs` (appendix), the signed ladder with six types and the level compensation, has a positive gap of
   +0.026 at room 20%, so the loss in `bvysg` came with the visible type, as in `vyg25u`. What matters is room net of
   DKKM's estimation cost. Four more GS21 wirings (investment cost, floating
-  coupon, a larger option, state-dependent recovery) were stopped at the oracle stage with room below +0.01, and
+  coupon, a larger option, state-dependent recovery) were stopped at the oracle stage with room below +0.01; `gvyib2`, the investment cost made to depend on leverage
+  times y, has room 0.001 and a fair gap of -0.003 (t -11, zero of ten); and
   GS21's default channel is dormant at every calibration tried.
 - **Knobs that are not mechanisms**: the speed of the priced state (kappa 0.15 / 0.35 / 0.70 in KP14: +0.007 /
   +0.014 / +0.009, a mild hump within noise), the visibility of the type, the number of types (`vym3` against
