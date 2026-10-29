@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvychsx2-v1",
+ "title": "BGN bvychs with the loadings x 2: six types -0.14, -0.07, -0.02, +0.02, +0.07, +0.14, 21-node chain, level-compensated, price 2.5",
+ "question": "Does scaling the hidden, mean-zero loading by 2 raise room and the gap in BGN, or does the type become linearly visible?",
+ "notes": "WHY (2026-10-29). The exposure's SIZE has been laddered only for GS21's product (gvyp05/075/10/15/20: room +0.13, +0.29, +0.19, +0.12, +0.04; gap +0.020, +0.080, +0.006, +0.053, -0.005): hump-shaped in the size, because past 0.075 the linear ceiling (0.28 -> 0.73) rises faster than SR_max (0.43 -> 0.78) -- a larger exposure moves the firm's policies and the type becomes linearly visible in the characteristics. The sign-switching ladders (vyg25s room 226% of the linear ceiling, bvychs 20%, gvy25s 11%) hide the type at y = 0 by construction, so their size has a different ceiling; it was never varied.\n\nFEASIBILITY (parameters.py at these overrides, 2026-10-29): the chain exponents span -0.490 to +0.490 per type (y grid +-3.5 sd); the module builds; the J* programme has no sign assumption.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): room rises from bvychs's 20% of the linear ceiling to 25-35%, gap +0.03 to +0.05 (bvychs +0.026). FALSIFIED as 'size is the lever' if room % does not rise above 20%.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs-v1",
+  "changes": [
+   "type_bv [-0.07 .. 0.07] -> [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14]; jstar_vy_file Jstar_vy_bvychsx2.npz; everything else bvychs's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.14,
+   -0.07,
+   -0.02,
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvychsx2.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.14,
+      -0.07,
+      -0.02,
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvychsx2.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (loading-size ladder of the sign-switching types); specs written by _scratch/gen_size_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvychsx2",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "ff6529a9d1f7ac97035703015de0ae33f10cd1f955cbc904131f33ff24095697"
+}

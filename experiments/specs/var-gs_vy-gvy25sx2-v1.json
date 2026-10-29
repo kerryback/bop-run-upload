@@ -1,0 +1,232 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvy25sx2-v1",
+ "title": "GS21 gvy25s with the loadings x 2: six level-exposure types gs_bv -0.2, -0.1, -0.03, +0.03, +0.1, +0.2, level-compensated, price 2.5",
+ "question": "Does scaling the hidden, mean-zero level exposure by 2 raise room and open a gap in GS21 (gvy25s: room 11%, gap -0.012)?",
+ "notes": "WHY (2026-10-29). The exposure's SIZE has been laddered only for GS21's product (gvyp05/075/10/15/20: room +0.13, +0.29, +0.19, +0.12, +0.04; gap +0.020, +0.080, +0.006, +0.053, -0.005): hump-shaped in the size, because past 0.075 the linear ceiling (0.28 -> 0.73) rises faster than SR_max (0.43 -> 0.78) -- a larger exposure moves the firm's policies and the type becomes linearly visible in the characteristics. The sign-switching ladders (vyg25s room 226% of the linear ceiling, bvychs 20%, gvy25s 11%) hide the type at y = 0 by construction, so their size has a different ceiling; it was never varied.\n\nFEASIBILITY (gs_solve_vy.py's gs_ashift = -bv_comp log W(b), 2026-10-29): about -1.04 at gs_bv -0.2 and +1.20 at 0.2 (gvy25s: -0.58 / +0.54; gvy25sh solved at +-1.0).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): room rises above gvy25s's 11% (to 15-25%); the gap stays near zero or negative, because the type's level shift is read by size and leverage linearly, unless the hump that gvy25sq showed grows with the loading. FALSIFIED as 'size is the lever' if room % does not rise above 11%.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25s-v1",
+  "changes": [
+   "gs_bv [-0.1 .. 0.1] -> [-0.2, -0.1, -0.03, 0.03, 0.1, 0.2]; six solves sol_gvy25sx2a..f; everything else gvy25s's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "mirrored level-exposure ladder, E[gs_bv] = 0 across types, each type level-compensated at y = 0"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.2
+ },
+ "types": {
+  "share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.2,
+    -0.1,
+    -0.03,
+    0.03,
+    0.1,
+    0.2
+   ]
+  },
+  "soldirs": [
+   "sol_gvy25sx2a",
+   "sol_gvy25sx2b",
+   "sol_gvy25sx2c",
+   "sol_gvy25sx2d",
+   "sol_gvy25sx2e",
+   "sol_gvy25sx2f"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvy25sx2a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.2
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvy25sx2b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvy25sx2c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": -0.03
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvy25sx2d",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.03
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvy25sx2e",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   },
+   {
+    "name": "sol_gvy25sx2f",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.2,
+     "gs_bv": 0.2
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 5
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvy25sx2a,sol_gvy25sx2b,sol_gvy25sx2c,sol_gvy25sx2d,sol_gvy25sx2e,sol_gvy25sx2f",
+  "GS_VY_BV": "-0.2,-0.1,-0.03,0.03,0.1,0.2",
+  "GS_VY_SHARES": "0.1667,0.1667,0.1667,0.1667,0.1666,0.1666"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (loading-size ladder of the sign-switching types); specs written by _scratch/gen_size_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvy25sx2",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh (six tasks); ids filled by verify_gs_vy_klc.sh"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvy25sx2a",
+  "sol_gvy25sx2b",
+  "sol_gvy25sx2c",
+  "sol_gvy25sx2d",
+  "sol_gvy25sx2e",
+  "sol_gvy25sx2f"
+ ],
+ "reused_solves": null,
+ "spec_hash": "965f29bf1fa9f8b8a6fd34d2c80bbae466773d5bed0cc2dfaf043b5133e1f364"
+}
