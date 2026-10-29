@@ -955,7 +955,8 @@ case "$SEED_SPEC" in
   gvytls)
     # gs_vy (2026-10-28): gvytl with the exposure ladder MIRRORED (-0.10 .. 0.10, E[b] = 0, level-compensated) x three FIXED coupons 0.15 / 0.40 / 0.70: eighteen hidden types. Eighteen solves.
     MODEL=gs_vy; TAG=gvytls; SPEC=var-gs_vy-gvytls-v1
-    SOLVE_TAG=sol_gvytlsa,sol_gvytlsb,sol_gvytlsc,sol_gvytlsd,sol_gvytlse,sol_gvytlsf,sol_gvytlsg,sol_gvytlsh,sol_gvytlsi,sol_gvytlsj,sol_gvytlsk,sol_gvytlsl,sol_gvytlsm,sol_gvytlsn,sol_gvytlso,sol_gvytlsp,sol_gvytlsq,sol_gvytlsr
+    # sol_gvytlsj..r are symlinks to sol_gvytla..i (identical parameters); their manifests carry gvytl's tags, so the staleness lookup (live_solves) uses those
+    SOLVE_TAG=sol_gvytlsa,sol_gvytlsb,sol_gvytlsc,sol_gvytlsd,sol_gvytlse,sol_gvytlsf,sol_gvytlsg,sol_gvytlsh,sol_gvytlsi,sol_gvytla,sol_gvytlb,sol_gvytlc,sol_gvytld,sol_gvytle,sol_gvytlf,sol_gvytlg,sol_gvytlh,sol_gvytli
     export GS_VY_SOLDIRS=sol_gvytlsa,sol_gvytlsb,sol_gvytlsc,sol_gvytlsd,sol_gvytlse,sol_gvytlsf,sol_gvytlsg,sol_gvytlsh,sol_gvytlsi,sol_gvytlsj,sol_gvytlsk,sol_gvytlsl,sol_gvytlsm,sol_gvytlsn,sol_gvytlso,sol_gvytlsp,sol_gvytlsq,sol_gvytlsr
     export GS_VY_BV=-0.1,-0.1,-0.1,-0.05,-0.05,-0.05,-0.015,-0.015,-0.015,0.015,0.015,0.015,0.05,0.05,0.05,0.1,0.1,0.1
     export GS_VY_BC=0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
@@ -979,6 +980,20 @@ case "$SEED_SPEC" in
     unset GS_VY_BV2 GS_VY_BK
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyib-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyib5)
+    # gs_vy (2026-10-28, retry at half magnitude: -1.0 diverged): investment cost x exp(-0.5 b~ y): the y exposure through the option is leverage x the option's value. One type, one solve.
+    MODEL=gs_vy; TAG=gvyib5; SPEC=var-gs_vy-gvyib5-v1
+    SOLVE_TAG=sol_gvyib5a
+    export GS_VY_SOLDIRS=sol_gvyib5a
+    export GS_VY_BV=0.0
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BIB=-0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyib5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   kpsgn)
     # kp_vy (2026-10-27): kpgam with the price of x SWITCHING SIGN with y: gamma_x x (2 logistic(-2y) - 1); y unpriced. A conditioning room (DKKM sees y as rf_stand).
