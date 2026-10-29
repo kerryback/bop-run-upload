@@ -117,14 +117,14 @@
   "runner_note": "SEED_SPEC=vyg25s18",
   "solve_runner": "variants/klc/solve_kp_klc.sh",
   "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
-  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5492948.vyg25s.build.log (see PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5838796.vyg25s18.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "spec_hash": "5e1b2a24925e61ca7b5c770a0f735db119a9f951e08e8f254d85252650c20434",
- "expected_solves": null,
+ "spec_hash": "935d6803b4f3e13da67383c02968d830ef58cfef760e8ff98899517dd2f2c6c8",
+ "expected_solves": {
+  "G": "2a44dec89b777e3b",
+  "integ": "4112c3a2b42acc21"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
+ "solves_pending": null,
  "reused_solves": null
 }
