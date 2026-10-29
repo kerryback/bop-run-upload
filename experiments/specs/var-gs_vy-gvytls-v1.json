@@ -700,30 +700,30 @@
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=gvytls",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
-  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvytlsa": "80f4b478d94d0616",
+  "sol_gvytlsb": "5b62d5b45e65f22e",
+  "sol_gvytlsc": "f100eaa024267b52",
+  "sol_gvytlsd": "a2f1e6665dfdb845",
+  "sol_gvytlse": "0f97081b67e99f8b",
+  "sol_gvytlsf": "3ef38ddc59737c48",
+  "sol_gvytlsg": "aa181b56bd7022d1",
+  "sol_gvytlsh": "67830da5d23deef6",
+  "sol_gvytlsi": "2fb1dae6fdd9061a",
+  "sol_gvytlsj": "354f16b8a5afe75a",
+  "sol_gvytlsk": "d47f398bfa6bed41",
+  "sol_gvytlsl": "7c4befe93b5f0a33",
+  "sol_gvytlsm": "3401b71a8d3385ab",
+  "sol_gvytlsn": "5c97d4da343bb143",
+  "sol_gvytlso": "37f671abd03855a2",
+  "sol_gvytlsp": "024364ab297dfe38",
+  "sol_gvytlsq": "4b68ff9cf4204663",
+  "sol_gvytlsr": "a5f22921c9855c40"
+ },
  "precommitted": false,
- "solves_pending": [
-  "sol_gvytlsa",
-  "sol_gvytlsb",
-  "sol_gvytlsc",
-  "sol_gvytlsd",
-  "sol_gvytlse",
-  "sol_gvytlsf",
-  "sol_gvytlsg",
-  "sol_gvytlsh",
-  "sol_gvytlsi",
-  "sol_gvytlsj",
-  "sol_gvytlsk",
-  "sol_gvytlsl",
-  "sol_gvytlsm",
-  "sol_gvytlsn",
-  "sol_gvytlso",
-  "sol_gvytlsp",
-  "sol_gvytlsq",
-  "sol_gvytlsr"
- ],
+ "solves_pending": null,
  "reused_solves": null,
- "spec_hash": "c22339818264811d267316727a5db3439a97926cf29f565925ad204a4b0f2612"
+ "spec_hash": "21f9e8ccea7e589e35fcee2c5d3f4cd603664a5b9b77a40c760958ef4040f248"
 }
