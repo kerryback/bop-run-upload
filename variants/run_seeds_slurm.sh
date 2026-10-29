@@ -919,6 +919,24 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 0.8, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs8.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs8-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  bvychsn5)
+    # bgn_vy (2026-10-29): bvychs at bv_comp -0.5 (hump search: the compensation as a channel opposed to y)
+    MODEL=bgn_vy; TAG=bvychsn5; SPEC=var-bgn_vy-bvychsn5-v1; SOLVE_TAG=Jstar_vy_bvychsn5
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": -0.5, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychsn5.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychsn5-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvychs25)
+    # bgn_vy (2026-10-29): bvychs at bv_comp 2.5 (hump search: the compensation as a channel opposed to y)
+    MODEL=bgn_vy; TAG=bvychs25; SPEC=var-bgn_vy-bvychs25-v1; SOLVE_TAG=Jstar_vy_bvychs25
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 2.5, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs25.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs25-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvychs18)
+    # bgn_vy (2026-10-29): bvychs at bv_comp 1.8 (hump search: the compensation as a channel opposed to y)
+    MODEL=bgn_vy; TAG=bvychs18; SPEC=var-bgn_vy-bvychs18-v1; SOLVE_TAG=Jstar_vy_bvychs18
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.8, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs18.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs18-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   bvychs6)
     # bgn_vy (2026-10-28): bvychs at bv_comp 0.6 (the level-compensation ladder; bvychs = 1.2 over-compensates)
     MODEL=bgn_vy; TAG=bvychs6; SPEC=var-bgn_vy-bvychs6-v1; SOLVE_TAG=Jstar_vy_bvychs6
@@ -1008,6 +1026,56 @@ case "$SEED_SPEC" in
     unset GS_VY_BV2 GS_VY_BK
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyib2-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvy25sh)
+    # gs_vy (2026-10-29): gvy25s at gamma_v 0.5, bv_comp 9.0: same level shifts, a smaller y price. Six solves.
+    MODEL=gs_vy; TAG=gvy25sh; SPEC=var-gs_vy-gvy25sh-v1
+    SOLVE_TAG=sol_gvy25sha,sol_gvy25shb,sol_gvy25shc,sol_gvy25shd,sol_gvy25she,sol_gvy25shf
+    export GS_VY_SOLDIRS=sol_gvy25sha,sol_gvy25shb,sol_gvy25shc,sol_gvy25shd,sol_gvy25she,sol_gvy25shf
+    export GS_VY_BV=-0.1,-0.05,-0.015,0.015,0.05,0.1
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25sh-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvy25sq)
+    # gs_vy (2026-10-29): gvy25s at gamma_v 0.25, bv_comp 12.0: same level shifts, a smaller y price. Six solves.
+    MODEL=gs_vy; TAG=gvy25sq; SPEC=var-gs_vy-gvy25sq-v1
+    SOLVE_TAG=sol_gvy25sqa,sol_gvy25sqb,sol_gvy25sqc,sol_gvy25sqd,sol_gvy25sqe,sol_gvy25sqf
+    export GS_VY_SOLDIRS=sol_gvy25sqa,sol_gvy25sqb,sol_gvy25sqc,sol_gvy25sqd,sol_gvy25sqe,sol_gvy25sqf
+    export GS_VY_BV=-0.1,-0.05,-0.015,0.015,0.05,0.1
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25sq-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gxq70)
+    # gs_vy (2026-10-29): gsbase with a HUMP-shaped x loading in productivity, 1 + (-0.7) (z~^2 - 1)/sqrt2. One solve; no y.
+    MODEL=gs_vy; TAG=gxq70; SPEC=var-gs_vy-gxq70-v1
+    SOLVE_TAG=sol_gxq70a
+    export GS_VY_SOLDIRS=sol_gxq70a
+    export GS_VY_BV=0.0
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gxq70-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gxq35)
+    # gs_vy (2026-10-29): gsbase with a HUMP-shaped x loading in productivity, 1 + (-0.35) (z~^2 - 1)/sqrt2. One solve; no y.
+    MODEL=gs_vy; TAG=gxq35; SPEC=var-gs_vy-gxq35-v1
+    SOLVE_TAG=sol_gxq35a
+    export GS_VY_SOLDIRS=sol_gxq35a
+    export GS_VY_BV=0.0
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BK=0.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gxq35-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   kpsgn)
     # kp_vy (2026-10-27): kpgam with the price of x SWITCHING SIGN with y: gamma_x x (2 logistic(-2y) - 1); y unpriced. A conditioning room (DKKM sees y as rf_stand).

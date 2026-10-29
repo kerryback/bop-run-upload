@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gxq70-v1",
+ "title": "GS21 baseline with a HUMP-shaped exposure to the priced productivity shock: x loading 1 + (-0.7) (z~^2 - 1)/sqrt2",
+ "question": "Does a premium hump-shaped in a visible characteristic (productivity, which ROE reveals monotonically) make room and a gap in GS21?",
+ "notes": "DIAGNOSIS (2026-10-29, bop_runs/probe/hump_decomp.py). Type EW portfolio returns regressed on the EW market and dy: in vyg25s market beta rises with b, concavely (0.71, 0.87, 1.00, 1.10, 1.19, 1.27) while the residual premium falls (+0.02, +0.10, +0.10, +0.03, -0.07, -0.23 %/mo): two priced channels opposed, with different curvature, sum to the hump. In bvychs both rise with b (beta 0.89 -> 1.19, residual -0.33 -> +0.44). In gvy25s they oppose (market part 0.36 -> 0.26) but the y channel (-0.59 -> +0.71) is ten times the market one, so the sum is monotone.\n\nDESIGN. The direct route to a premium non-monotone in a visible characteristic: firms of middling productivity carry the most aggregate-productivity risk, the most and least productive the least (loading 1.49 at z~ = 0, -0.48 at z~ = +-2). The loading's cross-sectional mean stays 1, so the market keeps its premium. Uses the existing gs_bx2 knob (gvyp10x had +1.0 on top of the product: gap +0.043 against gvyp10's +0.006); the simulator reads gs_bx2 from the solution. Benchmark gsbase (gamma_x 0.5). No y (NY 1).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): room 20 to 60% of the linear ceiling, fair gap +0.02 to +0.08, larger at -0.70. Falsified if room stays under 10%: then ROE's rank does not reveal productivity sharply enough, or the premium is not hump-shaped.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gsbg1-v1",
+  "changes": [
+   "gsbg1's gamma_x 0.1 -> GS21's 0.5 (gsbase); gs_bx2 0 -> -0.7"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_1_nodes_2.5sd_priced",
+  "gs_vy_exposure": "no y exposure; x loading 1 + (-0.7) (z~^2 - 1)/sqrt(2), z~ productivity in stationary-sd units"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 1,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "gs_bx2": -0.7
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.0
+   ],
+   "gs_bc": [
+    0.0
+   ],
+   "gs_bi": [
+    0.0
+   ],
+   "gs_bk": [
+    0.0
+   ]
+  },
+  "soldirs": [
+   "sol_gxq70a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gxq70a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 1,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bv": 0.0,
+     "gs_fc": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_bx2": -0.7
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gxq70a",
+  "GS_VY_BV": "0.0",
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BK": "0.0",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (hump-shaped premia in BGN and GS21); specs written by _scratch/gen_hump_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gxq70",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gxq70a"
+ ],
+ "reused_solves": null,
+ "spec_hash": "e632dfb5bd71e1afd24c5ea35fc091a669e39852fc44b25d635c0efbb264f3e1"
+}
