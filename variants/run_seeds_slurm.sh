@@ -995,6 +995,20 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyib5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvyib2)
+    # gs_vy (2026-10-28, second retry: -1.0 and -0.5 diverged, 0.0/-0.01 converge): investment cost x exp(-0.2 b~ y): the y exposure through the option is leverage x the option's value. One type, one solve.
+    MODEL=gs_vy; TAG=gvyib2; SPEC=var-gs_vy-gvyib2-v1
+    SOLVE_TAG=sol_gvyib2a
+    export GS_VY_SOLDIRS=sol_gvyib2a
+    export GS_VY_BV=0.0
+    export GS_VY_BC=0.0
+    export GS_VY_BI=0.0
+    export GS_VY_BIB=-0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyib2-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   kpsgn)
     # kp_vy (2026-10-27): kpgam with the price of x SWITCHING SIGN with y: gamma_x x (2 logistic(-2y) - 1); y unpriced. A conditioning room (DKKM sees y as rf_stand).
     MODEL=kp_vy; TAG=kpsgn; SPEC=var-kp_vy-kpsgn-v1; SOLVE_TAG=kpsgn
