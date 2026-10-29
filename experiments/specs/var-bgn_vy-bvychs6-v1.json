@@ -118,13 +118,13 @@
   "runner_note": "SEED_SPEC=bvychs6",
   "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
   "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
-  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.5492949.Jstar_vy_bvychs.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.5838794.Jstar_vy_bvychs6.npz.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "jstar": "7b7384938fe2641e"
+ },
  "precommitted": false,
- "solves_pending": [
-  "jstar"
- ],
+ "solves_pending": null,
  "reused_solves": null,
- "spec_hash": "babf32606aaf1d62eecef46bcc526bf438cfab434d689d6c175120db8b08b6de"
+ "spec_hash": "093601543a059f81ecd50cbbed7b87fd7eb388d518e97684b2883afe98c2ff9a"
 }

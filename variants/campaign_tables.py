@@ -104,8 +104,8 @@ E = {
     "bvychs": ("BGN", CAMPAIGN, "bvych0 with sign-switching types: six types, loadings $\\pm 0.01, \\pm 0.035, \\pm 0.07$"),
     # the three routes to a larger gap (2026-10-27): a hidden sign in GS21, sign-switching prices of risk, K past the characteristic count
     "gvy25s": ("GS21", CAMPAIGN, "gvy25 with sign-switching types: six level-exposure types, $\\pm 0.015, \\pm 0.05, \\pm 0.1$"),
-    "gvy2s": ("GS21", CAMPAIGN, "gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve hidden types"),
-    "gvytls": ("GS21", CAMPAIGN, "gvytl with the exposure ladder mirrored: six signed exposure types $\\times$ three fixed coupons, eighteen hidden types"),
+    "gvy2s": ("GS21", CAMPAIGN, "gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types"),
+    "gvytls": ("GS21", CAMPAIGN, "gvytl with the exposure ladder mirrored: six signed exposure types $\\times$ three fixed coupons, eighteen mean-zero types"),
     "bvychs4": ("BGN", CAMPAIGN, "bvychs at bv_comp 0.4"),
     "bvychs6": ("BGN", CAMPAIGN, "bvychs at bv_comp 0.6"),
     "bvychs8": ("BGN", CAMPAIGN, "bvychs at bv_comp 0.8"),
@@ -116,8 +116,8 @@ E = {
     "bgsgn": ("BGN", CAMPAIGN, "the regime price of the market shock at $-\\sigma_z$ / $+\\sigma_z$, 12-month spells (conditioning room)"),
     "vym6": ("KP14", CAMPAIGN, "six priced states, 24 rank-6 types (vym3's construction at K = 6)"),
     # the signed ladder over K states (2026-10-27): vyg25s's hidden mean-zero loading spread over K priced states
-    "vym3s": ("KP14", CAMPAIGN, "vyg25s's signed ladder over three priced states: 24 hidden types, mirrored alignments"),
-    "vym6s": ("KP14", CAMPAIGN, "vyg25s's signed ladder over six priced states: 24 hidden types, mirrored alignments, orthogonal off-$\\gamma$ directions"),
+    "vym3s": ("KP14", CAMPAIGN, "vyg25s's signed ladder over three priced states: 24 mean-zero types, mirrored alignments"),
+    "vym6s": ("KP14", CAMPAIGN, "vyg25s's signed ladder over six priced states: 24 mean-zero types, mirrored alignments, orthogonal off-$\\gamma$ directions"),
     "gvypk3": ("GS21", CAMPAIGN, "two priced chains, three product types"),
     # the 2026-10-17 fixes
     "gvyz10": ("GS21", CAMPAIGN, "one type, output $\\times e^{0.10\\,\\tilde z\\,y}$: the product economy without the coupon"),
