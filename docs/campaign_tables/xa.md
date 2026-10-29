@@ -44,7 +44,14 @@
 | KP14 | `vym6` -- six priced states, 24 rank-6 types (vym3's construction at K = 6) | 0.421 | 15% | 0.300 | +0.056 | 19 | 0.19 | 0.287 | 0.260 | 0.275 | 0.286 | 0.059 | +0.0002 (t 0.1) | -0.01 | 4/10 |
 | KP14 | `vym3s` -- vyg25s's signed ladder over three priced states: 24 mean-zero types, mirrored alignments | 0.503 | 13% | 0.191 | +0.224 | 126 | 0.37 | 0.296 | 0.134 | 0.195 | 0.171 | 0.065 | +0.0998 (t 20.9) | +0.22 | 10/10 |
 | KP14 | `vym6s` -- vyg25s's signed ladder over six priced states: 24 mean-zero types, mirrored alignments, orthogonal off-gamma directions | 0.507 | 13% | 0.192 | +0.225 | 124 | 0.37 | 0.296 | 0.132 | 0.194 | 0.168 | 0.065 | +0.0987 (t 15.0) | +0.22 | 10/10 |
-| GS21 | `gvy2s`‡ -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvy2s`‡ -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | 0.540 | 0.542 | 0.505 | 0.564 | 0.333 | -0.0246 (t -5.1) | -0.16 | 0/2 |
+| GS21 | `gvytls`‡ -- gvytl with the exposure ladder mirrored: six signed exposure types x three fixed coupons, eighteen mean-zero types | 0.627 | 51% | 0.580 | +0.044 | 8 | 0.23 | 0.580 | 0.493 | 0.544 | 0.588 | 0.313 | -0.0074 (t -1.0) | -0.06 | 1/3 |
+| BGN | `bvychs4` -- bvychs at bv_comp 0.4 | 0.612 | 29% | 0.519 | +0.059 | 12 | 0.25 | 0.497 | 0.468 | 0.465 | 0.497 | 0.177 | -0.0035 (t -0.3) | -0.01 | 2/5 |
+| BGN | `bvychs6` -- bvychs at bv_comp 0.6 | 0.656 | 28% | 0.578 | +0.047 | 8 | 0.23 | 0.547 | 0.493 | 0.512 | 0.545 | 0.183 | +0.0013 (t 0.3) | +0.00 | 1/3 |
+| BGN | `bvychs8` -- bvychs at bv_comp 0.8 | 0.684 | 28% | 0.590 | +0.044 | 7 | 0.23 | 0.577 | 0.501 | 0.468 | 0.568 | 0.189 | +0.0086 (t 1.0) | +0.06 | 2/3 |
+| KP14 | `vyg25s6` -- vyg25s at bv_comp 0.6 | 0.576 | 11% | 0.212 | +0.305 | 147 | 0.47 | 0.337 | 0.183 | 0.131 | 0.185 | 0.062 | +0.1424 (t 24.2) | +0.27 | 5/5 |
+| KP14 | `vyg25s18` -- vyg25s at bv_comp 1.8 | 0.574 | 11% | 0.209 | +0.312 | 167 | 0.47 | 0.387 | 0.106 | 0.172 | 0.193 | 0.062 | +0.1854 (t 8.7) | +0.33 | 5/5 |
+| GS21 | `gvyib2`‡ -- gvyib at gs_bib -0.2 (the -1.0 and -0.5 solves diverged: the firm picks the coupon that makes investment near-free) | 0.327 | 96% | 0.326 | +0.001 | 0 | 0.03 | 0.319 | 0.298 | 0.293 | 0.322 | 0.314 | -0.0027 (t -11.0) | -0.04 | 0/10 |
 | KP14 | `kpgam` -- gamma_x x logistic(y), 1 to 3 | 0.390 | 65% | 0.373 | +0.005 | 1 | 0.06 | 0.358 | 0.348 | 0.340 | 0.363 | 0.254 | -0.0053 (t -4.0) | -0.05 | 1/10 |
 | KP14 | `vyx` -- three types on y, price 1.8 | 0.421 | 14% | 0.321 | +0.055 | 17 | 0.19 | 0.313 | 0.284 | 0.302 | 0.310 | 0.054 | +0.0009 (t 0.3) | +0.02 | 7/10 |
 | KP14 | `vyj25` -- the same with a priced crash in y | 0.554 | 10% | 0.323 | +0.104 | 33 | 0.28 | 0.315 | 0.270 | 0.292 | 0.307 | 0.045 | +0.0080 (t 2.2) | +0.06 | 8/10 |
