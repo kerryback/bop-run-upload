@@ -105,6 +105,7 @@ E = {
     # the three routes to a larger gap (2026-10-27): a hidden sign in GS21, sign-switching prices of risk, K past the characteristic count
     "gvy25s": ("GS21", CAMPAIGN, "gvy25 with sign-switching types: six level-exposure types, $\\pm 0.015, \\pm 0.05, \\pm 0.1$"),
     "gvy2s": ("GS21", CAMPAIGN, "gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve hidden types"),
+    "gvytls": ("GS21", CAMPAIGN, "gvytl with the exposure ladder mirrored: six signed exposure types $\\times$ three fixed coupons, eighteen hidden types"),
     "kpsgn": ("KP14", CAMPAIGN, "the price of x switches sign with y: $\\gamma_x (2\\,\\mathrm{logistic}(-2y) - 1)$ (conditioning room)"),
     "bgsgn": ("BGN", CAMPAIGN, "the regime price of the market shock at $-\\sigma_z$ / $+\\sigma_z$, 12-month spells (conditioning room)"),
     "vym6": ("KP14", CAMPAIGN, "six priced states, 24 rank-6 types (vym3's construction at K = 6)"),
@@ -141,7 +142,7 @@ GROUPS = [
     # ---- the appendix: everything else that was run, grouped by what it tested ----
     ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 
