@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvychsn5-v1",
+ "title": "BGN bvychs at bv_comp -0.5: the compensation pushes positive-b types' premium DOWN, against y",
+ "question": "Can BGN's level compensation open a priced channel opposed to y, as KP14's growth-option share does, and so a hump?",
+ "notes": "DIAGNOSIS (2026-10-29, bop_runs/probe/hump_decomp.py). Type EW portfolio returns regressed on the EW market and dy: in vyg25s market beta rises with b, concavely (0.71, 0.87, 1.00, 1.10, 1.19, 1.27) while the residual premium falls (+0.02, +0.10, +0.10, +0.03, -0.07, -0.23 %/mo): two priced channels opposed, with different curvature, sum to the hump. In bvychs both rise with b (beta 0.89 -> 1.19, residual -0.33 -> +0.44). In gvy25s they oppose (market part 0.36 -> 0.26) but the y channel (-0.59 -> +0.71) is ten times the market one, so the sum is monotone.\n\nIn BGN, unlike KP14, the compensation changes returns: across bv_comp 0.4 / 0.8 / 1.2 the b = +0.07 type's premium is 0.78 / 1.00 / 1.24 %/mo and the reference type's fixed. At bv_comp -0.5 positive-b types get the SMALLER cash-flow level, which lowers their premium against y's push up; a linear extrapolation of the 0.4-1.2 ladder puts the type premium nearly flat with a weak interior peak.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): premium non-monotone in b, room above bvychs's 20%, but SR_max lower (a flatter premium); gap uncertain. Falsified if the premium stays monotone.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs-v1",
+  "changes": [
+   "bv_comp 1.2 -> -0.5; jstar_vy_file Jstar_vy_bvychsn5.npz; everything else bvychs's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.07,
+   -0.035,
+   -0.01,
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": -0.5,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvychsn5.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.07,
+      -0.035,
+      -0.01,
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": -0.5,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvychsn5.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (hump-shaped premia in BGN and GS21); specs written by _scratch/gen_hump_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvychsn5",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.5492949.Jstar_vy_bvychs.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "ca310e6f896295453518c42c6abba3a59d710f610d73ce85ba3e0607093f0522"
+}
