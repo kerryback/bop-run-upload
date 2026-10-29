@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvychs6-v1",
+ "title": "BGN bvychs at bv_comp 0.6: the mirrored six-type ladder (+-0.01, +-0.035, +-0.07) with a weaker level compensation",
+ "question": "Does a level compensation that does not over-shoot hide the type's sign in BGN? At bv_comp 1.2 the sign is half visible through size, in the OPPOSITE direction from the uncompensated economy.",
+ "notes": "WHY (2026-10-28). In the bvychs seed-0 panel the ranked characteristics explain 54% of b_f with constant weights (size corr +0.73: positive-b firms are LARGER), while in bvysg (bv_comp 0) they explain 93% with size corr -0.92 (positive-b firms are SMALLER, their cash flows discounted at y's negative Q-mean). The exponent that zeroes the size gap interpolates to about 0.6; 0.4 and 0.8 bracket it. Adding ranks x y raises the R2 only to 0.56: the leak is unconditional, which is what the constant-weight linear ceiling and the fair linear ridge hold.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-28): at 0.6 the linear ceiling falls below bvychs's 0.35, room rises from 20% of it to above 50%, and the fair gap from +0.026 to +0.05 or more; 0.4 and 0.8 bracket a hump. CAVEAT from KP14 (same day): in vyg25s the type is 90% visible through size (theta 1 to 3.36) and the premium is hump-shaped in b, so hiding the sign is not what KP14 does; if hiding it in BGN lowers the nonlinear ceiling as much as the linear one, room will not rise.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs-v1",
+  "changes": [
+   "bv_comp 1.2 -> 0.6; jstar_vy_file Jstar_vy_bvychs6.npz; everything else bvychs's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.07,
+   -0.035,
+   -0.01,
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 0.6,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvychs6.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.07,
+      -0.035,
+      -0.01,
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 0.6,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvychs6.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-28 (level-compensation ladders / leverage-dependent investment cost); specs written by _scratch/gen_comp_ladders.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvychs6",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.5492949.Jstar_vy_bvychs.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "babf32606aaf1d62eecef46bcc526bf438cfab434d689d6c175120db8b08b6de"
+}

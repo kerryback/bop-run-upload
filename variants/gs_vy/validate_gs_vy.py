@@ -17,7 +17,7 @@ for t in range(gs.burnin + 5, T - 2, 2):
 rows = np.array(rows)
 print(f"max |E[MR]-1|: {worst:.2e}")
 q = np.quantile(rows[:, 1], [1 / 3, 2 / 3]); terc = np.digitize(rows[:, 1], q)
-print(f"types gs_bv={gs._bv_list} gs_bc={gs._bc_list} gs_fc={gs.gs_fc} gs_bphi={gs.gs_bphi} gs_bi={gs._bi_list} gs_bk={gs._bk_list} gs_bzl={gs.gs_bzl} gs_bzi={gs.gs_bzi} gs_bzb={gs.gs_bzb} gs_bx2={gs.gs_bx2} gs_pj={gs.gs_pj} shares={gs._share} ashift={np.round(gs.ashift_ts, 5).tolist()} NY={gs.NY} NY2={gs.NY2} gs_bv2={gs._bv2_list}")
+print(f"types gs_bv={gs._bv_list} gs_bc={gs._bc_list} gs_fc={gs.gs_fc} gs_bphi={gs.gs_bphi} gs_bi={gs._bi_list} gs_bib={gs._bib_list} gs_bk={gs._bk_list} gs_bzl={gs.gs_bzl} gs_bzi={gs.gs_bzi} gs_bzb={gs.gs_bzb} gs_bx2={gs.gs_bx2} gs_pj={gs.gs_pj} shares={gs._share} ashift={np.round(gs.ashift_ts, 5).tolist()} NY={gs.NY} NY2={gs.NY2} gs_bv2={gs._bv2_list}")
 for k in range(3):
     m = rows[terc == k]
     if len(m) == 0:        # a coarse chain (few distinct y values) can leave a quantile tercile empty

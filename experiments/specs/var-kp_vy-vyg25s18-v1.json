@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25s18-v1",
+ "title": "KP14 vyg25s at bv_comp 1.8: the mirrored six-type ladder with a stronger level compensation",
+ "question": "How does the level compensation's exponent move vyg25s's room and gap, given that at 1.2 the type is fully visible through size and the premium is hump-shaped in the loading?",
+ "notes": "WHY (2026-10-28). Reconstructing the type draw (bx_seed 777, seed 0) in the vyg25s panel: the ranked characteristics explain 90% of b_f with constant weights (size corr +0.88, bm -0.83; mean size 0.23M to 10.8M across the six types, theta 1 to 3.36), the EW y-beta is monotone in b (+0.019 to +0.062) but the mean excess return is hump-shaped (0.56, 0.76, 0.87, 0.86, 0.84, 0.74 %/month). So the linear sort fails not because the type is hidden but because the premium is not monotone in the characteristic that reveals it. The exponent sets both the size spread and (through the growth-option share) the hump.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-28): no directional prediction; 0.6 and 1.8 bracket 1.2 to measure the exponent's effect on the linear ceiling (0.17), the nonlinear ceiling (0.52) and the gap (+0.18).",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25s-v1",
+  "changes": [
+   "bv_comp 1.2 -> 1.8; own tables under prefix vyg25s18; everything else vyg25s's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.14,
+   -0.07,
+   -0.02,
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.8
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25s18"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.14,
+      -0.07,
+      -0.02,
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.8
+    },
+    "args": {
+     "prefix": "vyg25s18"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-28 (level-compensation ladders / leverage-dependent investment cost); specs written by _scratch/gen_comp_ladders.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25s18",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.5492948.vyg25s.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "5e1b2a24925e61ca7b5c770a0f735db119a9f951e08e8f254d85252650c20434",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}

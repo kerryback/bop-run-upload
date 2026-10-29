@@ -64,6 +64,11 @@ gs_bphi = 0.0
 # investment option -- KP14's growth-option mechanism in GS21's own option. The cost draw u ~ U(imin, imax) is
 # unchanged; the firm invests if cy*u <= gain, i.e. u <= gain/cy, and pays cy*u. icut_* stay in u-units.
 gs_bi = 0.0
+# ---- leverage-dependent investment cost (2026-10-28): the cost multiplier becomes exp((gs_bi + gs_bib * b~) y), b~ the
+# standardized coupon (b - 0.5)/0.29 of the firm's CURRENT debt, so with gs_bib < 0 a levered firm's investment is dear
+# in bad states and an unlevered firm's cheap: the firm's exposure to y through its option is the PRODUCT of its leverage
+# and the option's value, with a cross-sectional mean near zero. gs_bib = 0 is the level cost exposure gs_bi alone.
+gs_bib = 0.0
 # ---- floating coupon (2026-10-09): the coupon paid by the firm AND received by creditors is b * exp(gs_bk y), so
 # with gs_bk < 0 debt service rises in bad states (floating-rate debt, spreads widening on roll-over); the firm's
 # exposure to y is then proportional to its leverage relative to profit, and the type is invisible at y = 0.
@@ -235,7 +240,7 @@ if NY2 > 1:
 else:
     ygrid2 = np.zeros(NY)
 MPy = My * pr_y                                             # (NY, NY): priced y-transition weights
-print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}, coupon set [{gs_blo}, {gs_bhi}] -> nodes {np.round(bgrid[_bmask], 4).tolist()}", flush=True)
+print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bib {gs_bib}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}, coupon set [{gs_blo}, {gs_bhi}] -> nodes {np.round(bgrid[_bmask], 4).tolist()}", flush=True)
 
 mn = np.linspace(-4 * sigma_m, 4 * sigma_m, 161)
 mw = np.exp(-0.5 * (mn / sigma_m) ** 2)
@@ -260,7 +265,7 @@ _expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * 
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)                          # (znum,) x loading by productivity
 _prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift)
 _cost = delta + gs_fc * np.exp(gs_bc * ygrid)[:, None, None, None]            # (NY, 1, 1, 1)
-cy = np.exp(gs_bi * ygrid)                                                      # (NY,) investment-cost multiplier
+cy = np.exp((gs_bi + gs_bib * _btil[None, :]) * ygrid[:, None])                 # (NY, bnum) investment-cost multiplier by y node and current coupon
 ky = np.exp(gs_bk * ygrid)                                                      # (NY,) coupon multiplier
 pi_R = (1 - tau) * (_prod - _cost) - (1 - tau) * (ky[:, None, None, None] * bgrid[None, None, None, :])
 _phi_y = np.minimum(phi * np.exp(gs_bphi * ygrid), 1.0)[:, None, None, None]           # (NY, 1, 1, 1)
@@ -432,7 +437,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     params=np.array([g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
                                      kappa_b, xi, imin, imax, sigma_m]),
                     solve_id=_snap.solve_id,
-                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
+                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
                     gamma_v=gamma_v, kappa_y=kappa_y, NY=NY, y_mult=y_mult, lam_y=lam_y, rho_y=rho_y, s_y=s_y,
                     ygrid2=ygrid2, NY1=NY1, NY2=NY2, gs_bv2=gs_bv2, gamma_v2=gamma_v2, kappa_y2=kappa_y2,
                     kappa_e=kappa_e, xnum=xnum, bnum=bnum, znum=znum, tol=tol,
