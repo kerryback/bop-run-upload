@@ -196,9 +196,17 @@ def sdf_compute(N, T, arr_tuple):
                  + 2 * exp_betaA[: t + 1, :] * exp_betaB[: t + 1, :] * iAB + exp_betaB[: t + 1, :] ** 2 * iBB)).sum(axis=0)).ravel()
         term3 = term3 + np.diag(diag3 * (1 / pi - 1))
 
-        result4 = kron(col2, col2).tocsr()
-        result4.data = np.exp(result4.data)
-        K4 = np.asarray(result4.sum(axis=0)).reshape(N, N)
+        # K4[i, j] = sum over live projects p of firm i and q of firm j of exp(tau_p tau_q). Written
+        # as kron(col2, col2) -> exp -> column sums this materialises nnz^2 entries at once, and nnz
+        # (live projects) grows with the cash-flow level: bvychs18/25 (2026-10-29) spiked past 36 GB
+        # and ran 15-66 s per month. The blocked pair sum below is the same sum in the same stored-
+        # entry semantics (verified to 3e-15 relative against the kron form, bop_runs/probe/k4_equiv.py)
+        # with O(block x nnz) memory.
+        _a = col2.data; _nnz = len(_a)
+        _G = csr_matrix((np.ones(_nnz), (np.arange(_nnz), col2.indices)), shape=(_nnz, N))
+        K4 = np.zeros((N, N))
+        for _s in range(0, _nnz, 2048):
+            K4 += _G[_s:_s + 2048].T @ (np.exp(_a[_s:_s + 2048, None] * _a[None, :]) @ _G)
         term4 = (I * pi) ** 2 * thth * Gy * K4
         diag4_sub = (I * pi) ** 2 * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2 * corr_zj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
         diag4_add = I ** 2 * pi * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
