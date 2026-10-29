@@ -893,6 +893,13 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyg25s18
     SOLVE_HINT='export KSPECS=var-kp_vy-vyg25s18-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyg25sx2)
+    # kp_vy (2026-10-29): vyg25s with the loadings DOUBLED (-0.28 .. 0.28), E[b] = 0, level-compensated, price 2.5
+    MODEL=kp_vy; TAG=vyg25sx2; SPEC=var-kp_vy-vyg25sx2-v1; SOLVE_TAG=vyg25sx2
+    export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.28, -0.14, -0.04, 0.04, 0.14, 0.28], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vyg25sx2
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25sx2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25s6)
     # kp_vy (2026-10-28): vyg25s at bv_comp 0.6 (the level-compensation bracket)
     MODEL=kp_vy; TAG=vyg25s6; SPEC=var-kp_vy-vyg25s6-v1; SOLVE_TAG=vyg25s6
@@ -924,6 +931,18 @@ case "$SEED_SPEC" in
     MODEL=bgn_vy; TAG=bvychsn5; SPEC=var-bgn_vy-bvychsn5-v1; SOLVE_TAG=Jstar_vy_bvychsn5
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": -0.5, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychsn5.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvychsn5-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvychsx3)
+    # bgn_vy (2026-10-29): bvychs with the loadings x 3 (-0.21 .. 0.21), E[b] = 0, chain, level-compensated, price 2.5
+    MODEL=bgn_vy; TAG=bvychsx3; SPEC=var-bgn_vy-bvychsx3-v1; SOLVE_TAG=Jstar_vy_bvychsx3
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.21, -0.105, -0.03, 0.03, 0.105, 0.21], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychsx3.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychsx3-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvychsx2)
+    # bgn_vy (2026-10-29): bvychs with the loadings x 2 (-0.14 .. 0.14), E[b] = 0, chain, level-compensated, price 2.5
+    MODEL=bgn_vy; TAG=bvychsx2; SPEC=var-bgn_vy-bvychsx2-v1; SOLVE_TAG=Jstar_vy_bvychsx2
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychsx2.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychsx2-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
   bvychs25)
     # bgn_vy (2026-10-29): bvychs at bv_comp 2.5 (hump search: the compensation as a channel opposed to y)
@@ -1037,6 +1056,28 @@ case "$SEED_SPEC" in
     unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvy25sh-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvy25sx3)
+    # gs_vy (2026-10-29): gvy25s with the loadings x 3 (-0.3 .. 0.3), E[b] = 0, level-compensated, price 2.5. Six solves.
+    MODEL=gs_vy; TAG=gvy25sx3; SPEC=var-gs_vy-gvy25sx3-v1
+    SOLVE_TAG=sol_gvy25sx3a,sol_gvy25sx3b,sol_gvy25sx3c,sol_gvy25sx3d,sol_gvy25sx3e,sol_gvy25sx3f
+    export GS_VY_SOLDIRS=sol_gvy25sx3a,sol_gvy25sx3b,sol_gvy25sx3c,sol_gvy25sx3d,sol_gvy25sx3e,sol_gvy25sx3f
+    export GS_VY_BV=-0.3,-0.15,-0.045,0.045,0.15,0.3
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25sx3-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvy25sx2)
+    # gs_vy (2026-10-29): gvy25s with the loadings x 2 (-0.2 .. 0.2), E[b] = 0, level-compensated, price 2.5. Six solves.
+    MODEL=gs_vy; TAG=gvy25sx2; SPEC=var-gs_vy-gvy25sx2-v1
+    SOLVE_TAG=sol_gvy25sx2a,sol_gvy25sx2b,sol_gvy25sx2c,sol_gvy25sx2d,sol_gvy25sx2e,sol_gvy25sx2f
+    export GS_VY_SOLDIRS=sol_gvy25sx2a,sol_gvy25sx2b,sol_gvy25sx2c,sol_gvy25sx2d,sol_gvy25sx2e,sol_gvy25sx2f
+    export GS_VY_BV=-0.2,-0.1,-0.03,0.03,0.1,0.2
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvy25sx2-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   gvy25sq)
     # gs_vy (2026-10-29): gvy25s at gamma_v 0.25, bv_comp 12.0: same level shifts, a smaller y price. Six solves.

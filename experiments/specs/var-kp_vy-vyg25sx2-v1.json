@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25sx2-v1",
+ "title": "KP14 vyg25s with the loadings DOUBLED: six types -0.28, -0.14, -0.04, 0.04, 0.14, 0.28, level-compensated, price 2.5",
+ "question": "Does doubling the size of the hidden, mean-zero loading raise room and the gap in KP14, or does the type become linearly visible (as gvyp15/20 did)?",
+ "notes": "WHY (2026-10-29). The exposure's SIZE has been laddered only for GS21's product (gvyp05/075/10/15/20: room +0.13, +0.29, +0.19, +0.12, +0.04; gap +0.020, +0.080, +0.006, +0.053, -0.005): hump-shaped in the size, because past 0.075 the linear ceiling (0.28 -> 0.73) rises faster than SR_max (0.43 -> 0.78) -- a larger exposure moves the firm's policies and the type becomes linearly visible in the characteristics. The sign-switching ladders (vyg25s room 226% of the linear ceiling, bvychs 20%, gvy25s 11%) hide the type at y = 0 by construction, so their size has a different ceiling; it was never varied.\n\nFEASIBILITY (parameters_kp14 at these overrides, 2026-10-29): A0 finite for all six types (13.9 to 1.85 pre-compensation at y = 0); type_theta 1 to 11.2; rho0 min 0.0158 unchanged. Premium b.gamma from -0.70 to +0.70.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-29): room rises above vyg25s's +0.35 (to +0.45 or more) and the gap above +0.18; SR_max above 0.7. FALSIFIED as 'size is the lever' if room % of the linear ceiling falls below vyg25s's 226%.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25s-v1",
+  "changes": [
+   "type_bv [-0.14 .. 0.14] -> [-0.28, -0.14, -0.04, 0.04, 0.14, 0.28]; own tables under prefix vyg25sx2; everything else vyg25s's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.28,
+   -0.14,
+   -0.04,
+   0.04,
+   0.14,
+   0.28
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25sx2"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.28,
+      -0.14,
+      -0.04,
+      0.04,
+      0.14,
+      0.28
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2
+    },
+    "args": {
+     "prefix": "vyg25sx2"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-29 (loading-size ladder of the sign-switching types); specs written by _scratch/gen_size_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25sx2",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "273b116ba42a87771dc94ea047a019f37b017b0954723aed96f34cfe8ebfd8f5",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
