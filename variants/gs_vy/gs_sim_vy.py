@@ -8,7 +8,7 @@ per-y' outer products, never products of mixtures). At NY = 1 this is gs_sim_bx.
 Interface mirrors gs_sim_bx: create_arrays, create_panel, sdf_compute, conditional_moments. The panel
 exports TWO conditioning features: rf_stand (aggregate x) and y_stand (the priced state y).
 
-Environment: GS_VY_SOLDIRS (comma list), GS_VY_BV (each type's gs_bv, must match the solves),
+Environment: GS_VY_SOLDIRS (comma list), GS_VY_BV (each type's gs_bv, must match the solves), GS_VY_BIB (gs_bib per type),
 GS_VY_SHARES. GS_SIM_OVERRIDES as gs_sim_bx.
 """
 import numpy as np
@@ -21,6 +21,7 @@ _bv_list = [float(b) for b in os.environ.get("GS_VY_BV", "0.0").split(",")]
 _bc_list = [float(b) for b in os.environ.get("GS_VY_BC", ",".join(["0.0"] * len(_bv_list))).split(",")]
 _bi_list = [float(b) for b in os.environ.get("GS_VY_BI", ",".join(["0.0"] * len(_bv_list))).split(",")]
 _bk_list = [float(b) for b in os.environ.get("GS_VY_BK", ",".join(["0.0"] * len(_bv_list))).split(",")]
+_bib_list = [float(b) for b in os.environ.get("GS_VY_BIB", ",".join(["0.0"] * len(_bv_list))).split(",")]   # leverage-dependent investment cost
 _bv2_list = [float(b) for b in os.environ.get("GS_VY_BV2", ",".join(["0.0"] * len(_bv_list))).split(",")]   # second chain
 _share = [float(v) for v in os.environ.get("GS_VY_SHARES", "1.0").split(",")]
 ntypes = len(_dirs)
@@ -60,6 +61,9 @@ if _solved_bv != _bv_list:
 _solved_bc = [float(d["gs_bc"]) if "gs_bc" in d.files else 0.0 for d in _sols]
 _solved_bi = [float(d["gs_bi"]) if "gs_bi" in d.files else 0.0 for d in _sols]
 _solved_bk = [float(d["gs_bk"]) if "gs_bk" in d.files else 0.0 for d in _sols]
+_solved_bib = [float(d["gs_bib"]) if "gs_bib" in d.files else 0.0 for d in _sols]
+if _solved_bib != _bib_list:
+    raise ValueError(f"GS_VY_BIB={_bib_list} does not match the leverage-dependent investment-cost exposures these solutions were solved at: {dict(zip(_dirs, _solved_bib))}.")
 _solved_bv2 = [float(d["gs_bv2"]) if "gs_bv2" in d.files else 0.0 for d in _sols]
 if _solved_bv2 != _bv2_list:
     raise ValueError(f"GS_VY_BV2={_bv2_list} does not match the second-chain exposures these solutions were solved at: {dict(zip(_dirs, _solved_bv2))}.")
@@ -164,6 +168,7 @@ def create_arrays(N, T, seed_offset=0):
     bcf = np.array(_bc_list)[ftype]
     bif = np.array(_bi_list)[ftype]
     bkf = np.array(_bk_list)[ftype]
+    bibf = np.array(_bib_list)[ftype]
     bvf2 = np.array(_bv2_list)[ftype]
     bfixf = np.array(bfix_ts)[ftype]                                  # the type's coupon per unit capital (gs_fixcs)
     statx = np.linalg.matrix_power(pr_x.T, 500) @ np.full(xnum, 1 / xnum)
@@ -217,7 +222,7 @@ def create_arrays(N, T, seed_offset=0):
         if gs_fixcs:                                                  # proceeds of the new debt issued pari passu at investment
             dflow = np.where(invest[t], (1 - kappa_b) * (g - 1) * _by_type(Q0_ts, s, zi, xt, b[t], ftype), 0.0)
         cf = prod + dflow
-        div[t] = cf + kappa_e * np.minimum(cf, 0.0) - invest[t] * icost[t] * np.exp(bif * ygrid[s])
+        div[t] = cf + kappa_e * np.minimum(cf, 0.0) - invest[t] * icost[t] * np.exp((bif + bibf * (b[t] - 0.5) / 0.29) * ygrid[s])
         if t == T:
             break
         ix[t + 1] = rng.choice(xnum, p=pr_x[xt])

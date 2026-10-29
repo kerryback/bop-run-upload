@@ -1,0 +1,139 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyib-v1",
+ "title": "GS21 with the investment cost dependent on LEVERAGE and the priced state: cost x exp(-1.0 b~ y), one type, GS21's own debt dynamics",
+ "question": "Does a y exposure that is the product of the firm's leverage and its investment option make room in GS21, where the level investment-cost exposure (gvyi25) left 1%?",
+ "notes": "WHY (2026-10-28, user request). gvyi25 put y on every firm's investment cost (room 1%: the option is a small share of GS21 equity and the exposure is a level). Here the cost multiplier is exp(gs_bib b~ y) with gs_bib = -1.0 (gvyi25's largest magnitude): a levered firm finds investment dear when y is low, an unlevered firm cheap, so the exposure through the option is leverage times the option's value, with a cross-sectional mean near zero. New solver / simulator knob gs_bib (2026-10-28), inert at 0: the (NY,) cost multiplier cy becomes (NY, bnum) over the CURRENT coupon, broadcast in the investment cutoffs; the simulator pays icost x exp((gs_bi + gs_bib b~(b_t)) y). One type, no level compensation (nothing to hide at y = 0).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-28): room 1 to 5% of the linear ceiling, no gap: the option is too small a share of GS21 equity for its exposure to matter, and leverage is now an observed characteristic.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvyi25-v1",
+  "changes": [
+   "three level investment-cost types gs_bi -0.2/-0.6/-1.0 -> one type with gs_bi 0 and gs_bib -1.0 (cost x exp(gs_bib b~ y))",
+   "one solve sol_gvyiba; everything else gvyi25's (gamma_v 2.5, kappa_y 0.35, NY 9, y_mult 2.5, bv_comp 0)"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_vy_exposure": "investment cost x exp(gs_bib b~ y), b~ = (b - 0.5)/0.29 the standardized current coupon; production does not load on y"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.0
+   ],
+   "gs_bc": [
+    0.0
+   ],
+   "gs_bi": [
+    0.0
+   ],
+   "gs_bib": [
+    -1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvyiba"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyiba",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "gs_bv": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bib": -1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyiba",
+  "GS_VY_BV": "0.0",
+  "GS_VY_BC": "0.0",
+  "GS_VY_BI": "0.0",
+  "GS_VY_BIB": "-1.0",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-28 (level-compensation ladders / leverage-dependent investment cost); specs written by _scratch/gen_comp_ladders.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyib",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvyiba"
+ ],
+ "reused_solves": null,
+ "spec_hash": "b1588864b027da2def3ca8ee89bb26c08835d74af09c3099b32d9df56b6047b5"
+}
