@@ -30,7 +30,7 @@ gaps of +0.008 to +0.020 (t 2.7 to 5.2); with the type loading's cross-sectional
 `bvychs`, section 3b) room rises to 226% (KP14) and 20% (BGN) of the linear ceiling and the gap to +0.181 and
 +0.026, while GS21's mirrored ladder (`gvy25s`) gains room (2% to 11%) and no gap (-0.012). In KP14 the strength of the level compensation changes only the
 characteristics, and room and gap hold across it (fair gap +0.14 to +0.19 at bv_comp 0.6 to 1.8); weakening it in BGN, or
-fixing GS21's capital structure (`gvytls`), lowers room and leaves no gap. Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
+fixing GS21's capital structure (`gvytls`), lowers room and leaves no gap. Two levers found afterwards move the gap further (section 3b): doubling the mean-zero loading in KP14 (`vyg25sx2`, ±0.04 to ±0.28) deepens the hump and raises the gap to +0.245 (t 11, ten of ten; tripling it is past the peak at +0.218), and strengthening BGN's compensation to bv_comp 2.5 and 3.0 (`bvychs25`, `bvychs30`) raises BGN's room to 67% of the linear ceiling and its gap to +0.048 and +0.063 (t 3.7 and 5.6) without a hump; the same size ladder in BGN and GS21, a V-shaped exposure across a visible level ladder in BGN, and a quadratic leverage exposure in GS21 give nothing. Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
 keeps the linear ceiling at 0.19 and lowers the nonlinear one, so room falls to 110% and the gap to +0.10 (ten of ten
 seeds at either K; K = 3 and K = 6 are identical to the third digit); a price of risk that switches sign with the state
 (`kpsgn`) and six unsigned states (`vym6`) give nothing. More priced
@@ -74,6 +74,9 @@ sort takes it and room stays small.
 | 3b. interaction | three types (a product in GS21) exposed to y | 16-47 | +0.008 to +0.020 |
 | 3b with a mean-zero type loading | the ladder mirrored, six types, level-compensated | 20 (BGN) / 226 (KP14) | +0.026 / +0.181 |
 | the mean-zero ladder at other compensation strengths | bv_comp 0.6 / 1.8 (KP14); 0.4 to 0.8 (BGN) | 147 / 167 (KP14); 7-12 (BGN) | +0.142 / +0.185; none |
+| the mean-zero loading doubled / tripled | `vyg25sx2`, `vyg25sx3` (KP14); `bvychsx2`, `bvychsx3` (BGN); `gvy25sx2` (GS21) | 343 / 175 (KP14); 26 / 21 (BGN); 13 (GS21) | +0.245 / +0.218; none; none |
+| stronger BGN compensation | bv_comp 1.8 / 2.5 / 3.0 (`bvychs18`, `bvychs25`, `bvychs30`) | 27 / 67 / 67 | +0.006 / +0.048 / +0.063 |
+| a non-monotone exposure | V-shaped loading across a visible level ladder (BGN `bvyvee`); quadratic in the firm's leverage (GS21 `gvyql10`, `gvyql20`, `gvyqh10`) | 23; 1-11 | none; none |
 | the mean-zero loading over K = 3 / 6 priced states (KP14) | the signed ladder spread over K states, 24 mean-zero types | 110 / 110 | +0.100 / +0.099 |
 | 4. larger factor model (reduced form) | K factors loading linearly on characteristics / on products of latent states | 0-1 / 190-660 | none / +0.03 to +0.29 |
 | structural second priced state (appendix) | a second chain in each model | 15-65 | +0.005 to +0.056 |
