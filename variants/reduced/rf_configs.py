@@ -153,11 +153,21 @@ for ma in (0, 1, 2):
         LSQ[f"lsq_a{ma}_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "square",
                                      "lat_shift": (float(ma), 0.0, 0.0, 0.0, 0.0), "lat_std": True}
 CONFIGS.update(LSQ)
+# lsqb_: the same curvature in the BOOK-TO-MARKET latent (index 1). Latent 0 is size and market value is exp(size), so the
+# value-weighted market inside the Fama-French set holds size^2 (lsq_a0_n0: FF 0.565 of SR_max 0.60, fair gap -0.008); bm's square
+# has no such carrier. The shift is applied to the squared latent.
+LSQB = {}
+for ma in (0, 1, 2):
+    for on in (0.0, 1.0):
+        LSQB[f"lsqb_a{ma}_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "square",
+                                       "lat_sq_idx": 1, "lat_shift": (0.0, float(ma), 0.0, 0.0, 0.0), "lat_std": True}
+CONFIGS.update(LSQB)
 
 LADDERS = {
     "lfac": sorted(LFAC),
     "signs": sorted(LSH),
     "lsq": sorted(LSQ),
+    "lsqb": sorted(LSQB),
     "kfac": sorted(KFAC),
     "kfo": sorted(KFO),
     "speed": ["hl120", "hl48", "base", "hl12", "hl6"],
