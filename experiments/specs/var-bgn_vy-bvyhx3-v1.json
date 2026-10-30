@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyhx3-v1",
+ "title": "BGN with a HUMP-SHAPED exposure across a mild visible level ladder: five types, cash-flow level [0.8, 0.9, 1.0, 1.1, 1.2], loadings [-0.21, 0.0, 0.21, 0.0, -0.21], exact compensation, price 2.5",
+ "question": "With the b channel made larger than the level channel, is the premium hump-shaped in size (as KP14's is in b) and does DKKM take the room?",
+ "notes": "WHY (2026-10-30). bvyvee (level 0.6..1.4, b V-shaped at +-0.07) failed because the level itself moves the premium monotonically by about 1.15 %/mo across the ladder while +-0.07 in b moves it by 0.8. Measured on bvychsx2 / bvychsx3, b = +-0.14 / +-0.21 moves the premium by 1.8 / 2.4 %/mo; a level ladder of 0.8..1.2 should tilt it by about 0.6 %/mo. The hump in b across the level order is then a hump in size.\n\nDESIGN. type_level as in bvyvee; bv_comp 1 so value at y = 0 does not reveal b and size tracks the level; b arranged -, 0, +, 0, - across it.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): premium hump-shaped in size in most seeds; room above bvychs's 20% (30-60%); fair gap +0.03 to +0.08. FALSIFIED if the premium is monotone in the level or room is at or below 20% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvyvee-v1",
+  "changes": [
+   "type_bv [0.07, 0.0, -0.07, 0.0, 0.07] -> [-0.21, 0.0, 0.21, 0.0, -0.21]; type_level 0.6..1.4 -> [0.8, 0.9, 1.0, 1.1, 1.2]; jstar_vy_file Jstar_vy_bvyhx3.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   -0.21,
+   0.0,
+   0.21,
+   0.0,
+   -0.21
+  ],
+  "type_level": [
+   0.8,
+   0.9,
+   1.0,
+   1.1,
+   1.2
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyhx3.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      -0.21,
+      0.0,
+      0.21,
+      0.0,
+      -0.21
+     ],
+     "type_level": [
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyhx3.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: interaction / non-monotone exposures with sizeable gaps in every model); written by _scratch/gen_round3_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyhx3",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "ba2f3caad5561b3450a08dfd3a59ce8a38d447ca076517b340c867638ab85e90"
+}
