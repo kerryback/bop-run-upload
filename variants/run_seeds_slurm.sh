@@ -914,6 +914,20 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyg25sux2
     SOLVE_HINT='export KSPECS=var-kp_vy-vyg25sux2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyg25x2)
+    # kp_vy (2026-10-30): vyg25 (positive three-type ladder) with the loadings x2: [0.04, 0.14, 0.28], level-compensated, price 2.5
+    MODEL=kp_vy; TAG=vyg25x2; SPEC=var-kp_vy-vyg25x2-v1; SOLVE_TAG=vyg25x2
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.04, 0.14, 0.28], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vyg25x2
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyg25x3)
+    # kp_vy (2026-10-30): vyg25 (positive three-type ladder) with the loadings x3: [0.06, 0.21, 0.42], level-compensated, price 2.5
+    MODEL=kp_vy; TAG=vyg25x3; SPEC=var-kp_vy-vyg25x3-v1; SOLVE_TAG=vyg25x3
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.06, 0.21, 0.42], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vyg25x3
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25su)
     # kp_vy (2026-10-30): vyg25s WITHOUT level compensation (bv_comp 0): the type visible in value, product type x growth-option share
     MODEL=kp_vy; TAG=vyg25su; SPEC=var-kp_vy-vyg25su-v1; SOLVE_TAG=vyg25su
