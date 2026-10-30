@@ -1007,6 +1007,18 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 3.5, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs35.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs35-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  bvychs40)
+    # bgn_vy (2026-10-30): bvychs at bv_comp 4.0 (the compensation ladder above 2.5, whose gap was +0.055/+0.118)
+    MODEL=bgn_vy; TAG=bvychs40; SPEC=var-bgn_vy-bvychs40-v1; SOLVE_TAG=Jstar_vy_bvychs40
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 4.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs40.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs40-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvychs45)
+    # bgn_vy (2026-10-30): bvychs at bv_comp 4.5 (the compensation ladder above 2.5, whose gap was +0.055/+0.118)
+    MODEL=bgn_vy; TAG=bvychs45; SPEC=var-bgn_vy-bvychs45-v1; SOLVE_TAG=Jstar_vy_bvychs45
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 4.5, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvychs45.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvychs45-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   bvychs18)
     # bgn_vy (2026-10-29): bvychs at bv_comp 1.8 (hump search: the compensation as a channel opposed to y)
     MODEL=bgn_vy; TAG=bvychs18; SPEC=var-bgn_vy-bvychs18-v1; SOLVE_TAG=Jstar_vy_bvychs18
