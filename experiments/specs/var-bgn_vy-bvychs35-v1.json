@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvychs35-v1",
+ "title": "BGN bvychs at bv_comp 3.5: the level-compensation ladder continued above 2.5",
+ "question": "Does the BGN fair gap keep rising with bv_comp above 2.5, or was 2.5 the peak of a non-monotone response?",
+ "notes": "WHY (2026-10-30). The bv_comp ladder on bvychs's six sign-switching types: -0.5 -> gap 0.000 (10 seeds), 1.2 -> +0.026 (10), 1.8 -> 0.000 (5), 2.5 -> +0.055 / +0.118 on the first two seeds (oracle room +0.15..+0.17 on six seeds, 63-84% of the linear ceiling; the type premium is monotone in b, so the room is cross-sectional nonlinearity in how the compensated characteristics map to b, not a hump). The response is non-monotone and the top is untested; this continues the ladder.\n\nCOST. The K4 pair sum scales with live projects, which stronger compensation multiplies: bvychs 22 GB, bvychs18 31 GB, bvychs25 ~9 s/month at 48 GB under the blocked K4 (commit 78961c4). Seeds requested at 64 GB.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): if the 2.5 result is the ladder's slope and not a peak, room above +0.17 and gap above +0.09 at 3.5; SR_max rises with bv_comp (0.41 at 2.5). FALSIFIED as 'more compensation pays' if the gap falls below bvychs25's on three seeds.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs25-v1",
+  "changes": [
+   "bv_comp 2.5 -> 3.5; jstar_vy_file Jstar_vy_bvychs35.npz; everything else bvychs25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.07,
+   -0.035,
+   -0.01,
+   0.01,
+   0.035,
+   0.07
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 3.5,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvychs35.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.07,
+      -0.035,
+      -0.01,
+      0.01,
+      0.035,
+      0.07
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 3.5,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvychs35.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (bv_comp ladder above 2.5); specs written by _scratch/gen_bvcomp_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvychs35",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "3020d9369f86813ffea9a75c3c5bd5542581ced39691ebd4547d9ea2f7a7997a"
+}
