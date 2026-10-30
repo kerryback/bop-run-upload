@@ -1,0 +1,152 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyq2x-v1",
+ "title": "BGN with the second-chain loading QUADRATIC in the first: six types, b1 = [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14], b2 = -7 (b1^2 - mean) = [-0.0791, 0.0238, 0.0553, 0.0553, 0.0238, -0.0791], both chains priced 2.5/sqrt2, level-compensated",
+ "question": "Does a premium that is hump-shaped in the type's own loading, built from two priced states, give BGN room that no linear sort holds and DKKM a gap?",
+ "notes": "WHY (2026-10-30). bvyhx2 made the premium hump-shaped in SIZE (level ladder with b hump-shaped across it) and failed: the premium stays monotone in b, and bm, ROE and momentum reveal b monotonically (R2 0.73), so the linear ceiling held 90% of SR_max (room 9%). KP14's hump is in b itself. Here the second chain's loading is a quadratic function of the first (-7 (b1^2 - mean b1^2)), so the type premium gamma1 b1 + gamma2 b2 is a parabola in b1 with its peak inside the ladder, and no characteristic monotone in b1 spans it.\n\nDESIGN. bvy9t2's two-chain machinery (NY2 21, gamma_v2 = gamma_v = 2.5/sqrt2, kappa 0.35) with bvychs's six equal types and compensation 1.2.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): type premium hump-shaped in b1 in most seeds; room above bvychs's 20% (30-80% of the linear ceiling); fair gap +0.03 to +0.10. FALSIFIED if the premium is monotone in b1 or room is at or below 20% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvychs-v1",
+  "changes": [
+   "type_bv -> [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14]; second chain NY2 21, type_bv2 [-0.0791, 0.0238, 0.0553, 0.0553, 0.0238, -0.0791], gamma_v = gamma_v2 = 2.5/sqrt2, kappa_y2 0.35; jstar_vy_file Jstar_vy_bvyq2x.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.14,
+   -0.07,
+   -0.02,
+   0.02,
+   0.07,
+   0.14
+  ],
+  "gamma_v": 1.7677669529663687,
+  "kappa_y": 0.35,
+  "bv_comp": 1.2,
+  "y_kind": "chain",
+  "NY2": 21,
+  "type_bv2": [
+   -0.0791,
+   0.0238,
+   0.0553,
+   0.0553,
+   0.0238,
+   -0.0791
+  ],
+  "gamma_v2": 1.7677669529663687,
+  "kappa_y2": 0.35,
+  "jstar_vy_file": "Jstar_vy_bvyq2x.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.14,
+      -0.07,
+      -0.02,
+      0.02,
+      0.07,
+      0.14
+     ],
+     "gamma_v": 1.7677669529663687,
+     "kappa_y": 0.35,
+     "bv_comp": 1.2,
+     "y_kind": "chain",
+     "NY2": 21,
+     "type_bv2": [
+      -0.0791,
+      0.0238,
+      0.0553,
+      0.0553,
+      0.0238,
+      -0.0791
+     ],
+     "gamma_v2": 1.7677669529663687,
+     "kappa_y2": 0.35,
+     "jstar_vy_file": "Jstar_vy_bvyq2x.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: a hump in b itself for BGN); spec written by _scratch/gen_bvyq2_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyq2x",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "68b485cbdec843b1536349048c08255f40ab8d2f202a350f5ba9f8d622e42aaa"
+}
