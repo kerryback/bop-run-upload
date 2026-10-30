@@ -1,0 +1,111 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25x2c-v1",
+ "title": "KP14 vyg25x2 (positive ladder 0.04/0.14/0.28) with the level compensation strengthened to 2.5",
+ "question": "Does the positive (interaction-only) KP14 ladder reach a fair gap of 0.1/yr (+0.029 monthly) with this lever?",
+ "notes": "WHY (2026-10-30). KP14's interaction slot: the sign-switching ladders' premium is hump-shaped whatever the compensation, so the interaction-only economy is the positive ladder (vyg25 +0.015; vyg25x2 / vyg25x3 queued). On the sign ladder the fair gap rose with the compensation (0.6/1.2/1.8: +0.142/+0.181/+0.185); here theta 1..6.0 makes the type a size characteristic, as bvychs30 did in BGN.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): gap above vyg25x2's; passes if +0.029 or more on most seeds. FALSIFIED if at or below vyg25x2 on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25x2-v1",
+  "changes": [
+   "{'bv_comp': 2.5}; own tables under prefix vyg25x2c; everything else vyg25x2's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.04,
+   0.14,
+   0.28
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 2.5
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25x2c"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.04,
+      0.14,
+      0.28
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 2.5
+    },
+    "args": {
+     "prefix": "vyg25x2c"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: more levers on the KP14 interaction slot); spec written by _scratch/gen_vyg25x_more.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25x2c",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "27a8f321b2d683b65c267daf2420e0e18b5d1fbbe311933df519f232c764fd17",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
