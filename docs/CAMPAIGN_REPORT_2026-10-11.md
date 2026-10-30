@@ -271,6 +271,55 @@ three; the other seven were stopped). The type stays visible (R² 0.83 to 0.84; 
 out: in each of three seeds none of the b_f = -0.10, coupon-0.70 firms and at most five of about thirty b_f = -0.05,
 coupon-0.70 firms survive into the panel. The prediction (room 15 to 25%) is falsified.
 
+**A hump outside KP14, and larger loadings.** The decomposition of each type's premium on the market and on y
+(`variants/hump_decomp.py`: a type's equal-weighted return regressed on the equal-weighted market and on dy) says why
+only KP14's premium is hump-shaped. In `vyg25s` the market beta rises from 0.71 to 1.27 across the ladder, concave in
+b_f, while the residual premium falls from +0.10 to -0.23% a month: two opposed channels, and their sum peaks inside.
+In `bvychs` both channels rise with b_f; in `gvy25s` they oppose, but the y channel is ten times the market channel.
+Seven economies tried to build the second channel into BGN and GS21, and none did. A pure curvature of the
+productivity loading in GS21 without y (`gxq35`, `gxq70`: loading 1 + c (z̃² − 1)/√2, c = −0.35 and −0.70) gives
+room of 1 to 3% and a gap of zero. Keeping `gvy25s`'s level shifts but cutting the y price (`gvy25sq`, `gvy25sh`:
+γ_v 0.25 and 0.5 with bv_comp 12 and 9) does make the premium non-monotone, because the market beta collapses from
+1.0 to 0.5 at the top of the ladder, but the premium then spans 0.0 to 0.4% a month against −0.2 to +1.0 in
+`gvy25s`, room is 1 to 3% and the gap −0.004 and −0.008. In BGN the compensation ladder was continued in both
+directions (`bvychsn5`, `bvychs18`, `bvychs25`, `bvychs30`, `bvychs35`: bv_comp −0.5, 1.8, 2.5, 3.0, 3.5). The
+premium stays monotone in b_f at every rung (bvychs25 seed 0: 0.27 to 1.17% a month), so no hump; but room, which was
+20% of the linear ceiling at 1.2 and 27% at 1.8, is 67% at 2.5 (+0.163), 67% at 3.0 (+0.182) and 66% at 3.5
+(+0.185, seven oracle seeds), with SR_max rising from 0.51 to 0.50 at 3.5 and the linear ceiling falling from 0.35
+to 0.25 to 0.29. It is cross-sectional nonlinearity, not conditioning: the bins basis alone reaches 0.36 against a
+linear 0.21 in bvychs25's seed 0. DKKM takes some of it: the fair gap is +0.048 (t 3.7, nine of ten) at 2.5 and
++0.063 (t 5.6, ten of ten) at 3.0, the largest BGN gaps of the campaign (bvychs +0.026; bvychs35's estimators were
+still running when this was written), where 1.8 gave +0.006 (t 1.4) and −0.5 gave −0.005 despite 35% room. The
+response to bv_comp is not monotone, and the oracle room at −0.5 was not learnable: DKKM there is below the linear
+model in four of ten seeds.
+
+**Non-monotone exposures in BGN and GS21.** Two constructions put the non-monotonicity into the exposure itself
+rather than hoping for it in the premium. `bvyvee` gives BGN five types on a visible level ladder (θ_f = 0.6, 0.8,
+1.0, 1.2, 1.4 multiplies the cash-flow level) with the exposure V-shaped across it (b_f = +0.07, 0, −0.07, 0, +0.07),
+so the extremes of size are the exposed firms. Room is 23% of the linear ceiling (bvychs 20%) and the fair gap +0.007
+(t 1.3, six of eight): the premium is monotone in the level itself, from −0.15 to +1.0% a month along the ladder with
+the market beta rising from 0.5 to 1.2, because in BGN the level changes returns and that monotone piece swamps the V
+in b_f. The mirror (`bvyhump`) was solved and not run. In GS21 the y exposure was written as a quadratic in the
+firm's own standardized coupon, c (b̃² − 1), with c = +0.1, +0.2 and −0.1 (`gvyql10`, `gvyql20`, `gvyqh10`), so that
+extreme leverage is more (or less) exposed to cash-flow risk. Room is 1 to 11%, the fair gaps −0.002, −0.002 and
+−0.026 (none of three seeds positive in any), and two things explain it: the leverage characteristic spans only
+0.002 to 0.006 across quintiles in these panels, so the term has almost no cross-sectional variation to load on
+(the premium across leverage quintiles is within ±0.09% a month of its market part), and the one-type wiring hands
+the market a negative premium (−0.1 to −0.7% a month, `market %` negative in the appendix table).
+
+**The size of the loading.** The one lever that moved the gap was the size of the sign-switching loading, and only
+in KP14. `vyg25sx2` doubles `vyg25s`'s loadings (±0.04, ±0.14, ±0.28; θ_f 1 to 11.2, the compensation still exact at
+y = 0). SR_max rises from 0.575 to 0.640, the linear ceiling falls from 0.174 to 0.158, room is +0.437 (343% of the
+ceiling against 226%), and the fair gap +0.245 (t 11.1, ten of ten; DKKM 0.456 against the linear model's 0.134 and
+FMR's 0.206) against +0.181. The hump deepens: seed 4's premium is −0.04, +0.43, +0.60, +0.58, +0.43, +0.32% a month
+from b_f = −0.28 to +0.28, the residual channel +0.25 to −0.27 against a market beta of 0.58 to 1.36. Tripling
+(`vyg25sx3`: ±0.06, ±0.21, ±0.42; θ_f 1 to 37) is past the peak: the forty-fold level spread begins to show
+linearly in size, the linear ceiling rises to 0.248, room is +0.364 (175%) and the gap +0.218 (t 9.7, ten of ten).
+BGN and GS21 do not follow. `bvychsx2` and `bvychsx3` (loadings ×2 and ×3) raise room from +0.068 to +0.089 and
++0.081 but the gaps are +0.007 (seven of ten) and +0.002 (six of ten); the room is there and DKKM does not find it.
+`gvy25sx2` makes the type linearly visible, as the product ladder did: the linear ceiling is 0.72 of an SR_max of
+0.82, room 13%, gap +0.0005. (`gvy25sx3`'s b_f = +0.045 type did not converge and the economy was not run.)
+
 ## 4. Larger factor models
 
 More priced factors are tested where the structure is controlled: the reduced form below adds K priced factors to a
@@ -544,13 +593,13 @@ harmonized cells replace.
 | BGN | `bvyc0` -- the same without compensation | 0.475 | 41% | 0.395 | +0.066 | 18 | 0.22 | 0.386 | 0.321 | 0.347 | 0.376 | 0.195 | +0.0104 (t 3.1) | +0.07 | 9/10 |
 | BGN | `bvyj25` -- the chain with a priced crash (1%/month to -y_max, priced e^2) | 0.536 | 38% | 0.315 | +0.054 | 17 | 0.19 | 0.307 | 0.261 | 0.269 | 0.301 | 0.202 | +0.0066 (t 2.8) | +0.05 | 9/10 |
 | BGN | `bvysg` -- signed exposure ladder (-0.07 / 0 / +0.07) | 0.504 | 28% | 0.361 | +0.120 | 35 | 0.31 | 0.318 | 0.305 | 0.273 | 0.324 | 0.141 | -0.0199 (t -2.0) | -0.08 | 2/10 |
-| GS21 | `g28`‡ -- countercyclical gamma(x), clipped | 0.314 | 95% | 0.312 | +0.001 | 0 | 0.02 | 0.303 | 0.254 | 0.256 | 0.305 | 0.298 | -0.0024 (t -4.3) | -0.04 | 0/10 |
-| GS21 | `bx7`‡ -- two-state regime on gamma, five types on x | 0.327 | 94% | 0.317 | +0.007 | 2 | 0.07 | 0.309 | 0.282 | 0.271 | 0.311 | 0.306 | -0.0017 (t -2.8) | -0.03 | 0/10 |
-| GS21 | `gx7`‡ -- five types on productivity x | 0.485 | 98% | 0.474 | +0.008 | 2 | 0.08 | 0.473 | 0.393 | 0.383 | 0.473 | 0.473 | +0.0003 (t 1.6) | +0.01 | 5/10 |
+| GS21 | `g28` -- countercyclical gamma(x), clipped | 0.314 | 95% | 0.312 | +0.001 | 0 | 0.02 | 0.303 | 0.254 | 0.256 | 0.305 | 0.298 | -0.0024 (t -4.3) | -0.04 | 0/10 |
+| GS21 | `bx7` -- two-state regime on gamma, five types on x | 0.327 | 94% | 0.317 | +0.007 | 2 | 0.07 | 0.309 | 0.282 | 0.271 | 0.311 | 0.306 | -0.0017 (t -2.8) | -0.03 | 0/10 |
+| GS21 | `gx7` -- five types on productivity x | 0.485 | 98% | 0.474 | +0.008 | 2 | 0.08 | 0.473 | 0.393 | 0.383 | 0.473 | 0.473 | +0.0003 (t 1.6) | +0.01 | 5/10 |
 | GS21 | `gvy1` -- one type, output x e^0.05y | 0.636 | 95% | 0.633 | +0.002 | 0 | 0.05 | 0.626 | 0.608 | 0.598 | 0.629 | 0.602 | -0.0030 (t -4.0) | -0.05 | 1/10 |
 | GS21 | `gvy1j` -- crash-only factor: e^0.05y, the same crash | 0.379 | 96% | 0.377 | +0.001 | 0 | 0.03 | 0.372 | 0.350 | 0.341 | 0.374 | 0.363 | -0.0022 (t -4.4) | -0.04 | 1/10 |
 | GS21 | `gvy25` -- production-level exposure to y, three types | 0.725 | 86% | 0.709 | +0.014 | 2 | 0.14 | 0.688 | 0.682 | 0.666 | 0.695 | 0.625 | -0.0070 (t -4.0) | -0.09 | 1/10 |
-| GS21 | `gvys25`‡ -- signed fixed-cost exposure to y | 0.619 | 69% | 0.602 | +0.014 | 2 | 0.13 | 0.496 | 0.490 | 0.426 | 0.499 | 0.420 | -0.0032 (t -1.5) | -0.03 | 2/6 |
+| GS21 | `gvys25` -- signed fixed-cost exposure to y | 0.619 | 69% | 0.602 | +0.014 | 2 | 0.13 | 0.496 | 0.490 | 0.426 | 0.499 | 0.420 | -0.0032 (t -1.5) | -0.03 | 2/6 |
 | GS21 | `gvyp05` -- product zb at 0.05 | 0.425 | 60% | 0.284 | +0.128 | 45 | 0.30 | 0.297 | 0.254 | 0.202 | 0.276 | 0.254 | +0.0203 (t 7.4) | +0.11 | 10/10 |
 | GS21 | `gvyp075` -- product at 0.075 | 0.561 | 28% | 0.261 | +0.287 | 111 | 0.48 | 0.433 | 0.212 | 0.187 | 0.352 | 0.149 | +0.0802 (t 9.4) | +0.25 | 10/10 |
 | GS21 | `gvyp15` -- product at 0.15 | 0.744 | -25% | 0.616 | +0.119 | 22 | 0.39 | 0.665 | 0.349 | 0.516 | 0.612 | 0.192 | +0.0528 (t 9.3) | +0.26 | 10/10 |
@@ -576,19 +625,37 @@ harmonized cells replace.
 | BGN | `bvychs` -- bvych0 with sign-switching types: six types, loadings pm 0.01, pm 0.035, pm 0.07 | 0.510 | 36% | 0.349 | +0.069 | 20 | 0.23 | 0.360 | 0.274 | 0.277 | 0.334 | 0.183 | +0.0255 (t 4.9) | +0.12 | 9/10 |
 | KP14 | `vyg25s` -- vyg25 with sign-switching types: six types, loadings pm 0.02, pm 0.07, pm 0.14 | 0.575 | 11% | 0.174 | +0.349 | 226 | 0.49 | 0.373 | 0.102 | 0.190 | 0.153 | 0.056 | +0.1810 (t 17.2) | +0.32 | 10/10 |
 | KP14 | `vyg25u` -- vyg25 without the level compensation: the type shows in value at y = 0 | 0.495 | 11% | 0.351 | +0.066 | 19 | 0.22 | 0.339 | 0.290 | 0.293 | 0.341 | 0.044 | -0.0018 (t -0.5) | -0.02 | 3/10 |
-| GS21 | `gvy25s`‡ -- gvy25 with sign-switching types: six level-exposure types, pm 0.015, pm 0.05, pm 0.1 | 0.619 | 52% | 0.554 | +0.061 | 11 | 0.27 | 0.549 | 0.541 | 0.506 | 0.560 | 0.318 | -0.0118 (t -4.4) | -0.10 | 2/10 |
+| GS21 | `gvy25s` -- gvy25 with sign-switching types: six level-exposure types, pm 0.015, pm 0.05, pm 0.1 | 0.619 | 52% | 0.554 | +0.061 | 11 | 0.27 | 0.549 | 0.541 | 0.506 | 0.560 | 0.318 | -0.0118 (t -4.4) | -0.10 | 2/10 |
 | KP14 | `kpsgn` -- the price of x switches sign with y: gamma_x (2 mathrmlogistic(-2y) - 1) (conditioning room) | 0.143 | 42% | 0.075 | +0.050 | 90 | 0.10 | 0.060 | 0.018 | 0.045 | 0.064 | -0.002 | -0.0041 (t -0.9) | -0.01 | 1/3 |
 | KP14 | `vym6` -- six priced states, 24 rank-6 types (vym3's construction at K = 6) | 0.421 | 15% | 0.300 | +0.056 | 19 | 0.19 | 0.287 | 0.260 | 0.275 | 0.286 | 0.059 | +0.0002 (t 0.1) | -0.01 | 4/10 |
 | KP14 | `vym3s` -- vyg25s's signed ladder over three priced states: 24 mean-zero types, mirrored alignments | 0.503 | 13% | 0.191 | +0.224 | 126 | 0.37 | 0.296 | 0.134 | 0.195 | 0.171 | 0.065 | +0.0998 (t 20.9) | +0.22 | 10/10 |
 | KP14 | `vym6s` -- vyg25s's signed ladder over six priced states: 24 mean-zero types, mirrored alignments, orthogonal off-gamma directions | 0.507 | 13% | 0.192 | +0.225 | 124 | 0.37 | 0.296 | 0.132 | 0.194 | 0.168 | 0.065 | +0.0987 (t 15.0) | +0.22 | 10/10 |
-| GS21 | `gvy2s`‡ -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | 0.540 | 0.542 | 0.505 | 0.564 | 0.333 | -0.0246 (t -5.1) | -0.16 | 0/2 |
-| GS21 | `gvytls`‡ -- gvytl with the exposure ladder mirrored: six signed exposure types x three fixed coupons, eighteen mean-zero types | 0.627 | 51% | 0.580 | +0.044 | 8 | 0.23 | 0.580 | 0.493 | 0.544 | 0.588 | 0.313 | -0.0074 (t -1.0) | -0.06 | 1/3 |
+| GS21 | `gvy2s` -- gvy25s's signed ladder over two priced chains, cash-flow exposure only: twelve mean-zero types | 0.625 | 53% | 0.567 | +0.046 | 8 | 0.23 | 0.540 | 0.542 | 0.505 | 0.564 | 0.333 | -0.0246 (t -5.1) | -0.16 | 0/2 |
+| GS21 | `gvytls` -- gvytl with the exposure ladder mirrored: six signed exposure types x three fixed coupons, eighteen mean-zero types | 0.627 | 51% | 0.580 | +0.044 | 8 | 0.23 | 0.580 | 0.493 | 0.544 | 0.588 | 0.313 | -0.0074 (t -1.0) | -0.06 | 1/3 |
 | BGN | `bvychs4` -- bvychs at bv_comp 0.4 | 0.612 | 29% | 0.519 | +0.059 | 12 | 0.25 | 0.497 | 0.468 | 0.465 | 0.497 | 0.177 | -0.0035 (t -0.3) | -0.01 | 2/5 |
 | BGN | `bvychs6` -- bvychs at bv_comp 0.6 | 0.656 | 28% | 0.578 | +0.047 | 8 | 0.23 | 0.547 | 0.493 | 0.512 | 0.545 | 0.183 | +0.0013 (t 0.3) | +0.00 | 1/3 |
 | BGN | `bvychs8` -- bvychs at bv_comp 0.8 | 0.684 | 28% | 0.590 | +0.044 | 7 | 0.23 | 0.577 | 0.501 | 0.468 | 0.568 | 0.189 | +0.0086 (t 1.0) | +0.06 | 2/3 |
 | KP14 | `vyg25s6` -- vyg25s at bv_comp 0.6 | 0.576 | 11% | 0.212 | +0.305 | 147 | 0.47 | 0.337 | 0.183 | 0.131 | 0.185 | 0.062 | +0.1424 (t 24.2) | +0.27 | 5/5 |
 | KP14 | `vyg25s18` -- vyg25s at bv_comp 1.8 | 0.574 | 11% | 0.209 | +0.312 | 167 | 0.47 | 0.387 | 0.106 | 0.172 | 0.193 | 0.062 | +0.1854 (t 8.7) | +0.33 | 5/5 |
-| GS21 | `gvyib2`‡ -- gvyib at gs_bib -0.2 (the -1.0 and -0.5 solves diverged: the firm picks the coupon that makes investment near-free) | 0.327 | 96% | 0.326 | +0.001 | 0 | 0.03 | 0.319 | 0.298 | 0.293 | 0.322 | 0.314 | -0.0027 (t -11.0) | -0.04 | 0/10 |
+| GS21 | `gvyib2` -- gvyib at gs_bib -0.2 (the -1.0 and -0.5 solves diverged: the firm picks the coupon that makes investment near-free) | 0.327 | 96% | 0.326 | +0.001 | 0 | 0.03 | 0.319 | 0.298 | 0.293 | 0.322 | 0.314 | -0.0027 (t -11.0) | -0.04 | 0/10 |
+| GS21 | `gxq35` -- gsbase with the x loading hump-shaped in productivity: 1 -0.35 (z^2 - 1)/sqrt2 | 0.284 | 96% | 0.282 | +0.002 | 1 | 0.03 | 0.270 | 0.248 | 0.242 | 0.270 | 0.269 | +0.0002 (t 0.4) | +0.00 | 1/3 |
+| GS21 | `gxq70` -- gsbase with the x loading hump-shaped in productivity: 1 -0.70 (z^2 - 1)/sqrt2 | 0.278 | 95% | 0.269 | +0.008 | 3 | 0.07 | 0.261 | 0.211 | 0.201 | 0.261 | 0.259 | +0.0006 (t 1.8) | +0.01 | 2/3 |
+| GS21 | `gvy25sq` -- gvy25s at gamma_v 0.25, bv_comp 12.0: the level shifts kept, the y price cut | 0.307 | 87% | 0.305 | +0.002 | 1 | 0.03 | 0.290 | 0.262 | 0.239 | 0.294 | 0.263 | -0.0038 (t -8.2) | -0.05 | 0/3 |
+| GS21 | `gvy25sh` -- gvy25s at gamma_v 0.5, bv_comp 9.0: the level shifts kept, the y price cut | 0.351 | 71% | 0.341 | +0.009 | 3 | 0.08 | 0.328 | 0.309 | 0.286 | 0.336 | 0.246 | -0.0077 (t -2.5) | -0.07 | 0/3 |
+| BGN | `bvychs18` -- bvychs at bv_comp 1.8 | 0.340 | 49% | 0.207 | +0.055 | 27 | 0.16 | 0.218 | 0.198 | 0.178 | 0.208 | 0.167 | +0.0064 (t 1.4) | +0.03 | 6/8 |
+| BGN | `bvychs25` -- bvychs at bv_comp 2.5 | 0.449 | 36% | 0.250 | +0.163 | 67 | 0.33 | 0.341 | 0.286 | 0.223 | 0.246 | 0.159 | +0.0482 (t 3.7) | +0.15 | 9/10 |
+| BGN | `bvychs30` -- bvychs at bv_comp 3.0 | 0.488 | 32% | 0.277 | +0.182 | 67 | 0.36 | 0.384 | 0.318 | 0.268 | 0.279 | 0.157 | +0.0626 (t 5.6) | +0.20 | 10/10 |
+| BGN | `bvychs35` -- bvychs at bv_comp 3.5 | 0.501 | 31% | 0.292 | +0.185 | 66 | 0.37 | -- | -- | -- | -- | -- | -- | -- | -- |
+| BGN | `bvychsn5` -- bvychs at bv_comp -0.5 | 0.367 | 35% | 0.254 | +0.080 | 35 | 0.21 | 0.229 | 0.202 | 0.207 | 0.228 | 0.127 | -0.0054 (t -0.9) | -0.01 | 6/10 |
+| BGN | `bvyvee` -- V-shaped loading across a visible level ladder: level 0.6..1.4, b = +0.07, +0.00, -0.07, +0.00, +0.07 | 0.485 | 34% | 0.352 | +0.076 | 23 | 0.24 | 0.352 | 0.305 | 0.320 | 0.344 | 0.164 | +0.0071 (t 1.3) | +0.05 | 6/8 |
+| GS21 | `gvyql10` -- U-shaped exposure in the firm's own leverage: +0.1 (b^2 - 1), one type | 0.287 | -81% | 0.259 | +0.015 | 8 | 0.08 | 0.247 | 0.230 | 0.231 | 0.249 | 0.238 | -0.0021 (t -1.9) | -0.03 | 0/3 |
+| GS21 | `gvyql20` -- U-shaped exposure in the firm's own leverage: +0.2 (b^2 - 1), one type | 0.602 | -95% | 0.593 | +0.007 | 1 | 0.09 | 0.581 | 0.570 | 0.565 | 0.583 | 0.571 | -0.0020 (t -1.9) | -0.05 | 0/3 |
+| GS21 | `gvyqh10` -- hump-shaped exposure in the firm's own leverage: -0.1 (b^2 - 1), one type | 0.469 | -66% | 0.409 | +0.032 | 11 | 0.16 | 0.366 | 0.358 | 0.335 | 0.391 | 0.339 | -0.0259 (t -6.9) | -0.14 | 0/3 |
+| KP14 | `vyg25sx2` -- vyg25s with the loadings doubled: pm0.04, pm0.14, pm0.28 | 0.640 | 6% | 0.158 | +0.437 | 343 | 0.57 | 0.456 | 0.206 | 0.105 | 0.134 | 0.027 | +0.2452 (t 11.1) | +0.40 | 10/10 |
+| KP14 | `vyg25sx3` -- vyg25s with the loadings tripled: pm0.06, pm0.21, pm0.42 | 0.661 | 5% | 0.248 | +0.364 | 175 | 0.55 | 0.461 | 0.223 | 0.098 | 0.237 | 0.021 | +0.2177 (t 9.7) | +0.39 | 10/10 |
+| BGN | `bvychsx2` -- bvychs with the loadings x 2: pm0.02, pm0.07, pm0.14 | 0.496 | 32% | 0.344 | +0.089 | 26 | 0.26 | 0.347 | 0.308 | 0.279 | 0.333 | 0.161 | +0.0072 (t 1.1) | +0.04 | 7/10 |
+| BGN | `bvychsx3` -- bvychs with the loadings x 3: pm0.03, pm0.105, pm0.21 | 0.533 | 31% | 0.384 | +0.081 | 21 | 0.26 | 0.377 | 0.353 | 0.321 | 0.370 | 0.164 | +0.0024 (t 0.5) | +0.01 | 6/10 |
+| GS21 | `gvy25sx2` -- gvy25s with the loadings x 2: pm0.03, pm0.1, pm0.2 | 0.817 | 41% | 0.721 | +0.093 | 13 | 0.38 | 0.814 | 0.777 | 0.796 | 0.814 | 0.344 | +0.0005 (t 0.1) | +0.01 | 2/3 |
 | KP14 | `kpgam` -- gamma_x x logistic(y), 1 to 3 | 0.390 | 65% | 0.373 | +0.005 | 1 | 0.06 | 0.358 | 0.348 | 0.340 | 0.363 | 0.254 | -0.0053 (t -4.0) | -0.05 | 1/10 |
 | KP14 | `vyx` -- three types on y, price 1.8 | 0.421 | 14% | 0.321 | +0.055 | 17 | 0.19 | 0.313 | 0.284 | 0.302 | 0.310 | 0.054 | +0.0009 (t 0.3) | +0.02 | 7/10 |
 | KP14 | `vyj25` -- the same with a priced crash in y | 0.554 | 10% | 0.323 | +0.104 | 33 | 0.28 | 0.315 | 0.270 | 0.292 | 0.307 | 0.045 | +0.0080 (t 2.2) | +0.06 | 8/10 |
@@ -628,6 +695,9 @@ harmonized cells replace.
 - `bvysg`: `bgnbase` plus y; type f's project cash flows are C_j e^{b_f y_t}, b_f ∈ {-0.07, 0, +0.07}, not level-compensated.
 - `bvychs4`, `bvychs6`, `bvychs8`: `bvychs` at bv_comp 0.4 / 0.6 / 0.8. Five, three and three seeds; stopped.
 - `bvychs`: `bvych0` with the ladder mirrored: six types of equal share, b_f ∈ {-0.07, -0.035, -0.01, 0.01, 0.035, 0.07}, level-compensated (bv_comp 1.2, θ_f 1 to 1.60 with b = -0.07 the reference), 21-node chain, price 2.5.
+- `bvychs18`, `bvychs25`, `bvychs30`, `bvychs35`, `bvychsn5`: `bvychs` at bv_comp 1.8 / 2.5 / 3.0 / 3.5 / −0.5. Ten seeds each (bvychs18 eight: two of its 36 GB tasks ran out of memory and were not resubmitted once the room was read). bgn_vy's SDF step had its K4 pair sum rewritten as a blocked sum (commit 78961c4) after these ran out of memory at 36 GB; the arithmetic is unchanged to 3e-15.
+- `bvyvee`: five types of equal share on a visible level ladder, θ_f = 0.6 / 0.8 / 1.0 / 1.2 / 1.4 multiplying the cash-flow level (`type_level`), with the exposure V-shaped across it, b_f = +0.07, 0, −0.07, 0, +0.07; bv_comp 1.0, price 2.5. Eight seeds; two stopped. `bvyhump`, its mirror (b_f = −0.07, 0, +0.07, 0, −0.07), was solved and not simulated once bvyvee's premium came out monotone in the level.
+- `bvychsx2`, `bvychsx3`: `bvychs` with the loadings ×2 (±0.02, ±0.07, ±0.14) and ×3 (±0.03, ±0.105, ±0.21). Ten seeds each.
 
 **GS21**
 - `g28`: `gsbase` with γ_x → γ(x_t) = clip(0.5 - 0.28 x_t / sd(x), 0.05, 1.0), countercyclical.
@@ -659,6 +729,10 @@ harmonized cells replace.
 - `gvyp10c`: `gvyp10` with a leverage-level term, output e^{x + z + 0.10 b̃ (z̃ + 2) y}: a levered firm's exposure keeps leverage's sign for every firm with z̃ > -2. The mean firm (b̃ < 0) is a hedge against y, so the market's premium is negative.
 - `gvytl`: KP14's 3b recipe in GS21: three latent exposure types, output e^{x + z + b_f y + a_f} with b_f ∈ {0.015, 0.05, 0.10} and a_f the level compensation, times three fixed leverage types (coupons 0.158 / 0.421 / 0.684, no refinancing), nine types of equal share.
 - `gvytlg`: `gvytl` at γ_x = 0.1 (benchmark `gsbg1`).
+- `gxq35`, `gxq70`: `gsbase` (no y) with the productivity loading 1 + c (z̃² − 1)/√2, c = −0.35 / −0.70. Ten oracle seeds, three estimator seeds; stopped.
+- `gvy25sq`, `gvy25sh`: `gvy25s` at γ_v 0.25 / 0.5 with bv_comp 12 / 9, so the types' level shifts (about ±0.6 / ±1.0) are kept and the y price cut. Ten oracle seeds, three estimator seeds; stopped.
+- `gvyql10`, `gvyql20`, `gvyqh10`: one type on `gvy25s`'s chassis (NY 9, y_mult 2.5) with the y exposure c (b̃² − 1), b̃ the firm's standardized coupon, c = +0.1 / +0.2 / −0.1, no level term (`gs_bzq`). Three seeds each; stopped.
+- `gvy25sx2`: `gvy25s` with the loadings ×2 (±0.03, ±0.10, ±0.20). Five oracle seeds, three estimator seeds; stopped. `gvy25sx3` (×3): five of its six type solves converged, the b_f = +0.045 type oscillated to the sweep cap, and the economy was not run.
 
 **KP14**
 - `kpgam`: `kpbase` with γ_x → γ_x g(y_t), g(y) = 1 + 2/(1 + e^{2y}), rising from 1 when y is high to 3 when it is low; y is unpriced (γ_v = 0) and no firm is exposed to it.
@@ -704,6 +778,7 @@ What they add to the main results:
   +0.014 / +0.009, a mild hump within noise), the visibility of the type, the number of types (`vym3` against
   `vym3t3`), the sample size (vym3 at N = 1000: room up, gap flat), and the ridge grid (DKKM +0.0001). The price of
   the interacted component is the one scaling lever (`vyx` to `vyg25`).
+- `vyg25sx2`, `vyg25sx3`: `vyg25s` with the loadings ×2 (±0.04, ±0.14, ±0.28; θ_f 1 to 11.2) and ×3 (±0.06, ±0.21, ±0.42; θ_f 1 to 37). Ten seeds each.
 
 ### Two priced states
 

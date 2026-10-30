@@ -179,7 +179,14 @@ def estimator_dir(tag):
     model, d, _ = E[tag]
     if model == "GS21" and LEV and glob.glob(os.path.join(LEV, f"*_estimators_{tag}_s[0-9][0-9][0-9]_w360_summary.csv")):
         return LEV, False
-    return d, model == "GS21"
+    if model == "GS21":
+        # GS21 economies run after the leverage characteristic was added (2026-10-26) are scored on six characteristics in
+        # the campaign directory itself: their summaries carry linlev rows. Only summaries without them are the Sol-era five.
+        for f in glob.glob(os.path.join(d, f"*_estimators_{tag}_s[0-9][0-9][0-9]_w360_summary.csv")):
+            with open(f) as fh:
+                return d, ("linlev" not in fh.read())
+        return d, True
+    return d, False
 
 
 def seed_rows(tag):
