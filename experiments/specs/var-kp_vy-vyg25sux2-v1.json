@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25sux2-v1",
+ "title": "KP14 vyg25sx2 WITHOUT level compensation (bv_comp 0): six types [-0.28, -0.14, -0.04, 0.04, 0.14, 0.28], the type revealed by value itself, price 2.5",
+ "question": "Without the compensation that makes KP14's premium hump-shaped, does the product 'mean-zero type (visible in value) x growth-option share' still give a gap?",
+ "notes": "WHY (2026-10-30). The user wants an interaction economy with a sizeable gap in KP14 that is not the hump. vyg25u (the positive ladder without compensation) has a monotone premium and no gap; vyg25s's hump was read as the compensation changing each type's growth-option leverage. Here the mirrored ladder keeps its mean-zero loading but theta_f = 1: at y = 0 a unit project is worth 7x more for b = -0.28 than for b = +0.28 (A0 13.9 vs 1.85 at x2), so the type is revealed by size with the sign reversed, and the exposure b_f x growth-option share is a product of two visible things, as in bvychs30.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): the premium monotone in b_f in most seeds; room below vyg25sx2's but above vyg25's 24%; fair gap +0.03 to +0.10 if the product alone carries it, near zero if the hump was the whole mechanism. Either answer settles whether KP14 has an interaction gap without the hump.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25sx2-v1",
+  "changes": [
+   "bv_comp 1.2 -> 0.0; own tables under prefix vyg25sux2; everything else vyg25sx2's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.28,
+   -0.14,
+   -0.04,
+   0.04,
+   0.14,
+   0.28
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 0.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25sux2"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.28,
+      -0.14,
+      -0.04,
+      0.04,
+      0.14,
+      0.28
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 0.0
+    },
+    "args": {
+     "prefix": "vyg25sux2"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: interaction / non-monotone exposures with sizeable gaps in every model); written by _scratch/gen_round3_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25sux2",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "ed5450d92a812e06227595264317b6508f7e48998faa73cc4d17a8e80986817a",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}

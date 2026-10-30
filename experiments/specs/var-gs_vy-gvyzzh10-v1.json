@@ -1,0 +1,126 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyzzh10-v1",
+ "title": "GS21 with a PRODUCTIVITY-CURVATURE exposure: one type, production x exp(-0.1 (z~^2 - 1) y), z~ the standardized idiosyncratic productivity (hump-shaped), price 2.5",
+ "question": "Does a y exposure that is quadratic in the firm's own productivity, mean zero across firms, give GS21 a non-monotone premium that no linear sort holds and DKKM a gap?",
+ "notes": "WHY (2026-10-30). The leverage-curvature version (gvyql10/20, gvyqh10) failed because the leverage characteristic spans only 0.002-0.006 across quintiles; productivity has the cross-sectional variation and is revealed by ROE and size. The reduced form's pure-curvature loading on observed characteristics (kfh_sq_1) has room 647% and a gap of +0.52: this is its structural counterpart, with the curvature in the exposure to a priced y.\n\nDESIGN. gs_bzz (new) adds gs_bv * gs_bzz * (z~^2 - 1) to the exposure multiplier; gs_bzl 0 so there is no level exposure; bv_comp 0 (one type, no shift). gs_bzz = 0 leaves every other economy unchanged (x + 0.0).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): room 30-60% of the linear ceiling (the y Sharpe sits almost entirely outside the linear span), fair gap +0.03 to +0.10. FALSIFIED if room is below 11% (gvy25s) or the gap below +0.01 on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvyql10-v1",
+  "changes": [
+   "gs_bzq 1 -> 0 (dropped); gs_bzz 1 (new); gs_bv -0.1; everything else gvyql10's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "mirrored level-exposure ladder, E[gs_bv] = 0 across types, each type level-compensated at y = 0"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 0.0,
+  "gs_bzl": 0.0,
+  "gs_bzz": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.1
+   ]
+  },
+  "soldirs": [
+   "sol_gvyzzh10"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyzzh10",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 0.0,
+     "gs_bzl": 0.0,
+     "gs_bzz": 1.0,
+     "gs_bv": -0.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyzzh10",
+  "GS_VY_BV": "-0.1",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: interaction / non-monotone exposures with sizeable gaps in every model); written by _scratch/gen_round3_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyzzh10",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh (one task); id filled by verify_gs_vy_klc.sh"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvyzzh10"
+ ],
+ "reused_solves": null,
+ "spec_hash": "41a0608780fc5f355d52a41245809eff5655226653d3069d306a03ee35264a23"
+}

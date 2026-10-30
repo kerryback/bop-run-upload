@@ -48,7 +48,8 @@ gs_bzl = float(_s["gs_bzl"]) if "gs_bzl" in _s.files else 1.0
 gs_bzi = float(_s["gs_bzi"]) if "gs_bzi" in _s.files else 0.0
 gs_bzb = float(_s["gs_bzb"]) if "gs_bzb" in _s.files else 0.0
 gs_bzc = float(_s["gs_bzc"]) if "gs_bzc" in _s.files else 0.0
-gs_bzq = float(_s["gs_bzq"]) if "gs_bzq" in _s.files else 0.0      # leverage-curvature exposure term (gs_solve_vy.py)
+gs_bzq = float(_s["gs_bzq"]) if "gs_bzq" in _s.files else 0.0
+gs_bzz = float(_s["gs_bzz"]) if "gs_bzz" in _s.files else 0.0      # productivity-curvature exposure term (gs_solve_vy.py)      # leverage-curvature exposure term (gs_solve_vy.py)
 gs_bx2 = float(_s["gs_bx2"]) if "gs_bx2" in _s.files else 0.0
 gs_pj = float(_s["gs_pj"]) if "gs_pj" in _s.files else 0.0
 ashift_ts = [float(d["gs_ashift"]) for d in _sols]  # applied in production below, as the solver does
@@ -82,7 +83,7 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
     if _f == 0:
         continue
     for _k in ("xgrid", "zgrid", "bgrid", "pr_x", "pr_z", "Mx", "ygrid", "pr_y", "MPy", "params", "kappa_e", "gs_bx",
-               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bzc", "gs_bzq", "gs_bx2", "gs_pj", "gs_gj",
+               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bzc", "gs_bzq", "gs_bzz", "gs_bx2", "gs_pj", "gs_gj",
                "ygrid2", "NY2", "gamma_v2", "kappa_y2"):
         if _k not in _s.files or _k not in _sol.files:
             continue
@@ -92,10 +93,10 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
 
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
 _ztil = zgrid / np.sqrt(sigma_z ** 2 / (1 - rho_z ** 2))
-_zexpo = gs_bzl + gs_bzi * _ztil                     # (znum,) multiplies each type's gs_bv
+_zexpo = gs_bzl + gs_bzi * _ztil + gs_bzz * (_ztil ** 2 - 1.0)                     # (znum,) multiplies each type's gs_bv
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)   # (znum,) x loading by productivity
 def _expo_of(zi, b):
-    """exposure multiplier at productivity node zi and coupon b (continuous): gs_bzl + gs_bzi z~ + gs_bzb z~ b~ + gs_bzc b~ + gs_bzq (b~^2 - 1)"""
+    """exposure multiplier at productivity node zi and coupon b (continuous): gs_bzl + gs_bzi z~ + gs_bzb z~ b~ + gs_bzc b~ + gs_bzq (b~^2 - 1) + gs_bzz (z~^2 - 1)"""
     return _zexpo[zi] + (gs_bzb * _ztil[zi] + gs_bzc) * (b - 0.5) / 0.29 + gs_bzq * (((b - 0.5) / 0.29) ** 2 - 1.0)
 burnin = 400          # the protocol's BURNIN (common/protocol.py)
 alpha_e = 0.2
