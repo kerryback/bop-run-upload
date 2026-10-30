@@ -1,0 +1,111 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyg25x2-v1",
+ "title": "KP14 vyg25 with the loadings x2: three types [0.04, 0.14, 0.28], level-compensated, price 2.5",
+ "question": "Does the positive (interaction-only, monotone-premium) KP14 ladder reach a sizeable gap when its loadings are scaled, as GS21's product did?",
+ "notes": "WHY (2026-10-30). The user wants an interaction economy with a fair gap of 0.1/yr (+0.029 monthly) in KP14 that is not the hump. The sign-switching ladders cannot be it: their premium is hump-shaped whatever the compensation (vyg25su, bv_comp 0, has vyg25s's returns to the digit). The positive ladder vyg25 (0.02/0.07/0.14) has a monotone premium (0.85/0.81/0.75 %/mo) and a gap of +0.015; its size was never varied. GS21's product ladder rose from +0.02 at 0.05 to +0.08 at 0.075-0.15 before the type became linearly visible.\n\nFEASIBILITY: A0 finite at these loadings (vyg25sx2/sx3 used +-0.28 / +-0.42).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): room above vyg25's 24%; gap +0.02 to +0.06 at x2, lower at x3 if the type becomes linearly visible. FALSIFIED if the gap is at or below vyg25's +0.015 on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v1",
+  "changes": [
+   "type_bv [0.02, 0.07, 0.14] -> [0.04, 0.14, 0.28]; own tables under prefix vyg25x2; everything else vyg25's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.04,
+   0.14,
+   0.28
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyg25x2"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.04,
+      0.14,
+      0.28
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2
+    },
+    "args": {
+     "prefix": "vyg25x2"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: the KP14 interaction slot); spec written by _scratch/gen_vyg25x_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyg25x2",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "2d15c1f2d4d208f28c9a79ad2d707e9b24688b75400a892d44db1c8c7c0ace39",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
