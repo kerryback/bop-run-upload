@@ -900,6 +900,13 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyg25sx2
     SOLVE_HINT='export KSPECS=var-kp_vy-vyg25sx2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyg25sx3)
+    # kp_vy (2026-10-30): vyg25s with the loadings TRIPLED (-0.42 .. 0.42), E[b] = 0, level-compensated, price 2.5
+    MODEL=kp_vy; TAG=vyg25sx3; SPEC=var-kp_vy-vyg25sx3-v1; SOLVE_TAG=vyg25sx3
+    export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.42, -0.21, -0.06, 0.06, 0.21, 0.42], "gamma_v": 2.5, "bv_comp": 1.2}'
+    export KP_VY_PREFIX=vyg25sx3
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25sx3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25s6)
     # kp_vy (2026-10-28): vyg25s at bv_comp 0.6 (the level-compensation bracket)
     MODEL=kp_vy; TAG=vyg25s6; SPEC=var-kp_vy-vyg25s6-v1; SOLVE_TAG=vyg25s6
