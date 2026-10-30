@@ -1003,6 +1003,12 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.14, -0.07, -0.02, 0.02, 0.07, 0.14], "gamma_v": 1.7677669529663687, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "NY2": 21, "type_bv2": [-0.0791, 0.0238, 0.0553, 0.0553, 0.0238, -0.0791], "gamma_v2": 1.7677669529663687, "kappa_y2": 0.35, "jstar_vy_file": "Jstar_vy_bvyq2x.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvyq2x-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  bvyq2k)
+    # bgn_vy (2026-10-30): second-chain loading QUADRATIC in the first (b2 = -28 (b1^2 - mean)): a hump in b itself; both chains priced 2.5/sqrt2
+    MODEL=bgn_vy; TAG=bvyq2k; SPEC=var-bgn_vy-bvyq2k-v1; SOLVE_TAG=Jstar_vy_bvyq2k
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.07, -0.035, -0.01, 0.01, 0.035, 0.07], "gamma_v": 1.7677669529663687, "kappa_y": 0.35, "bv_comp": 1.2, "y_kind": "chain", "NY2": 21, "type_bv2": [-0.0791, 0.0238, 0.0553, 0.0553, 0.0238, -0.0791], "gamma_v2": 1.7677669529663687, "kappa_y2": 0.35, "jstar_vy_file": "Jstar_vy_bvyq2k.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyq2k-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   bvyhx2)
     # bgn_vy (2026-10-30): HUMP-shaped exposure across a MILD level ladder: type_level [0.85, 0.925, 1.0, 1.075, 1.15], loadings [-0.14, 0.0, 0.14, 0.0, -0.14], exact compensation, chain, price 2.5
     MODEL=bgn_vy; TAG=bvyhx2; SPEC=var-bgn_vy-bvyhx2-v1; SOLVE_TAG=Jstar_vy_bvyhx2
