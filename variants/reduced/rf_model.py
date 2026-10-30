@@ -265,6 +265,12 @@ class Economy:
                 m, cap = float(p["lat_ratio_mean"]), float(p["lat_ratio_cap"])
                 L = np.column_stack([1.0 / np.maximum(np.exp(m + (s_lat[:, a] - s_lat[:, b]) / np.sqrt(2.0)) - 1.0, 1.0 / cap)
                                      for a, b in self.lat_pairs])
+            elif p["lat_form"] == "square":
+                # 2026-10-30 (user: 'a non-monotonic version of the reduced form'): the factor loads on the SQUARE of ONE partly
+                # hidden latent, (s_a + m_a)^2 - 1: U-shaped (hump after the sign flip of a long-short portfolio) in a state that
+                # the characteristics reveal only through obs_noise. m_a = 0 is the mean-zero curvature (gvyzz's structural analogue);
+                # m_a > 0 adds the linear part 2 m_a s_a that a linear portfolio holds, as the shift did for the product.
+                L = np.column_stack([(s_lat[:, a] + sh[a]) ** 2 - 1.0 for a, b in self.lat_pairs])
             else:
                 raise ValueError(p["lat_form"])
             if p["lat_std"]:

@@ -144,9 +144,20 @@ for on in (0.0, 1.0):
     LSH[f"lrt_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "ratio", "lat_std": True}
 CONFIGS.update(LSH)
 
+# ---- the CURVATURE-in-a-latent ladder (2026-10-30, 'a non-monotonic version of the reduced form'): one factor loading on the
+# square of ONE partly hidden latent, (s + m)^2 - 1, standardised each month; m = 0 is mean-zero curvature (the structural
+# gvyzz economies: exposure quadratic in a firm's own productivity), m = 1, 2 add a linear part. Noise 0 and 1 as the sign ladder.
+LSQ = {}
+for ma in (0, 1, 2):
+    for on in (0.0, 1.0):
+        LSQ[f"lsq_a{ma}_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "square",
+                                     "lat_shift": (float(ma), 0.0, 0.0, 0.0, 0.0), "lat_std": True}
+CONFIGS.update(LSQ)
+
 LADDERS = {
     "lfac": sorted(LFAC),
     "signs": sorted(LSH),
+    "lsq": sorted(LSQ),
     "kfac": sorted(KFAC),
     "kfo": sorted(KFO),
     "speed": ["hl120", "hl48", "base", "hl12", "hl6"],
