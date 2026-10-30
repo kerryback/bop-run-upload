@@ -101,6 +101,7 @@ DEFAULTS = dict(
     # one-signed and convex in ONE index. lat_std standardises each factor's loading cross-sectionally every month, so
     # the premium's dispersion is the same in every cell and only its additive share moves.
     lat_shift=0.0, lat_form="product", lat_std=False, lat_ratio_mean=1.0, lat_ratio_cap=5.0,
+    lat_sq_idx=0,            # lat_form "square": which latent is squared (0 = size, whose square the VW market and FF legs hold)
 )
 
 
@@ -270,7 +271,8 @@ class Economy:
                 # hidden latent, (s_a + m_a)^2 - 1: U-shaped (hump after the sign flip of a long-short portfolio) in a state that
                 # the characteristics reveal only through obs_noise. m_a = 0 is the mean-zero curvature (gvyzz's structural analogue);
                 # m_a > 0 adds the linear part 2 m_a s_a that a linear portfolio holds, as the shift did for the product.
-                L = np.column_stack([(s_lat[:, a] + sh[a]) ** 2 - 1.0 for a, b in self.lat_pairs])
+                q = int(p["lat_sq_idx"])
+                L = np.column_stack([(s_lat[:, q] + sh[q]) ** 2 - 1.0 for a, b in self.lat_pairs])
             else:
                 raise ValueError(p["lat_form"])
             if p["lat_std"]:
