@@ -132,7 +132,7 @@ def create_arrays(N, T):
     _ytil_n = ytil[ftype].T                               # (T+1, N): each firm's own projection
     ebv = np.exp(bvw[None, :] * _ytil_n)                  # (T+1, N): the wholesale e^{b_f . y_t} (ones under bv_on_eps)
     # bv_on_eps: the exposure sits on the profitability deviation, cash flow ~ u [1 + (eps - 1) e^{b_f y}]
-    epsx = eps if not bv_on_eps else 1.0 + (eps - 1.0) * np.exp(bvf[None, :] * _ytil_n)
+    epsx = eps if not bv_on_eps else 1.0 + (eps - 1.0) * eps_expo(bvf[None, :], _ytil_n)
 
     def _coefs_ty(ycols):
         # per-(date, firm) A-coefficients, each type read at ITS OWN column (ycols: (ntypes, M))

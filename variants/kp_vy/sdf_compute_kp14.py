@@ -170,7 +170,7 @@ def sdf_compute(N, T, arr_tuple):
         Mmix = sum(_ghw[q] * branch(yq[:, q]) for q in range(len(_ghw)))
 
         # cash-flow adjustment terms (regime-free)
-        _epsx = eps[t, :] if not bv_on_eps else 1.0 + (eps[t, :] - 1.0) * np.exp(bvf * y_now[_FTYPE[0]])
+        _epsx = eps[t, :] if not bv_on_eps else 1.0 + (eps[t, :] - 1.0) * eps_expo(bvf, y_now[_FTYPE[0]])
         cf = np.sum(_epsx*ujt*x[t]*Ktalpha*dt, axis=0) * np.exp(bvw * y_now[_FTYPE[0]]) * tt
         term4 = np.outer(cf/price[t, :], 1 + eret[t, :])
         term4 = term4 + term4.T - np.outer(cf/price[t, :], cf/price[t, :])

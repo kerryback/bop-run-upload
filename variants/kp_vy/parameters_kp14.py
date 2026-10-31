@@ -43,6 +43,11 @@ bv_on_eps = False
 # type_level (2026-10-31): an explicit cash-flow level multiplier per type on top of the compensation (BGN's type_level); None = ones.
 # Under bv_on_eps the compensation is 1 (a0 is type-free), so this is the only way the type shows in size.
 type_level = None
+# bv_eps_cap (2026-10-31): a BOUNDED exposure function on the profitability deviation in place of e^{b y}. With e^{b y} a negative
+# b blows up where y sits far below zero under Q (mean -gamma_v sigma_y/kappa_y ~ -7), and a0 + (eps-1) a1 turns negative for
+# unprofitable firms once b <= -0.2 (vygels, never run). h_b(y) = c / (1 + (c-1) e^{-c b y/(c-1)}) has h(0) = 1, h'(0) = b and
+# range (0, c), so the eps-claim is at most c times its unexposed value whatever b. None keeps e^{b y} (every table bit-identical).
+bv_eps_cap = None
 bv_comp = 0.0                             # y=0 value compensation knob (omega analogue)
 bx_seed = 777
 # 2026-09-18: price the e^{beta_f y} claims under the RISK-NEUTRAL OU dynamics (1), or the
@@ -180,6 +185,15 @@ def project_y(yreg):
     return (yreg @ type_bv_mat.T).T / b_eff[:, None]
 
 y_grid = _np.linspace(-y_max, y_max, NY)
+
+def eps_expo(b, y):
+    """the exposure factor on the profitability deviation: e^{b y}, or the bounded h_b(y) when bv_eps_cap is set"""
+    b = _np.asarray(b, float); y = _np.asarray(y, float)
+    if bv_eps_cap is None:
+        return _np.exp(b * y)
+    c = float(bv_eps_cap)
+    return c / (1.0 + (c - 1.0) * _np.exp(_np.clip(-c * b * y / (c - 1.0), -700, 700)))
+assert bv_eps_cap is None or (bv_on_eps and float(bv_eps_cap) > 1.0), "bv_eps_cap needs bv_on_eps and a bound above 1"
 dy = y_grid[1] - y_grid[0]
 sigma_y = _np.sqrt(2.0 * kappa_y)                      # stationary sd 1
 
@@ -271,8 +285,9 @@ def _solve_coeff_ty(f, theta_c, b=None):
     if not y_risk_neutral:
         return _np.linalg.solve(_np.diag(const_ty(f) + theta_c) - Qy, _np.ones(NY))
     b = b_eff[f] if b is None else float(b)
-    W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve_ty[f], _np.exp(b * y_solve))
-    _A_solve[(f, theta_c)] = W * _np.exp(-b * y_solve)
+    _h = eps_expo(b, y_solve)                          # e^{b y}, or the bounded exposure under bv_eps_cap
+    W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve_ty[f], _h)
+    _A_solve[(f, theta_c)] = W * (_np.exp(-b * y_solve) if bv_eps_cap is None else 1.0 / _h)   # exact old ops when unbounded
     return _A_solve[(f, theta_c)][_i_tab]
 _b_lvl = 0.0 if bv_on_eps else None                                                  # a0, a2: the level part, unexposed under bv_on_eps
 A0_ty = _np.stack([_solve_coeff_ty(f, 0.0, _b_lvl) for f in range(ntypes)])         # (ntypes, NY)
@@ -281,7 +296,7 @@ A2_ty = _np.stack([_solve_coeff_ty(f, theta_u, _b_lvl) for f in range(ntypes)])
 A3_ty = _np.stack([_solve_coeff_ty(f, theta_eps + theta_u) for f in range(ntypes)])
 if bv_on_eps:
     # fold e^{b_f y} into the eps-components: the tables are then value per unit of x K^alpha theta with no wholesale factor
-    _fold = _np.exp(b_eff[:, None] * y_grid[None, :])
+    _fold = eps_expo(b_eff[:, None], y_grid[None, :])
     A1_ty = A1_ty * _fold; A3_ty = A3_ty * _fold
 b_eff_whole = _np.zeros(ntypes) if bv_on_eps else b_eff       # the wholesale e^{b y} factor (G solve, simulator)
 
@@ -297,7 +312,7 @@ def coef_on_solve_grid(f):
     where the Q-measure lives, which is outside y_grid; _coef_at would clamp it there."""
     out = [_A_solve[(f, th)] * type_theta[f] for th in (0.0, theta_eps, theta_u, theta_eps + theta_u)]
     if bv_on_eps:
-        _fs = _np.exp(b_eff[f] * y_solve); out[1] = out[1] * _fs; out[3] = out[3] * _fs
+        _fs = eps_expo(b_eff[f], y_solve); out[1] = out[1] * _fs; out[3] = out[3] * _fs
     return tuple(out)
 
 def _coef_at(y, f):
