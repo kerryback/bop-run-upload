@@ -1,0 +1,554 @@
+{
+  "achieved": {
+    "exit": "direct_solve",
+    "max_rel_residual": 1.23e-12,
+    "per_type_rel_residual": {
+      "0": 1.23e-12,
+      "1": 8.38e-13,
+      "2": 5.3e-13
+    }
+  },
+  "artifacts": [
+    {
+      "bytes": 788800,
+      "path": "variants/kp_vy/G_vyg35x20.csv",
+      "sha256": "7611773dd1f7b00c1555b80e21384d643be07792f37feae1f884ce9d472e0eb8"
+    },
+    {
+      "bytes": 793233,
+      "path": "variants/kp_vy/G_vyg35x21.csv",
+      "sha256": "a49f9d515799bed24628303c6ef4e744116b10b8fd7e5424bf9e85fff1084cd5"
+    },
+    {
+      "bytes": 796249,
+      "path": "variants/kp_vy/G_vyg35x22.csv",
+      "sha256": "d73928f474c1a971db6d17b3d8b8b43f9177291a7197a8c9d9700ebe47e0947a"
+    }
+  ],
+  "committable": true,
+  "env_params": {},
+  "environment": {
+    "hostname": "qnode4044",
+    "machine": "x86_64",
+    "numpy": "2.5.3",
+    "omp_num_threads": "1",
+    "pandas": "3.0.6",
+    "platform": "Linux-4.18.0-553.136.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.14.7",
+    "scipy": "1.18.1",
+    "slurm_cpus_per_task": "8",
+    "slurm_job_id": "6074897"
+  },
+  "extra": {
+    "prefix": "vyg35x2"
+  },
+  "inputs": {},
+  "model": "kp_vy",
+  "note": "Written by variants/common/solstamp.py. The solve_id is sha256(params + source digests); identical id means the artifacts are reusable. Do not hand-edit.",
+  "params": {
+    "A0_ty": {
+      "__array_sha256__": "46d5c7b375186ceeb8f84d9d20817ccfbbf9061a5390b890d35f4087ce6f4f35",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A1_ty": {
+      "__array_sha256__": "913a4ac421d642334248469cee8cb52e2e63b4f2f4448a0f486c626eebb88ab7",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A2_ty": {
+      "__array_sha256__": "714985d33b39e6de751cf4c1febbf7fe0252f0bfbd79fec7c49e075cdf346ca8",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A3_ty": {
+      "__array_sha256__": "c359e6c57b857d15e1ea090f0a52393e6a51b37832f54101c9014cb55e38bcad",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "A_0": "3.5772938250115307",
+    "A_1": "1.5268766963516684",
+    "A_2": "1.2336368810167426",
+    "A_3": "0.8552929752293821",
+    "C": "0.05972165551735604",
+    "NY": 21,
+    "Qy": {
+      "__array_sha256__": "e687dabff6c33d05313acdf74e753bb65f1bc01a79f5fface07be851af175cd2",
+      "dtype": "float64",
+      "shape": [
+        21,
+        21
+      ]
+    },
+    "_A_solve": {
+      "(0, 0.0)": {
+        "__array_sha256__": "2e1a613d541b29d24d7477c821ca9c1f6c6f6b48e518d323f8eb0a1c47db3130",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(0, 0.35)": {
+        "__array_sha256__": "7459238542a00550587d7453dc7d49dff2ca46adb3991ae4b879090cb12361f6",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(0, 0.5)": {
+        "__array_sha256__": "35a58808e417442c8fd651d569ee8a14d365e0b3ae166bab0665eb06ac24ec71",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(0, 0.85)": {
+        "__array_sha256__": "6d355e384f3b70368c3b38ab861666ccd3e081fcbfbdfcdb02753735c967d801",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(1, 0.0)": {
+        "__array_sha256__": "e86f5ddee180c64437180ced5af29c760a7f99acba92f480a737a486d9c5bfed",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(1, 0.35)": {
+        "__array_sha256__": "3412d4e64ee9cfd8329cfe26f664e745e471f0bcf3172cebf5ffb68c25ae9ef4",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(1, 0.5)": {
+        "__array_sha256__": "15b575a0c7a4fed71c824b3098d9c3b5d1b5eb2625faef6af66d86eed15a30a3",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(1, 0.85)": {
+        "__array_sha256__": "a2a92aa7fab1c28e66ac2b0e7d4afbc388fbfbeaaf4b9ac85980d5a754245204",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(2, 0.0)": {
+        "__array_sha256__": "a075a5a5d820dc76c023124b947c9653a50fc4a77d4f939c70c68729ad805362",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(2, 0.35)": {
+        "__array_sha256__": "ac784bfce1108bcdf9e1d28f46e1f73811a212c2012603b2663edeae825a6bd3",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(2, 0.5)": {
+        "__array_sha256__": "495b2b051c67e5f7fc5b8759d2dddf40823dfa00f0d3cb7b297c64e0b1316a5e",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      },
+      "(2, 0.85)": {
+        "__array_sha256__": "e4ce5fb3360fb420d2b8d0877aad72cc0091585f9c3717d91c3ffc2e1f649b82",
+        "dtype": "float64",
+        "shape": [
+          1601
+        ]
+      }
+    },
+    "_NORMALISED": {
+      "__set__": [
+        "\"type_share\""
+      ]
+    },
+    "_QyQ_solve_ty": [
+      {
+        "__array_sha256__": "07bfc8438c7ea8af1aa14092514456bc36d72453c68396fa5ae2100535ba158d",
+        "dtype": "float64",
+        "shape": [
+          1601,
+          1601
+        ]
+      },
+      {
+        "__array_sha256__": "07bfc8438c7ea8af1aa14092514456bc36d72453c68396fa5ae2100535ba158d",
+        "dtype": "float64",
+        "shape": [
+          1601,
+          1601
+        ]
+      },
+      {
+        "__array_sha256__": "07bfc8438c7ea8af1aa14092514456bc36d72453c68396fa5ae2100535ba158d",
+        "dtype": "float64",
+        "shape": [
+          1601,
+          1601
+        ]
+      }
+    ],
+    "_ar_y": "np.float64(0.9712545752136729)",
+    "_bv": {
+      "__array__": [
+        "0.04",
+        "0.14",
+        "0.28"
+      ],
+      "shape": [
+        3,
+        1
+      ]
+    },
+    "_const_base_solve": {
+      "__array_sha256__": "e57e7dde811e8e40e84d544a959338b78f0c74126abf4c202ec8478d0807a057",
+      "dtype": "float64",
+      "shape": [
+        1601
+      ]
+    },
+    "_discarded": [],
+    "_i0": 10,
+    "_i_tab": {
+      "__array__": [
+        740,
+        760,
+        780,
+        800,
+        820,
+        840,
+        860,
+        880,
+        900,
+        920,
+        940,
+        960,
+        980,
+        1000,
+        1020,
+        1040,
+        1060,
+        1080,
+        1100,
+        1120,
+        1140
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "_n_hi": 23,
+    "_n_lo": 37,
+    "_pre_override_names": {
+      "__set__": [
+        "\"NY\"",
+        "\"__builtins__\"",
+        "\"__cached__\"",
+        "\"__doc__\"",
+        "\"__file__\"",
+        "\"__loader__\"",
+        "\"__name__\"",
+        "\"__package__\"",
+        "\"__spec__\"",
+        "\"_np\"",
+        "\"alpha\"",
+        "\"burnin\"",
+        "\"bv_comp\"",
+        "\"bx_seed\"",
+        "\"delta\"",
+        "\"dt\"",
+        "\"g_file\"",
+        "\"g_hi\"",
+        "\"g_lo\"",
+        "\"g_qhi\"",
+        "\"g_quad\"",
+        "\"g_steep\"",
+        "\"gam_seed\"",
+        "\"gamma_v\"",
+        "\"gamma_x\"",
+        "\"gamma_z\"",
+        "\"integ_file\"",
+        "\"json\"",
+        "\"kappa_y\"",
+        "\"lambda_H\"",
+        "\"mu_H\"",
+        "\"mu_L\"",
+        "\"mu_lambda\"",
+        "\"mu_x\"",
+        "\"mu_z\"",
+        "\"os\"",
+        "\"r\"",
+        "\"sigma_eps\"",
+        "\"sigma_lambda\"",
+        "\"sigma_u\"",
+        "\"sigma_x\"",
+        "\"sigma_z\"",
+        "\"theta_eps\"",
+        "\"theta_u\"",
+        "\"type_bv\"",
+        "\"type_share\"",
+        "\"y_max\"",
+        "\"y_risk_neutral\""
+      ]
+    },
+    "_sd_c": "np.float64(0.23804316861970193)",
+    "_sub": 20,
+    "_ys_hi": "11.5",
+    "_ys_lo": "np.float64(-16.366600265340757)",
+    "alpha": "0.85",
+    "b_eff": {
+      "__array__": [
+        "0.04",
+        "0.14",
+        "0.28"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "burnin": 400,
+    "bv_comp": "1.2",
+    "bx_seed": 777,
+    "const_base_y": {
+      "__array__": [
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297",
+        "0.2297"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "delta": "0.1",
+    "dt": "0.08333333333333333",
+    "dy": "np.float64(0.3500000000000001)",
+    "exit_H": "0.16",
+    "exit_L": "0.075",
+    "g_file": "G_func.csv",
+    "g_hi": "1.0",
+    "g_lo": "1.0",
+    "g_qhi": "3.0",
+    "g_quad": "0.0",
+    "g_steep": "1.5",
+    "gam_seed": 555,
+    "gamma_eff": {
+      "__array__": [
+        "3.5",
+        "3.5",
+        "3.5"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "gamma_v": "3.5",
+    "gamma_vec": {
+      "__array__": [
+        "3.5"
+      ],
+      "shape": [
+        1
+      ]
+    },
+    "gamma_x": "0.69",
+    "gamma_z": "-0.35",
+    "gm_grid": {
+      "__array__": [
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0",
+        "1.0"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "integ_file": "integ_results.npz",
+    "kappa_y": "0.35",
+    "lambda_H": "2.35",
+    "lambda_L": "0.36718749999999983",
+    "mu_H": "0.075",
+    "mu_L": "0.16",
+    "mu_lambda": "2.0",
+    "mu_x": "0.01",
+    "mu_z": "0.005",
+    "nstates": 1,
+    "ntypes": 3,
+    "pm_tau": {
+      "__array__": [
+        "1.0",
+        "33.98203441852761",
+        "1859.8794195841729"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "prob_H": "0.3191489361702128",
+    "r": "0.05",
+    "rho": "0.1323251814925483",
+    "rho_ty": {
+      "__array_sha256__": "30288b6d8188983bb07a7439c7c43ff7bd1410d3557aa5c4e5401c3aebc18e8d",
+      "dtype": "float64",
+      "shape": [
+        3,
+        21
+      ]
+    },
+    "sigma_eps": "0.2",
+    "sigma_lambda": "2.0",
+    "sigma_u": "1.5",
+    "sigma_x": "0.13",
+    "sigma_y": "np.float64(0.8366600265340756)",
+    "sigma_z": "0.035",
+    "theta_eps": "0.35",
+    "theta_u": "0.5",
+    "type_bv": {
+      "__array__": [
+        "0.04",
+        "0.14",
+        "0.28"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "type_bv_mat": {
+      "__array__": [
+        "0.04",
+        "0.14",
+        "0.28"
+      ],
+      "shape": [
+        3,
+        1
+      ]
+    },
+    "type_share": {
+      "__array__": [
+        "0.34",
+        "0.33",
+        "0.33"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "type_theta": {
+      "__array__": [
+        "1.0",
+        "1.697021741380766",
+        "3.0933048201506006"
+      ],
+      "shape": [
+        3
+      ]
+    },
+    "y_grid": {
+      "__array__": [
+        "-3.5",
+        "-3.15",
+        "-2.8",
+        "-2.45",
+        "-2.1",
+        "-1.75",
+        "-1.4000000000000004",
+        "-1.0500000000000003",
+        "-0.7000000000000002",
+        "-0.3500000000000001",
+        "0.0",
+        "0.34999999999999964",
+        "0.6999999999999993",
+        "1.0499999999999998",
+        "1.3999999999999995",
+        "1.75",
+        "2.0999999999999996",
+        "2.4499999999999993",
+        "2.8",
+        "3.1499999999999995",
+        "3.5"
+      ],
+      "shape": [
+        21
+      ]
+    },
+    "y_max": "3.5",
+    "y_mean_Q": "np.float64(-8.366600265340756)",
+    "y_risk_neutral": 1,
+    "y_solve": {
+      "__array_sha256__": "6c07be7aa38785edfb79e4be617f5205f7afb9150bf9443a4998500154de39c6",
+      "dtype": "float64",
+      "shape": [
+        1601
+      ]
+    }
+  },
+  "recorded_at": "2026-10-30T18:57:25-0500",
+  "solve_id": "28d17ec4946782ab",
+  "sources": {
+    "variants/kp_vy/kp14_fd_vy.py": "3c94e636066338fac56f4adae37c8dfca43808b9fb3d4e9da77b8e39d3cdf2bd",
+    "variants/kp_vy/parameters_kp14.py": "9120211130e799fcf13bd61968791ca2057fbd03c335e3fee07454f9b8f34ca6"
+  },
+  "spec_ids": [],
+  "stage": "G",
+  "tags": [
+    "vyg35x2"
+  ],
+  "total_bytes": 2378282
+}
