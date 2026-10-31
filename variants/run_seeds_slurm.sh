@@ -949,6 +949,13 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyge
     SOLVE_HINT='export KSPECS=var-kp_vy-vyge-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vygel)
+    # kp_vy (2026-10-31): vyge (exposure b_f (eps - 1)) with a visible level ladder type_level [0.6, 1.0, 1.6]: type via size, eps via ROE
+    MODEL=kp_vy; TAG=vygel; SPEC=var-kp_vy-vygel-v1; SOLVE_TAG=vygel
+    export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.1, 0.25, 0.45], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.6, 1.0, 1.6]}'
+    export KP_VY_PREFIX=vygel
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygel-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25su)
     # kp_vy (2026-10-30): vyg25s WITHOUT level compensation (bv_comp 0): the type visible in value, product type x growth-option share
     MODEL=kp_vy; TAG=vyg25su; SPEC=var-kp_vy-vyg25su-v1; SOLVE_TAG=vyg25su

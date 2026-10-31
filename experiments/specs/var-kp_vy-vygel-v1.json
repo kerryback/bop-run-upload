@@ -1,0 +1,123 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vygel-v1",
+ "title": "KP14 vyge (exposure on the profitability deviation, b_f 0.1/0.25/0.45) with a visible level ladder type_level [0.6, 1.0, 1.6]",
+ "question": "Does revealing the type through size turn the hidden-type x profitability product into room and a gap, as a partly revealed type did in the reduced form?",
+ "notes": "WHY (2026-10-31 01:00). vyge's first oracle has room of 12%: the exposure b_f (eps - 1) is mean zero within type and a0 is type-free, so the type is invisible, the three types earn the same premium (0.34 / 0.36 / 0.35 %/mo), and a product of a hidden type and a visible state is learnable by nobody. The reduced form's latent-product ladder gives room only when the type is partly revealed. type_level (new in kp_vy, BGN's parameter) multiplies each type's cash-flow level: size reveals the type, ROE reveals eps, and the premium b_f (eps - 1) is a product of two visible characteristics that no linear function of ranks holds (bvychs30's structure, now in KP14). In KP14 the level changes only the characteristics.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-31): room above vyg25's 24%, fair gap +0.03 to +0.10. FALSIFIED if room is at or below vyge's 12% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyge-v1",
+  "changes": [
+   "type_level [0.6, 1.0, 1.6] (new in kp_vy); own tables under prefix vygel"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.1,
+   0.25,
+   0.45
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2,
+  "bv_on_eps": true,
+  "type_level": [
+   0.6,
+   1.0,
+   1.6
+  ]
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vygel"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.1,
+      0.25,
+      0.45
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2,
+     "bv_on_eps": true,
+     "type_level": [
+      0.6,
+      1.0,
+      1.6
+     ]
+    },
+    "args": {
+     "prefix": "vygel"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-31 (round 3: the KP14 interaction slot, type revealed through size); spec written inline (see round3 memory)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vygel",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "ccaa15c115f5eb68c541aef06e249fd1488da1a6c6902d20765a973b566374dc",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
