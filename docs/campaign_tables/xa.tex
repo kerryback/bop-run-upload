@@ -1,5 +1,5 @@
 \begin{table}[htbp]\centering\footnotesize
-\caption{Additional economies. Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).}\label{tab:xa}
+\caption{Additional economies. Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio), and the curvature-in-a-latent ladder (lsq / lsqb: the square of one partly hidden latent, size or book-to-market, with its mean shifted).}\label{tab:xa}
 \resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrrrrrrrr}\hline
 model & economy & SR$_{\max}$ & market share & linear ceiling & room & room \% of linear & interaction SR & DKKM & FMR & FF & linear & CAPM & fair gap & DKKM $\perp$ & + \\\hline
 BGN & \texttt{g0235f} -- regime price $\times$0.2 / $\times$3.5, spells 4$\times$ faster & 0.237 & 62\% & 0.163 & +0.045 & 28 & 0.13 & 0.169 & 0.141 & 0.131 & 0.161 & 0.146 & +0.0079 (t 4.8) & +0.05 & 10/10 \\
@@ -61,7 +61,9 @@ GS21 & \texttt{gvy25sh} -- gvy25s at $\gamma_v$ 0.5, bv\_comp 9.0: the level shi
 BGN & \texttt{bvychs18} -- bvychs at bv\_comp 1.8 & 0.340 & 49\% & 0.207 & +0.055 & 27 & 0.16 & 0.218 & 0.198 & 0.178 & 0.208 & 0.167 & +0.0064 (t 1.4) & +0.03 & 6/8 \\
 BGN & \texttt{bvychs25} -- bvychs at bv\_comp 2.5 & 0.449 & 36\% & 0.250 & +0.163 & 67 & 0.33 & 0.341 & 0.286 & 0.223 & 0.246 & 0.159 & +0.0482 (t 3.7) & +0.15 & 9/10 \\
 BGN & \texttt{bvychs30} -- bvychs at bv\_comp 3.0 & 0.488 & 32\% & 0.277 & +0.182 & 67 & 0.36 & 0.384 & 0.318 & 0.268 & 0.279 & 0.157 & +0.0626 (t 5.6) & +0.20 & 10/10 \\
-BGN & \texttt{bvychs35} -- bvychs at bv\_comp 3.5 & 0.501 & 31\% & 0.292 & +0.185 & 66 & 0.37 & -- & -- & -- & -- & -- & -- & -- & -- \\
+BGN & \texttt{bvychs35} -- bvychs at bv\_comp 3.5 & 0.508 & 31\% & 0.294 & +0.189 & 67 & 0.38 & 0.403 & 0.315 & 0.309 & 0.303 & 0.156 & +0.0712 (t 5.8) & +0.22 & 10/10 \\
+BGN & \texttt{bvychs40} -- bvychs at bv\_comp 4.0 & 0.518 & 30\% & 0.305 & +0.189 & 65 & 0.39 & 0.413 & 0.305 & 0.334 & 0.319 & 0.155 & +0.0590 (t 4.6) & +0.20 & 10/10 \\
+BGN & \texttt{bvychs45} -- bvychs at bv\_comp 4.5 & 0.525 & 29\% & 0.281 & +0.224 & 81 & 0.42 & -- & -- & -- & -- & -- & -- & -- & -- \\
 BGN & \texttt{bvychsn5} -- bvychs at bv\_comp -0.5 & 0.367 & 35\% & 0.254 & +0.080 & 35 & 0.21 & 0.229 & 0.202 & 0.207 & 0.228 & 0.127 & -0.0054 (t -0.9) & -0.01 & 6/10 \\
 BGN & \texttt{bvyvee} -- V-shaped loading across a visible level ladder: level 0.6..1.4, $b$ = +0.07, +0.00, -0.07, +0.00, +0.07 & 0.485 & 34\% & 0.352 & +0.076 & 23 & 0.24 & 0.352 & 0.305 & 0.320 & 0.344 & 0.164 & +0.0071 (t 1.3) & +0.05 & 6/8 \\
 GS21 & \texttt{gvyql10} -- U-shaped exposure in the firm's own leverage: $+0.1\,(\tilde b^2 - 1)$, one type & 0.287 & -81\% & 0.259 & +0.015 & 8 & 0.08 & 0.247 & 0.230 & 0.231 & 0.249 & 0.238 & -0.0021 (t -1.9) & -0.03 & 0/3 \\
@@ -69,6 +71,20 @@ GS21 & \texttt{gvyql20} -- U-shaped exposure in the firm's own leverage: $+0.2\,
 GS21 & \texttt{gvyqh10} -- hump-shaped exposure in the firm's own leverage: $-0.1\,(\tilde b^2 - 1)$, one type & 0.469 & -66\% & 0.409 & +0.032 & 11 & 0.16 & 0.366 & 0.358 & 0.335 & 0.391 & 0.339 & -0.0259 (t -6.9) & -0.14 & 0/3 \\
 KP14 & \texttt{vyg25sx2} -- vyg25s with the loadings doubled: $\pm$0.04, $\pm$0.14, $\pm$0.28 & 0.640 & 6\% & 0.158 & +0.437 & 343 & 0.57 & 0.456 & 0.206 & 0.105 & 0.134 & 0.027 & +0.2452 (t 11.1) & +0.40 & 10/10 \\
 KP14 & \texttt{vyg25sx3} -- vyg25s with the loadings tripled: $\pm$0.06, $\pm$0.21, $\pm$0.42 & 0.661 & 5\% & 0.248 & +0.364 & 175 & 0.55 & 0.461 & 0.223 & 0.098 & 0.237 & 0.021 & +0.2177 (t 9.7) & +0.39 & 10/10 \\
+GS21 & \texttt{gvyzz10} -- U-shaped exposure in the firm's own productivity: $+0.1\,(\tilde z^2 - 1)$, one type & 0.621 & 43\% & 0.356 & +0.224 & 60 & 0.45 & 0.498 & 0.455 & 0.312 & 0.489 & 0.252 & +0.0086 (t 0.7) & +0.02 & 3/5 \\
+GS21 & \texttt{gvyzz20} -- U-shaped exposure in the firm's own productivity: $+0.2\,(\tilde z^2 - 1)$, one type & 0.686 & 26\% & 0.441 & +0.168 & 43 & 0.42 & 0.500 & 0.343 & 0.313 & 0.456 & 0.173 & +0.0434 (t 3.5) & +0.19 & 5/5 \\
+GS21 & \texttt{gvyzzh10} -- hump-shaped exposure in the firm's own productivity: $-0.1\,(\tilde z^2 - 1)$, one type & 0.639 & 25\% & 0.364 & +0.250 & 70 & 0.49 & 0.474 & 0.325 & 0.246 & 0.378 & 0.147 & +0.0965 (t 3.5) & +0.27 & 5/5 \\
+GS21 & \texttt{gvy25sc25} -- gvy25s at bv\_comp 2.5: strong level compensation & 0.712 & 33\% & 0.542 & +0.168 & 31 & 0.46 & 0.621 & 0.575 & 0.623 & 0.644 & 0.230 & -0.0229 (t -2.9) & -0.15 & 1/5 \\
+BGN & \texttt{bvyhx2} -- hump-shaped loading across a mild level ladder 0.85..1.15: $b$ = -0.14, +0.00, +0.14, +0.00, -0.14 & 0.597 & 27\% & 0.526 & +0.057 & 11 & 0.25 & 0.523 & 0.392 & 0.315 & 0.508 & 0.158 & +0.0150 (t 0.7) & +0.06 & 2/3 \\
+BGN & \texttt{bvyhx3} -- hump-shaped loading across a mild level ladder 0.8..1.2: $b$ = -0.21, +0.00, +0.21, +0.00, -0.21 & 0.551 & 28\% & 0.349 & +0.155 & 44 & 0.36 & 0.375 & 0.295 & 0.280 & 0.340 & 0.153 & +0.0345 (t 3.9) & +0.14 & 10/10 \\
+BGN & \texttt{bvyq2} -- two chains, the second loading quadratic in the first: $b_2 = -14\,(b_1^2 - \bar{b_1^2})$, $b_1 = \pm$0.01, $\pm$0.035, $\pm$0.07 & 0.460 & 37\% & 0.303 & +0.063 & 21 & 0.20 & 0.307 & 0.240 & 0.260 & 0.285 & 0.172 & +0.0223 (t 18.1) & +0.11 & 3/3 \\
+BGN & \texttt{bvyq2x} -- two chains, the second loading quadratic in the first: $b_2 = -7\,(b_1^2 - \bar{b_1^2})$, $b_1 = \pm$0.02, $\pm$0.07, $\pm$0.14 & 0.523 & 30\% & 0.375 & +0.070 & 19 & 0.24 & -- & -- & -- & -- & -- & -- & -- & -- \\
+KP14 & \texttt{vyg25su} -- vyg25s without level compensation (bv\_comp 0): $\pm$0.02, $\pm$0.07, $\pm$0.14 & 0.575 & 11\% & 0.290 & +0.230 & 84 & 0.43 & 0.395 & 0.270 & 0.066 & 0.274 & 0.056 & +0.1162 (t 11.1) & +0.28 & 10/10 \\
+KP14 & \texttt{vyg25sux2} -- vyg25sx2 without level compensation (bv\_comp 0): $\pm$0.04, $\pm$0.14, $\pm$0.28 & 0.640 & 6\% & 0.185 & +0.411 & 500 & 0.55 & 0.482 & 0.284 & 0.088 & 0.229 & 0.027 & +0.1914 (t 6.5) & +0.37 & 10/10 \\
+KP14 & \texttt{vyg25x2} -- vyg25 (positive ladder) with the loadings x2: 0.04, 0.14, 0.28 & 0.468 & 7\% & 0.335 & +0.074 & 22 & 0.23 & -- & -- & -- & -- & -- & -- & -- & -- \\
+KP14 & \texttt{vyg25x3} -- vyg25 (positive ladder) with the loadings x3: 0.06, 0.21, 0.42 & 0.475 & 6\% & 0.358 & +0.063 & 17 & 0.22 & -- & -- & -- & -- & -- & -- & -- & -- \\
+KP14 & \texttt{vyg35x2} -- vyg25x2 (positive ladder x2) with the $y$ price raised to 3.5 & 0.531 & 5\% & 0.373 & +0.079 & 21 & 0.26 & -- & -- & -- & -- & -- & -- & -- & -- \\
+KP14 & \texttt{vyg25x2c} -- vyg25x2 (positive ladder x2) with the level compensation strengthened to 2.5 & 0.489 & 7\% & 0.359 & +0.074 & 20 & 0.24 & -- & -- & -- & -- & -- & -- & -- & -- \\
 BGN & \texttt{bvychsx2} -- bvychs with the loadings x 2: $\pm$0.02, $\pm$0.07, $\pm$0.14 & 0.496 & 32\% & 0.344 & +0.089 & 26 & 0.26 & 0.347 & 0.308 & 0.279 & 0.333 & 0.161 & +0.0072 (t 1.1) & +0.04 & 7/10 \\
 BGN & \texttt{bvychsx3} -- bvychs with the loadings x 3: $\pm$0.03, $\pm$0.105, $\pm$0.21 & 0.533 & 31\% & 0.384 & +0.081 & 21 & 0.26 & 0.377 & 0.353 & 0.321 & 0.370 & 0.164 & +0.0024 (t 0.5) & +0.01 & 6/10 \\
 GS21 & \texttt{gvy25sx2} -- gvy25s with the loadings x 2: $\pm$0.03, $\pm$0.1, $\pm$0.2 & 0.817 & 41\% & 0.721 & +0.093 & 13 & 0.38 & 0.814 & 0.777 & 0.796 & 0.814 & 0.344 & +0.0005 (t 0.1) & +0.01 & 2/3 \\
@@ -97,4 +113,14 @@ RF & \texttt{lsh\_a3\_b3\_n0} -- both 3 sd & 0.598 & 8\% & 0.598 & +0.000 & 0 & 
 RF & \texttt{lsh\_a0\_b0\_n1} -- mean-zero product, observation noise 1.0 & 0.598 & 8\% & 0.160 & +0.422 & 263 & 0.56 & 0.524 & 0.094 & 0.431 & 0.133 & 0.041 & +0.0928 (t 3.7) & +0.30 & 5/5 \\
 RF & \texttt{lsh\_a2\_b2\_n1} -- both shifted 2 sd, noise 1.0 & 0.598 & 8\% & 0.593 & +0.001 & 0 & 0.03 & 0.583 & 0.582 & 0.572 & 0.589 & 0.041 & -0.0060 (t -2.1) & -0.08 & 0/5 \\
 RF & \texttt{lrt\_n0} -- one-signed coverage ratio of the two latents, no noise & 0.598 & 8\% & 0.597 & +0.001 & 0 & 0.04 & 0.591 & 0.579 & 0.571 & 0.593 & 0.041 & -0.0033 (t -2.3) & -0.05 & 0/5 \\
+RF & \texttt{lsq\_a0\_n0} -- K=1 square of the SIZE latent, mean zero, no noise (the VW market holds size^2) & 0.598 & 8\% & 0.175 & +0.422 & 242 & 0.57 & 0.557 & 0.153 & 0.565 & 0.151 & 0.041 & -0.0082 (t -1.5) & -0.10 & 2/5 \\
+RF & \texttt{lsq\_a0\_n1} -- noise 1.0 & 0.598 & 8\% & 0.144 & +0.436 & 302 & 0.56 & 0.508 & 0.119 & 0.540 & 0.130 & 0.041 & -0.0313 (t -2.0) & -0.18 & 1/5 \\
+RF & \texttt{lsq\_a1\_n0} -- size latent shifted 1 sd & 0.598 & 8\% & 0.596 & +0.002 & 0 & 0.05 & 0.585 & 0.578 & 0.581 & 0.595 & 0.041 & -0.0101 (t -1.9) & -0.11 & 0/5 \\
+RF & \texttt{lsq\_a2\_n0} -- shifted 2 sd & 0.598 & 8\% & 0.598 & +0.000 & 0 & 0.02 & 0.588 & 0.580 & 0.579 & 0.597 & 0.041 & -0.0089 (t -1.9) & -0.10 & 0/5 \\
+RF & \texttt{lsqb\_a0\_n0} -- K=1 square of the BOOK-TO-MARKET latent, mean zero, no noise & 0.598 & 8\% & 0.199 & +0.398 & 200 & 0.56 & 0.564 & 0.142 & 0.125 & 0.173 & 0.041 & +0.3662 (t 11.0) & +0.54 & 5/5 \\
+RF & \texttt{lsqb\_a0\_n1} -- noise 1.0 & 0.598 & 8\% & 0.190 & +0.392 & 206 & 0.55 & 0.515 & 0.120 & 0.092 & 0.146 & 0.041 & +0.3403 (t 6.5) & +0.49 & 5/5 \\
+RF & \texttt{lsqb\_a1\_n0} -- bm latent shifted 1 sd & 0.598 & 8\% & 0.596 & +0.002 & 0 & 0.05 & 0.590 & 0.582 & 0.577 & 0.593 & 0.041 & -0.0027 (t -2.2) & -0.06 & 0/5 \\
+RF & \texttt{lsqb\_a1\_n1} -- shifted 1 sd, noise 1.0 & 0.598 & 8\% & 0.589 & +0.002 & 0 & 0.05 & 0.581 & 0.579 & 0.560 & 0.585 & 0.041 & -0.0047 (t -1.9) & -0.07 & 1/5 \\
+RF & \texttt{lsqb\_a2\_n0} -- shifted 2 sd & 0.598 & 8\% & 0.597 & +0.000 & 0 & 0.02 & 0.592 & 0.583 & 0.580 & 0.594 & 0.041 & -0.0026 (t -2.3) & -0.05 & 0/5 \\
+RF & \texttt{lsqb\_a2\_n1} -- shifted 2 sd, noise 1.0 & 0.598 & 8\% & 0.593 & +0.001 & 0 & 0.03 & 0.584 & 0.582 & 0.568 & 0.589 & 0.041 & -0.0047 (t -1.9) & -0.07 & 0/5 \\
 \hline\end{tabular}}\end{table}
