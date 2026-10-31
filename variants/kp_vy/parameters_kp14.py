@@ -32,6 +32,14 @@ gam_seed = 555
 gamma_v = 0.12                            # price of y-risk
 type_share = [1.0]
 type_bv = [0.0]                           # exposure betas on y
+# bv_on_eps (2026-10-30, the KP14 interaction slot): the y exposure multiplies only the firm's PROFITABILITY DEVIATION. Project
+# cash flow x K^alpha theta u [1 + (eps - 1) e^{b_f y}] instead of x K^alpha theta u eps e^{b_f y}: a firm with eps > 1 loads
+# positively on y, eps < 1 negatively, so the exposure is b_f (eps - 1), a product of the type and a visible within-firm state
+# that switches sign across firms. The four A-coefficients keep their structure (each is its own y-ODE): a0, a2 are solved with
+# b = 0, a1, a3 with b_f, and the tables carry e^{b y} folded into a1, a3 so that value = x K^alpha theta [a0 + (eps-1) a1 +
+# (u-1) a2 + (eps-1)(u-1) a3] with NO wholesale e^{b y}; b_eff_whole (zeros) is what the growth-option solve and the simulator
+# use for the wholesale factor. False leaves every economy op-for-op unchanged.
+bv_on_eps = False
 bv_comp = 0.0                             # y=0 value compensation knob (omega analogue)
 bx_seed = 777
 # 2026-09-18: price the e^{beta_f y} claims under the RISK-NEUTRAL OU dynamics (1), or the
@@ -256,17 +264,23 @@ _QyQ_solve_ty = [build_generator(y_solve, -kappa_y * y_solve - gamma_eff[f] * si
 _const_base_solve = r + gamma_x * gmult_y(y_solve) * sigma_x + delta - mu_x
 _A_solve = {}                                          # (f, theta_c) -> A on y_solve, pre-compensation
 
-def _solve_coeff_ty(f, theta_c):
+def _solve_coeff_ty(f, theta_c, b=None):
     if not y_risk_neutral:
         return _np.linalg.solve(_np.diag(const_ty(f) + theta_c) - Qy, _np.ones(NY))
-    b = b_eff[f]
+    b = b_eff[f] if b is None else float(b)
     W = _np.linalg.solve(_np.diag(_const_base_solve + theta_c) - _QyQ_solve_ty[f], _np.exp(b * y_solve))
     _A_solve[(f, theta_c)] = W * _np.exp(-b * y_solve)
     return _A_solve[(f, theta_c)][_i_tab]
-A0_ty = _np.stack([_solve_coeff_ty(f, 0.0) for f in range(ntypes)])                 # (ntypes, NY)
+_b_lvl = 0.0 if bv_on_eps else None                                                  # a0, a2: the level part, unexposed under bv_on_eps
+A0_ty = _np.stack([_solve_coeff_ty(f, 0.0, _b_lvl) for f in range(ntypes)])         # (ntypes, NY)
 A1_ty = _np.stack([_solve_coeff_ty(f, theta_eps) for f in range(ntypes)])
-A2_ty = _np.stack([_solve_coeff_ty(f, theta_u) for f in range(ntypes)])
+A2_ty = _np.stack([_solve_coeff_ty(f, theta_u, _b_lvl) for f in range(ntypes)])
 A3_ty = _np.stack([_solve_coeff_ty(f, theta_eps + theta_u) for f in range(ntypes)])
+if bv_on_eps:
+    # fold e^{b_f y} into the eps-components: the tables are then value per unit of x K^alpha theta with no wholesale factor
+    _fold = _np.exp(b_eff[:, None] * y_grid[None, :])
+    A1_ty = A1_ty * _fold; A3_ty = A3_ty * _fold
+b_eff_whole = _np.zeros(ntypes) if bv_on_eps else b_eff       # the wholesale e^{b y} factor (G solve, simulator)
 
 # y=0 value compensation: theta multiplies the cash-flow level (and hence A's and all values)
 _i0 = NY // 2
@@ -278,7 +292,10 @@ A2_ty = A2_ty * type_theta[:, None]; A3_ty = A3_ty * type_theta[:, None]
 def coef_on_solve_grid(f):
     """(A0, A1, A2, A3) for type f on y_solve, compensated like the tables. The G solve needs A
     where the Q-measure lives, which is outside y_grid; _coef_at would clamp it there."""
-    return tuple(_A_solve[(f, th)] * type_theta[f] for th in (0.0, theta_eps, theta_u, theta_eps + theta_u))
+    out = [_A_solve[(f, th)] * type_theta[f] for th in (0.0, theta_eps, theta_u, theta_eps + theta_u)]
+    if bv_on_eps:
+        _fs = _np.exp(b_eff[f] * y_solve); out[1] = out[1] * _fs; out[3] = out[3] * _fs
+    return tuple(out)
 
 def _coef_at(y, f):
     y = _np.asarray(y, float)
