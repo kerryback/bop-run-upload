@@ -187,7 +187,7 @@ GROUPS = [
      "Two independent priced states at total price 2.5 ($2.5/\\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).",
      ["bvyk2", "gvypk3", "vy9t2"]),
     # ---- the appendix: everything else that was run, grouped by what it tested ----
-    ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, and the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio).",
+    ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio), and the curvature-in-a-latent ladder (lsq / lsqb: the square of one partly hidden latent, size or book-to-market, with its mean shifted).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
       "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "bvychs4", "bvychs6", "bvychs8", "vyg25s6", "vyg25s18", "gvyib", "gvyib5", "gvyib2", "gxq35", "gxq70", "gvy25sq", "gvy25sh", "bvychs18", "bvychs25", "bvychs30", "bvychs35", "bvychs40", "bvychs45", "bvychsn5", "bvyvee", "bvyhump", "gvyql10", "gvyql20", "gvyqh10", "vyg25sx2", "vyg25sx3", "gvyzz10", "gvyzz20", "gvyzzh10", "gvy25sc25", "gvy25sc32", "bvyhx2", "bvyhx3", "bvyhx4", "bvyq2", "bvyq2x", "bvyq2k", "vyg25su", "vyg25sux2", "vyg25x2", "vyg25x3", "vyg35x2", "vyg25x2c", "bvychsx2", "bvychsx3", "gvy25sx2", "gvy25sx3", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
@@ -293,7 +293,12 @@ def reduced_rows():
               ("lsh_a0_b0_n0", "K=1 product of two mean-zero latent states (sign ladder origin), no noise"), ("lsh_a0_b1_n0", "one factor's mean shifted 1 sd"),
               ("lsh_a0_b2_n0", "one factor shifted 2 sd"), ("lsh_a1_b1_n0", "both factors shifted 1 sd"), ("lsh_a2_b2_n0", "both 2 sd"), ("lsh_a3_b3_n0", "both 3 sd"),
               ("lsh_a0_b0_n1", "mean-zero product, observation noise 1.0"), ("lsh_a2_b2_n1", "both shifted 2 sd, noise 1.0"),
-              ("lrt_n0", "one-signed coverage ratio of the two latents, no noise")]
+              ("lrt_n0", "one-signed coverage ratio of the two latents, no noise"),
+              # the curvature-in-a-latent ladder (2026-10-30): one factor on the SQUARE of one partly hidden latent, (s + m)^2 - 1
+              ("lsq_a0_n0", "K=1 square of the SIZE latent, mean zero, no noise (the VW market holds size^2)"), ("lsq_a0_n1", "noise 1.0"),
+              ("lsq_a1_n0", "size latent shifted 1 sd"), ("lsq_a2_n0", "shifted 2 sd"),
+              ("lsqb_a0_n0", "K=1 square of the BOOK-TO-MARKET latent, mean zero, no noise"), ("lsqb_a0_n1", "noise 1.0"),
+              ("lsqb_a1_n0", "bm latent shifted 1 sd"), ("lsqb_a1_n1", "shifted 1 sd, noise 1.0"), ("lsqb_a2_n0", "shifted 2 sd"), ("lsqb_a2_n1", "shifted 2 sd, noise 1.0")]
     return [_rf_rows(df, pick), _rf_rows(df, pick_x)]
 
 
