@@ -101,6 +101,7 @@ def sdf_compute(N, T, arr_tuple):
      loadings_z_taylor, loadings_x_taylor, loadings_z_proj, loadings_x_proj, yreg, ftype) = arr_tuple
     _FTYPE[0] = ftype
     bvf = b_eff[ftype]
+    bvw = b_eff_whole[ftype]                              # wholesale factor (0 under bv_on_eps)
     _YTIL[0] = project_y(yreg)
     tt = type_theta[ftype]
     _ghx, _ghw = np.polynomial.hermite.hermgauss(7)
@@ -125,7 +126,7 @@ def sdf_compute(N, T, arr_tuple):
             """all A/G-dependent pieces of E_t[R_i R_j] * P_i P_j conditional on y' = yv; the
             per-firm value factor e^{beta_f yv} is absorbed into the coefficients and linear tables,
             so squared/cross terms carry the right powers automatically."""
-            ebq = np.exp(bvf * yv[_FTYPE[0]])             # (N,) e^{b_f . y'} per firm
+            ebq = np.exp(bvw * yv[_FTYPE[0]])             # (N,) wholesale e^{b_f . y'} per firm (ones under bv_on_eps)
             coef = _coef_vec(yv, scale=ebq)               # e-scaled per-firm A-coefficients
             _t1 = _tab_at_s = lambda name: (lambda e: ebq * _tab_at(name, yv)(e))     # linear tables x e^{b y'}
             _t2 = lambda name: (lambda e: ebq**2 * _tab_at(name, yv)(e))              # squared/cross tables x e^{2 b y'}
@@ -169,7 +170,8 @@ def sdf_compute(N, T, arr_tuple):
         Mmix = sum(_ghw[q] * branch(yq[:, q]) for q in range(len(_ghw)))
 
         # cash-flow adjustment terms (regime-free)
-        cf = np.sum(eps[t, :]*ujt*x[t]*Ktalpha*dt, axis=0) * np.exp(bvf * y_now[_FTYPE[0]]) * tt
+        _epsx = eps[t, :] if not bv_on_eps else 1.0 + (eps[t, :] - 1.0) * np.exp(bvf * y_now[_FTYPE[0]])
+        cf = np.sum(_epsx*ujt*x[t]*Ktalpha*dt, axis=0) * np.exp(bvw * y_now[_FTYPE[0]]) * tt
         term4 = np.outer(cf/price[t, :], 1 + eret[t, :])
         term4 = term4 + term4.T - np.outer(cf/price[t, :], cf/price[t, :])
         term8_diag = 2*cf/price[t, :]*(1 + eret[t, :]) - (cf/price[t, :])**2

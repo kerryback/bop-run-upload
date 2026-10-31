@@ -127,9 +127,12 @@ def create_arrays(N, T):
     rng_bx = np.random.default_rng(bx_seed)
     ftype = rng_bx.choice(ntypes, size=N, p=type_share)
     bvf = b_eff[ftype]                                    # (N,) effective exposure magnitude
+    bvw = b_eff_whole[ftype]                              # (N,) wholesale factor's exposure (0 under bv_on_eps)
     tt = type_theta[ftype]                                # (N,)
     _ytil_n = ytil[ftype].T                               # (T+1, N): each firm's own projection
-    ebv = np.exp(bvf[None, :] * _ytil_n)                  # (T+1, N): e^{b_f . y_t}
+    ebv = np.exp(bvw[None, :] * _ytil_n)                  # (T+1, N): the wholesale e^{b_f . y_t} (ones under bv_on_eps)
+    # bv_on_eps: the exposure sits on the profitability deviation, cash flow ~ u [1 + (eps - 1) e^{b_f y}]
+    epsx = eps if not bv_on_eps else 1.0 + (eps - 1.0) * np.exp(bvf[None, :] * _ytil_n)
 
     def _coefs_ty(ycols):
         # per-(date, firm) A-coefficients, each type read at ITS OWN column (ycols: (ntypes, M))
@@ -161,7 +164,7 @@ def create_arrays(N, T):
 
     # Kj[t1, k] is capital allocated at time t1 by firm k if a project were to be initialized
     _Cown = _coefs_ty(ytil)
-    Kj = ((alpha*z*_Aval(_Cown, eps, 1.0))**(1/(1 - alpha))) 
+    Kj = ((alpha*z*np.maximum(_Aval(_Cown, eps, 1.0), 0.0))**(1/(1 - alpha)))    # no investment when the unit project value is <= 0 (bv_on_eps)
 
     # K[t1, t2, n] is capital allocated at t2 to project arriving at time t1 for firm n (0 if project is dead)
     K = chi*Kj[:, np.newaxis, :] 
@@ -177,7 +180,7 @@ def create_arrays(N, T):
     # cashflow[t1, t2, n] is cashflow at time t2 from project arriving at t1 for firm n
     # cashflow from t to t + 1 is flow_t dt, arriving at date t + 1
     cashflow = np.zeros((T+1, T+1, N))
-    cashflow[:, 1:, :] = eps[np.newaxis, :-1, :]*(x[:-1]*ebv[:-1])[np.newaxis, :, :]*uj[:, :-1,:]*K[:, :-1,:]**alpha* dt * tt[None, None, :] 
+    cashflow[:, 1:, :] = epsx[np.newaxis, :-1, :]*(x[:-1]*ebv[:-1])[np.newaxis, :, :]*uj[:, :-1,:]*K[:, :-1,:]**alpha* dt * tt[None, None, :] 
     op_cashflow = cashflow # cashflow from operations
     op_cashflow = np.sum(op_cashflow, axis = 0)
     cashflow[range(T+1), range(T+1),:] = -K[range(T+1), range(T+1),:]*x*ebv/z
@@ -213,7 +216,7 @@ def create_arrays(N, T):
     # compute 4 terms from the KP14.tex overleaf
     Et_x = np.exp(mu_x*dt)*x
     # E_t[e^{beta_f y'} ...] handled inside the y'-quadrature with per-type exp factors
-    ebq = np.exp(bvf[None, None, :] * yq_t[ftype].transpose(1, 2, 0))   # (T+1, 7, N)
+    ebq = np.exp(bvw[None, None, :] * yq_t[ftype].transpose(1, 2, 0))   # (T+1, 7, N)
     alph = alpha/(1 - alpha)
     Et_z_alph = z**alph*np.exp(alph*mu_z*dt + 0.5*alph*(2*alpha-1)/(1 - alpha)*sigma_z**2*dt)
 
@@ -235,14 +238,14 @@ def create_arrays(N, T):
             for t_ in range(e.shape[0]):
                 row = 0.0
                 for q in range(len(ghw)):
-                    row = row + ghw[q] * np.exp(b_eff[f] * yq_t[f, t_, q]) * at_y([tb[name] for tb in Et_ty[f]], yq_t[f, t_, q])(e[t_, cols])
+                    row = row + ghw[q] * np.exp(b_eff_whole[f] * yq_t[f, t_, q]) * at_y([tb[name] for tb in Et_ty[f]], yq_t[f, t_, q])(e[t_, cols])
                 out[t_, cols] = row
         return out
     Et_G = ((high == 0)*lambda_f*((1 - mu_H*dt)* _mixG("Et_G_down", eps) + mu_H*dt* _mixG("Et_G_up", eps)) + 
         (high == 1)*lambda_f*((1 - mu_L*dt)* _mixG("Et_G_up", eps) + mu_L*dt * _mixG("Et_G_down", eps)))
 
     term2 = Et_z_alph*Et_x*Et_G
-    term3 = np.sum(chi*eps[np.newaxis, :, :]*uj*(x*ebv)[np.newaxis, :, :]*K**alpha*dt*tt[None, None, :], axis = 0)
+    term3 = np.sum(chi*epsx[np.newaxis, :, :]*uj*(x*ebv)[np.newaxis, :, :]*K**alpha*dt*tt[None, None, :], axis = 0)
 
     rate = lambda_f*(lambda_L + (lambda_H - lambda_L)*high)
     term4 = rate*dt*C*Et_z_alph*Et_x*_mixG("Et_A_mod", eps)

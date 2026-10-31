@@ -146,7 +146,7 @@ import parameters_kp14 as P
 worst = 0.0
 for f in range(P.ntypes):
     for th in (0.0, P.theta_eps + P.theta_u):
-        A = P._A_solve[(f, th)]; b = P.b_eff[f]
+        A = P._A_solve[(f, th)]; b = 0.0 if (getattr(P, 'bv_on_eps', False) and th == 0.0) else P.b_eff[f]   # a0 unexposed under bv_on_eps
         W = A * np.exp(b * P.y_solve)
         lhs = (P._const_base_solve + th) * W - P._QyQ_solve_ty[f] @ W
         worst = max(worst, float(np.abs(lhs - np.exp(b * P.y_solve)).max() / np.abs(np.exp(b * P.y_solve)).max()))

@@ -46,7 +46,7 @@ if y_risk_neutral:
     # scalar gamma_v whenever there is only one priced state
     Qy = build_generator(y_grid, -kappa_y * y_grid - gamma_eff[_ft] * sigma_y)
     rho_y = rho0_at(y_grid)
-    _b = b_eff[_ft]
+    _b = b_eff_whole[_ft]                                  # 0 under bv_on_eps: the eps-part's e^{b y} is inside A_y
     _Afine = [a[_idx] for a in coef_on_solve_grid(_ft)]
     def A_y(ep, u, yv, f):                                   # A at solve-grid nodes (not clamped)
         i = int(np.argmin(np.abs(y_grid - yv)))
@@ -72,7 +72,8 @@ np.fill_diagonal(Qs, -Qs.sum(axis=1))
 util = np.empty((n, NS))
 for j in range(NS):
     iy = j // 2
-    util[:, j] = lam_rate[j] * C * A_y(eps_pts, 1.0, y_grid[iy], _ft) ** (1 / (1 - alpha))
+    # bv_on_eps can make the unit project value negative for unprofitable firms at high y: no investment there (K = 0)
+    util[:, j] = lam_rate[j] * C * np.maximum(A_y(eps_pts, 1.0, y_grid[iy], _ft), 0.0) ** (1 / (1 - alpha))
     if y_risk_neutral:
         util[:, j] *= np.exp(_b * y_grid[iy])                # flow of H = e^{b y} G
 

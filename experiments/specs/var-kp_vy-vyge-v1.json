@@ -1,0 +1,113 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyge-v1",
+ "title": "KP14 with the y exposure on the PROFITABILITY DEVIATION: three types b_f = [0.1, 0.25, 0.45], cash flow x K^a u [1 + (eps - 1) e^(b_f y)], price 2.5",
+ "question": "Does a type x profitability product, b_f (eps - 1), give KP14 an interaction gap of 0.1/yr without the sign-switching ladder's hump?",
+ "notes": "WHY (2026-10-30 23:50). The KP14 interaction slot: every lever on the positive ladder (loadings x2 / x3, price 3.5, bv_comp 2.5) left room at vyg25's 19-28%, and the sign-switching ladders' premium is hump-shaped whatever the compensation, because the type enters only through b and the level. This gives KP14 a genuine second dimension: the exposure multiplies the firm's profitability deviation, so profitable firms (eps > 1) load positively on y and unprofitable ones negatively, with the type setting the scale. The exposure b_f (eps - 1) is mean zero across firms and a product of a partly hidden type and a visible within-firm state (ROE), the structure the reduced form's latent product and GS21's imposed product share.\n\nIMPLEMENTATION (parameters_kp14 bv_on_eps, commit of 2026-10-30): a0, a2 solved with b = 0 and a1, a3 with b_f, e^{b y} folded into a1, a3; the growth-option solve and the simulator use no wholesale e^{b y} (b_eff_whole = 0); the unit project value is clipped at 0 at the investment margin (no investment when NPV <= 0: with the eps-part exposed it turns negative for eps < 0.3 beyond the table grid). type_theta = 1 (a0 is type-free). Mode off is op-for-op identical (parity test on vyg25s's tables). Loadings chosen so the unit value stays positive on the table grid for eps >= 0.1 (b <= 0.45; the effective exposure sd is about 0.24 b, so 0.024-0.11, vyg25's range).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): the premium monotone in eps within type and the type visible through book-to-market only (no level difference); room above vyg25's 24%; fair gap +0.03 to +0.10. FALSIFIED if room is at or below 28% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25-v1",
+  "changes": [
+   "type_bv [0.02, 0.07, 0.14] -> [0.1, 0.25, 0.45]; bv_on_eps true (new); own tables under prefix vyge"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "type_bv": [
+   0.1,
+   0.25,
+   0.45
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2,
+  "bv_on_eps": true
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyge"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.34,
+      0.33,
+      0.33
+     ],
+     "type_bv": [
+      0.1,
+      0.25,
+      0.45
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2,
+     "bv_on_eps": true
+    },
+    "args": {
+     "prefix": "vyge"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: the KP14 interaction slot, a type x profitability exposure); spec written inline (see round3 memory)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyge",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "e9c800a1637206c09a6c6e99b186797c27e7f489b19ed0676112eb314f574856",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
