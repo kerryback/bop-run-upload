@@ -98,14 +98,14 @@
   "runner_note": "SEED_SPEC=vyg25x2",
   "solve_runner": "variants/run_solve_slurm.sh",
   "verified_by": "tests/test_specs_match_shell.py",
-  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.6049532.vyg25x2.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "spec_hash": "2d15c1f2d4d208f28c9a79ad2d707e9b24688b75400a892d44db1c8c7c0ace39",
- "expected_solves": null,
+ "spec_hash": "bb10f496f54626a25026a9209f0ae70d53ed8066dc621ea2d436e3c6eea13c91",
+ "expected_solves": {
+  "G": "45269f85c4f276f5",
+  "integ": "678a99dea849ab37"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
+ "solves_pending": null,
  "reused_solves": null
 }
