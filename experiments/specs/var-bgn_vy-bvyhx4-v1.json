@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyhx4-v1",
+ "title": "BGN with a HUMP-SHAPED exposure across a mild visible level ladder, loadings +-0.28: five types, cash-flow level [0.8, 0.9, 1.0, 1.1, 1.2], loadings [-0.28, 0.0, 0.28, 0.0, -0.28], exact compensation, price 2.5",
+ "question": "Does the BGN size-hump ladder keep gaining with the loading (room 9-13% at +-0.14, 40% at +-0.21; gap at the bar), as KP14's did up to x2?",
+ "notes": "WHY (2026-10-30 20:05). bvyhx3 (+-0.21) has room 37-40% on ten seeds and a fair gap of +0.032 on four (t 2.4): at the 0.1/yr bar. bvyhx2 (+-0.14) had 9-13%. The room rose steeply with the loading because the b channel (2.4 %/mo across the ladder at +-0.21) outgrows the part of b that bm, ROE and momentum reveal; this is the next rung.\n\nDESIGN. As bvyhx3 with type_bv +-0.28. Level ladder 0.8..1.2 kept.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-30): room above 40%; fair gap +0.04 to +0.08. FALSIFIED if the gap is at or below bvyhx3's on three seeds.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvyhx3-v1",
+  "changes": [
+   "type_bv +-0.21 -> [-0.28, 0.0, 0.28, 0.0, -0.28]; jstar_vy_file Jstar_vy_bvyhx4.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   -0.28,
+   0.0,
+   0.28,
+   0.0,
+   -0.28
+  ],
+  "type_level": [
+   0.8,
+   0.9,
+   1.0,
+   1.1,
+   1.2
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyhx4.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      -0.28,
+      0.0,
+      0.28,
+      0.0,
+      -0.28
+     ],
+     "type_level": [
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyhx4.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-30 (round 3: fourth rung of the BGN size-hump ladder); written inline (see round3 memory)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyhx4",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "e159eade4732722279a9574986245d0b08866b8dc86971a94da5cfc8eaa1ee19"
+}
