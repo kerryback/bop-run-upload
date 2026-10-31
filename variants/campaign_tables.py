@@ -295,7 +295,7 @@ def reduced_rows():
               ("lsh_a0_b0_n1", "mean-zero product, observation noise 1.0"), ("lsh_a2_b2_n1", "both shifted 2 sd, noise 1.0"),
               ("lrt_n0", "one-signed coverage ratio of the two latents, no noise"),
               # the curvature-in-a-latent ladder (2026-10-30): one factor on the SQUARE of one partly hidden latent, (s + m)^2 - 1
-              ("lsq_a0_n0", "K=1 square of the SIZE latent, mean zero, no noise (the VW market holds size^2)"), ("lsq_a0_n1", "noise 1.0"),
+              ("lsq_a0_n0", "K=1 square of the SIZE latent, mean zero, no noise (the VW market holds $\\mathrm{size}^2$)"), ("lsq_a0_n1", "noise 1.0"),
               ("lsq_a1_n0", "size latent shifted 1 sd"), ("lsq_a2_n0", "shifted 2 sd"),
               ("lsqb_a0_n0", "K=1 square of the BOOK-TO-MARKET latent, mean zero, no noise"), ("lsqb_a0_n1", "noise 1.0"),
               ("lsqb_a1_n0", "bm latent shifted 1 sd"), ("lsqb_a1_n1", "shifted 1 sd, noise 1.0"), ("lsqb_a2_n0", "shifted 2 sd"), ("lsqb_a2_n1", "shifted 2 sd, noise 1.0")]

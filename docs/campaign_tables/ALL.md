@@ -177,7 +177,7 @@ Everything else that was run, by model, each described in the appendix against i
 | RF | `lsh_a0_b0_n1` -- mean-zero product, observation noise 1.0 | 0.598 | 8% | 0.160 | +0.422 | 263 | 0.56 | 0.524 | 0.094 | 0.431 | 0.133 | 0.041 | +0.0928 (t 3.7) | +0.30 | 5/5 |
 | RF | `lsh_a2_b2_n1` -- both shifted 2 sd, noise 1.0 | 0.598 | 8% | 0.593 | +0.001 | 0 | 0.03 | 0.583 | 0.582 | 0.572 | 0.589 | 0.041 | -0.0060 (t -2.1) | -0.08 | 0/5 |
 | RF | `lrt_n0` -- one-signed coverage ratio of the two latents, no noise | 0.598 | 8% | 0.597 | +0.001 | 0 | 0.04 | 0.591 | 0.579 | 0.571 | 0.593 | 0.041 | -0.0033 (t -2.3) | -0.05 | 0/5 |
-| RF | `lsq_a0_n0` -- K=1 square of the SIZE latent, mean zero, no noise (the VW market holds size^2) | 0.598 | 8% | 0.175 | +0.422 | 242 | 0.57 | 0.557 | 0.153 | 0.565 | 0.151 | 0.041 | -0.0082 (t -1.5) | -0.10 | 2/5 |
+| RF | `lsq_a0_n0` -- K=1 square of the SIZE latent, mean zero, no noise (the VW market holds mathrmsize^2) | 0.598 | 8% | 0.175 | +0.422 | 242 | 0.57 | 0.557 | 0.153 | 0.565 | 0.151 | 0.041 | -0.0082 (t -1.5) | -0.10 | 2/5 |
 | RF | `lsq_a0_n1` -- noise 1.0 | 0.598 | 8% | 0.144 | +0.436 | 302 | 0.56 | 0.508 | 0.119 | 0.540 | 0.130 | 0.041 | -0.0313 (t -2.0) | -0.18 | 1/5 |
 | RF | `lsq_a1_n0` -- size latent shifted 1 sd | 0.598 | 8% | 0.596 | +0.002 | 0 | 0.05 | 0.585 | 0.578 | 0.581 | 0.595 | 0.041 | -0.0101 (t -1.9) | -0.11 | 0/5 |
 | RF | `lsq_a2_n0` -- shifted 2 sd | 0.598 | 8% | 0.598 | +0.000 | 0 | 0.02 | 0.588 | 0.580 | 0.579 | 0.597 | 0.041 | -0.0089 (t -1.9) | -0.10 | 0/5 |
