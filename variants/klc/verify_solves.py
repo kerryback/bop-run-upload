@@ -119,7 +119,7 @@ def kp(which="kp", model="kp_vy"):
         check(want in (None, integ[0]), f"integ id {integ[0]}" + (" matches the spec" if want else " (spec does not pin it yet: chained id, fill it in now)"))
         print(f"INTEG_ID={integ[0]}", flush=True)
     pr = s["params"]
-    ou = float(pr.get("pj", 0.0)) == 0.0 and float(pr.get("g_lo", 1.0)) == float(pr.get("g_hi", 1.0)) and float(pr.get("g_quad", 0.0)) == 0.0 and not any(isinstance(b, list) for b in pr.get("type_bv", []))
+    ou = float(pr.get("pj", 0.0)) == 0.0 and float(pr.get("g_lo", 1.0)) == float(pr.get("g_hi", 1.0)) and float(pr.get("g_quad", 0.0)) == 0.0 and not any(isinstance(b, list) for b in pr.get("type_bv", [])) and not bool(pr.get("bv_on_eps", False))
     if ou:
         out = rnp._run(rnp._KP, d, ov)
         check(out["rn"] == 1 and out["worst"] < 1e-4, f"A(y) against the risk-neutral closed form at these parameters: worst {out['worst']:.2e} (< 1e-4)")
