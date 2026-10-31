@@ -1,0 +1,141 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vygesm-v1",
+ "title": "KP14 exposure on the profitability deviation with MIRRORED types b_f = [-0.15, -0.1, -0.05, 0.05, 0.1, 0.15] and a level ladder [0.5, 0.65, 0.85, 1.15, 1.5, 2.0]: the product of two mean-zero visible factors",
+ "question": "With both factors of the product mean zero (type sign via size, profitability deviation via ROE), does KP14 get an interaction gap of 0.1/yr?",
+ "notes": "WHY (2026-10-31 02:00). vyge (hidden type) and vygel (type visible in size, R^2 0.91) both have room of 10-27%: with POSITIVE loadings the product b_f (eps - 1) is a monotone function of profitability whose slope varies by type, so a ROE sort takes most of it and the type only scales the slope. The campaign's rule (reduced form sign ladder, GS21's product): room needs the exposure orthogonal to every linear function of the characteristics, which a product has only when BOTH factors are mean zero. Here the loadings are mirrored (mean zero over types) and the profitability deviation is mean zero over firms; size reveals the sign of b_f through the level ladder, ROE reveals eps, and the premium b_f (eps - 1) is a product of two visible mean-zero factors, monotone in each given the other (no hump).\n\nLOADINGS. +-0.45/0.25 (vygels, cancelled before running) and +-0.2 give NEGATIVE unit project values on the table grid for the negative-b types (y spends time far negative under Q, so e^{b y} is large there for b < 0: -8.5 / -1.6 / -0.3 at eps 0.1); +-0.15 keeps every type's unit value positive for eps >= 0.1. The effective exposure sd is about 0.24 b, so 0.012-0.036.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-31): room well above vyg25's 24% (the pure product: 50% or more); fair gap +0.05 to +0.15. FALSIFIED if room is at or below 27% (vygel) on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vygel-v1",
+  "changes": [
+   "three positive types -> six mirrored [-0.15, -0.1, -0.05, 0.05, 0.1, 0.15]; type_level [0.5, 0.65, 0.85, 1.15, 1.5, 2.0] (monotone in b); own tables under prefix vygesm"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -0.15,
+   -0.1,
+   -0.05,
+   0.05,
+   0.1,
+   0.15
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.2,
+  "bv_on_eps": true,
+  "type_level": [
+   0.5,
+   0.65,
+   0.85,
+   1.15,
+   1.5,
+   2.0
+  ]
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vygesm"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -0.15,
+      -0.1,
+      -0.05,
+      0.05,
+      0.1,
+      0.15
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.2,
+     "bv_on_eps": true,
+     "type_level": [
+      0.5,
+      0.65,
+      0.85,
+      1.15,
+      1.5,
+      2.0
+     ]
+    },
+    "args": {
+     "prefix": "vygesm"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-31 (round 3: the KP14 interaction slot, both product factors mean zero); spec written inline (see round3 memory)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vygesm",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "39c943dd4acc498405329222e3f564a443ac7c19a7512ca8573d50549d1c16de",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
