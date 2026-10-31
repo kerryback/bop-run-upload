@@ -40,6 +40,9 @@ type_bv = [0.0]                           # exposure betas on y
 # (u-1) a2 + (eps-1)(u-1) a3] with NO wholesale e^{b y}; b_eff_whole (zeros) is what the growth-option solve and the simulator
 # use for the wholesale factor. False leaves every economy op-for-op unchanged.
 bv_on_eps = False
+# type_level (2026-10-31): an explicit cash-flow level multiplier per type on top of the compensation (BGN's type_level); None = ones.
+# Under bv_on_eps the compensation is 1 (a0 is type-free), so this is the only way the type shows in size.
+type_level = None
 bv_comp = 0.0                             # y=0 value compensation knob (omega analogue)
 bx_seed = 777
 # 2026-09-18: price the e^{beta_f y} claims under the RISK-NEUTRAL OU dynamics (1), or the
@@ -284,7 +287,7 @@ b_eff_whole = _np.zeros(ntypes) if bv_on_eps else b_eff       # the wholesale e^
 
 # y=0 value compensation: theta multiplies the cash-flow level (and hence A's and all values)
 _i0 = NY // 2
-type_theta = (A0_ty[0, _i0] / A0_ty[:, _i0]) ** bv_comp
+type_theta = (A0_ty[0, _i0] / A0_ty[:, _i0]) ** bv_comp * (_np.ones(ntypes) if type_level is None else _np.array(type_level, float))
 pm_tau = type_theta ** (1 / (1 - alpha))
 A0_ty = A0_ty * type_theta[:, None]; A1_ty = A1_ty * type_theta[:, None]
 A2_ty = A2_ty * type_theta[:, None]; A3_ty = A3_ty * type_theta[:, None]
