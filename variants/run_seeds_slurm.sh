@@ -1427,6 +1427,34 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvylu30c-v1; sbatch --export=ALL --array=0-2 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvysl15)
+    # gs_vy (2026-11-01): INDUSTRY SIGN x FINANCIAL LEVERAGE: two industries (gs_level 0.8 / 1.2) x three fixed coupons 0.15 / 0.40 / 0.70, production exposure sign x 0.15 x coupon/0.40, value-compensated, price 2.5. Six solves.
+    MODEL=gs_vy; TAG=gvysl15; SPEC=var-gs_vy-gvysl15-v1
+    SOLVE_TAG=sol_gvysl15a,sol_gvysl15b,sol_gvysl15c,sol_gvysl15d,sol_gvysl15e,sol_gvysl15f
+    export GS_VY_SOLDIRS=sol_gvysl15a,sol_gvysl15b,sol_gvysl15c,sol_gvysl15d,sol_gvysl15e,sol_gvysl15f
+    export GS_VY_BV=-0.0562,-0.15,-0.2625,0.0562,0.15,0.2625
+    export GS_VY_BC=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_BI=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_BK=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_SHARES=0.1667,0.1667,0.1666,0.1667,0.1667,0.1666
+    unset GS_VY_BV2 GS_VY_BIB
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvysl15-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvysl20)
+    # gs_vy (2026-11-01): INDUSTRY SIGN x FINANCIAL LEVERAGE: two industries (gs_level 0.8 / 1.2) x three fixed coupons 0.15 / 0.40 / 0.70, production exposure sign x 0.2 x coupon/0.40, value-compensated, price 2.5. Six solves.
+    MODEL=gs_vy; TAG=gvysl20; SPEC=var-gs_vy-gvysl20-v1
+    SOLVE_TAG=sol_gvysl20a,sol_gvysl20b,sol_gvysl20c,sol_gvysl20d,sol_gvysl20e,sol_gvysl20f
+    export GS_VY_SOLDIRS=sol_gvysl20a,sol_gvysl20b,sol_gvysl20c,sol_gvysl20d,sol_gvysl20e,sol_gvysl20f
+    export GS_VY_BV=-0.075,-0.2,-0.35,0.075,0.2,0.35
+    export GS_VY_BC=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_BI=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_BK=0.0,0.0,0.0,0.0,0.0,0.0
+    export GS_VY_SHARES=0.1667,0.1667,0.1666,0.1667,0.1667,0.1666
+    unset GS_VY_BV2 GS_VY_BIB
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvysl20-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   gvysz1)
     # gs_vy (2026-11-01): TYPE SIGN x PRODUCTIVITY: exposure gs_bv_f z~ (gs_bzl 0, gs_bzi 1), six mirrored types +-0.1/0.2/0.35 on the gs_level ladder 0.5..2.0, no compensation, price 2.5 (KP14 vygelbc's construction). Six solves.
     MODEL=gs_vy; TAG=gvysz1; SPEC=var-gs_vy-gvysz1-v1
