@@ -1,0 +1,223 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyu4-v1",
+ "title": "GS21 U-shaped exposure (0.28, 0, 0, 0, 0.28) across a MILD visible level ladder 0.8..1.2 (gs_level), five types, exact compensation, price 2.5 (small firms constrained, large firms operationally levered)",
+ "question": "Does a U-shaped loading across size give GS21 room and a fair gap at the bar?",
+ "notes": "WHY (2026-11-01). A non-monotone exposure with a simple story, built the same way in every model: five equal types on the mild visible level ladder 0.8..1.2 with the loading U-shaped across it, b = (0.28, 0, 0, 0, 0.28), exact y = 0 compensation (bv_comp 1.0) so that only size carries the U. Small firms are exposed to the aggregate cash-flow shock through financing constraints, large firms through operating leverage, mid-sized firms through neither. The hump twins (bvyhx4 / vyhx4 / gvyhx4, b = -c, 0, +c, 0, -c) are running; the U has no sign flip and all its exposure is of one sign, so its mean is not zero and the market holds the common part; the room is the curvature in size, which no linear function of the characteristics spans (bvyvee's V across the WIDE ladder 0.6..1.4 failed because the level's own monotone premium swamped it; the mild ladder and the larger loading are bvyhx3/4's fix).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-01): premium U-shaped in size; oracle room 30% or more and a fair gap at or above +0.029 in BGN (bvyhx4 gave +0.119 with the sign flip); KP14 and GS21 as their hump twins. FALSIFIED if room is at or below 15% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvyhx4-v1",
+  "changes": [
+   "gs_bv [-0.28, 0, 0.28, 0, -0.28] -> [0.28, 0.0, 0.0, 0.0, 0.28]; five solves sol_gvyu4a..e"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "U-shaped gs_bv across the visible gs_level ladder, each type level-compensated at y = 0 (bv_comp 1.0)",
+  "gs_level_ladder": "explicit per-type production-level multiplier gs_level, log gs_level added to the production exponent beside gs_ashift in solver and simulator (read per type from each solution)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.0
+ },
+ "types": {
+  "share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.28,
+    0.0,
+    0.0,
+    0.0,
+    0.28
+   ],
+   "gs_level": [
+    0.8,
+    0.9,
+    1.0,
+    1.1,
+    1.2
+   ]
+  },
+  "soldirs": [
+   "sol_gvyu4a",
+   "sol_gvyu4b",
+   "sol_gvyu4c",
+   "sol_gvyu4d",
+   "sol_gvyu4e"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyu4a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.28,
+     "gs_level": 0.8
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvyu4b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.0,
+     "gs_level": 0.9
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvyu4c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.0,
+     "gs_level": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvyu4d",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.0,
+     "gs_level": 1.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvyu4e",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.28,
+     "gs_level": 1.2
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyu4a,sol_gvyu4b,sol_gvyu4c,sol_gvyu4d,sol_gvyu4e",
+  "GS_VY_BV": "0.28,0.0,0.0,0.0,0.28",
+  "GS_VY_SHARES": "0.2,0.2,0.2,0.2,0.2"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (interpretable non-monotone exposures); spec written by _scratch/gen_u_specs.py; solves by variants/klc/solve_gs_vy_klc.sh (five tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyu4",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvyu4a",
+  "sol_gvyu4b",
+  "sol_gvyu4c",
+  "sol_gvyu4d",
+  "sol_gvyu4e"
+ ],
+ "reused_solves": null,
+ "spec_hash": "006050a72c956d71d7293568f1c43bae4f4f798438e6ccd471c2925bde4d913e"
+}

@@ -1,0 +1,224 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylu30-v1",
+ "title": "GS21 cash-flow exposure U-SHAPED IN LEVERAGE: three fixed-coupon types (0.15 / 0.40 / 0.70), production-level exposure gs_bv (0.3, 0, 0.3), price 2.5, no compensation",
+ "question": "Does the distress-and-rationing story (cash-flow exposure U-shaped in leverage) give GS21 room and a fair gap at the bar, with leverage an observed characteristic?",
+ "notes": "WHY (2026-11-01, the user's story). High-leverage firms are in distress and low-leverage firms are (inferred to be) credit-rationed, so both are more exposed to the aggregate cash-flow shock than firms in the middle: cash-flow exposure is U-shaped in leverage, all else equal. GS21 is the model with debt. gvyzlf's chassis gives leverage a real cross-section (three types born with coupon 0.15 / 0.40 / 0.70 per unit capital, fixed for life, D/E about 0.25 / 1.0 / 3.25; the earlier leverage-curvature attempt gvyql/gvyqh had nothing to load on because endogenous leverage spans 0.002 to 0.006 across quintiles). The production-level exposure (gs_bzl 1) is gs_bv = (0.3, 0, 0.3): the linear part of the exposure in the coupon is near zero (cov(coupon, exposure) = 0.3 x (0.15 + 0.70 - 2 x 0.417) / 3), so a leverage sort does not hold it. With bv_comp 0 nothing is compensated: the exposed types are worth less per unit capital at y = 0, so book-to-market may reveal the exposed ends; gvylu30c is the compensated twin.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-01): the premium across the leverage characteristic is U-shaped; room 30% or more if neither value nor size reveals the ends linearly, and a fair gap at or above +0.029. FALSIFIED if room is at or below gvyzlf's 8% on three seeds (then book-to-market or size holds the U).",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvyzlf-v1",
+  "changes": [
+   "gs_bv [0.1, 0.1, 0.1] on z~ -> [0.3, 0.0, 0.3] on the production level (gs_bzl 0 -> 1, gs_bzi 1 -> 0); bv_comp 0.0; three solves sol_gvylu30a..c; coupons, gs_fixcs 1, xi 0, y_mult 3.5 unchanged"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "U-shaped production-level exposure across three fixed-coupon leverage types without compensation (bv_comp 0)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "gs_bzl": 1.0,
+  "gs_bzi": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 1
+ },
+ "types": {
+  "share": [
+   0.34,
+   0.33,
+   0.33
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.3,
+    0.0,
+    0.3
+   ],
+   "gs_bc": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bi": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bk": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "gs_bfix": [
+    0.15,
+    0.4,
+    0.7
+   ]
+  },
+  "soldirs": [
+   "sol_gvylu30a",
+   "sol_gvylu30b",
+   "sol_gvylu30c"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylu30a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "gs_bzl": 1.0,
+     "gs_bzi": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gs_bv": 0.3,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.15,
+     "gs_bhi": 0.15
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvylu30b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "gs_bzl": 1.0,
+     "gs_bzi": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gs_bv": 0.0,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.4,
+     "gs_bhi": 0.4
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvylu30c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "gs_bzl": 1.0,
+     "gs_bzi": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 1,
+     "gs_bv": 0.3,
+     "gs_bc": 0.0,
+     "gs_bi": 0.0,
+     "gs_bk": 0.0,
+     "gs_blo": 0.7,
+     "gs_bhi": 0.7
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylu30a,sol_gvylu30b,sol_gvylu30c",
+  "GS_VY_BV": "0.3,0.0,0.3",
+  "GS_VY_BC": "0.0,0.0,0.0",
+  "GS_VY_BI": "0.0,0.0,0.0",
+  "GS_VY_BK": "0.0,0.0,0.0",
+  "GS_VY_SHARES": "0.34,0.33,0.33"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (interpretable non-monotone exposures: the user's distress / rationing story); spec written by _scratch/gen_u_specs.py; solves by variants/klc/solve_gs_vy_klc.sh (three tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylu30",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvylu30a",
+  "sol_gvylu30b",
+  "sol_gvylu30c"
+ ],
+ "reused_solves": null,
+ "spec_hash": "64c83c63f2b74fd95881c1cfceb22d429ae1f1870136fd91b995552c4be331ad"
+}
