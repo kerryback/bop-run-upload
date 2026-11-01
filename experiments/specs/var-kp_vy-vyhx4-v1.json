@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyhx4-v1",
+ "title": "KP14 HUMP-shaped exposure +-0.28 across a MILD visible level ladder 0.8..1.2 (b = -0.28, 0, +0.28, 0, -0.28), five types, exact compensation, price 2.5 (BGN bvyhx4's twin)",
+ "question": "Does the hump-shaped loading across a visible level ladder that gives BGN its non-monotone gap do the same in KP14, where the level enters through type_level (the same knob) and the exposure is on the production level?",
+ "notes": "WHY (2026-11-01). Section 3c of the report: non-monotone exposure as a type of its own, built the SAME way in every model. BGN's bvyhx3 / bvyhx4 (hump-shaped loading +-0.21 / +-0.28 across a mild visible level ladder 0.8..1.2, exact compensation) have room 44% / 73% and fair gaps +0.035 / +0.119 (ten of ten); the type is hidden from every monotone sort because the two exposed types sit at the two ENDS of the size ladder and the unexposed ones in the middle, so no linear function of size (or of anything the level moves) is long exposure. This is bvyhx4 in KP14: type_level [0.8..1.2] (an explicit cash-flow level multiplier on top of the compensation, parameters_kp14 2026-10-31), type_bv the same hump, bv_comp 1.0 (exact compensation of the y = 0 value ratio, as BGN's), price 2.5; the exposure is KP14's production-level e^{b y} (not bv_on_eps).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-01): the premium across the ladder is hump-shaped in the level, as in BGN; oracle room 40% or more of the linear ceiling and a fair gap at or above +0.029 at +-0.28 (BGN: +0.119), smaller at +-0.21 (BGN: +0.035). FALSIFIED if room is at or below 25% on three seeds, or ten seeds give a gap below +0.029 at +-0.28.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyg25s-v1",
+  "changes": [
+   "type_share 6 -> 5 equal; type_bv -> [-0.28, 0.0, 0.28, 0.0, -0.28]; type_level [0.8, 0.9, 1.0, 1.1, 1.2] (new); bv_comp 1.2 -> 1.0; own tables under prefix vyhx4; gamma_v 2.5 unchanged (BGN bvyhx4's construction)"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   -0.28,
+   0.0,
+   0.28,
+   0.0,
+   -0.28
+  ],
+  "type_level": [
+   0.8,
+   0.9,
+   1.0,
+   1.1,
+   1.2
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyhx4"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      -0.28,
+      0.0,
+      0.28,
+      0.0,
+      -0.28
+     ],
+     "type_level": [
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.0
+    },
+    "args": {
+     "prefix": "vyhx4"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (section 3c: non-monotone exposure built the same way in every model); spec written by _scratch/gen_hx_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyhx4",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "8ba5f08b13c06b6f6d0583762d7072bc659773d8b5b239c34a6e98b904439370",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}

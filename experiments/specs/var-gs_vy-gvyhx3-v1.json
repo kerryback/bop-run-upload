@@ -1,0 +1,223 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvyhx3-v1",
+ "title": "GS21 HUMP-shaped exposure +-0.21 across a MILD visible level ladder 0.8..1.2 (gs_bv = -0.21, 0, +0.21, 0, -0.21; gs_level 0.8..1.2), five types, exact compensation, price 2.5 (BGN bvyhx3's twin)",
+ "question": "Does the hump-shaped loading across a visible level ladder that gives BGN its non-monotone gap do the same in GS21, where the level enters through the new gs_level multiplier on production and the exposure is the production-level gs_bv?",
+ "notes": "WHY (2026-11-01). Section 3c of the report: non-monotone exposure as a type of its own, built the SAME way in every model. BGN's bvyhx3 / bvyhx4 (hump-shaped loading +-0.21 / +-0.28 across a mild visible level ladder 0.8..1.2, exact compensation) have room 44% / 73% and fair gaps +0.035 / +0.119 (ten of ten); the type is hidden from every monotone sort because the two exposed types sit at the two ENDS of the size ladder and the unexposed ones in the middle, so no linear function of size (or of anything the level moves) is long exposure. This is bvyhx3 in GS21: five solves, one per (gs_bv, gs_level) pair; gs_level [0.8..1.2] multiplies production (log gs_level in the exponent, solver and simulator; 1.0 leaves every earlier economy unchanged), gs_bv the same hump on the production level (gs_bzl 1), bv_comp 1.0 (exact y = 0 compensation, -log W(gs_bv)), price 2.5, NY 9, y_mult 2.5. GS21's own non-monotone economy so far is gvyzzh10 (quadratic in the firm's productivity, +0.080), a different construction; +-0.21 / +-0.28 are larger than any gs_bv run before (gvy25sx2 +-0.2 converged).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-01): the premium across the ladder is hump-shaped in the level; oracle room 40% or more and a fair gap at or above +0.029 at +-0.28, smaller at +-0.21. FALSIFIED if room is at or below 25% on three seeds, or ten seeds give a gap below +0.029 at +-0.28. Convergence of the +-0.28 types is the feasibility risk (tolerance exit within the 5600-sweep cap).",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvy25s-v1",
+  "changes": [
+   "type_share 6 -> 5 equal; gs_bv -> [-0.21, 0.0, 0.21, 0.0, -0.21]; gs_level [0.8, 0.9, 1.0, 1.1, 1.2] (new knob); bv_comp 1.2 -> 1.0; five solves sol_gvyhx3a..e; gamma_v 2.5, kappa_y 0.35, NY 9, y_mult 2.5 unchanged (BGN bvyhx3's construction)"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_2.5sd_priced",
+  "gs_ashift_ladder": "derived: -bv_comp log W(gs_bv), applied in solver and simulator",
+  "gs_vy_sign_ladder": "hump-shaped gs_bv across the visible gs_level ladder, each type level-compensated at y = 0 (bv_comp 1.0)",
+  "gs_level_ladder": "explicit per-type production-level multiplier gs_level, log gs_level added to the production exponent beside gs_ashift in solver and simulator (read per type from each solution)"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed / reg_seed offset by the seed). Seed 0 reproduces the single-run behaviour; --common_aggregate restores the fixed-aggregate behaviour as an explicit variance decomposition.",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 2.5,
+  "bv_comp": 1.0
+ },
+ "types": {
+  "share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.21,
+    0.0,
+    0.21,
+    0.0,
+    -0.21
+   ],
+   "gs_level": [
+    0.8,
+    0.9,
+    1.0,
+    1.1,
+    1.2
+   ]
+  },
+  "soldirs": [
+   "sol_gvyhx3a",
+   "sol_gvyhx3b",
+   "sol_gvyhx3c",
+   "sol_gvyhx3d",
+   "sol_gvyhx3e"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvyhx3a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": -0.21,
+     "gs_level": 0.8
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvyhx3b",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.0,
+     "gs_level": 0.9
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvyhx3c",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.21,
+     "gs_level": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvyhx3d",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": 0.0,
+     "gs_level": 1.1
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   },
+   {
+    "name": "sol_gvyhx3e",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 2.5,
+     "bv_comp": 1.0,
+     "gs_bv": -0.21,
+     "gs_level": 1.2
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 4
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvyhx3a,sol_gvyhx3b,sol_gvyhx3c,sol_gvyhx3d,sol_gvyhx3e",
+  "GS_VY_BV": "-0.21,0.0,0.21,0.0,-0.21",
+  "GS_VY_SHARES": "0.2,0.2,0.2,0.2,0.2"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (section 3c: non-monotone exposure built the same way in every model); spec written by _scratch/gen_hx_specs.py; solves by variants/klc/solve_gs_vy_klc.sh (five tasks), ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvyhx3",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "sol_gvyhx3a",
+  "sol_gvyhx3b",
+  "sol_gvyhx3c",
+  "sol_gvyhx3d",
+  "sol_gvyhx3e"
+ ],
+ "reused_solves": null,
+ "spec_hash": "aaad8a781ae042bd80fb91f6391e90ab3dade7639be4cc466311fedde6fa414a"
+}
