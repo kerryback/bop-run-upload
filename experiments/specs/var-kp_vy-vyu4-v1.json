@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyu4-v1",
+ "title": "KP14 U-shaped exposure (0.28, 0, 0, 0, 0.28) across a MILD visible level ladder 0.8..1.2, five types, exact compensation, price 2.5 (small firms constrained, large firms operationally levered)",
+ "question": "Does a U-shaped loading across size give KP14 room and a fair gap at the bar?",
+ "notes": "WHY (2026-11-01). A non-monotone exposure with a simple story, built the same way in every model: five equal types on the mild visible level ladder 0.8..1.2 with the loading U-shaped across it, b = (0.28, 0, 0, 0, 0.28), exact y = 0 compensation (bv_comp 1.0) so that only size carries the U. Small firms are exposed to the aggregate cash-flow shock through financing constraints, large firms through operating leverage, mid-sized firms through neither. The hump twins (bvyhx4 / vyhx4 / gvyhx4, b = -c, 0, +c, 0, -c) are running; the U has no sign flip and all its exposure is of one sign, so its mean is not zero and the market holds the common part; the room is the curvature in size, which no linear function of the characteristics spans (bvyvee's V across the WIDE ladder 0.6..1.4 failed because the level's own monotone premium swamped it; the mild ladder and the larger loading are bvyhx3/4's fix).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-01): premium U-shaped in size; oracle room 30% or more and a fair gap at or above +0.029 in BGN (bvyhx4 gave +0.119 with the sign flip); KP14 and GS21 as their hump twins. FALSIFIED if room is at or below 15% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyhx4-v1",
+  "changes": [
+   "type_bv [-0.28, 0, 0.28, 0, -0.28] -> [0.28, 0.0, 0.0, 0.0, 0.28]; own tables under prefix vyu4"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   0.28,
+   0.0,
+   0.0,
+   0.0,
+   0.28
+  ],
+  "type_level": [
+   0.8,
+   0.9,
+   1.0,
+   1.1,
+   1.2
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyu4"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      0.28,
+      0.0,
+      0.0,
+      0.0,
+      0.28
+     ],
+     "type_level": [
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.0
+    },
+    "args": {
+     "prefix": "vyu4"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (interpretable non-monotone exposures); spec written by _scratch/gen_u_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyu4",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "e68a0af853de5860a122317d309b0bdc4002378c985f4a695470cbc8abdc81f4",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
