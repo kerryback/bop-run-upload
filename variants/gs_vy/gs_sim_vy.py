@@ -52,7 +52,8 @@ gs_bzq = float(_s["gs_bzq"]) if "gs_bzq" in _s.files else 0.0
 gs_bzz = float(_s["gs_bzz"]) if "gs_bzz" in _s.files else 0.0      # productivity-curvature exposure term (gs_solve_vy.py)      # leverage-curvature exposure term (gs_solve_vy.py)
 gs_bx2 = float(_s["gs_bx2"]) if "gs_bx2" in _s.files else 0.0
 gs_pj = float(_s["gs_pj"]) if "gs_pj" in _s.files else 0.0
-ashift_ts = [float(d["gs_ashift"]) for d in _sols]  # applied in production below, as the solver does
+level_ts = [float(d["gs_level"]) if "gs_level" in d.files else 1.0 for d in _sols]   # per-type visible level (gs_solve_vy.py gs_level)
+ashift_ts = [float(d["gs_ashift"]) + float(np.log(l)) for d, l in zip(_sols, level_ts)]  # applied in production below, as the solver does (log 1 = 0 exactly)
 gs_fixcs = int(_s["gs_fixcs"]) if "gs_fixcs" in _s.files else 0        # fixed capital structure: see gs_solve_vy.py
 bfix_ts = [float(bgrid[np.argmin(np.abs(bgrid - float(d["gs_blo"])))]) if "gs_blo" in d.files else 0.0 for d in _sols]
 
@@ -89,7 +90,7 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
             continue
         if not np.array_equal(_s[_k], _sol[_k]):
             raise ValueError(f"solutions disagree on '{_k}': {_dirs[0].strip()} vs {_d.strip()}. The types must differ "
-                             f"in gs_bv (and the derived gs_ashift) and NOTHING else; re-solve the ladder with one parameter set.")
+                             f"in gs_bv (and the derived gs_ashift) and gs_level and NOTHING else; re-solve the ladder with one parameter set.")
 
 znum, xnum, bnum = len(zgrid), len(xgrid), len(bgrid)
 _ztil = zgrid / np.sqrt(sigma_z ** 2 / (1 - rho_z ** 2))

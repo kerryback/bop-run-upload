@@ -48,6 +48,11 @@ NY = 1                    # Tauchen nodes for y (1 = no state: reproduces gs_sol
 y_mult = 2.5              # Tauchen half-width in stationary sd
 gs_bv = 0.0               # this type's exposure: production * exp(gs_bv * y)
 bv_comp = 0.0             # y=0 level compensation exponent -> gs_ashift below
+# gs_level (2026-11-01, non-monotone exposures across a VISIBLE level ladder, BGN's / KP14's type_level): an explicit per-type
+# production-level multiplier on top of the compensation, log gs_level added to the production exponent beside gs_ashift in the
+# solver and the simulator. With it a ladder of types can carry a hump-shaped gs_bv across a visible size ladder. 1.0 leaves every
+# economy unchanged (log 1 = 0 added exactly).
+gs_level = 1.0
 # ---- cost-side exposure (2026-10-08): a fixed operating cost gs_fc per unit capital whose level moves
 # with y as exp(gs_bc * y). The firm's cash-flow exposure to y then runs through OPERATING LEVERAGE,
 # -gs_fc gs_bc e^{gs_bc y} / (output - delta - cost): convex in profitability within a type, and at y = 0
@@ -146,6 +151,7 @@ rho_y2 = float(np.exp(-kappa_y2 * dt)); s_y2 = float(np.sqrt(1.0 - rho_y2 ** 2))
 _mk2 = -gs_bv2 * lam_y2 * s_y2 * (1 - rho_y2 ** _k) / (1 - rho_y2) + 0.5 * gs_bv2 ** 2 * (1 - rho_y2 ** (2 * _k))   # 0 at gs_bv2 = 0
 _W = float((np.exp(-r * _k) * np.exp(_mk + _mk2)).sum() / np.exp(-r * _k).sum())
 gs_ashift = float(-bv_comp * np.log(_W))
+_lshift = float(np.log(gs_level))                 # the visible level ladder, 0 unless the spec sets gs_level
 
 sys.path.insert(0, os.path.dirname(HERE))          # variants/, for `common`
 from common import solstamp                        # noqa: E402
@@ -251,7 +257,7 @@ if NY2 > 1:
 else:
     ygrid2 = np.zeros(NY)
 MPy = My * pr_y                                             # (NY, NY): priced y-transition weights
-print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bib {gs_bib}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}, coupon set [{gs_blo}, {gs_bhi}] -> nodes {np.round(bgrid[_bmask], 4).tolist()}", flush=True)
+print(f"y chain: {NY} nodes ({NY1} x {NY2}) over +-{y_mult} sd, rho_y {rho_y:.4f}, lam_y {lam_y:.4f}, lam_y2 {lam_y2:.4f}, gs_bv2 {gs_bv2}; gs_bv {gs_bv}, gs_ashift {gs_ashift:.5f}, gs_level {gs_level}, gs_fc {gs_fc}, gs_bc {gs_bc}, gs_bphi {gs_bphi}, gs_bi {gs_bi}, gs_bib {gs_bib}, gs_bk {gs_bk}, gs_bzl {gs_bzl}, gs_bzi {gs_bzi}, gs_bzb {gs_bzb}, gs_bx2 {gs_bx2}, gs_pj {gs_pj}, gs_gj {gs_gj}, coupon set [{gs_blo}, {gs_bhi}] -> nodes {np.round(bgrid[_bmask], 4).tolist()}", flush=True)
 
 mn = np.linspace(-4 * sigma_m, 4 * sigma_m, 161)
 mw = np.exp(-0.5 * (mn / sigma_m) ** 2)
@@ -274,7 +280,7 @@ _btil = (bgrid - 0.5) / 0.29                                                    
 _expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0) + gs_bzz * (_ztil[:, None] ** 2 - 1.0))   # (znum, bnum)
 _expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0) + gs_bzz * (_ztil[:, None] ** 2 - 1.0))  # the second chain's
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)                          # (znum,) x loading by productivity
-_prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift)
+_prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift + _lshift)
 _cost = delta + gs_fc * np.exp(gs_bc * ygrid)[:, None, None, None]            # (NY, 1, 1, 1)
 cy = np.exp((gs_bi + gs_bib * _btil[None, :]) * ygrid[:, None])                 # (NY, bnum) investment-cost multiplier by y node and current coupon
 ky = np.exp(gs_bk * ygrid)                                                      # (NY,) coupon multiplier
@@ -448,7 +454,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                     params=np.array([g, delta, rho_x, sigma_x, rho_z, sigma_z, r, gamma_x, tau, phi,
                                      kappa_b, xi, imin, imax, sigma_m]),
                     solve_id=_snap.solve_id,
-                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bzq=gs_bzq, gs_bzz=gs_bzz, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
+                    gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, gs_level=gs_level, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bzq=gs_bzq, gs_bzz=gs_bzz, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
                     gamma_v=gamma_v, kappa_y=kappa_y, NY=NY, y_mult=y_mult, lam_y=lam_y, rho_y=rho_y, s_y=s_y,
                     ygrid2=ygrid2, NY1=NY1, NY2=NY2, gs_bv2=gs_bv2, gamma_v2=gamma_v2, kappa_y2=kappa_y2,
                     kappa_e=kappa_e, xnum=xnum, bnum=bnum, znum=znum, tol=tol,

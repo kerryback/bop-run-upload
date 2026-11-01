@@ -1026,6 +1026,20 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vygelbcs
     SOLVE_HINT='export KSPECS=var-kp_vy-vygelbcs-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyhx3)
+    # kp_vy (2026-11-01): HUMP-shaped exposure +-0.21 across a MILD visible level ladder [0.8, 0.9, 1.0, 1.1, 1.2] (BGN bvyhx3's twin), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyhx3; SPEC=var-kp_vy-vyhx3-v1; SOLVE_TAG=vyhx3
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [-0.21, 0.0, 0.21, 0.0, -0.21], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyhx3
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyhx3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyhx4)
+    # kp_vy (2026-11-01): HUMP-shaped exposure +-0.28 across a MILD visible level ladder [0.8, 0.9, 1.0, 1.1, 1.2] (BGN bvyhx4's twin), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyhx4; SPEC=var-kp_vy-vyhx4-v1; SOLVE_TAG=vyhx4
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [-0.28, 0.0, 0.28, 0.0, -0.28], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyhx4
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyhx4-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25su)
     # kp_vy (2026-10-30): vyg25s WITHOUT level compensation (bv_comp 0): the type visible in value, product type x growth-option share
     MODEL=kp_vy; TAG=vyg25su; SPEC=var-kp_vy-vyg25su-v1; SOLVE_TAG=vyg25su
@@ -1338,6 +1352,28 @@ case "$SEED_SPEC" in
     unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyzzh10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyhx3)
+    # gs_vy (2026-11-01): HUMP-shaped exposure +-0.21 across a MILD visible level ladder gs_level [0.8, 0.9, 1.0, 1.1, 1.2] (BGN bvyhx3's twin), exact compensation, price 2.5. Five solves.
+    MODEL=gs_vy; TAG=gvyhx3; SPEC=var-gs_vy-gvyhx3-v1
+    SOLVE_TAG=sol_gvyhx3a,sol_gvyhx3b,sol_gvyhx3c,sol_gvyhx3d,sol_gvyhx3e
+    export GS_VY_SOLDIRS=sol_gvyhx3a,sol_gvyhx3b,sol_gvyhx3c,sol_gvyhx3d,sol_gvyhx3e
+    export GS_VY_BV=-0.21,0.0,0.21,0.0,-0.21
+    export GS_VY_SHARES=0.2,0.2,0.2,0.2,0.2
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyhx3-v1; sbatch --export=ALL --array=0-4 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyhx4)
+    # gs_vy (2026-11-01): HUMP-shaped exposure +-0.28 across a MILD visible level ladder gs_level [0.8, 0.9, 1.0, 1.1, 1.2] (BGN bvyhx4's twin), exact compensation, price 2.5. Five solves.
+    MODEL=gs_vy; TAG=gvyhx4; SPEC=var-gs_vy-gvyhx4-v1
+    SOLVE_TAG=sol_gvyhx4a,sol_gvyhx4b,sol_gvyhx4c,sol_gvyhx4d,sol_gvyhx4e
+    export GS_VY_SOLDIRS=sol_gvyhx4a,sol_gvyhx4b,sol_gvyhx4c,sol_gvyhx4d,sol_gvyhx4e
+    export GS_VY_BV=-0.28,0.0,0.28,0.0,-0.28
+    export GS_VY_SHARES=0.2,0.2,0.2,0.2,0.2
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyhx4-v1; sbatch --export=ALL --array=0-4 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   gvyzz20)
     # gs_vy (2026-10-30): PRODUCTIVITY-CURVATURE exposure gs_bv 0.2 x (z~^2 - 1) (U in productivity), one type, price 2.5, no level shift
