@@ -130,14 +130,14 @@
   "runner_note": "SEED_SPEC=vygelb7g",
   "solve_runner": "variants/run_solve_slurm.sh",
   "verified_by": "tests/test_specs_match_shell.py",
-  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.6170209.vygelb7g.build.log (see PRECOMMITMENT STATUS in notes)"
  },
- "spec_hash": "6b83841ff1c649337100da98017fc5f579709dc902a73c94284237643b5249ec",
- "expected_solves": null,
+ "spec_hash": "7c4ac200cb7231925f5d191d91a731b408b0f2d0f256f005cfebacc77af77dcd",
+ "expected_solves": {
+  "G": "0b6afdf49d95b604",
+  "integ": "11c02e2c8f8fba09"
+ },
  "precommitted": false,
- "solves_pending": [
-  "G",
-  "integ"
- ],
+ "solves_pending": null,
  "reused_solves": null
 }
