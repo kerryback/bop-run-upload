@@ -1,0 +1,145 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vygelbcs-v1",
+ "title": "KP14 bounded exposure (cap 2.5), mirrored types \\pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, \\gamma_v 4.0, \\sigma_\\epsilon 0.3",
+ "question": "Does a KP14 economy whose only type-dependence is a PRODUCT of two visible mean-zero factors (sign of b via size, eps - 1 via ROE) reach a fair gap of 0.1/yr (+0.029 monthly)?",
+ "notes": "WHY (2026-10-31). The KP14 interaction slot: vyge/vygel (positive b) had room 10-27% because b_f (eps-1) is monotone in ROE; vygesm (mirrored, |b| <= 0.15) 7-12% because the positivity bound made the product's Sharpe tiny; vygels (mirrored to 0.45) could not be solved (negative unit project values). vygelbc with the profitability noise raised from 0.2 to 0.3 (stationary sd of eps 0.24 -> 0.36): the exposure b_f (eps - 1) h'(y) widens with the eps deviation; unit values are unchanged on the eps grid (min +0.24; positive down to eps = 0 since A1/A0 < 1).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-10-31): oracle room 40% or more (both factors mean zero, as in vyg25s / bvychs30) and a fair gap of +0.03 to +0.10 monthly; passes at +0.029 or more on most seeds. FALSIFIED if room is at or below vygel's 27% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vygelbc-v1",
+  "changes": [
+   "{'sigma_eps': 0.3}; own tables under prefix vygelbcs; everything else vygelbc's"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 200
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1667,
+   0.1666,
+   0.1666
+  ],
+  "type_bv": [
+   -1.2,
+   -0.7,
+   -0.3,
+   0.3,
+   0.7,
+   1.2
+  ],
+  "gamma_v": 4.0,
+  "bv_comp": 1.2,
+  "bv_on_eps": true,
+  "type_level": [
+   0.5,
+   0.65,
+   0.85,
+   1.15,
+   1.5,
+   2.0
+  ],
+  "bv_eps_cap": 2.5,
+  "sigma_eps": 0.3
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vygelbcs"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1667,
+      0.1666,
+      0.1666
+     ],
+     "type_bv": [
+      -1.2,
+      -0.7,
+      -0.3,
+      0.3,
+      0.7,
+      1.2
+     ],
+     "gamma_v": 4.0,
+     "bv_comp": 1.2,
+     "bv_on_eps": true,
+     "type_level": [
+      0.5,
+      0.65,
+      0.85,
+      1.15,
+      1.5,
+      2.0
+     ],
+     "bv_eps_cap": 2.5,
+     "sigma_eps": 0.3
+    },
+    "args": {
+     "prefix": "vygelbcs"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   0.001,
+   0.01,
+   0.1,
+   1
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-10-31 (KP14 interaction slot: bounded exposure); spec written by _scratch/gen_vygelbc2_specs.py",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vygelbcs",
+  "solve_runner": "variants/run_solve_slurm.sh",
+  "verified_by": "tests/test_specs_match_shell.py",
+  "solve_note": "to be built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "19a774cba9d62f796839feb7f5080a4eb9cf2a95e5de228fbf0facda6daaafee",
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "G",
+  "integ"
+ ],
+ "reused_solves": null
+}
