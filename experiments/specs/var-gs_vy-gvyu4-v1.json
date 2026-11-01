@@ -207,17 +207,20 @@
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=gvyu4",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
-  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvyu4a": "6a1477c4efb727af",
+  "sol_gvyu4b": "ad1406bf36fd5f67",
+  "sol_gvyu4c": "503209c69df4fd98",
+  "sol_gvyu4d": "f59b8bab6b48b8f5",
+  "sol_gvyu4e": "f733b842663974c9"
+ },
  "precommitted": false,
- "solves_pending": [
-  "sol_gvyu4a",
-  "sol_gvyu4b",
-  "sol_gvyu4c",
-  "sol_gvyu4d",
-  "sol_gvyu4e"
- ],
- "reused_solves": null,
- "spec_hash": "006050a72c956d71d7293568f1c43bae4f4f798438e6ccd471c2925bde4d913e"
+ "solves_pending": null,
+ "reused_solves": {
+  "sol_gvyu4b": "sol_gvyhx4b (same parameters, solve_id ad1406bf36fd5f67; the solver's cache hit left the new directory empty, solution copied 2026-11-01)",
+  "sol_gvyu4d": "sol_gvyhx4d (same parameters, solve_id f59b8bab6b48b8f5; copied 2026-11-01)"
+ },
+ "spec_hash": "b9b70426e44b3922b8dc53d0b3383c1a9b61cc89a69b20974596f28327a90dd4"
 }
