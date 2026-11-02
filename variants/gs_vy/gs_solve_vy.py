@@ -135,6 +135,11 @@ gs_bhi = 1.0
 # capital, so b' = b instead of b/g, equity receives (1 - kappa_b)(g - 1) Q(b) for the new debt, and the old debt's
 # value per old unit of capital is unchanged (Q(b), not g Q(b/g)). The coupon per unit capital is then the type's
 # gs_blo = gs_bhi for the firm's whole life. gs_fixcs = 0 is GS21's debt dynamics.
+# gs_fixcs = 2 (2026-11-02, 'continuous exogenous leverage'): the same fixed capital structure, but the coupon per unit capital is a
+# FIRM-level debt capacity drawn at birth (and at re-entry) uniformly from the grid nodes in [gs_blo, gs_bhi], fixed for the firm's
+# life. Every admissible node is an absorbing state with the gs_fixcs dynamics, so the solve on the full admissible set is the union
+# of the per-node fixed-coupon solves; the simulator (gs_sim_vy.py) draws the coupons. Leverage then varies continuously across firms
+# within a type, independently of productivity, without defining observed groups.
 gs_fixcs = 0
 # ---- RISKLESS debt (2026-10-23): gs_riskless = 1 values the debt claim at its riskless coupon value in every state,
 # b / (e^r - 1) per unit coupon, as if creditors were made whole on default. Equity then bears the whole exposure of the
@@ -216,8 +221,11 @@ def restrict_b(obj):
         obj[..., ~_bmask] = -np.inf
     return obj
 if gs_fixcs:
-    assert xi == 0.0, "a fixed capital structure (gs_fixcs = 1) has no refinancing: set xi = 0"
-    assert _bmask.sum() == 1, "a fixed capital structure needs one coupon node: gs_blo = gs_bhi"
+    assert xi == 0.0, "a fixed capital structure (gs_fixcs = 1 or 2) has no refinancing: set xi = 0"
+    if int(gs_fixcs) == 1:
+        assert _bmask.sum() == 1, "a fixed capital structure needs one coupon node: gs_blo = gs_bhi"
+    else:
+        assert _bmask.sum() >= 2, "gs_fixcs = 2 needs at least two admissible coupon nodes in [gs_blo, gs_bhi]"
 def qi_no(Q0):
     """old debt's value per OLD unit of capital after an investment without refinancing"""
     return Q0 if gs_fixcs else at_bg(g * Q0)

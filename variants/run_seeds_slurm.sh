@@ -1493,6 +1493,50 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvysl20-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvylq10)
+    # gs_vy (2026-11-02): exposure U-shaped in leverage, firm-level coupon drawn from [0.1, 0.9]: $b$ = 0.1 ($\\tilde b^2 - 1$), one type; CONTINUOUS exogenous leverage (gs_fixcs 2: firm coupon drawn at birth from [0.1, 0.9], fixed for life), price 2.5. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylq10; SPEC=var-gs_vy-gvylq10-v1
+    SOLVE_TAG=sol_gvylq10a
+    export GS_VY_SOLDIRS=sol_gvylq10a
+    export GS_VY_BV=0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylq10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylq20)
+    # gs_vy (2026-11-02): exposure U-shaped in leverage, firm-level coupon drawn from [0.1, 0.9]: $b$ = 0.2 ($\\tilde b^2 - 1$), one type; CONTINUOUS exogenous leverage (gs_fixcs 2: firm coupon drawn at birth from [0.1, 0.9], fixed for life), price 2.5. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylq20; SPEC=var-gs_vy-gvylq20-v1
+    SOLVE_TAG=sol_gvylq20a
+    export GS_VY_SOLDIRS=sol_gvylq20a
+    export GS_VY_BV=0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylq20-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslq)
+    # gs_vy (2026-11-02): industry sign $\\times$ leverage, firm-level coupon drawn from [0.1, 0.9]: $b_f \\times$ coupon/0.4, mirrored types $\\pm$0.05 / 0.1 / 0.15 on the level ladder; CONTINUOUS exogenous leverage (gs_fixcs 2: firm coupon drawn at birth from [0.1, 0.9], fixed for life), price 2.5. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslq; SPEC=var-gs_vy-gvyslq-v1
+    SOLVE_TAG=sol_gvyslqa,sol_gvyslqb,sol_gvyslqc,sol_gvyslqd,sol_gvyslqe,sol_gvyslqf
+    export GS_VY_SOLDIRS=sol_gvyslqa,sol_gvyslqb,sol_gvyslqc,sol_gvyslqd,sol_gvyslqe,sol_gvyslqf
+    export GS_VY_BV=-0.15,-0.1,-0.05,0.05,0.1,0.15
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslq-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslz)
+    # gs_vy (2026-11-02): industry sign $\\times$ standardized leverage, firm-level coupon drawn from [0.1, 0.9]: $b_f \\tilde b$, mirrored types $\\pm$0.1 / 0.2 / 0.35 on the level ladder; CONTINUOUS exogenous leverage (gs_fixcs 2: firm coupon drawn at birth from [0.1, 0.9], fixed for life), price 2.5. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslz; SPEC=var-gs_vy-gvyslz-v1
+    SOLVE_TAG=sol_gvyslza,sol_gvyslzb,sol_gvyslzc,sol_gvyslzd,sol_gvyslze,sol_gvyslzf
+    export GS_VY_SOLDIRS=sol_gvyslza,sol_gvyslzb,sol_gvyslzc,sol_gvyslzd,sol_gvyslze,sol_gvyslzf
+    export GS_VY_BV=-0.35,-0.2,-0.1,0.1,0.2,0.35
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslz-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   gvysz1)
     # gs_vy (2026-11-01): TYPE SIGN x PRODUCTIVITY: exposure gs_bv_f z~ (gs_bzl 0, gs_bzi 1), six mirrored types +-0.1/0.2/0.35 on the gs_level ladder 0.5..2.0, no compensation, price 2.5 (KP14 vygelbc's construction). Six solves.
     MODEL=gs_vy; TAG=gvysz1; SPEC=var-gs_vy-gvysz1-v1

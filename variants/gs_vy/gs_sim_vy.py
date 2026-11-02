@@ -56,6 +56,12 @@ level_ts = [float(d["gs_level"]) if "gs_level" in d.files else 1.0 for d in _sol
 ashift_ts = [float(d["gs_ashift"]) + float(np.log(l)) for d, l in zip(_sols, level_ts)]  # applied in production below, as the solver does (log 1 = 0 exactly)
 gs_fixcs = int(_s["gs_fixcs"]) if "gs_fixcs" in _s.files else 0        # fixed capital structure: see gs_solve_vy.py
 bfix_ts = [float(bgrid[np.argmin(np.abs(bgrid - float(d["gs_blo"])))]) if "gs_blo" in d.files else 0.0 for d in _sols]
+if gs_fixcs == 2:                                                       # continuous exogenous leverage: the admissible coupon nodes
+    _bh = 0.5 * (bgrid[1] - bgrid[0])
+    _lohi = {(float(d["gs_blo"]), float(d["gs_bhi"])) for d in _sols}
+    assert len(_lohi) == 1, f"gs_fixcs = 2: every type must share [gs_blo, gs_bhi]; got {_lohi}"
+    _blo, _bhi = next(iter(_lohi)); _bnodes = bgrid[(bgrid >= _blo - _bh) & (bgrid <= _bhi + _bh)]
+    assert len(_bnodes) >= 2
 
 _solved_bv = [float(d["gs_bv"]) for d in _sols]
 if _solved_bv != _bv_list:
@@ -188,8 +194,10 @@ def create_arrays(N, T, seed_offset=0):
     ix[0] = rng.choice(xnum, p=statx)
     iz[0] = rng.choice(znum, size=N, p=statz)
     b = np.zeros((T + 1, N)); k = np.ones((T + 1, N))
+    if gs_fixcs == 2:
+        bfixf = rng_bx.choice(_bnodes, size=N)                        # each firm's own debt capacity, drawn at birth
     if gs_fixcs:
-        b[0] = bfixf                                                  # born with the type's debt
+        b[0] = bfixf                                                  # born with the type's (or the firm's) debt
     eta = rng.random((T + 1, N)) < xi
     icost = rng.uniform(imin, imax, size=(T + 1, N))
     mshock = rng.choice(mn, size=(T + 1, N), p=mw)
@@ -239,6 +247,8 @@ def create_arrays(N, T, seed_offset=0):
         alive = (Pn + mshock[t + 1]) > 0
         default[t + 1] = ~alive
         payoff[t + 1] = scale[t] * np.where(alive, np.maximum(Pn + mshock[t + 1], 0.0), 0.0)
+        if gs_fixcs == 2:
+            bfixf = np.where(alive, bfixf, rng_bx.choice(_bnodes, size=N))  # a firm that replaces a dead one draws its own capacity
         b[t + 1] = np.where(alive, bp, bfixf if gs_fixcs else 0.0)
         k[t + 1] = np.where(alive, k[t] * scale[t], np.maximum(alpha_e * k[t].mean(), 1e-3))
         iz[t + 1] = np.where(alive, iz[t + 1], rng.choice(znum, size=N, p=statz))
