@@ -236,4 +236,6 @@ Everything else that was run, by model, each described in the appendix against i
 | lsq_a0_n1 -- observation noise 1.0 | 0.598 | 8 | 0.144 | +0.436 | 302 | 0.56 | 0.508 | 0.119 | 0.540 | 0.130 | 0.041 | -0.0313 (t -2.0) | 1/5 |
 | lsqb_a0_n0 -- K=1, square of book-to-market, mean zero, observed exactly | 0.598 | 8 | 0.199 | +0.398 | 200 | 0.56 | 0.564 | 0.142 | 0.125 | 0.173 | 0.041 | +0.3662 (t 11.0) | 5/5 |
 | lsqb_a0_n1 -- noise 1.0 | 0.598 | 8 | 0.190 | +0.392 | 206 | 0.55 | 0.515 | 0.120 | 0.092 | 0.146 | 0.041 | +0.3403 (t 6.5) | 5/5 |
+| lsqr_a0_n0 -- K=1, square of profitability, mean zero, observed exactly | 0.598 | 8 | 0.121 | +0.476 | 392 | 0.58 | 0.569 | 0.076 | 0.064 | 0.101 | 0.041 | +0.4462 (t 11.9) | 5/5 |
+| lsqr_a0_n1 -- noise 1.0 | 0.598 | 8 | 0.111 | +0.471 | 425 | 0.57 | 0.532 | 0.012 | 0.049 | 0.058 | 0.041 | +0.4574 (t 17.5) | 5/5 |
 
