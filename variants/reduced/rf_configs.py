@@ -162,12 +162,20 @@ for ma in (0, 1, 2):
         LSQB[f"lsqb_a{ma}_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "square",
                                        "lat_sq_idx": 1, "lat_shift": (0.0, float(ma), 0.0, 0.0, 0.0), "lat_std": True}
 CONFIGS.update(LSQB)
+# lsqr_: the same curvature in the PROFITABILITY latent (index 3, roe): the reduced-form twin of GS21's exposure quadratic in the
+# firm's own productivity (gvyzzh10), beside the size square (KP14's and BGN's hump across size) and the book-to-market square.
+LSQR = {}
+for on in (0.0, 1.0):
+    LSQR[f"lsqr_a0_n{on:g}"] = {"J": 1, "nlat": 5, "obs_noise": on, "nf_lat": 1, "lam_lat": 0.012 * 2.0, "lat_form": "square",
+                                "lat_sq_idx": 3, "lat_shift": (0.0, 0.0, 0.0, 0.0, 0.0), "lat_std": True}
+CONFIGS.update(LSQR)
 
 LADDERS = {
     "lfac": sorted(LFAC),
     "signs": sorted(LSH),
     "lsq": sorted(LSQ),
     "lsqb": sorted(LSQB),
+    "lsqr": sorted(LSQR),
     "kfac": sorted(KFAC),
     "kfo": sorted(KFO),
     "speed": ["hl120", "hl48", "base", "hl12", "hl6"],

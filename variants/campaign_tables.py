@@ -316,20 +316,21 @@ def reduced_rows():
     pick = [("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
             ("lfh_L5_K1_n0", "K=1 product of latent states, no observation noise"), ("lfh_L5_K2_n0", "K=2"), ("lfh_L5_K3_n0", "K=3"), ("lfh_L5_K5_n0", "K=5"), ("lfh_L5_K10_n0", "K=10"),
             ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10"),
-            ("kfh_sq_1", "K=1, curvature: squares of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
-            ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
-            ("lsqb_a0_n0", "K=1 square of the book-to-market latent, mean zero, no noise"), ("lsqb_a0_n1", "noise 1.0")]
+            ("lsq_a0_n0", "K=1, square of size, mean zero, state observed exactly"), ("lsq_a0_n1", "observation noise 1.0"),
+            ("lsqb_a0_n0", "K=1, square of book-to-market, mean zero, observed exactly"), ("lsqb_a0_n1", "noise 1.0"),
+            ("lsqr_a0_n0", "K=1, square of profitability, mean zero, observed exactly"), ("lsqr_a0_n1", "noise 1.0")]
     # the appendix: bounded and curvature loadings on observed characteristics, and the size-orthogonal curvature ladder
     pick_x = [("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
+              ("kfh_sq_1", "K=1, squares of a random index of the characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
+              ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
               # the sign ladder (2026-10-26): the K=1 latent product with the factors' means shifted, and a one-signed ratio
               ("lsh_a0_b0_n0", "K=1 product of two mean-zero latent states (sign ladder origin), no noise"), ("lsh_a0_b1_n0", "one factor's mean shifted 1 sd"),
               ("lsh_a0_b2_n0", "one factor shifted 2 sd"), ("lsh_a1_b1_n0", "both factors shifted 1 sd"), ("lsh_a2_b2_n0", "both 2 sd"), ("lsh_a3_b3_n0", "both 3 sd"),
               ("lsh_a0_b0_n1", "mean-zero product, observation noise 1.0"), ("lsh_a2_b2_n1", "both shifted 2 sd, noise 1.0"),
               ("lrt_n0", "one-signed coverage ratio of the two latents, no noise"),
               # the curvature-in-a-latent ladder (2026-10-30): one factor on the SQUARE of one partly hidden latent, (s + m)^2 - 1
-              ("lsq_a0_n0", "K=1 square of the SIZE latent, mean zero, no noise (the VW market holds $\\mathrm{size}^2$)"), ("lsq_a0_n1", "noise 1.0"),
-              ("lsq_a1_n0", "size latent shifted 1 sd"), ("lsq_a2_n0", "shifted 2 sd"),
-              ("lsqb_a1_n0", "bm latent shifted 1 sd"), ("lsqb_a1_n1", "shifted 1 sd, noise 1.0"), ("lsqb_a2_n0", "shifted 2 sd"), ("lsqb_a2_n1", "shifted 2 sd, noise 1.0")]
+              ("lsq_a1_n0", "square of size, the state shifted 1 sd"), ("lsq_a2_n0", "shifted 2 sd"),
+              ("lsqb_a1_n0", "square of book-to-market, the state shifted 1 sd"), ("lsqb_a1_n1", "shifted 1 sd, noise 1.0"), ("lsqb_a2_n0", "shifted 2 sd"), ("lsqb_a2_n1", "shifted 2 sd, noise 1.0")]
     return [_rf_rows(df, pick), _rf_rows(df, pick_x)]
 
 
@@ -403,7 +404,7 @@ def main():
         print(key, "injected" if inject(a.report, key, "\n".join(md)) else "no marker in the report")
     # the reduced form's main table (linear loadings and latent products); the other ladders are rows of the appendix table
     for key, rr, cap, title in [
-        ("rf", rr_main, "Reduced form: priced factors loading linearly on observed characteristics, on products of latent states, and on curvature (squares of observed characteristics, or of one partly hidden latent). Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).", "Reduced form")]:
+        ("rf", rr_main, "Reduced form: priced factors loading linearly on observed characteristics, on products of two partly hidden firm states, and on the square of one firm state (size, book-to-market or profitability). Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).", "Reduced form")]:
         h = ["configuration", "SR_max", "market %", "linear ceiling", "room", "room % lin", "interaction SR", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
         md = ["| " + " | ".join(h) + " |", "|" + "---|" * len(h)]
         tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{cap}}}\\label{{tab:{key}}}",
