@@ -217,17 +217,10 @@ GROUPS = [
     ("g3c", "Group 3c. Exposure non-monotone in a characteristic",
      "A hump-shaped loading ($b = -c, 0, +c, 0, -c$) across five equal types on a mild visible level ladder (0.8 to 1.2), level-compensated at $y = 0$, in BGN (bvyhx4, $c$ = 0.28) and KP14 (vyhx3, $c$ = 0.21); GS21, where the ladder is priced linearly, carries the exposure quadratic in the firm's own productivity (gvyzzh10).",
      ["bvyhx4", "vyhx3", "gvyzzh10"]),
-    ("s3b", "3b: the search", "The original three-type representatives (three positive loadings, or GS21's imposed product at 0.10), the rows the 3b search paragraphs cite are in the table of everything else.",
-     ["bvych0", "gvyp10", "vyg25"]),
-    ("s3c", "3c: the search", "The hump ladder's other rungs and GS21's, the U in size (the plain version and the reordered-reference version), the U in leverage on fixed-coupon types, and the other productivity quadratics. Rows marked with a dagger were stopped at the oracle.",
-     ["bvyhx2", "bvyhx3", "vyhx4", "gvyhx3", "gvyzz20", "gvyzz10", "bvyu4", "bvyu5r", "bvyu6r", "vyu4", "vyu4r", "vyu5r", "gvyu4", "gvylu30", "gvylu30c"]),
-    ("g4", "Group 4. Larger factor models: two priced states",
-     "Two independent priced states at total price 2.5 ($2.5/\\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).",
-     ["bvyk2", "gvypk3", "vy9t2"]),
     # ---- the appendix: everything else that was run, grouped by what it tested ----
     ("xa", "Additional economies", "Everything else that was run, by model, each described in the appendix against its parent; the RF rows are the reduced-form ladders with bounded (tanh), curvature (square) and size-orthogonal curvature (kfo) loadings, the sign ladder (lsh: the K=1 latent product with the factors' means shifted; lrt: a one-signed ratio), and the curvature-in-a-latent ladder (lsq / lsqb: the square of one partly hidden latent, size or book-to-market, with its mean shifted).",
      ["g0235f", "g0235df", "bvy25", "bvych41", "bvyc0", "bvyj25", "bvysg", "g28", "bx7", "gx7", "gvy1", "gvy1j", "gvy25", "gvys25", "gvyp05", "gvyp075", "gvyp15", "gvyp20",
-      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "bvychs4", "bvychs6", "bvychs8", "vyg25s6", "vyg25s18", "gvyib", "gvyib5", "gvyib2", "gxq35", "gxq70", "gvy25sq", "gvy25sh", "bvychs18", "bvychs25", "bvychs30", "bvychs35", "bvychs40", "bvychs45", "bvychsn5", "bvyvee", "bvyhump", "gvyql10", "gvyql20", "gvyqh10", "vyg25sx2", "vyg25sx3", "gvyzz10", "gvyzz20", "gvyzzh10", "gvy25sc25", "gvy25sc32", "bvyhx2", "bvyhx3", "bvyhx4", "vyhx3", "vyhx4", "gvyhx3", "gvyhx4", "bvyq2", "bvyq2x", "bvyq2k", "vyg25su", "vyg25sux2", "vyg25x2", "vyg25x3", "vyg35x2", "vyg25x2c", "vyge", "vygel", "vygels", "vygesm", "vygelb", "vygelb7", "vygelb7g", "vygelbw", "vygelbx", "vygelbc", "vygelbc6", "vygelbcs", "gvysl20", "gvysl15", "gvysz2", "gvysz1", "bvychsx2", "bvychsx3", "gvy25sx2", "gvy25sx3", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
+      "gvyp10x", "gvyp10j", "gvypk2", "gvyzl", "gvyzlf", "gvyzlw", "gvyzl5", "gvyzlb", "gvyzlr", "gvyzlp", "gvyzlrp", "gsbg1", "gvyz10g", "gvyzlg", "gvyp10c", "gvytl", "gvytlg", "bvy9t2", "bvychs", "vyg25s", "vyg25u", "gvy25s", "kpsgn", "bgsgn", "vym6", "vym3s", "vym6s", "gvy2s", "gvytls", "bvychs4", "bvychs6", "bvychs8", "vyg25s6", "vyg25s18", "gvyib", "gvyib5", "gvyib2", "gxq35", "gxq70", "gvy25sq", "gvy25sh", "bvychs18", "bvychs25", "bvychs30", "bvychs35", "bvychs40", "bvychs45", "bvychsn5", "bvyvee", "bvyhump", "gvyql10", "gvyql20", "gvyqh10", "vyg25sx2", "vyg25sx3", "gvyzz10", "gvyzz20", "gvyzzh10", "gvy25sc25", "gvy25sc32", "bvyhx2", "bvyhx3", "bvyhx4", "vyhx3", "vyhx4", "gvyhx3", "gvyhx4", "bvyq2", "bvyq2x", "bvyq2k", "vyg25su", "vyg25sux2", "vyg25x2", "vyg25x3", "vyg35x2", "vyg25x2c", "vyge", "vygel", "vygels", "vygesm", "vygelb", "vygelb7", "vygelb7g", "vygelbw", "vygelbx", "vygelbc", "vygelbc6", "vygelbcs", "gvylu30c", "gvylu30", "gvyu4", "vyu5r", "vyu4r", "vyu4", "bvyu6r", "bvyu5r", "bvyu4", "vyg25", "gvyp10", "bvych0", "gvysl20", "gvysl15", "gvysz2", "gvysz1", "bvychsx2", "bvychsx3", "gvy25sx2", "gvy25sx3", "kpgam", "vyx", "vyj25", "vym2t3", "vy9t2f", "vym3t3", "vym3"]),
 ]
 
 
@@ -322,11 +315,12 @@ def reduced_rows():
     # the FIXED-TOTAL-PRICE ladders (kfh_ / lfh_: lam ~ 1/sqrt(K), SR_max held); K = 1 is the same economy under both normalisations
     pick = [("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
             ("lfh_L5_K1_n0", "K=1 product of latent states, no observation noise"), ("lfh_L5_K2_n0", "K=2"), ("lfh_L5_K3_n0", "K=3"), ("lfh_L5_K5_n0", "K=5"), ("lfh_L5_K10_n0", "K=10"),
-            ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10")]
+            ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10"),
+            ("kfh_sq_1", "K=1, curvature: squares of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
+            ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
+            ("lsqb_a0_n0", "K=1 square of the book-to-market latent, mean zero, no noise"), ("lsqb_a0_n1", "noise 1.0")]
     # the appendix: bounded and curvature loadings on observed characteristics, and the size-orthogonal curvature ladder
     pick_x = [("kfh_tanh_1", "K=1, bounded (tanh) loadings on observed characteristics"), ("kfh_tanh_4", "K=4"), ("kfh_tanh_16", "K=16"),
-              ("kfh_sq_1", "K=1, pure curvature (squares) of observed characteristics"), ("kfh_sq_4", "K=4"), ("kfh_sq_16", "K=16"),
-              ("kfo_sq_1", "K=1, squares, directions orthogonal to size"), ("kfo_sq_4", "K=4"), ("kfo_sq_16", "K=16"),
               # the sign ladder (2026-10-26): the K=1 latent product with the factors' means shifted, and a one-signed ratio
               ("lsh_a0_b0_n0", "K=1 product of two mean-zero latent states (sign ladder origin), no noise"), ("lsh_a0_b1_n0", "one factor's mean shifted 1 sd"),
               ("lsh_a0_b2_n0", "one factor shifted 2 sd"), ("lsh_a1_b1_n0", "both factors shifted 1 sd"), ("lsh_a2_b2_n0", "both 2 sd"), ("lsh_a3_b3_n0", "both 3 sd"),
@@ -335,7 +329,6 @@ def reduced_rows():
               # the curvature-in-a-latent ladder (2026-10-30): one factor on the SQUARE of one partly hidden latent, (s + m)^2 - 1
               ("lsq_a0_n0", "K=1 square of the SIZE latent, mean zero, no noise (the VW market holds $\\mathrm{size}^2$)"), ("lsq_a0_n1", "noise 1.0"),
               ("lsq_a1_n0", "size latent shifted 1 sd"), ("lsq_a2_n0", "shifted 2 sd"),
-              ("lsqb_a0_n0", "K=1 square of the BOOK-TO-MARKET latent, mean zero, no noise"), ("lsqb_a0_n1", "noise 1.0"),
               ("lsqb_a1_n0", "bm latent shifted 1 sd"), ("lsqb_a1_n1", "shifted 1 sd, noise 1.0"), ("lsqb_a2_n0", "shifted 2 sd"), ("lsqb_a2_n1", "shifted 2 sd, noise 1.0")]
     return [_rf_rows(df, pick), _rf_rows(df, pick_x)]
 
@@ -410,7 +403,7 @@ def main():
         print(key, "injected" if inject(a.report, key, "\n".join(md)) else "no marker in the report")
     # the reduced form's main table (linear loadings and latent products); the other ladders are rows of the appendix table
     for key, rr, cap, title in [
-        ("rf", rr_main, "Reduced form: priced factors loading linearly on observed characteristics against products of latent states. Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).", "Reduced form")]:
+        ("rf", rr_main, "Reduced form: priced factors loading linearly on observed characteristics, on products of latent states, and on curvature (squares of observed characteristics, or of one partly hidden latent). Five seeds per cell, the total price of risk fixed across K (per-factor price $\\propto 1/\\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).", "Reduced form")]:
         h = ["configuration", "SR_max", "market %", "linear ceiling", "room", "room % lin", "interaction SR", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]
         md = ["| " + " | ".join(h) + " |", "|" + "---|" * len(h)]
         tex = ["\\begin{table}[htbp]\\centering\\footnotesize", f"\\caption{{{cap}}}\\label{{tab:{key}}}",
