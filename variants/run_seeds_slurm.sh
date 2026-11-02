@@ -1047,6 +1047,20 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyu4
     SOLVE_HINT='export KSPECS=var-kp_vy-vyu4-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyu4r)
+    # kp_vy (2026-11-01): U-shaped exposure 0.28 at the ends of the MILD level ladder [0.8 .. 1.2], unexposed level-1.0 type FIRST (the compensation's reference), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyu4r; SPEC=var-kp_vy-vyu4r-v1; SOLVE_TAG=vyu4r
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.28, 0.0, 0.0, 0.28], "type_level": [1.0, 0.8, 0.9, 1.1, 1.2], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyu4r
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyu4r-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyu5r)
+    # kp_vy (2026-11-01): U-shaped exposure 0.35 at the ends of the MILD level ladder [0.8 .. 1.2], unexposed level-1.0 type FIRST (the compensation's reference), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyu5r; SPEC=var-kp_vy-vyu5r-v1; SOLVE_TAG=vyu5r
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0, 0.0, 0.35], "type_level": [1.0, 0.8, 0.9, 1.1, 1.2], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyu5r
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyu5r-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyg25su)
     # kp_vy (2026-10-30): vyg25s WITHOUT level compensation (bv_comp 0): the type visible in value, product type x growth-option share
     MODEL=kp_vy; TAG=vyg25su; SPEC=var-kp_vy-vyg25su-v1; SOLVE_TAG=vyg25su
