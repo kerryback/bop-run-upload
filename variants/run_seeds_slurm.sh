@@ -1122,6 +1122,18 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.28, 0.0, 0.0, 0.0, 0.28], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu4.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu4-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  bvyu5)
+    # bgn_vy (2026-11-01): U-shaped exposure (0.35, 0, 0, 0, 0.35) across the MILD level ladder [0.8 .. 1.2] (bvyu4 = 0.28 was below the bar), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyu5; SPEC=var-bgn_vy-bvyu5-v1; SOLVE_TAG=Jstar_vy_bvyu5
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.35, 0.0, 0.0, 0.0, 0.35], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu5.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu5-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyu6)
+    # bgn_vy (2026-11-01): U-shaped exposure (0.42, 0, 0, 0, 0.42) across the MILD level ladder [0.8 .. 1.2] (bvyu4 = 0.28 was below the bar), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyu6; SPEC=var-bgn_vy-bvyu6-v1; SOLVE_TAG=Jstar_vy_bvyu6
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.42, 0.0, 0.0, 0.0, 0.42], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu6.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu6-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   bvyq2)
     # bgn_vy (2026-10-30): second-chain loading QUADRATIC in the first (b2 = -14 (b1^2 - mean)): a hump in b itself; both chains priced 2.5/sqrt2
     MODEL=bgn_vy; TAG=bvyq2; SPEC=var-bgn_vy-bvyq2-v1; SOLVE_TAG=Jstar_vy_bvyq2
