@@ -219,9 +219,11 @@ Everything else that was run, by model, each described in the appendix against i
 
 | configuration | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | + |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Linear loadings on observed characteristics** | | | | | | | | | | | | | |
 | kfh_lin_1 -- K=1 factor on observed characteristics, linear loadings | 0.598 | 8 | 0.598 | +0.000 | 0 | 0.01 | 0.590 | 0.584 | 0.581 | 0.595 | 0.041 | -0.0067 (t -1.7) | 0/5 |
 | kfh_lin_4 -- K=4 | 0.592 | 8 | 0.588 | +0.003 | 0 | 0.06 | 0.555 | 0.578 | 0.567 | 0.575 | 0.041 | -0.0237 (t -3.1) | 0/5 |
 | kfh_lin_16 -- K=16 | 0.385 | 13 | 0.383 | +0.001 | 0 | 0.03 | 0.352 | 0.357 | 0.353 | 0.365 | 0.041 | -0.0128 (t -1.2) | 2/5 |
+| **Interactions: products of two partly hidden firm states** | | | | | | | | | | | | | |
 | lfh_L5_K1_n0 -- K=1 product of latent states, no observation noise | 0.598 | 8 | 0.208 | +0.389 | 187 | 0.56 | 0.570 | 0.156 | 0.539 | 0.175 | 0.041 | +0.0311 (t 4.0) | 5/5 |
 | lfh_L5_K2_n0 -- K=2 | 0.598 | 8 | 0.144 | +0.453 | 314 | 0.58 | 0.564 | 0.111 | 0.520 | 0.115 | 0.041 | +0.0443 (t 6.7) | 5/5 |
 | lfh_L5_K3_n0 -- K=3 | 0.598 | 8 | 0.106 | +0.490 | 464 | 0.59 | 0.566 | 0.059 | 0.507 | 0.084 | 0.041 | +0.0589 (t 9.0) | 5/5 |
@@ -232,6 +234,7 @@ Everything else that was run, by model, each described in the appendix against i
 | lfh_L5_K3_n1 -- K=3 | 0.598 | 8 | 0.091 | +0.486 | 537 | 0.57 | 0.528 | 0.057 | 0.391 | 0.073 | 0.041 | +0.1371 (t 10.4) | 5/5 |
 | lfh_L5_K5_n1 -- K=5 | 0.598 | 8 | 0.075 | +0.496 | 664 | 0.57 | 0.496 | 0.038 | 0.309 | 0.060 | 0.041 | +0.1866 (t 26.3) | 5/5 |
 | lfh_L5_K10_n1 -- K=10 | 0.598 | 8 | 0.079 | +0.479 | 607 | 0.55 | 0.456 | 0.052 | 0.171 | 0.077 | 0.041 | +0.2854 (t 24.8) | 5/5 |
+| **Non-monotone exposures: the square of one firm state** | | | | | | | | | | | | | |
 | lsq_a0_n0 -- K=1, square of size, mean zero, state observed exactly | 0.598 | 8 | 0.175 | +0.422 | 242 | 0.57 | 0.557 | 0.153 | 0.565 | 0.151 | 0.041 | -0.0082 (t -1.5) | 2/5 |
 | lsq_a0_n1 -- observation noise 1.0 | 0.598 | 8 | 0.144 | +0.436 | 302 | 0.56 | 0.508 | 0.119 | 0.540 | 0.130 | 0.041 | -0.0313 (t -2.0) | 1/5 |
 | lsqb_a0_n0 -- K=1, square of book-to-market, mean zero, observed exactly | 0.598 | 8 | 0.199 | +0.398 | 200 | 0.56 | 0.564 | 0.142 | 0.125 | 0.173 | 0.041 | +0.3662 (t 11.0) | 5/5 |
