@@ -1134,6 +1134,18 @@ case "$SEED_SPEC" in
     export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.42, 0.0, 0.0, 0.0, 0.42], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu6.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu6-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
+  bvyu5r)
+    # bgn_vy (2026-11-01): U-shaped exposure 0.35 at the ends of the MILD level ladder [0.8 .. 1.2], types ordered with the unexposed level-1.0 type FIRST (the compensation's reference), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyu5r; SPEC=var-bgn_vy-bvyu5r-v1; SOLVE_TAG=Jstar_vy_bvyu5r
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0, 0.0, 0.35], "type_level": [1.0, 0.8, 0.9, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu5r.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu5r-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyu6r)
+    # bgn_vy (2026-11-01): U-shaped exposure 0.42 at the ends of the MILD level ladder [0.8 .. 1.2], types ordered with the unexposed level-1.0 type FIRST (the compensation's reference), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyu6r; SPEC=var-bgn_vy-bvyu6r-v1; SOLVE_TAG=Jstar_vy_bvyu6r
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.42, 0.0, 0.0, 0.42], "type_level": [1.0, 0.8, 0.9, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyu6r.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyu6r-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
   bvyq2)
     # bgn_vy (2026-10-30): second-chain loading QUADRATIC in the first (b2 = -14 (b1^2 - mean)): a hump in b itself; both chains priced 2.5/sqrt2
     MODEL=bgn_vy; TAG=bvyq2; SPEC=var-bgn_vy-bvyq2-v1; SOLVE_TAG=Jstar_vy_bvyq2

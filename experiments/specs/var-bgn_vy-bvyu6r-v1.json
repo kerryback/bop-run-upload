@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyu6r-v1",
+ "title": "BGN U-shaped exposure (0.42, 0, 0, 0, 0.42) across a MILD visible level ladder 0.8..1.2, five types, exact compensation, price 2.5 (small firms constrained, large firms operationally levered) -- types reordered so the compensation's reference is the unexposed type at level 1.0",
+ "question": "Does a U-shaped loading across size, with the story that the smallest and the largest firms are the exposed ones, give BGN room and a fair gap at the bar as the hump (bvyhx4) did?",
+ "notes": "WHY (2026-11-01). A non-monotone exposure with a simple story, built the same way in every model: five equal types on the mild visible level ladder 0.8..1.2 with the loading U-shaped across it, b = (0.28, 0, 0, 0, 0.28), exact y = 0 compensation (bv_comp 1.0) so that only size carries the U. Small firms are exposed to the aggregate cash-flow shock through financing constraints, large firms through operating leverage, mid-sized firms through neither. The hump twins (bvyhx4 / vyhx4 / gvyhx4, b = -c, 0, +c, 0, -c) are running; the U has no sign flip and all its exposure is of one sign, so its mean is not zero and the market holds the common part; the room is the curvature in size, which no linear function of the characteristics spans (bvyvee's V across the WIDE ladder 0.6..1.4 failed because the level's own monotone premium swamped it; the mild ladder and the larger loading are bvyhx3/4's fix).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nLADDER (2026-11-01 19:45): bvyu4 (0.28) gave room 18-121% and a fair gap of +0.014 (t 1.3, seven of ten), below the bar; the hump went from +0.035 at 0.21 to +0.119 at 0.28, so this is the next rung. REORDER (2026-11-01 21:10): bvyu6 failed the gate (type 0 realised +0.006 vs expected +0.065, z -7.3; J*(rbar, 0) = 0 for type 0). The y = 0 compensation is referenced to type 0 (type_theta = (D0[0]/D0[f])^bv_comp x level), and in the U type 0 was the SMALL EXPOSED type, whose positive exposure is discounted under Q (the Q-mean of y is about -7 sd); every type was scaled down to that low value and the level-0.8 type had no positive-NPV project. Here the unexposed type at level 1.0 comes first, so the exposed types are scaled UP to match it: the same five types, the same economics, a usable scale. (bvyu4 at 0.28 passed with the exposed reference, which also explains its low values and may have dulled its gap.) PREDICTION (2026-11-01): premium U-shaped in size; oracle room 30% or more and a fair gap at or above +0.029 in BGN (bvyhx4 gave +0.119 with the sign flip); KP14 and GS21 as their hump twins. FALSIFIED if room is at or below 15% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvyu6-v1",
+  "changes": [
+   "type order -> reference first: type_bv [0.0, 0.42, 0.0, 0.0, 0.42], type_level [1.0, 0.8, 0.9, 1.1, 1.2]; jstar_vy_file Jstar_vy_bvyu6r.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   0.0,
+   0.42,
+   0.0,
+   0.0,
+   0.42
+  ],
+  "type_level": [
+   1.0,
+   0.8,
+   0.9,
+   1.1,
+   1.2
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyu6r.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      0.0,
+      0.42,
+      0.0,
+      0.0,
+      0.42
+     ],
+     "type_level": [
+      1.0,
+      0.8,
+      0.9,
+      1.1,
+      1.2
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyu6r.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-01 (size-U loading ladder); written inline (see round3 memory)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyu6r",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": null,
+ "precommitted": false,
+ "solves_pending": [
+  "jstar"
+ ],
+ "reused_solves": null,
+ "spec_hash": "d3998060fc5001a30ce52c1db549537fe708a94f5b72cc6e6a4ea65b037b1108"
+}
