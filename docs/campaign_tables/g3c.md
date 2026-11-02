@@ -1,0 +1,15 @@
+| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | `bvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.551 | 28% | 0.349 | +0.155 | 44 | 0.36 | 0.375 | 0.295 | 0.280 | 0.340 | 0.153 | +0.0345 (t 3.9) | +0.14 | 10/10 |
+| BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
+| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
+| KP14 | `vyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.659 | 5% | 0.298 | +0.318 | 123 | 0.53 | 0.480 | 0.309 | 0.199 | 0.278 | 0.022 | +0.1664 (t 10.6) | +0.36 | 10/10 |
+| GS21 | `gvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.823 | 26% | 0.706 | +0.112 | 17 | 0.41 | 0.766 | 0.737 | 0.725 | 0.764 | 0.210 | +0.0023 (t 0.9) | +0.04 | 7/10 |
+| GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
+| BGN | `bvyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.382 | 31% | 0.246 | +0.111 | 54 | 0.25 | 0.241 | 0.157 | 0.181 | 0.227 | 0.118 | +0.0142 (t 1.3) | +0.06 | 7/10 |
+| BGN | `bvyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.774 | 46% | 0.641 | +0.108 | 17 | 0.38 | 0.690 | 0.590 | 0.582 | 0.646 | 0.373 | +0.0357 (t 2.6) | +0.21 | 3/3 |
+| KP14 | `vyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.371 | 13% | 0.263 | +0.072 | 28 | 0.20 | 0.256 | 0.216 | 0.209 | 0.246 | 0.040 | +0.0100 (t 1.5) | +0.04 | 7/10 |
+| KP14 | `vyu4r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28 at the ends, unexposed reference type | 0.367 | 14% | 0.262 | +0.069 | 27 | 0.20 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvyu4`‡ -- U-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = +0.28, 0, 0, 0, +0.28 | 0.917 | 85% | 0.893 | +0.020 | 2 | 0.18 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvylu30`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, no compensation | 0.967 | 95% | 0.951 | +0.016 | 2 | 0.17 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvylu30c`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, value-compensated | 1.219 | 99% | 1.213 | +0.005 | 0 | 0.11 | -- | -- | -- | -- | -- | -- | -- | -- |
