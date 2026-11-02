@@ -50,6 +50,26 @@ The same y with three types (BGN, KP14) or a product written into production (GS
 | GS21 | `gvyp10` -- product exposure zb at 0.10 (control) | 0.650 | 8% | 0.447 | +0.194 | 47 | 0.46 | 0.553 | 0.238 | 0.333 | 0.548 | 0.018 | +0.0057 (t 0.7) | +0.01 | 5/10 |
 | KP14 | `vyg25` -- three types on y, price 2.5 (control) | 0.495 | 11% | 0.346 | +0.082 | 24 | 0.25 | 0.350 | 0.292 | 0.320 | 0.335 | 0.044 | +0.0148 (t 5.2) | +0.09 | 10/10 |
 
+### Group 3c. Exposure non-monotone in a characteristic
+
+The non-monotone constructions, by model: a hump-shaped loading ($b = -c, 0, +c, 0, -c$) or a U-shaped one ($+c$ at the ends) across five equal types on a mild visible level ladder (0.8, 0.9, 1.0, 1.1, 1.2 multiplies the cash-flow or production level), each type level-compensated at $y = 0$, price 2.5; GS21's exposure U-shaped in leverage on three fixed-coupon types; and GS21's exposure quadratic in the firm's own productivity. Rows marked with a dagger were stopped at the oracle.
+
+| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | `bvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.551 | 28% | 0.349 | +0.155 | 44 | 0.36 | 0.375 | 0.295 | 0.280 | 0.340 | 0.153 | +0.0345 (t 3.9) | +0.14 | 10/10 |
+| BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
+| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
+| KP14 | `vyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.659 | 5% | 0.298 | +0.318 | 123 | 0.53 | 0.480 | 0.309 | 0.199 | 0.278 | 0.022 | +0.1664 (t 10.6) | +0.36 | 10/10 |
+| GS21 | `gvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.823 | 26% | 0.706 | +0.112 | 17 | 0.41 | 0.766 | 0.737 | 0.725 | 0.764 | 0.210 | +0.0023 (t 0.9) | +0.04 | 7/10 |
+| GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
+| BGN | `bvyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.382 | 31% | 0.246 | +0.111 | 54 | 0.25 | 0.241 | 0.157 | 0.181 | 0.227 | 0.118 | +0.0142 (t 1.3) | +0.06 | 7/10 |
+| BGN | `bvyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.774 | 46% | 0.641 | +0.108 | 17 | 0.38 | 0.690 | 0.590 | 0.582 | 0.646 | 0.373 | +0.0357 (t 2.6) | +0.21 | 3/3 |
+| KP14 | `vyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.371 | 13% | 0.263 | +0.072 | 28 | 0.20 | 0.256 | 0.216 | 0.209 | 0.246 | 0.040 | +0.0100 (t 1.5) | +0.04 | 7/10 |
+| KP14 | `vyu4r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28 at the ends, unexposed reference type | 0.367 | 14% | 0.262 | +0.069 | 27 | 0.20 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvyu4`‡ -- U-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = +0.28, 0, 0, 0, +0.28 | 0.917 | 85% | 0.893 | +0.020 | 2 | 0.18 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvylu30`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, no compensation | 0.967 | 95% | 0.951 | +0.016 | 2 | 0.17 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvylu30c`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, value-compensated | 1.219 | 99% | 1.213 | +0.005 | 0 | 0.11 | -- | -- | -- | -- | -- | -- | -- | -- |
+
 ### Group 4. Larger factor models: two priced states
 
 Two independent priced states at total price 2.5 ($2.5/\sqrt2$ each). BGN and GS21: three types with loading vectors (1,0), (0,1), (1,1)/$\sqrt2$. KP14: nine types, an independent draw from the 3b ladder for each state (the three-direction version and the full-price version are in the appendix).
@@ -142,6 +162,9 @@ Everything else that was run, by model, each described in the appendix against i
 | BGN | `bvyhx2` -- hump-shaped loading across a mild level ladder 0.85..1.15: b = -0.14, +0.00, +0.14, +0.00, -0.14 | 0.597 | 27% | 0.526 | +0.057 | 11 | 0.25 | 0.523 | 0.392 | 0.315 | 0.508 | 0.158 | +0.0150 (t 0.7) | +0.06 | 2/3 |
 | BGN | `bvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.551 | 28% | 0.349 | +0.155 | 44 | 0.36 | 0.375 | 0.295 | 0.280 | 0.340 | 0.153 | +0.0345 (t 3.9) | +0.14 | 10/10 |
 | BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
+| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
+| KP14 | `vyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.659 | 5% | 0.298 | +0.318 | 123 | 0.53 | 0.480 | 0.309 | 0.199 | 0.278 | 0.022 | +0.1664 (t 10.6) | +0.36 | 10/10 |
+| GS21 | `gvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.823 | 26% | 0.706 | +0.112 | 17 | 0.41 | 0.766 | 0.737 | 0.725 | 0.764 | 0.210 | +0.0023 (t 0.9) | +0.04 | 7/10 |
 | BGN | `bvyq2` -- two chains, the second loading quadratic in the first: b_2 = -14 (b_1^2 - barb_1^2), b_1 = pm0.01, pm0.035, pm0.07 | 0.460 | 37% | 0.303 | +0.063 | 21 | 0.20 | 0.307 | 0.240 | 0.260 | 0.285 | 0.172 | +0.0223 (t 18.1) | +0.11 | 3/3 |
 | BGN | `bvyq2x` -- two chains, the second loading quadratic in the first: b_2 = -7 (b_1^2 - barb_1^2), b_1 = pm0.02, pm0.07, pm0.14 | 0.523 | 30% | 0.375 | +0.070 | 19 | 0.24 | 0.359 | 0.321 | 0.308 | 0.366 | 0.158 | -0.0075 (t -1.2) | -0.05 | 1/3 |
 | BGN | `bvyq2k` -- two chains, the second loading quadratic in the first: b_2 = -28 (b_1^2 - barb_1^2), b_1 = pm0.01, pm0.035, pm0.07 | 0.470 | 34% | 0.315 | +0.071 | 22 | 0.22 | 0.304 | 0.265 | 0.261 | 0.302 | 0.159 | +0.0026 (t 0.9) | +0.01 | 6/10 |
@@ -162,6 +185,9 @@ Everything else that was run, by model, each described in the appendix against i
 | KP14 | `vygelbc` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0 | 0.752 | 9% | 0.244 | +0.170 | 69 | 0.33 | 0.272 | 0.220 | 0.219 | 0.231 | 0.068 | +0.0369 (t 6.6) | +0.14 | 10/10 |
 | KP14 | `vygelbc6` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 6.0 | 0.892 | 8% | 0.249 | +0.201 | 80 | 0.37 | 0.290 | 0.230 | 0.222 | 0.237 | 0.069 | +0.0487 (t 5.8) | +0.16 | 10/10 |
 | KP14 | `vygelbcs` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0, sigma_epsilon 0.3 | 0.858 | 7% | 0.297 | +0.256 | 90 | 0.46 | 0.388 | 0.251 | 0.288 | 0.282 | 0.052 | +0.0913 (t 12.3) | +0.25 | 10/10 |
+| GS21 | `gvysl15`‡ -- industry sign x leverage: two industries (gs_level 0.8 / 1.2) x fixed coupons 0.15 / 0.40 / 0.70, b = sign x 0.15 x coupon/0.4 | 1.190 | 66% | 1.183 | +0.006 | 1 | 0.12 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvysz2`‡ -- type sign x productivity z: mirrored types pm0.15 / 0.3 / 0.5, gs_level ladder 0.5..2.0, no compensation | 0.835 | 15% | 0.589 | +0.210 | 39 | 0.53 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvysz1` -- type sign x productivity z: mirrored types pm0.1 / 0.2 / 0.35, gs_level ladder 0.5..2.0, no compensation | 0.844 | 25% | 0.530 | +0.278 | 60 | 0.60 | 0.658 | 0.560 | 0.431 | 0.605 | 0.210 | +0.0533 (t 6.1) | +0.24 | 10/10 |
 | BGN | `bvychsx2` -- bvychs with the loadings x 2: pm0.02, pm0.07, pm0.14 | 0.496 | 32% | 0.344 | +0.089 | 26 | 0.26 | 0.347 | 0.308 | 0.279 | 0.333 | 0.161 | +0.0072 (t 1.1) | +0.04 | 7/10 |
 | BGN | `bvychsx3` -- bvychs with the loadings x 3: pm0.03, pm0.105, pm0.21 | 0.533 | 31% | 0.384 | +0.081 | 21 | 0.26 | 0.377 | 0.353 | 0.321 | 0.370 | 0.164 | +0.0024 (t 0.5) | +0.01 | 6/10 |
 | GS21 | `gvy25sx2` -- gvy25s with the loadings x 2: pm0.03, pm0.1, pm0.2 | 0.817 | 41% | 0.721 | +0.093 | 13 | 0.38 | 0.814 | 0.777 | 0.796 | 0.814 | 0.344 | +0.0005 (t 0.1) | +0.01 | 2/3 |
