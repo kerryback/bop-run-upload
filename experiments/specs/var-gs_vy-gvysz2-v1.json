@@ -244,18 +244,18 @@
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=gvysz2",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
-  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvysz2a": "c1727db8df4cb45f",
+  "sol_gvysz2b": "c63395e910b0e99b",
+  "sol_gvysz2c": "c508b8693d9f9217",
+  "sol_gvysz2d": "d671e502492dcb5a",
+  "sol_gvysz2e": "c507829a662c47a3",
+  "sol_gvysz2f": "8614f959202821b8"
+ },
  "precommitted": false,
- "solves_pending": [
-  "sol_gvysz2a",
-  "sol_gvysz2b",
-  "sol_gvysz2c",
-  "sol_gvysz2d",
-  "sol_gvysz2e",
-  "sol_gvysz2f"
- ],
+ "solves_pending": null,
  "reused_solves": null,
- "spec_hash": "395c55942f9dab25042a8356163499b24023ddfa6f3807547c15cab9f9134b89"
+ "spec_hash": "be2d948f917b86d6daef293856656b3eb27d41dbedda35d1bbad6228daffa0be"
 }
