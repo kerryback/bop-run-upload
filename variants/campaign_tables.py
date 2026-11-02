@@ -313,9 +313,12 @@ def reduced_rows():
     import rf_table                                                   # noqa: E402
     df = rf_table.load(SCREEN)
     # the FIXED-TOTAL-PRICE ladders (kfh_ / lfh_: lam ~ 1/sqrt(K), SR_max held); K = 1 is the same economy under both normalisations
-    pick = [("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
+    pick = [("__panel__", "Linear loadings on observed characteristics"),
+            ("kfh_lin_1", "K=1 factor on observed characteristics, linear loadings"), ("kfh_lin_4", "K=4"), ("kfh_lin_16", "K=16"),
+            ("__panel__", "Interactions: products of two partly hidden firm states"),
             ("lfh_L5_K1_n0", "K=1 product of latent states, no observation noise"), ("lfh_L5_K2_n0", "K=2"), ("lfh_L5_K3_n0", "K=3"), ("lfh_L5_K5_n0", "K=5"), ("lfh_L5_K10_n0", "K=10"),
             ("lfh_L5_K1_n1", "K=1 product of latent states, observation noise 1.0"), ("lfh_L5_K2_n1", "K=2"), ("lfh_L5_K3_n1", "K=3"), ("lfh_L5_K5_n1", "K=5"), ("lfh_L5_K10_n1", "K=10"),
+            ("__panel__", "Non-monotone exposures: the square of one firm state"),
             ("lsq_a0_n0", "K=1, square of size, mean zero, state observed exactly"), ("lsq_a0_n1", "observation noise 1.0"),
             ("lsqb_a0_n0", "K=1, square of book-to-market, mean zero, observed exactly"), ("lsqb_a0_n1", "noise 1.0"),
             ("lsqr_a0_n0", "K=1, square of profitability, mean zero, observed exactly"), ("lsqr_a0_n1", "noise 1.0")]
@@ -337,6 +340,8 @@ def reduced_rows():
 def _rf_rows(df, pick):
     out = []
     for name, what in pick:
+        if name == "__panel__":
+            out.append({"panel": what}); continue
         sub = df[df.name == name]
         if sub.empty:
             continue
@@ -411,6 +416,12 @@ def main():
                "\\resizebox{\\textwidth}{!}{\\begin{tabular}{lr" + "r" * (len(h) - 2) + "}\\hline",
                " & ".join(["configuration", "SR$_{\\max}$", "market share", "linear ceiling", "room", "room \\% of linear", "interaction SR", "DKKM", "FMR", "FF", "linear", "CAPM", "fair gap", "+"]) + " \\\\\\hline"]
         for r in rr:
+            if "panel" in r:
+                if any(l.startswith("| ") and not l.startswith("| **") for l in md[2:]):
+                    tex.append("\\hline")
+                md.append("| **" + r["panel"] + "** |" + " |" * (len(h) - 1))
+                tex.append("\\multicolumn{" + str(len(h)) + "}{l}{\\textit{" + r["panel"] + "}} \\\\")
+                continue
             cells = [f"{r['name']} -- {r['what']}", fmt(r["sr_max"]), fmt(100 * r["mkt"], 0), fmt(r["lin"]), fmt(r["room"], 3, True),
                      fmt(r["room_pct"], 0), fmt(float(np.sqrt(max((r["lin"] + r["room"]) ** 2 - r["lin"] ** 2, 0.0))), 2), fmt(r["dkkm"]), fmt(r["fmr"]), fmt(r["ff"]), fmt(r["linear"]), fmt(r["capm"]),
                      fmt(r["gap"], 4, True) + f" (t {r['gap'] / (r['gap_sd'] / np.sqrt(r['n'])):.1f})", f"{r['pos']}/{r['n']}"]
