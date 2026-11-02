@@ -42,7 +42,27 @@ A priced state y with one type: a firm's exposure varies only through one firm s
 
 ### Group 3b. Exposure as an interaction of characteristics
 
-The same y with three types (BGN, KP14) or a product written into production (GS21): exposure = type or productivity $\times$ how levered the claim is.
+One construction in every model: a mirrored set of types, the winners and losers of the priced shock, level-compensated at $y = 0$ and revealed only in part through size, times a firm-level amplifier -- the assets-in-place share in BGN (bvychs35), the profitability deviation in KP14 (vygelbcs, bounded exposure, price 4.0, $\sigma_\epsilon$ 0.3), the productivity in GS21 (gvysz2).
+
+| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | `bvychs35` -- bvychs at bv_comp 3.5 | 0.508 | 31% | 0.294 | +0.189 | 67 | 0.38 | 0.403 | 0.315 | 0.309 | 0.303 | 0.156 | +0.0712 (t 5.8) | +0.22 | 10/10 |
+| GS21 | `gvysz2` -- type sign x productivity z: mirrored types pm0.15 / 0.3 / 0.5, gs_level ladder 0.5..2.0, no compensation | 0.847 | 17% | 0.603 | +0.208 | 37 | 0.54 | 0.678 | 0.536 | 0.488 | 0.619 | 0.151 | +0.0590 (t 11.5) | +0.27 | 10/10 |
+| KP14 | `vygelbcs` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0, sigma_epsilon 0.3 | 0.858 | 7% | 0.297 | +0.256 | 90 | 0.46 | 0.388 | 0.251 | 0.288 | 0.282 | 0.052 | +0.0913 (t 12.3) | +0.25 | 10/10 |
+
+### Group 3c. Exposure non-monotone in a characteristic
+
+A hump-shaped loading ($b = -c, 0, +c, 0, -c$) across five equal types on a mild visible level ladder (0.8 to 1.2), level-compensated at $y = 0$, in BGN (bvyhx4, $c$ = 0.28) and KP14 (vyhx3, $c$ = 0.21); GS21, where the ladder is priced linearly, carries the exposure quadratic in the firm's own productivity (gvyzzh10).
+
+| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
+| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
+| GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
+
+### 3b: the search
+
+The original three-type representatives (three positive loadings, or GS21's imposed product at 0.10), the rows the 3b search paragraphs cite are in the table of everything else.
 
 | model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -50,18 +70,18 @@ The same y with three types (BGN, KP14) or a product written into production (GS
 | GS21 | `gvyp10` -- product exposure zb at 0.10 (control) | 0.650 | 8% | 0.447 | +0.194 | 47 | 0.46 | 0.553 | 0.238 | 0.333 | 0.548 | 0.018 | +0.0057 (t 0.7) | +0.01 | 5/10 |
 | KP14 | `vyg25` -- three types on y, price 2.5 (control) | 0.495 | 11% | 0.346 | +0.082 | 24 | 0.25 | 0.350 | 0.292 | 0.320 | 0.335 | 0.044 | +0.0148 (t 5.2) | +0.09 | 10/10 |
 
-### Group 3c. Exposure non-monotone in a characteristic
+### 3c: the search
 
-The non-monotone constructions, by model: a hump-shaped loading ($b = -c, 0, +c, 0, -c$) or a U-shaped one ($+c$ at the ends) across five equal types on a mild visible level ladder (0.8, 0.9, 1.0, 1.1, 1.2 multiplies the cash-flow or production level), each type level-compensated at $y = 0$, price 2.5; GS21's exposure U-shaped in leverage on three fixed-coupon types; and GS21's exposure quadratic in the firm's own productivity. Rows marked with a dagger were stopped at the oracle.
+The hump ladder's other rungs and GS21's, the U in size (the plain version and the reordered-reference version), the U in leverage on fixed-coupon types, and the other productivity quadratics. Rows marked with a dagger were stopped at the oracle.
 
 | model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| BGN | `bvyhx2` -- hump-shaped loading across a mild level ladder 0.85..1.15: b = -0.14, +0.00, +0.14, +0.00, -0.14 | 0.597 | 27% | 0.526 | +0.057 | 11 | 0.25 | 0.523 | 0.392 | 0.315 | 0.508 | 0.158 | +0.0150 (t 0.7) | +0.06 | 2/3 |
 | BGN | `bvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.551 | 28% | 0.349 | +0.155 | 44 | 0.36 | 0.375 | 0.295 | 0.280 | 0.340 | 0.153 | +0.0345 (t 3.9) | +0.14 | 10/10 |
-| BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
-| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
 | KP14 | `vyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.659 | 5% | 0.298 | +0.318 | 123 | 0.53 | 0.480 | 0.309 | 0.199 | 0.278 | 0.022 | +0.1664 (t 10.6) | +0.36 | 10/10 |
 | GS21 | `gvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.823 | 26% | 0.706 | +0.112 | 17 | 0.41 | 0.766 | 0.737 | 0.725 | 0.764 | 0.210 | +0.0023 (t 0.9) | +0.04 | 7/10 |
-| GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
+| GS21 | `gvyzz20` -- U-shaped exposure in the firm's own productivity: +0.2 (z^2 - 1), one type | 0.686 | 26% | 0.441 | +0.168 | 43 | 0.42 | 0.521 | 0.350 | 0.321 | 0.462 | 0.179 | +0.0589 (t 6.3) | +0.23 | 10/10 |
+| GS21 | `gvyzz10` -- U-shaped exposure in the firm's own productivity: +0.1 (z^2 - 1), one type | 0.621 | 43% | 0.356 | +0.224 | 60 | 0.45 | 0.498 | 0.455 | 0.312 | 0.489 | 0.252 | +0.0086 (t 0.7) | +0.02 | 3/5 |
 | BGN | `bvyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.382 | 31% | 0.246 | +0.111 | 54 | 0.25 | 0.241 | 0.157 | 0.181 | 0.227 | 0.118 | +0.0142 (t 1.3) | +0.06 | 7/10 |
 | BGN | `bvyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.774 | 46% | 0.641 | +0.108 | 17 | 0.38 | 0.664 | 0.562 | 0.558 | 0.623 | 0.358 | +0.0295 (t 3.1) | +0.16 | 9/10 |
 | BGN | `bvyu6r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.42 at the ends, unexposed reference type | 0.768 | 49% | 0.592 | +0.137 | 24 | 0.42 | 0.616 | 0.479 | 0.533 | 0.582 | 0.373 | +0.0246 (t 2.6) | +0.13 | 8/10 |
