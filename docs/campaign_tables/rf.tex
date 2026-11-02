@@ -1,5 +1,5 @@
 \begin{table}[htbp]\centering\footnotesize
-\caption{Reduced form: priced factors loading linearly on observed characteristics against products of latent states. Five seeds per cell, the total price of risk fixed across K (per-factor price $\propto 1/\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).}\label{tab:rf}
+\caption{Reduced form: priced factors loading linearly on observed characteristics, on products of latent states, and on curvature (squares of observed characteristics, or of one partly hidden latent). Five seeds per cell, the total price of risk fixed across K (per-factor price $\propto 1/\sqrt{K}$); K = number of priced factors; the lfh rows load products of pairs of the five latent processes, observed with noise of sd 0 (n0) or 1 (n1).}\label{tab:rf}
 \resizebox{\textwidth}{!}{\begin{tabular}{lrrrrrrrrrrrrr}\hline
 configuration & SR$_{\max}$ & market share & linear ceiling & room & room \% of linear & interaction SR & DKKM & FMR & FF & linear & CAPM & fair gap & + \\\hline
 kfh\_lin\_1 -- K=1 factor on observed characteristics, linear loadings & 0.598 & 8 & 0.598 & +0.000 & 0 & 0.01 & 0.590 & 0.584 & 0.581 & 0.595 & 0.041 & -0.0067 (t -1.7) & 0/5 \\
@@ -15,4 +15,12 @@ lfh\_L5\_K2\_n1 -- K=2 & 0.598 & 8 & 0.111 & +0.469 & 423 & 0.57 & 0.523 & 0.072
 lfh\_L5\_K3\_n1 -- K=3 & 0.598 & 8 & 0.091 & +0.486 & 537 & 0.57 & 0.528 & 0.057 & 0.391 & 0.073 & 0.041 & +0.1371 (t 10.4) & 5/5 \\
 lfh\_L5\_K5\_n1 -- K=5 & 0.598 & 8 & 0.075 & +0.496 & 664 & 0.57 & 0.496 & 0.038 & 0.309 & 0.060 & 0.041 & +0.1866 (t 26.3) & 5/5 \\
 lfh\_L5\_K10\_n1 -- K=10 & 0.598 & 8 & 0.079 & +0.479 & 607 & 0.55 & 0.456 & 0.052 & 0.171 & 0.077 & 0.041 & +0.2854 (t 24.8) & 5/5 \\
+kfh\_sq\_1 -- K=1, curvature: squares of observed characteristics & 0.600 & 8 & 0.080 & +0.519 & 647 & 0.59 & 0.582 & 0.032 & 0.046 & 0.059 & 0.041 & +0.5161 (t 57.3) & 5/5 \\
+kfh\_sq\_4 -- K=4 & 0.601 & 8 & 0.097 & +0.501 & 515 & 0.59 & 0.573 & 0.042 & 0.458 & 0.074 & 0.041 & +0.1155 (t 22.6) & 5/5 \\
+kfh\_sq\_16 -- K=16 & 0.601 & 8 & 0.076 & +0.523 & 687 & 0.59 & 0.571 & 0.036 & 0.429 & 0.052 & 0.041 & +0.1429 (t 14.3) & 5/5 \\
+kfo\_sq\_1 -- K=1, squares, directions orthogonal to size & 0.600 & 8 & 0.080 & +0.519 & 648 & 0.59 & 0.582 & 0.032 & 0.048 & 0.059 & 0.041 & +0.5163 (t 57.7) & 5/5 \\
+kfo\_sq\_4 -- K=4 & 0.601 & 8 & 0.092 & +0.507 & 552 & 0.59 & 0.575 & 0.058 & 0.061 & 0.081 & 0.041 & +0.4833 (t 25.4) & 5/5 \\
+kfo\_sq\_16 -- K=16 & 0.602 & 8 & 0.079 & +0.520 & 656 & 0.59 & 0.575 & 0.015 & 0.031 & 0.053 & 0.041 & +0.5030 (t 21.3) & 5/5 \\
+lsqb\_a0\_n0 -- K=1 square of the book-to-market latent, mean zero, no noise & 0.598 & 8 & 0.199 & +0.398 & 200 & 0.56 & 0.564 & 0.142 & 0.125 & 0.173 & 0.041 & +0.3662 (t 11.0) & 5/5 \\
+lsqb\_a0\_n1 -- noise 1.0 & 0.598 & 8 & 0.190 & +0.392 & 206 & 0.55 & 0.515 & 0.120 & 0.092 & 0.146 & 0.041 & +0.3403 (t 6.5) & 5/5 \\
 \hline\end{tabular}}\end{table}

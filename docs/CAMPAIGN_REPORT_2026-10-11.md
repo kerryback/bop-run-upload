@@ -30,7 +30,7 @@ gaps of +0.008 to +0.020 (t 2.7 to 5.2); with the type loading's cross-sectional
 `bvychs`, section 3b) room rises to 226% (KP14) and 20% (BGN) of the linear ceiling and the gap to +0.181 and
 +0.026, while GS21's mirrored ladder (`gvy25s`) gains room (2% to 11%) and no gap (-0.012). In KP14 the strength of the level compensation changes only the
 characteristics, and room and gap hold across it (fair gap +0.14 to +0.19 at bv_comp 0.6 to 1.8); weakening it in BGN, or
-fixing GS21's capital structure (`gvytls`), lowers room and leaves no gap. Two levers found afterwards move the gap further (section 7, the search): doubling the mean-zero loading in KP14 (`vyg25sx2`, ±0.04 to ±0.28) deepens the hump and raises the gap to +0.245 (t 11, ten of ten; tripling it is past the peak at +0.218), and strengthening BGN's compensation to bv_comp 2.5 and 3.0 (`bvychs25`, `bvychs30`) raises BGN's room to 67% of the linear ceiling and its gap to +0.048 and +0.063 (t 3.7 and 5.6) without a hump; the same size ladder in BGN and GS21, a V-shaped exposure across a visible level ladder in BGN, and a quadratic leverage exposure in GS21 give nothing. The round that asked for an interaction and a non-monotone economy in every model (sections 3b and 3c) filled all six slots: GS21's exposure quadratic in the firm's own productivity (`gvyzzh10`) gives the largest GS21 gap in the campaign, +0.080 (t 4.6, ten of ten), and a hump-shaped loading ±0.28 across a mild size ladder (`bvyhx4`) gives BGN +0.119 (t 10.9, ten of ten), the largest gap outside KP14, and the same hump in KP14 (`vyhx3`, ±0.21; section 3c) gives +0.212 (t 12.5, ten of ten) where GS21's size ladder gives nothing; a GS21 interaction with a plain story, the industry sign times the firm's productivity (`gvysz2`), gives +0.059 (t 11.5, ten of ten); and the KP14 interaction slot, open after eight economies whose room stayed at or below vyg25's, is filled by a bounded exposure on the firm's profitability deviation (`vygelbc`, `vygelbcs`): six mirrored types revealed by a size ladder, so that the exposure is the product of the type's sign and the firm's ROE, with a fair gap of +0.037 (t 6.6, ten of ten) once the exponential exposure is replaced by a capped logistic that keeps project values positive at loadings up to ±1.2 and the price of y risk is raised to 4.0, and of +0.091 (t 12.3, ten of ten; three times the bar, the largest interaction gap in any model) once the profitability dispersion is widened to σ_ε 0.3. Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
+fixing GS21's capital structure (`gvytls`), lowers room and leaves no gap. Two levers found afterwards move the gap further (section 5): doubling the mean-zero loading in KP14 (`vyg25sx2`, ±0.04 to ±0.28) deepens the hump and raises the gap to +0.245 (t 11, ten of ten; tripling it is past the peak at +0.218), and strengthening BGN's compensation to bv_comp 2.5 and 3.0 (`bvychs25`, `bvychs30`) raises BGN's room to 67% of the linear ceiling and its gap to +0.048 and +0.063 (t 3.7 and 5.6) without a hump; the same size ladder in BGN and GS21, a V-shaped exposure across a visible level ladder in BGN, and a quadratic leverage exposure in GS21 give nothing. The round that asked for an interaction and a non-monotone economy in every model (sections 3b and 3c) filled all six slots: GS21's exposure quadratic in the firm's own productivity (`gvyzzh10`) gives the largest GS21 gap in the campaign, +0.080 (t 4.6, ten of ten), and a hump-shaped loading ±0.28 across a mild size ladder (`bvyhx4`) gives BGN +0.119 (t 10.9, ten of ten), the largest gap outside KP14, and the same hump in KP14 (`vyhx3`, ±0.21; section 3c) gives +0.212 (t 12.5, ten of ten) where GS21's size ladder gives nothing; a GS21 interaction with a plain story, the industry sign times the firm's productivity (`gvysz2`), gives +0.059 (t 11.5, ten of ten); and the KP14 interaction slot, open after eight economies whose room stayed at or below vyg25's, is filled by a bounded exposure on the firm's profitability deviation (`vygelbc`, `vygelbcs`): six mirrored types revealed by a size ladder, so that the exposure is the product of the type's sign and the firm's ROE, with a fair gap of +0.037 (t 6.6, ten of ten) once the exponential exposure is replaced by a capped logistic that keeps project values positive at loadings up to ±1.2 and the price of y risk is raised to 4.0, and of +0.091 (t 12.3, ten of ten; three times the bar, the largest interaction gap in any model) once the profitability dispersion is widened to σ_ε 0.3. Spreading vyg25s's mean-zero loading over K = 3 or 6 priced states (`vym3s`, `vym6s`, section 4)
 keeps the linear ceiling at 0.19 and lowers the nonlinear one, so room falls to 110% and the gap to +0.10 (ten of ten
 seeds at either K; K = 3 and K = 6 are identical to the third digit); a price of risk that switches sign with the state
 (`kpsgn`) and six unsigned states (`vym6`) give nothing. More priced
@@ -41,12 +41,6 @@ load linearly on observed characteristics give nothing at any K. The structural 
 no interaction: a second state through the same channel dilutes the exposure factor (KP14's room falls from 24% to
 15%), and the designs that raise BGN's and GS21's gaps do so by giving each type its own state's premium, time
 variation in a sort rather than a second product.
-
-The weight analysis (section 5) shows the mechanism directly. In the 3b economies the true weight's slope in
-book-to-market depends on size (KP14, BGN) or on profitability (GS21); DKKM's fitted weight surface bends the same
-way, its nonlinear part correlating 0.77, 0.84 and 0.49 with the truth's, and in KP14 the interaction it recovers
-has the truth's size (0.107 against 0.106); Fama-MacBeth's surface is parallel lines by construction; and in the
-benchmarks there is no bend to find.
 
 Economically: every factor model is firm exposure times aggregate shock, so the interaction that matters is not
 with the aggregate state but within the exposure. A capturable gap needs a firm's exposure to a priced shock to be
@@ -87,6 +81,30 @@ The baselines every group is read against:
 | KP14 | `kpbase` -- baseline, one type, no priced state | 0.229 | 35% | 0.221 | +0.004 | 2 | 0.04 | 0.208 | 0.193 | 0.195 | 0.209 | 0.078 | -0.0010 (t -0.6) | -0.00 | 6/10 |
 <!-- /TABLE:g0 -->
 
+**Notation.** BGN (Berk, Green and Naik 1999): a firm is a portfolio of live projects; project j has systematic
+risk β_j, drawn from an exponential distribution, and lognormal cash flows C_j; it survives each month with
+probability π; a new project arrives each month and is taken if its NPV is positive; the pricing kernel prices the
+market shock at σ_z and the Vasicek short rate r_t. GS21 (Gomes and Schmid 2021): output is e^{x_t + z_it} k_it with
+aggregate productivity x_t and idiosyncratic productivity z_it both AR(1); firms choose the coupon b_it, invest
+lumpily at a random cost, and may default; the kernel prices x-shocks at a constant γ_x = 0.5. KP14 (Kogan and
+Papanikolaou 2014): firm value is assets in place plus growth options; project cash flows are x_t u_it ε_jt K_j^α,
+new projects arrive at the firm-specific rate λ_it, and the kernel prices disembodied productivity x at γ_x and
+embodied technology z at γ_z.
+
+**The added priced state y.** Every economy with a y adds one stationary state with unit stationary variance and
+mean reversion κ_y = 0.35 per year, y_{t+1} = ρ y_t + sqrt(1 - ρ²) η_{t+1} with ρ = e^{-κ_y/12} (an
+Ornstein-Uhlenbeck process in KP14, a Tauchen chain in GS21 and in BGN's chain economies). It is priced: the kernel
+is multiplied by e^{-λ_y η - λ_y²/2} with λ_y = γ_v sqrt(1/12), and γ_v = 2.5 unless stated. "Types" are equal
+shares of firms differing only in their exposure b_f to y. "Level-compensated" means type f's cash flows are also
+scaled by a constant θ_f = (V_0/V_f)^1.2, the ratio of a unit project's value for type 0 and type f at y = 0, so
+that value at y = 0 does not reveal the type (KP14's ω device).
+
+**The baselines.**
+
+- `bgnbase`: BGN as above, one type. Expected returns come from the value-weighted β_j of assets in place and from the growth option's exposure to r_t.
+- `gsbase`: GS21 as above, Table I calibration, one type.
+- `kpbase`: KP14 as above, one type, no y.
+
 ## 1. A different distribution of shocks: a crash-only factor
 
 A cash-flow factor y (unit variance, half-life two years) multiplies every firm's cash flows as e^{b y}, with one
@@ -112,6 +130,13 @@ all three (+0.000, -0.005, -0.006). Adding the same
 crash to the interaction economies instead (appendix A1) leaves their room and gap at the control's in BGN and
 GS21 and halves KP14's.
 
+**What changes.** The 3a economy with the Gaussian price of y set to zero (γ_v = 0) and a crash.
+
+- `bvy1j`, `gvyz10j`, `vy1j`: `bvy1ch`, `gvyz10` and `vy1` with γ_v = 0 and, each month with probability 1%
+  whatever y_t, a jump of y_{t+1} to -3.5 (the lowest node), weighted e^2 by the kernel (a risk-neutral
+  probability of about 7% a month before renormalization). In KP14 the jump is a Poisson event at intensity 0.12 a
+  year under P and 0.12 e^2 under Q.
+
 ## 2. A different price of risk: quadratic in the model's own state
 
 The price of each model's own aggregate risk is multiplied by 1 + 0.25 s^2, capped at 3, where s is a standardized
@@ -136,6 +161,15 @@ and 14% in BGN, where the rate is itself a priced state so a price that rises wi
 rotates the premium with it; the fair gap is zero in all three (+0.003, -0.004, -0.002). The regime prices tried
 earlier (appendix) do the same, and BGN's fast regime gave the group's one small positive number (+0.008), which a
 ranks-times-state linear benchmark takes.
+
+**What changes.**
+
+- `bq25`: `bgnbase` with σ_z → σ_z g(r_t), g(r) = min(1 + 0.25 ((r - r̄)/sd_r)², 3), binned to seven equiprobable
+  bins of the stationary rate (g = 1.00, 1.03, 1.17, 1.68 from the middle outward); the date-k cash flow is priced
+  at the bin of r_{t+k-1}, through seven bases D_j(r) in place of the regime's two.
+- `gq25`: `gsbase` with γ_x → γ_x (1 + 0.25 x̃²) capped at 1.5, x̃ = x / sd(x).
+- `kpq`: `kpbase` with γ_x → γ_x min(1 + 0.25 y², 3), y the unpriced stationary state of `kpgam` (κ = 0.35, unit
+  variance); no firm is exposed to y.
 
 ## 3. Different exposures to aggregate risk
 
@@ -164,9 +198,16 @@ sines and cosines: recomputing the ceilings on the saved panels with the raw fea
 5% / 6% / 8% with the standardization, and 19% / 62% / 10% against 26% / 61% / 11% in the 3b economies; the quadratic
 and bin ceilings, which never standardize, say the same.
 
+**What changes.**
+
+- `bvy1ch`: `bgnbase` plus y (21-node chain), one type; project cash flows C_j e^{0.035 y_t}.
+- `gvyz10`: `gsbase` plus y (9-node chain over ±3.5 sd), one type; output e^{x_t + z_it + 0.10 z̃_it y_t} k_it,
+  z̃ = z / sd(z): the product economy's exposure without the coupon.
+- `vy1`: `kpbase` plus y, one type; project cash flows e^{0.07 y_t} x_t u_it ε_jt K_j^α.
+
 ### 3b. Exposure as an interaction of several characteristics
 
-The same y with the exposure a product of two firm-level factors, one of which carries a sign that no monotone sort on a characteristic reads. The construction every model carries: a mirrored set of types, the winners and losers of the priced shock (an industry attribute that the characteristics do not include and reveal only in part, through size), each type level-compensated at y = 0 so that value does not reveal it, times a firm-level amplifier that scales how much the firm's cash flow moves. The amplifier is what differs: in BGN the share of value in assets in place, generated by the model; in KP14 the firm's profitability deviation, written into the cash flow; in GS21 the firm's productivity, written into the production function. The original three-type economies, every lever tried on the way, and the leverage version of GS21's amplifier are in section 7.
+The same y with the exposure a product of two firm-level factors, one of which carries a sign that no monotone sort on a characteristic reads. The construction every model carries: a mirrored set of types, the winners and losers of the priced shock (an industry attribute that the characteristics do not include and reveal only in part, through size), each type level-compensated at y = 0 so that value does not reveal it, times a firm-level amplifier that scales how much the firm's cash flow moves. The amplifier is what differs: in BGN the share of value in assets in place, generated by the model; in KP14 the firm's profitability deviation, written into the cash flow; in GS21 the firm's productivity, written into the production function. The original three-type economies, every lever tried on the way, and the leverage version of GS21's amplifier are in section 5.
 
 <!-- TABLE:g3b -->
 | model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
@@ -176,13 +217,20 @@ The same y with the exposure a product of two firm-level factors, one of which c
 | KP14 | `vygelbcs` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0, sigma_epsilon 0.3 | 0.858 | 7% | 0.297 | +0.256 | 90 | 0.46 | 0.388 | 0.251 | 0.288 | 0.282 | 0.052 | +0.0913 (t 12.3) | +0.25 | 10/10 |
 <!-- /TABLE:g3b -->
 
-**Why a product has room.** A linear model in the ranks of the characteristics fits additive functions of them. The product of two factors that are each mean zero across firms has no additive part, so no linear portfolio is long the exposure, while the random features span products and DKKM recovers part of the difference as a gap. The sign must be hidden: one-sided versions, in which every type loads with the same sign and the amplifier alone switches sign, are a sort on the amplifier's characteristic with a type-dependent slope and have room of 10 to 27% and no gap (section 7). The compensation at y = 0 is what keeps value from revealing the sign; how visible the type is through size does not matter for room (the KP14 compensation ladder in section 7).
+**Why a product has room.** A linear model in the ranks of the characteristics fits additive functions of them. The product of two factors that are each mean zero across firms has no additive part, so no linear portfolio is long the exposure, while the random features span products and DKKM recovers part of the difference as a gap. The sign must be hidden: one-sided versions, in which every type loads with the same sign and the amplifier alone switches sign, are a sort on the amplifier's characteristic with a type-dependent slope and have room of 10 to 27% and no gap (section 5). The compensation at y = 0 is what keeps value from revealing the sign; how visible the type is through size does not matter for room (the KP14 compensation ladder in section 5).
 
 **BGN: `bvychs35`, +0.071.** Six mirrored types with loadings ±0.01, ±0.035, ±0.07 on y through project cash flows, compensated at y = 0 with exponent 3.5, which makes the type a size characteristic and lifts the room to 67% of the linear ceiling. The amplifier is the firm's claim leverage: operating assets bear the shock and growth options largely do not, so the exposure is type × assets-in-place share, and the compensated characteristics map to the type nonlinearly (the bins basis alone reaches 0.36 against a linear 0.21). Fair gap +0.071 (t 5.8, ten of ten; DKKM 0.403 against the fair linear model's 0.303); the compensation ladder 2.5 / 3.0 / 3.5 / 4.0 gives +0.048 / +0.063 / +0.071 / +0.059, peaking where the level spread begins to make the type a size factor the Fama-French benchmark holds.
 
 **KP14: `vygelbcs`, +0.091.** The y exposure sits on the profitability deviation: cash flow x K^α θ u [1 + (ε − 1) h_b(y)], so a profitable firm loads positively and an unprofitable one negatively, with the type's sign b_f setting which way; six mirrored types ±0.3, ±0.7, ±1.2 are revealed by a level ladder 0.5 to 2.0, the price of y risk is 4.0 and the profitability dispersion σ_ε 0.3. The exponential e^{b y} turns project values negative for b ≤ −0.2 where y is far below zero under the risk-neutral measure, so the exposure is the bounded h_b(y) = c / (1 + (c − 1) e^{−c b y/(c−1)}) with c = 2.5 (h(0) = 1, slope b at zero, range (0, c); the pricing equation keeps its form with h on the right-hand side, and economies without the cap are bit-identical). Room 58 to 119% (0.15 to 0.30 in Sharpe), fair gap +0.091 (t 12.3, ten of ten; range +0.041 to +0.131; DKKM 0.388 against 0.297). The exposure is b_f (ε − 1) h'(y): the type's sign read from size, the firm's deviation from ROE, their product spanned by no linear function of the characteristics.
 
-**GS21: `gvysz2`, +0.059.** The y exposure is gs_bv_f z̃, the type's loading times the firm's standardized productivity, six mirrored types ±0.15, ±0.3, ±0.5 on the new `gs_level` ladder 0.5 to 2.0 (a per-type production-level multiplier; 1.0 leaves every earlier economy unchanged), no compensation because the exposure is mean zero in z̃. Room 22 to 66% (0.18 to 0.27 in Sharpe), fair gap +0.059 (t 11.5, ten of ten; DKKM 0.678 against 0.619, the leverage-augmented linear model binding in most seeds); the smaller ladder ±0.1, ±0.2, ±0.35 (`gvysz1`) gives +0.053 (t 6.1, ten of ten). Across the ladder the type premium is −0.30, +0.01, +0.11, +0.51, +0.42, +0.24% a month, non-monotone in b, the market beta falling from 1.4 to 0.3 over the positive types. GS21's imposed product with no types, productivity × coupon (`gvyp15`, +0.078), is the same mechanism without the industry sign; financial leverage as the amplifier fails as a type (section 7).
+**GS21: `gvysz2`, +0.059.** The y exposure is gs_bv_f z̃, the type's loading times the firm's standardized productivity, six mirrored types ±0.15, ±0.3, ±0.5 on the new `gs_level` ladder 0.5 to 2.0 (a per-type production-level multiplier; 1.0 leaves every earlier economy unchanged), no compensation because the exposure is mean zero in z̃. Room 22 to 66% (0.18 to 0.27 in Sharpe), fair gap +0.059 (t 11.5, ten of ten; DKKM 0.678 against 0.619, the leverage-augmented linear model binding in most seeds); the smaller ladder ±0.1, ±0.2, ±0.35 (`gvysz1`) gives +0.053 (t 6.1, ten of ten). Across the ladder the type premium is −0.30, +0.01, +0.11, +0.51, +0.42, +0.24% a month, non-monotone in b, the market beta falling from 1.4 to 0.3 over the positive types. GS21's imposed product with no types, productivity × coupon (`gvyp15`, +0.078), is the same mechanism without the industry sign; financial leverage as the amplifier fails as a type (section 5).
+
+**What changes.**
+
+  Exposure is b_f times the firm's mix of assets in place and growth option.
+- `bvychs35`: `bvych0` with the ladder mirrored (six types of equal share, b_f ±0.01, ±0.035, ±0.07) and the compensation exponent raised from 1.2 to 3.5; chain y, price 2.5.
+- `vygelbcs`: `vy1`'s y moved onto the profitability deviation, cash flow x K^α θ u [1 + (ε − 1) h_b(y)] with the bounded h_b (cap 2.5); six mirrored types ±0.3, ±0.7, ±1.2 on an explicit level ladder 0.5 / 0.65 / 0.85 / 1.15 / 1.5 / 2.0; price 4.0; σ_ε 0.3 (baseline 0.2).
+- `gvysz2`: `gvy25s`'s chassis with the exposure gs_bv_f z̃ (gs_bzl 0, gs_bzi 1), six mirrored types ±0.15, ±0.3, ±0.5 on the gs_level ladder 0.5 to 2.0, bv_comp 0; one solve per type.
 
 ### 3c. Exposure that is non-monotone in a characteristic
 
@@ -196,7 +244,7 @@ A monotone exposure in one firm state is linear in that state's rank (section 3a
 | GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
 <!-- /TABLE:g3c -->
 
-**The construction.** Five types of equal share on a mild visible level ladder: the type's cash-flow level (BGN's and KP14's `type_level`) or production level (GS21's new `gs_level`, log gs_level added to the production exponent in solver and simulator) is multiplied by 0.8, 0.9, 1.0, 1.1 or 1.2, so the type shows in size and in nothing else; each type is level-compensated at y = 0 (bv_comp 1.0), so the types' unit values match at the mean state; the loading on y is either hump-shaped across the ladder, b = −c, 0, +c, 0, −c (`bvyhx`, `vyhx`, `gvyhx`), price 2.5. The hump's story is the thinner of the two non-monotone shapes: the two tails of the size distribution on one side of the shock and the middle on the other, an exposure non-monotone in size. The U, which has the plainer story (the smallest firms exposed through financing constraints, the largest through operating leverage, mid-sized firms through neither), reaches the bar only in BGN and only just; it and the leverage U are in section 7.
+**The construction.** Five types of equal share on a mild visible level ladder: the type's cash-flow level (BGN's and KP14's `type_level`) or production level (GS21's new `gs_level`, log gs_level added to the production exponent in solver and simulator) is multiplied by 0.8, 0.9, 1.0, 1.1 or 1.2, so the type shows in size and in nothing else; each type is level-compensated at y = 0 (bv_comp 1.0), so the types' unit values match at the mean state; the loading on y is either hump-shaped across the ladder, b = −c, 0, +c, 0, −c (`bvyhx`, `vyhx`, `gvyhx`), price 2.5. The hump's story is the thinner of the two non-monotone shapes: the two tails of the size distribution on one side of the shock and the middle on the other, an exposure non-monotone in size. The U, which has the plainer story (the smallest firms exposed through financing constraints, the largest through operating leverage, mid-sized firms through neither), reaches the bar only in BGN and only just; it and the leverage U are in section 5.
 
 **The hump across size: KP14 and BGN carry it, GS21 does not.** In BGN the hump ladder rises with the loading: room 9 to 13% at ±0.14, 37 to 40% and a fair gap of +0.035 (t 3.9, ten of ten) at ±0.21, 59 to 77% and +0.119 (t 10.9, ten of ten; range +0.083 to +0.188; DKKM 0.476 against the linear model's 0.357) at ±0.28 (`bvyhx2`, `bvyhx3`, `bvyhx4`); the premium across the ladder at ±0.28 is 0.12, 1.69, 4.76, 1.43, 0.09% a month. In KP14 the same ladder is the largest 3c gap in the campaign: at ±0.21 (`vyhx3`) the oracle room is 154 to 197% of a linear ceiling of 0.21 to 0.23 and the fair gap +0.212 (t 12.5, ten of ten; range +0.134 to +0.306; DKKM 0.431 against the fair linear model's 0.218), and at ±0.28 (`vyhx4`) room 123% and +0.166 (t 10.6, ten of ten; +0.108 to +0.248). The premium decomposition (`variants/hump_decomp.py`) says why: across the ladder the type premium is 0.36, 0.86, 0.68, 0.88, 0.35% a month (vyhx3, seed 0), the two unexposed middle types earning the most, the market beta rising from 0.73 to 1.36 with b while the y channel pulls the other way, so the premium is non-monotone in the exposure itself and no characteristic that reveals the type, size included, can rank it. In GS21 the same ladder gives nothing (`gvyhx3`: room 9 to 31%, fair gap +0.002, t 0.9, seven of ten; the ±0.28 version was solved and not pursued). There the premium is monotone in the exposure, −0.50, +0.26, +1.47, +0.25, −0.56% a month across the ladder, and a GS21 type's production level moves its optimal capital, its value and its profitability together, so book-to-market and ROE rank the exposure and the linear ceiling (0.4 to 0.9, against 0.2 to 0.4 in the other two models) holds it.
 
@@ -204,11 +252,17 @@ A monotone exposure in one firm state is linear in that state's rank (section 3a
 
 **The three economies and their stories.** KP14: the hump across size (`vyhx3`, +0.212), an exposure non-monotone in size whose premium is non-monotone in the exposure. BGN: the same construction (`bvyhx4`, +0.119), and the U in size with the plain story reaches the bar at 0.35 (`bvyu5r`, +0.0295, t 3.1, nine of ten). GS21: the quadratic in the firm's own productivity (`gvyzzh10`, +0.080), the middling firms most exposed. The common econometric thread: in each, the exposure is a function of the characteristics that no linear combination of them spans, and the premium is non-monotone in whatever the characteristics reveal about the type. Where the premium is monotone in a revealed quantity, the fixed-coupon leverage types, the GS21 size ladder, the one-signed U, the linear model holds it however curved the exposure is.
 
+**What changes.**
+
+- `bvyhx4`: `bvy1ch` with five types of equal share on the level ladder θ_f 0.8 / 0.9 / 1.0 / 1.1 / 1.2 (type_level), loadings −0.28, 0, +0.28, 0, −0.28, exact compensation (bv_comp 1.0), chain, price 2.5.
+- `vyhx3`: the same ladder in KP14 through type_level, loadings −0.21, 0, +0.21, 0, −0.21, bv_comp 1.0, price 2.5, the production-level exposure e^{b y}.
+- `gvyzzh10`: `gvy25s`'s chassis with one type whose exposure is −0.1 (z̃² − 1) (gs_bzz 1, gs_bzl 0), no compensation, price 2.5.
+
 ## 4. Larger factor models
 
 More priced factors are tested where the structure is controlled: the reduced form below adds K priced factors to a
 market factor, with the total price of risk held across K, and varies only whether the factors load linearly on the
-observed characteristics or on products of partly hidden states (setup in section 6). The structural version, a second
+observed characteristics or on products of partly hidden states (setup below). The structural version, a second
 priced state in each of the three models, is in the appendix (table 9).
 
 <!-- TABLE:rf -->
@@ -227,11 +281,62 @@ priced state in each of the three models, is in the appendix (table 9).
 | lfh_L5_K3_n1 -- K=3 | 0.598 | 8 | 0.091 | +0.486 | 537 | 0.57 | 0.528 | 0.057 | 0.391 | 0.073 | 0.041 | +0.1371 (t 10.4) | 5/5 |
 | lfh_L5_K5_n1 -- K=5 | 0.598 | 8 | 0.075 | +0.496 | 664 | 0.57 | 0.496 | 0.038 | 0.309 | 0.060 | 0.041 | +0.1866 (t 26.3) | 5/5 |
 | lfh_L5_K10_n1 -- K=10 | 0.598 | 8 | 0.079 | +0.479 | 607 | 0.55 | 0.456 | 0.052 | 0.171 | 0.077 | 0.041 | +0.2854 (t 24.8) | 5/5 |
+| kfh_sq_1 -- K=1, curvature: squares of observed characteristics | 0.600 | 8 | 0.080 | +0.519 | 647 | 0.59 | 0.582 | 0.032 | 0.046 | 0.059 | 0.041 | +0.5161 (t 57.3) | 5/5 |
+| kfh_sq_4 -- K=4 | 0.601 | 8 | 0.097 | +0.501 | 515 | 0.59 | 0.573 | 0.042 | 0.458 | 0.074 | 0.041 | +0.1155 (t 22.6) | 5/5 |
+| kfh_sq_16 -- K=16 | 0.601 | 8 | 0.076 | +0.523 | 687 | 0.59 | 0.571 | 0.036 | 0.429 | 0.052 | 0.041 | +0.1429 (t 14.3) | 5/5 |
+| kfo_sq_1 -- K=1, squares, directions orthogonal to size | 0.600 | 8 | 0.080 | +0.519 | 648 | 0.59 | 0.582 | 0.032 | 0.048 | 0.059 | 0.041 | +0.5163 (t 57.7) | 5/5 |
+| kfo_sq_4 -- K=4 | 0.601 | 8 | 0.092 | +0.507 | 552 | 0.59 | 0.575 | 0.058 | 0.061 | 0.081 | 0.041 | +0.4833 (t 25.4) | 5/5 |
+| kfo_sq_16 -- K=16 | 0.602 | 8 | 0.079 | +0.520 | 656 | 0.59 | 0.575 | 0.015 | 0.031 | 0.053 | 0.041 | +0.5030 (t 21.3) | 5/5 |
+| lsqb_a0_n0 -- K=1 square of the book-to-market latent, mean zero, no noise | 0.598 | 8 | 0.199 | +0.398 | 200 | 0.56 | 0.564 | 0.142 | 0.125 | 0.173 | 0.041 | +0.3662 (t 11.0) | 5/5 |
+| lsqb_a0_n1 -- noise 1.0 | 0.598 | 8 | 0.190 | +0.392 | 206 | 0.55 | 0.515 | 0.120 | 0.092 | 0.146 | 0.041 | +0.3403 (t 6.5) | 5/5 |
 <!-- /TABLE:rf -->
 
 Factors that load linearly on observed characteristics leave no room at any K and a negative gap; factors that load
 on products of partly hidden states give room and a gap that grow monotonically with K and with the observation noise
-that hides the states. Bounded and curvature loadings on observed characteristics are in the appendix (the RF rows of table 8).
+that hides the states. Curvature is the third kind of loading in the table: squares of observed characteristics (`kfh_sq`, `kfo_sq`) and the square of one partly hidden latent (`lsqb`). Bounded loadings and the sign ladder are in the appendix.
+
+Bounded loadings behave like linear ones: no room at K = 1 and 4, a little at K = 16 (12%), and a negative gap
+throughout, because tanh of a single index is monotone in that index and nearly linear in its rank. Pure curvature of
+an observed characteristic gives room of about five times the linear ceiling and a gap of about +0.5 at K = 1. In the
+unconstrained square rows the gap then falls to +0.12 and +0.14 at K = 4 and 16 while the room does not move: the
+squared index contains size², Fama-French's legs are value-weighted and market value is exp(size), so those legs
+hold a size² exposure mechanically and Fama-French's Sharpe jumps from 0.05 to 0.46. The kfo rows remove the size
+coordinate from every direction and the gap returns to about +0.5 at every K. Curvature of an observed characteristic
+is therefore captured by random features and by nothing linear, and the square ladder's apparent fall with K was an
+artefact of value weighting. A factor on the square of one partly hidden latent is the same result one level down: the square of the book-to-market latent, mean zero (`lsqb_a0_n0`), has room +0.40 and a fair gap of +0.37 (t 11; +0.34 with observation noise 1.0), while the same square on the size latent has the room and no fair gap, because market value is e^size and the value-weighted market inside the Fama-French set holds size²; any shift of the latent's mean, (s + m)² − 1 with m of 1 or more, adds a linear part a linear portfolio holds and sends room to 0.002 (appendix).
+
+**The reduced form** (`variants/reduced/rf_model.py`). A simulated panel of N = 500 firms over T = 500
+months after a 100-month burn-in, five seeds per cell, run through the same oracle ceilings and the same estimators as
+the structural economies at the 360-month window; its true conditional moments are known in closed form. Notation:
+i indexes firms, t months, j = 1, ..., 5 the characteristics (size, book-to-market, asset growth, profitability,
+momentum), k = 1, ..., K the extra priced factors.
+
+- **Latent processes.** Each firm carries five independent AR(1) processes
+  z_ijt = ρ_j z_ij,t-1 + sqrt(1 - ρ_j²) η_ijt, η standard normal, ρ = (0.99, 0.98, 0.90, 0.95, 0.70), so each has unit
+  stationary variance.
+- **Observed characteristics.** X_ijt = z_ijt in the kfh and kfo ladders. In the lfh ladder the five processes are the firm's true states and each characteristic is its state plus observation noise, X_ijt = z_ijt + σ_ν ν_ijt, with ν_ijt an independent AR(1) with the same ρ_j and unit variance. The ladder's one noise parameter is σ_ν: 0 (the states are observed exactly, rows n0) or 1 (noise as large as the state itself, rows n1). X̃_it is X_it standardized
+  across firms at t. The oracle's bases and the estimators see the ranks of X_it, as everywhere in the report.
+- **Returns.** r_i,t+1 = B_it λ + B_it f_t+1 + ε_i,t+1, with f_t+1 ~ N(0, σ_f² I_K+1), σ_f = 0.04, and
+  ε_i,t+1 ~ N(0, σ_ε²), σ_ε = 0.10, all independent. B_it is the 1 x (K+1) row of firm i's loadings and λ the (K+1)
+  vector of constant prices of risk. The true premium is μ_it = B_it λ and the true covariance Σ_t = σ_f² B_t B_t' +
+  σ_ε² I.
+- **The market factor (column 0).** B_i0t = 1 + a'X̃_it with a = (0, 0.3, 0, 0.3, 0.3) on (size, bm, agr, roe, mom), and
+  λ_0 = 0.002, a Sharpe of λ_0/σ_f = 0.05. This loading is linear in the characteristics, so every method holds it.
+- **The K extra factors (columns k = 1, ..., K).** λ_k = 0.024/sqrt(K) for every k, so each has Sharpe 0.6/sqrt(K) and the
+  total price of risk is the same at every K. Every extra loading is centered across firms each month (β̄_kt is the
+  cross-sectional mean), so the equal-weighted market carries none of the extra premia. The ladders differ only in
+  the loading:
+  - *kfh* (loadings on observed characteristics): B_ikt = h(w_k'X̃_it) - β̄_kt, with w_k a fixed unit vector in R⁵ drawn
+    once and reused in every seed, and h(u) = u in the main table (lin); the appendix adds h(u) = tanh(u) (tanh) and h(u) = u² (sq). Exposure is a function of what the characteristics show directly: GS21's structure.
+  - *kfo* (appendix): kfh with the size coordinate of each w_k set to zero before normalizing, so no extra factor loads on size.
+  - *lfh* (loadings on products of latent states): B_ikt = z_i a_k t z_i b_k t - β̄_kt, where (a_k, b_k) is the k-th pair in a fixed enumeration of the ten pairs of the five processes (so K ≤ 10). The
+    loading is a product of two true states that the characteristics reveal only up to the observation noise σ_ν:
+    KP14's and BGN's structure, a type times a within-firm state.
+
+The ladders therefore vary one thing at a time: K; whether the loading is a function of the observed characteristics
+or a product of partly hidden states; and, within lfh, how much noise hides the states. In the kfh linear and tanh
+ladders SR_max falls at K = 16 because sixteen directions over five characteristics are collinear and their loadings
+partly cancel; in the lfh ladder SR_max stays near 0.6 at every K.
 
 **The structural version of the latent-product ladder: vyg25s's signed loading over K priced states** (`vym3s`,
 `vym6s`; rows in the appendix table). y ∈ R^K, K independent OU states each priced 2.5/sqrt(K); 24 mean-zero types of equal share with loading vectors b_f ∈ R^K of magnitude 0.07 or 0.14 at cosines ±1, ±0.84, ±0.68, ±0.52, ±0.36, ±0.20
@@ -270,443 +375,12 @@ reach the policy-stability exit within the sweep cap: the discrete investment po
 (BOP_ACCEPT_CAPPED in the gate), with E[M R] = 1 to 1e-15 and every type's realized premium within |z| 1.2 of its
 expected value.
 
-## 5. What the estimated weights look like: the nonlinearity DKKM picks up
+## 5. Additional economies
 
-The Sharpe tables say DKKM beats the linear methods in the 3b economies; this section asks what its weights do
-that the linear methods' weights cannot. It applies the neural-network weight analysis (Pruitt's `MLP Analyze`
-pipeline, `external/MLP Analyze/BOP campaign/run_bop.py`) to the three benchmarks and the three 3b economies.
-For every economy, the per-firm weights of each method are rebuilt from the saved panels exactly as
-`run_estimators.py` formed them (`bop_runs/mlp/extract_weights.py`; the rebuild is accepted only if it
-reproduces the recorded per-month Sharpe ratios, and it does so to 1e-16): the true SDF weights (the population
-investor's conditional mean-variance portfolio), the Fama-MacBeth weights, the Fama-French weights and the DKKM
-weights (P = 3600 random features, the two-draw ensemble, the economy's best kappa), over the 125 evaluation months
-of every seed. A 5 x 32 ReLU network is then fitted to each method's weight as a function of the five characteristics,
-rank-standardized within each (seed, month) cross-section; the network is a smoother, and what is read off it is the
-shape of the weight surface, not its fit. Three statistics summarize each surface against the truth's. The
-*correlation with truth* is the cross-sectional correlation of the method's weights with the true weights, averaged
-over cross-sections (first for the weights themselves, then for the fitted surface). The *nonlinear share* is the part
-of the fitted surface's variance that a linear regression on the five ranks within each cross-section leaves: the part
-of the surface no portfolio linear in the ranks can hold. The *correlation of nonlinear parts* is the cross-sectional
-correlation of that remainder with the truth's remainder: whether the method's departures from linearity are the
-truth's departures or noise. Its t-statistic is across seeds. Two figures per model show the surfaces themselves, in the two characteristics the economy's exposure is
-written in (size, the proxy for the firm's type, and book-to-market, its leverage, in KP14 and BGN; profitability and
-book-to-market in GS21), with the benchmark in the top row and the 3b economy in the bottom row and one panel per
-method. The *interaction* figure evaluates each fitted surface on a grid over the two characteristics (the other three at
-their mean), subtracts the best additive fit f(a) + g(b), and maps what is left: the part of the weight that cannot be
-written as an effect of one characteristic plus an effect of the other. White is no interaction, a saddle (two opposite
-corners red, two blue) is a product term: the slope in book-to-market differs by size. Each panel has its own colour
-scale, so shapes are compared across panels and sizes read from the standard deviation in the panel title, which is
-also the table's last column. The *line* figure plots the fitted weight against one characteristic at five levels of
-the other; there an interaction shows as fanning or crossing lines, mixed with the additive part the interaction figure
-removes. Fama-MacBeth is linear in the characteristics, so its panels are parallel lines and its interaction is noise;
-Fama-French's portfolios are double sorts on size and each characteristic, so it carries an interaction by construction,
-but in the shape of its sort breakpoints.
-
-<!-- TABLE:mlp -->
-| model | economy | weights | corr with truth | corr, MLP fit | nonlinear share | corr of nonlinear parts (t) | interaction sd at pair |
-|---|---|---|---|---|---|---|---|
-| BGN | `bgnbase` (benchmark; pair size x bm) | true SDF | 1.00 | 0.77 | 0.35 |  | 0.076 |
-|  |  | FMR | 0.43 | 0.57 | 0.11 | +0.28 (89.4) | 0.012 |
-|  |  | FF | 0.35 | 0.44 | 0.35 | +0.11 (6.8) | 0.039 |
-|  |  | DKKM | 0.45 | 0.60 | 0.04 | +0.37 (4.9) | 0.008 |
-| BGN | `bvych0` (3b; pair size x bm) | true SDF | 1.00 | 0.38 | 0.39 |  | 0.051 |
-|  |  | FMR | 0.17 | 0.21 | 0.07 | +0.00 (0.4) | 0.013 |
-|  |  | FF | 0.19 | 0.24 | 0.17 | +0.19 (14.2) | 0.019 |
-|  |  | DKKM | 0.24 | 0.24 | 0.03 | +0.49 (59.9) | 0.013 |
-| GS21 | `gsbase` (benchmark; pair bm x roe) | true SDF | 1.00 | 0.97 | 0.11 |  | 0.004 |
-|  |  | FMR | 0.54 | 0.74 | 0.07 | +0.13 (14.3) | 0.002 |
-|  |  | FF | 0.48 | 0.69 | 0.39 | +0.30 (21.7) | 0.002 |
-|  |  | DKKM | 0.57 | 0.79 | 0.14 | -0.12 (-8.3) | 0.000 |
-| GS21 | `gvyp10` (3b; pair bm x roe) | true SDF | 1.00 | 0.98 | 0.50 |  | 0.052 |
-|  |  | FMR | 0.25 | 0.28 | 0.16 | +0.61 (68.8) | 0.021 |
-|  |  | FF | 0.40 | 0.40 | 0.16 | +0.33 (17.8) | 0.025 |
-|  |  | DKKM | 0.83 | 0.86 | 0.38 | +0.84 (83.9) | 0.033 |
-| KP14 | `kpbase` (benchmark; pair size x bm) | true SDF | 1.00 | 0.80 | 0.08 |  | 0.008 |
-|  |  | FMR | 0.37 | 0.59 | 0.10 | +0.02 (1.4) | 0.006 |
-|  |  | FF | 0.31 | 0.42 | 0.20 | +0.24 (17.3) | 0.016 |
-|  |  | DKKM | 0.33 | 0.41 | 0.10 | -0.10 (-23.5) | 0.009 |
-| KP14 | `vyg25` (3b; pair size x bm) | true SDF | 1.00 | 0.67 | 0.58 |  | 0.112 |
-|  |  | FMR | 0.29 | 0.33 | 0.19 | -0.13 (-18.2) | 0.012 |
-|  |  | FF | 0.35 | 0.39 | 0.33 | +0.18 (16.6) | 0.095 |
-|  |  | DKKM | 0.48 | 0.55 | 0.21 | +0.77 (229.0) | 0.110 |
-
-Columns: corr with truth = mean over (seed, month) cross-sections of the correlation between the method's weights and the true SDF weights; corr, MLP fit = the same for the MLP surface fitted to the method's weights; nonlinear share = the part of the fitted surface's variance that an OLS fit on the five ranks within each cross-section leaves (one minus the within-cross-section R-squared); corr of nonlinear parts = cross-sectional correlation of that nonlinear remainder with the truth surface's nonlinear remainder, with its t-statistic across seeds; interaction sd at pair = standard deviation, in weight units, of the two-way interaction part of the fitted surface over the named pair (the surface minus its additive fit in the two characteristics), so the truth's row says how large the interaction is and a method's row how much of it the method's weights carry. The pair is the one the economy's exposure is written in (KP14 and BGN: type, proxied by size, times leverage, bm; GS21: productivity, roe, times leverage, bm) and is the pair the figures use. Seeds: three per benchmark, ten per 3b economy; evaluation months only; DKKM at P=3600 and the economy's best kappa; weights winsorized at 1/99 within cross-sections.
-
-![KP14: the interaction part of the fitted weight over book-to-market and size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.](mlp_figures/interaction_kp_sizexbm.png)
-
-*KP14: the interaction part of the fitted weight over book-to-market and size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.*
-
-![KP14: fitted weight against book-to-market at five levels of size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.](mlp_figures/compare_kp_vary_bm_fix_size.png)
-
-*KP14: fitted weight against book-to-market at five levels of size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.*
-
-![GS21: the interaction part of the fitted weight over profitability and book-to-market (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.](mlp_figures/interaction_gs_bmxroe.png)
-
-*GS21: the interaction part of the fitted weight over profitability and book-to-market (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.*
-
-![GS21: fitted weight against profitability at five levels of book-to-market (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.](mlp_figures/compare_gs_vary_roe_fix_bm.png)
-
-*GS21: fitted weight against profitability at five levels of book-to-market (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.*
-
-![BGN: the interaction part of the fitted weight over book-to-market and size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.](mlp_figures/interaction_bgn_sizexbm.png)
-
-*BGN: the interaction part of the fitted weight over book-to-market and size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM, each on its own colour scale, the interaction's sd in weight units in the title.*
-
-![BGN: fitted weight against book-to-market at five levels of size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.](mlp_figures/compare_bgn_vary_bm_fix_size.png)
-
-*BGN: fitted weight against book-to-market at five levels of size (benchmark above, 3b below); panels: true SDF, Fama-MacBeth, Fama-French, DKKM; other characteristics at their mean.*
-<!-- /TABLE:mlp -->
-
-In every 3b economy the true weight is far from linear in the ranks (nonlinear share 0.39 to 0.58 of the surface),
-and the shape is an interaction: the weight's slope in one characteristic depends on the level of another. In KP14 (`vyg25`) the slope of the true weight in book-to-market depends on the firm's size (the proxy for its type) and on its momentum: steep for large and high-momentum firms, flat for the rest. Over size and book-to-market the interaction part of the true surface has a standard deviation of 0.106 and DKKM's 0.107, with the same saddle (the interaction figure); DKKM's nonlinear part correlates 0.77 with the truth's. Fama-MacBeth's interaction is 0.011, parallel lines by construction, and its nonlinear part correlates -0.13. Fama-French's interaction is 0.096, because its portfolios are size-by-characteristic double sorts, but its shape is the sorts' steps rather than the truth's saddle and its nonlinear part correlates 0.18. The truth's larger interaction, book-to-market with momentum (sd 0.148), DKKM does not recover (0.015): momentum is the noisier proxy for the type.
-In GS21 (`gvyp10`) 98% of the true weight is a function of the five characteristics and the surface is non-monotone
-in book-to-market: median-bm firms get the largest weight, the lowest-bm firms a negative one with a V in
-profitability. The DKKM weights reproduce this ordering (correlation with truth 0.83 for the weights themselves, 0.84 between the nonlinear parts); Fama-MacBeth gets the ordering of the bm levels wrong (0.25), and Fama-French (0.40) has the steps without the curvature. Over book-to-market and profitability the interaction's sd is 0.049 in the truth and 0.032 in DKKM, with the same pattern, against 0.020 and 0.025 for Fama-MacBeth and Fama-French with different patterns. In BGN (`bvych0`) only 38% of the true weight is a function of
-the five characteristics, because the exposure sits on a latent firm type that the characteristics proxy weakly; what
-is a function of them is a hump in book-to-market that grows with size. The DKKM surface is nearly linear here (nonlinear share 0.03): the size-by-book-to-market interaction has sd 0.049 in the truth and 0.013 in DKKM, the right saddle at a quarter of its size, and DKKM's nonlinear part correlates 0.49 with the truth's where Fama-MacBeth's is uncorrelated (0.00) and Fama-French's 0.19. The departure from linearity it captures is small, which is the Sharpe table's smallest 3b gap. The benchmarks are the control. In KP14 (`kpbase`) and GS21 (`gsbase`) the true weight is close to linear in
-the ranks (nonlinear share 0.08 and 0.11): parallel humps in book-to-market at every size in KP14, parallel rises in
-profitability at every book-to-market level in GS21, with nothing for a nonlinear method to find. The interaction over the figure pair has sd 0.008 and 0.004 in the truth and 0.009 and 0.000 in DKKM, and DKKM's nonlinear part is uncorrelated with the truth's (-0.10 and -0.12): what it adds to a linear portfolio is noise, which is
-the Sharpe tables' zero or negative gap, and in GS21 its best penalty is a hundred times the 3b economy's, shrinking
-it to the market. The BGN benchmark (`bgnbase`) is different: its true weight already has a size-by-book-to-market interaction (nonlinear share 0.35, interaction sd 0.074, the curves cross), and DKKM's surface is as linear there as in the 3b economy (nonlinear share 0.04, interaction sd 0.008); the BGN economies hand DKKM a nonlinearity it does not pick up in either version, which is why
-BGN's gaps are the smallest of the three models. Read across the figures, the mechanism is the same in all three
-models: DKKM's weights bend where the true weights bend, when the bend is an interaction of two characteristics large
-enough to show in the characteristics, and otherwise stay a linear portfolio plus noise.
-
-## 6. What each economy changes
-
-**Notation.** BGN (Berk, Green and Naik 1999): a firm is a portfolio of live projects; project j has systematic
-risk β_j, drawn from an exponential distribution, and lognormal cash flows C_j; it survives each month with
-probability π; a new project arrives each month and is taken if its NPV is positive; the pricing kernel prices the
-market shock at σ_z and the Vasicek short rate r_t. GS21 (Gomes and Schmid 2021): output is e^{x_t + z_it} k_it with
-aggregate productivity x_t and idiosyncratic productivity z_it both AR(1); firms choose the coupon b_it, invest
-lumpily at a random cost, and may default; the kernel prices x-shocks at a constant γ_x = 0.5. KP14 (Kogan and
-Papanikolaou 2014): firm value is assets in place plus growth options; project cash flows are x_t u_it ε_jt K_j^α,
-new projects arrive at the firm-specific rate λ_it, and the kernel prices disembodied productivity x at γ_x and
-embodied technology z at γ_z.
-
-**The added priced state y.** Every economy with a y adds one stationary state with unit stationary variance and
-mean reversion κ_y = 0.35 per year, y_{t+1} = ρ y_t + sqrt(1 - ρ²) η_{t+1} with ρ = e^{-κ_y/12} (an
-Ornstein-Uhlenbeck process in KP14, a Tauchen chain in GS21 and in BGN's chain economies). It is priced: the kernel
-is multiplied by e^{-λ_y η - λ_y²/2} with λ_y = γ_v sqrt(1/12), and γ_v = 2.5 unless stated. "Types" are equal
-shares of firms differing only in their exposure b_f to y. "Level-compensated" means type f's cash flows are also
-scaled by a constant θ_f = (V_0/V_f)^1.2, the ratio of a unit project's value for type 0 and type f at y = 0, so
-that value at y = 0 does not reveal the type (KP14's ω device).
-
-- **Baselines**
-  - `bgnbase`: BGN as above, one type. Expected returns come from the value-weighted β_j of assets in place and from the growth option's exposure to r_t.
-  - `gsbase`: GS21 as above, Table I calibration, one type.
-  - `kpbase`: KP14 as above, one type, no y.
-- **Group 1. A crash-only factor.** The 3a economy with the Gaussian price of y set to zero (γ_v = 0) and a crash.
-  - `bvy1j`, `gvyz10j`, `vy1j`: `bvy1ch`, `gvyz10` and `vy1` with γ_v = 0 and, each month with probability 1%
-    whatever y_t, a jump of y_{t+1} to -3.5 (the lowest node), weighted e^2 by the kernel (a risk-neutral
-    probability of about 7% a month before renormalization). In KP14 the jump is a Poisson event at intensity 0.12 a
-    year under P and 0.12 e^2 under Q.
-- **Group 2. A quadratic price of the model's own risk.**
-  - `bq25`: `bgnbase` with σ_z → σ_z g(r_t), g(r) = min(1 + 0.25 ((r - r̄)/sd_r)², 3), binned to seven equiprobable
-    bins of the stationary rate (g = 1.00, 1.03, 1.17, 1.68 from the middle outward); the date-k cash flow is priced
-    at the bin of r_{t+k-1}, through seven bases D_j(r) in place of the regime's two.
-  - `gq25`: `gsbase` with γ_x → γ_x (1 + 0.25 x̃²) capped at 1.5, x̃ = x / sd(x).
-  - `kpq`: `kpbase` with γ_x → γ_x min(1 + 0.25 y², 3), y the unpriced stationary state of `kpgam` (κ = 0.35, unit
-    variance); no firm is exposed to y.
-- **Group 3a. One type exposed to y.**
-  - `bvy1ch`: `bgnbase` plus y (21-node chain), one type; project cash flows C_j e^{0.035 y_t}.
-  - `gvyz10`: `gsbase` plus y (9-node chain over ±3.5 sd), one type; output e^{x_t + z_it + 0.10 z̃_it y_t} k_it,
-    z̃ = z / sd(z): the product economy's exposure without the coupon.
-  - `vy1`: `kpbase` plus y, one type; project cash flows e^{0.07 y_t} x_t u_it ε_jt K_j^α.
-- **Group 3b. Interactions.**
-  - `bvych0`: `bvy1ch` with three types, b_f ∈ {0.01, 0.035, 0.07}, level-compensated (θ_f = (V_0/V_f)^1.2).
-    Exposure is b_f times the firm's mix of assets in place and growth option.
-  - `gvyp10`: `gsbase` plus y (9-node chain), one type, output e^{x_t + z_it + 0.10 z̃_it b̃_it y_t} k_it, with z̃ = z / sd(z) and b̃ = (b - 0.5)/0.29 the standardized coupon. Exposure is productivity × leverage, revealed by profitability and leverage.
-  - `vyg25`: `vy1` with three types, b_f ∈ {0.02, 0.07, 0.14}, level-compensated. Growth options are options on the e^{b_f y} cash flows, so a firm's exposure is b_f times the elasticity of its value, which rises with its growth-option share: type × growth-option share, revealed by size and book-to-market.
-  - `bvychs35`: `bvych0` with the ladder mirrored (six types of equal share, b_f ±0.01, ±0.035, ±0.07) and the compensation exponent raised from 1.2 to 3.5; chain y, price 2.5.
-  - `vygelbcs`: `vy1`'s y moved onto the profitability deviation, cash flow x K^α θ u [1 + (ε − 1) h_b(y)] with the bounded h_b (cap 2.5); six mirrored types ±0.3, ±0.7, ±1.2 on an explicit level ladder 0.5 / 0.65 / 0.85 / 1.15 / 1.5 / 2.0; price 4.0; σ_ε 0.3 (baseline 0.2).
-  - `gvysz2`: `gvy25s`'s chassis with the exposure gs_bv_f z̃ (gs_bzl 0, gs_bzi 1), six mirrored types ±0.15, ±0.3, ±0.5 on the gs_level ladder 0.5 to 2.0, bv_comp 0; one solve per type.
-- **Group 3c. Non-monotone exposures.**
-  - `bvyhx4`: `bvy1ch` with five types of equal share on the level ladder θ_f 0.8 / 0.9 / 1.0 / 1.1 / 1.2 (type_level), loadings −0.28, 0, +0.28, 0, −0.28, exact compensation (bv_comp 1.0), chain, price 2.5.
-  - `vyhx3`: the same ladder in KP14 through type_level, loadings −0.21, 0, +0.21, 0, −0.21, bv_comp 1.0, price 2.5, the production-level exposure e^{b y}.
-  - `gvyzzh10`: `gvy25s`'s chassis with one type whose exposure is −0.1 (z̃² − 1) (gs_bzz 1, gs_bzl 0), no compensation, price 2.5.
-- **Group 4. Two priced states.** Total price fixed, γ_v = 2.5/sqrt(2) on each.
-  - `bvyk2`: `bvych0` with a second independent 21-node chain y⁽²⁾; project cash flows C_j e^{b_f y_t + b_f⁽²⁾ y⁽²⁾_t}, (b_f, b_f⁽²⁾) ∈ {(0.01, 0), (0, 0.035), (0.049, 0.049)}.
-  - `gvypk3`: `gvyp10` with a second independent chain (5 nodes each, 25 joint) and three types of equal share,
-    loading 0.10 z̃ b̃ on y, on y⁽²⁾, and 0.071 z̃ b̃ on both.
-  - `vy9t2`: `vyg25` with y ∈ R², two independent OU states; a firm's type is a pair (f₁, f₂) drawn independently from
-    {0.02, 0.07, 0.14} for each state, nine types of equal share, and its cash flows load e^{b_{f₁} y_t + b_{f₂} y⁽²⁾_t};
-    price 2.5/sqrt(2) on each state.
-
-**Reduced form (table 6)** (`variants/reduced/rf_model.py`). A simulated panel of N = 500 firms over T = 500
-months after a 100-month burn-in, five seeds per cell, run through the same oracle ceilings and the same estimators as
-the structural economies at the 360-month window; its true conditional moments are known in closed form. Notation:
-i indexes firms, t months, j = 1, ..., 5 the characteristics (size, book-to-market, asset growth, profitability,
-momentum), k = 1, ..., K the extra priced factors.
-
-- **Latent processes.** Each firm carries five independent AR(1) processes
-  z_ijt = ρ_j z_ij,t-1 + sqrt(1 - ρ_j²) η_ijt, η standard normal, ρ = (0.99, 0.98, 0.90, 0.95, 0.70), so each has unit
-  stationary variance.
-- **Observed characteristics.** X_ijt = z_ijt in the kfh and kfo ladders. In the lfh ladder the five processes are the firm's true states and each characteristic is its state plus observation noise, X_ijt = z_ijt + σ_ν ν_ijt, with ν_ijt an independent AR(1) with the same ρ_j and unit variance. The ladder's one noise parameter is σ_ν: 0 (the states are observed exactly, rows n0) or 1 (noise as large as the state itself, rows n1). X̃_it is X_it standardized
-  across firms at t. The oracle's bases and the estimators see the ranks of X_it, as everywhere in the report.
-- **Returns.** r_i,t+1 = B_it λ + B_it f_t+1 + ε_i,t+1, with f_t+1 ~ N(0, σ_f² I_K+1), σ_f = 0.04, and
-  ε_i,t+1 ~ N(0, σ_ε²), σ_ε = 0.10, all independent. B_it is the 1 x (K+1) row of firm i's loadings and λ the (K+1)
-  vector of constant prices of risk. The true premium is μ_it = B_it λ and the true covariance Σ_t = σ_f² B_t B_t' +
-  σ_ε² I.
-- **The market factor (column 0).** B_i0t = 1 + a'X̃_it with a = (0, 0.3, 0, 0.3, 0.3) on (size, bm, agr, roe, mom), and
-  λ_0 = 0.002, a Sharpe of λ_0/σ_f = 0.05. This loading is linear in the characteristics, so every method holds it.
-- **The K extra factors (columns k = 1, ..., K).** λ_k = 0.024/sqrt(K) for every k, so each has Sharpe 0.6/sqrt(K) and the
-  total price of risk is the same at every K. Every extra loading is centered across firms each month (β̄_kt is the
-  cross-sectional mean), so the equal-weighted market carries none of the extra premia. The ladders differ only in
-  the loading:
-  - *kfh* (loadings on observed characteristics): B_ikt = h(w_k'X̃_it) - β̄_kt, with w_k a fixed unit vector in R⁵ drawn
-    once and reused in every seed, and h(u) = u in the main table (lin); the appendix adds h(u) = tanh(u) (tanh) and h(u) = u² (sq). Exposure is a function of what the characteristics show directly: GS21's structure.
-  - *kfo* (appendix): kfh with the size coordinate of each w_k set to zero before normalizing, so no extra factor loads on size.
-  - *lfh* (loadings on products of latent states): B_ikt = z_i a_k t z_i b_k t - β̄_kt, where (a_k, b_k) is the k-th pair in a fixed enumeration of the ten pairs of the five processes (so K ≤ 10). The
-    loading is a product of two true states that the characteristics reveal only up to the observation noise σ_ν:
-    KP14's and BGN's structure, a type times a within-firm state.
-
-The ladders therefore vary one thing at a time: K; whether the loading is a function of the observed characteristics
-or a product of partly hidden states; and, within lfh, how much noise hides the states. In the kfh linear and tanh
-ladders SR_max falls at K = 16 because sixteen directions over five characteristics are collinear and their loadings
-partly cancel; in the lfh ladder SR_max stays near 0.6 at every K.
-
-## 7. Additional economies
-
-Everything else that was run: first the search behind sections 3b and 3c, lever by lever, then the table of every other economy and the bullets that describe each against its parent (notation as in section 6). Three groups of them answer side questions: the crash added to the
+Everything else that was run. The table has the main tables' columns; the bullets describe each economy against its parent (notation as in The answer). Three groups of them answer side questions: the crash added to the
 interaction economies instead of to a single-type economy (`bvyj25`, `gvyp10j`, `vyj25`), the GS21 product ladder
 (`gvyp05` to `gvyp20`, `gvyp10x`), and the earlier single-characteristic and price-of-risk wirings that the
 harmonized cells replace.
-
-### The search, lever by lever
-
-Every lever tried, by group: the one change to the spine, the room it gave as a percentage of the linear ceiling, and the fair gap.
-
-| group | the one change to the spine | room % of linear | fair gap |
-|---|---|---|---|
-| 1. distribution of shocks | a crash-only cash-flow factor | 3-12 | none |
-| 2. price of risk | quadratic in the model's own state | 0-14 | none |
-| 3a. single-characteristic exposure | one type exposed to y | 5-10 | none |
-| 3b. interaction | three types (a product in GS21) exposed to y | 16-47 | +0.008 to +0.020 |
-| 3b with a mean-zero type loading | the ladder mirrored, six types, level-compensated | 20 (BGN) / 226 (KP14) | +0.026 / +0.181 |
-| the mean-zero ladder at other compensation strengths | bv_comp 0.6 / 1.8 (KP14); 0.4 to 0.8 (BGN) | 147 / 167 (KP14); 7-12 (BGN) | +0.142 / +0.185; none |
-| the mean-zero loading doubled / tripled | `vyg25sx2`, `vyg25sx3` (KP14); `bvychsx2`, `bvychsx3` (BGN); `gvy25sx2` (GS21) | 343 / 175 (KP14); 26 / 21 (BGN); 13 (GS21) | +0.245 / +0.218; none; none |
-| stronger BGN compensation | bv_comp 1.8 / 2.5 / 3.0 (`bvychs18`, `bvychs25`, `bvychs30`) | 27 / 67 / 67 | +0.006 / +0.048 / +0.063 |
-| a non-monotone exposure | V-shaped loading across a visible level ladder (BGN `bvyvee`); quadratic in the firm's leverage (GS21 `gvyql10`, `gvyql20`, `gvyqh10`) | 23; 1-11 | none; none |
-| a non-monotone exposure that works (section 3c) | quadratic in the firm's own productivity (GS21 `gvyzzh10`, `gvyzz20`); hump-shaped loading ±0.21 / ±0.28 across a mild size ladder (BGN `bvyhx3`, `bvyhx4`; KP14 `vyhx3`, `vyhx4`; GS21 `gvyhx3`) | 55-81 / 25-65; 37-40 / 59-77 (BGN); 154-197 / 123 (KP14); 9-31 (GS21) | +0.080 / +0.059; +0.035 / +0.119; +0.212 / +0.166; +0.002 |
-| a non-monotone exposure with a story (section 3c) | U-shaped loading across the size ladder (`bvyu4`, `vyu4`, `gvyu4`; reordered reference `bvyu5r`, `bvyu6r`, `vyu4r`, `vyu5r`); exposure U-shaped in leverage on fixed-coupon types (GS21 `gvylu30`, `gvylu30c`) | 54 / 28 / 2; 17 / 25 (BGN 0.35 / 0.42), 27 / 20 (KP14 0.28 / 0.35); 2 / 0 | +0.014 / +0.010 / stopped; +0.0295 / +0.025 (BGN, at the bar at 0.35), +0.003 / +0.000 (KP14); stopped / stopped |
-| the interaction with a story in GS21 | industry sign × productivity on the gs_level ladder (`gvysz1`, `gvysz2`); industry sign × fixed leverage (`gvysl15`, `gvysl20`) | 60 / 39; 1 / not run | +0.053 / +0.059 (t 11.5, ten of ten); stopped / not run |
-| the KP14 interaction slot | the positive ladder with loadings ×2 / ×3, price 3.5, bv_comp 2.5; the exposure on the profitability deviation with the type hidden, visible, or mirrored (`vyge`, `vygel`, `vygesm`); the same exposure BOUNDED (a capped logistic in place of e^{b y}), mirrored types to ±1.2 on a size ladder (`vygelb` to `vygelbcs`) | 14-26 (vyg25: 19-28); 7-27; 26 / 36 / 51 / 56 / 49 / 69 / 80 / 90 (mean, along the ladder) | stopped at the oracle; stopped at the oracle; +0.002 / +0.005 / +0.014 / +0.022 / +0.030 / +0.037 / +0.049 / +0.091 (`vygelbc`, t 6.6; `vygelbcs`, σ_ε 0.3, t 12.3; both ten of ten) |
-| the mean-zero loading over K = 3 / 6 priced states (KP14) | the signed ladder spread over K states, 24 mean-zero types | 110 / 110 | +0.100 / +0.099 |
-| 4. larger factor model (reduced form) | K factors loading linearly on characteristics / on products of latent states | 0-1 / 190-660 | none / +0.03 to +0.29 |
-| structural second priced state (appendix) | a second chain in each model | 15-65 | +0.005 to +0.056 |
-
-### 3b: the search
-
-The original three-type economies and the levers tried on the way to the three in section 3b.
-
-The same y with heterogeneity in what is exposed to it: three types of firms with exposures 0.01 / 0.035 / 0.07
-(BGN) and 0.02 / 0.07 / 0.14 (KP14), level-compensated so that value at y = 0 does not reveal the type; and in GS21,
-where types never produced room (appendix A3), the product of standardized productivity and the standardized coupon
-written into the production function with coefficient 0.10. Exposure is then a product: type x project mix (BGN),
-type x growth-option share (KP14), productivity x leverage (GS21), each factor revealed by a different
-characteristic.
-
-<!-- TABLE:s3b -->
-| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN | `bvych0` -- y as a 21-node chain, three types (control) | 0.576 | 37% | 0.341 | +0.055 | 16 | 0.20 | 0.334 | 0.285 | 0.292 | 0.326 | 0.216 | +0.0076 (t 2.7) | +0.05 | 8/10 |
-| GS21 | `gvyp10` -- product exposure zb at 0.10 (control) | 0.650 | 8% | 0.447 | +0.194 | 47 | 0.46 | 0.553 | 0.238 | 0.333 | 0.548 | 0.018 | +0.0057 (t 0.7) | +0.01 | 5/10 |
-| KP14 | `vyg25` -- three types on y, price 2.5 (control) | 0.495 | 11% | 0.346 | +0.082 | 24 | 0.25 | 0.350 | 0.292 | 0.320 | 0.335 | 0.044 | +0.0148 (t 5.2) | +0.09 | 10/10 |
-<!-- /TABLE:s3b -->
-
-Verdict: every interaction economy has a positive mean gap with most seeds positive (t of 2.7 to 5.1 across seeds),
-at room of 16 to 47% of the linear ceiling. The gaps are statistically clear and economically modest: 2 to 4% of
-the linear Sharpe at these three representatives; the scaled GS21 versions in the appendix reach 11 to 22%. The premium is multiplicatively separable in the ranks, f(A) x g(B); a linear model in the ranks
-fits only additive functions, random features span products, and DKKM recovers 15 to 30% of the room as a gap.
-Going from 3a to 3b changes nothing but the second dimension of heterogeneity, and that is what creates the gap.
-The GS21 product ladder (appendix A4) shows the room hump-shaped in the product's size and the gap rising to +0.08. The GS21 product is imposed: the coupon multiplies the exposure inside the production function. Its
-structural counterpart, where the exposure 0.10 z̃ y sits in cash flows and leverage acts only through the equity
-claim, was tested by fixing each firm's capital structure as a type drawn independently of productivity (`gvyzlf`:
-coupons 0.16, 0.42 and 0.68 per unit capital, debt-to-equity 0.25 to 3.25, no refinancing; four variants in the
-appendix). The interaction is there, the true premium's slope in leverage flips sign across profitability quintiles,
-but the equity claim amplifies the y premium by only 20 to 40% around a large additive productivity part, so room
-stays at 6 to 8% of the linear ceiling and the gap at +0.005 (t 1.8). The imposed product has no additive part, which is where its 43% comes from. Three levers on `gvyzlf` fail to change this (appendix). Valuing the debt as riskless (`gvyzlr`) leaves
-every number unchanged, so the debt was not absorbing y risk; a more persistent y (`gvyzlp`, κ_y 0.10) halves SR_max
-and the interaction with it; and cutting the price of the aggregate productivity shock from 0.5 to 0.1 (`gvyzlg`,
-with its own benchmark `gsbg1` and 3a comparator `gvyz10g`) lowers the market's share from 50% to 27% but leaves the
-linear ceiling at 0.72, because the base is the priced productivity level itself rather than the market: room 9%,
-gap -0.006. The interaction's own Sharpe is 0.31 to 0.33 in all of them, the size seen in KP14's and BGN's 3b economies (table column *interaction SR*); what differs is the base it sits on. Two further wirings close the question from the other side: fixing the product's sign with a leverage-level term (`gvyp10c`, exposure 0.10 b̃ (z̃ + 2)) hands the market a large negative premium and leaves room of 1%, and KP14's own recipe, three latent exposure types times three fixed leverage types (`gvytl`, and `gvytlg` at a fifth of the aggregate shock's price), gives the market 72 to 84% of the attainable Sharpe and room of 1 to 3%. Every exposure with a nonzero cross-sectional mean is carried by GS21's equal-weighted market; the product is the one wiring whose mean is zero, which is why it alone has room.
-
-**The sign of the type loading.** The dispersion bound in the summary is not what sets room, and the reduced form said so
-before the structural runs did. With one priced factor and N = 500, any linear-in-characteristics portfolio whose
-covariance with the exposure is not zero mimics the factor and diversifies the rest, so it takes the factor's whole
-Sharpe: room is all or nothing, and it is all only when the exposure is orthogonal to every linear function of the
-characteristics. The sign ladder of the reduced form (appendix, `lsh` rows) shows this directly: a product of two
-mean-zero latent states has room of +0.39 to +0.42, and shifting either factor's mean by one standard deviation, or
-more, or replacing the product by a one-signed ratio (`lrt`), sends room to 0.000 to 0.005 at the same SR_max. In
-the structural models the type loading's cross-sectional mean is that shift. Mirroring vyg25's ladder to six types
-of equal share with loadings ±0.02, ±0.07, ±0.14 (`vyg25s`, level-compensated as vyg25, price 2.5) raises KP14's
-room from +0.082 to +0.349, two and a quarter times a linear ceiling that falls from 0.346 to 0.174 (a mean-zero
-type leaves no b̄ × growth-option piece for a book-to-market sort to hold), SR_max from 0.495 to 0.575, and DKKM's
-fair gap from +0.015 to +0.181 (t 17, ten of ten seeds; DKKM 0.373 against FMR's 0.102 and the linear model's
-0.153). The market's share stays at 11%. BGN moves the same way but less far: `bvychs` (bvych0's ladder mirrored,
-±0.01, ±0.035, ±0.07, level-compensated) has room of 20% of the linear ceiling against 16% and a fair gap of
-+0.026 (t 4.9, nine of ten) against +0.008, with the linear ceiling unchanged (0.341 to 0.349) and SR_max lower
-(0.576 to 0.510). Why BGN's linear ceiling holds where KP14's halves is measured directly. The type draws are reconstructed from the
-simulators' seeds (`variants/type_visibility.py`; the reconstruction is checked by the monotone mean value by
-type) and each type's mean return and mean characteristics are read off the panels. The level compensation hides
-none of the ladders. In `vyg25s` the within-month ranks of the five characteristics explain 88 to 92% of b_f in
-every seed (correlations: size +0.88, book-to-market -0.82; mean value rises fifty-fold from the most negative to
-the most positive loading, θ_f 1 to 3.36), in `bvychs` 46 to 70% (size +0.75), in `gvy25s` 83 to 87% (ROE +0.69,
-size +0.59, book-to-market -0.53, leverage -0.15). What differs is the shape of the premium in the type. In BGN and
-GS21 the mean return rises monotonically in b_f in ten of ten seeds (seed 0: bvychs 0.28 to 1.25% a month, gvy25s
--0.22 to +0.97%), so a sort on the characteristics that reveal b_f holds the premium and the linear ceiling keeps
-it. In vyg25s the mean return is hump-shaped in b_f in ten of ten seeds (seed 0: 0.56, 0.75, 0.86, 0.86, 0.83,
-0.75% a month from b_f = -0.14 to +0.14); the reading this suggests is that the compensation changes each type's
-growth-option leverage and with it the premium on the model's other risks, so the two smallest loadings earn the
-most and both ends the least. A linear function of ranks that are monotone in b_f cannot be high in the middle and
-low at both ends; a quadratic in size can, and that non-monotone piece is the room DKKM takes 71% of. The sign of
-the loading matters because it makes the premium non-monotone in a visible characteristic, not because it hides
-the type. `vyg25u`, vyg25 without the level compensation, has vyg25's returns exactly (SR_max 0.495 to every digit;
-only the characteristics change): its premium is monotone in b_f (0.85, 0.81, 0.75% a month), the type is less
-visible than with the compensation (R² 0.46 to 0.53 against 0.84 to 0.85: the compensation reveals the type
-through size rather than hiding it), and it loses the gap (-0.002, t -0.5, three of ten) and a fifth of the room.
-`bvysg`, the earlier BGN signed ladder without compensation, has a negative gap where `bvychs` has a positive one.
-The capturable gap is then the Sharpe of the part of the expected return that no linear function of the
-characteristics spans, not a dispersion ratio. GS21 does not follow. `gvy25s`, gvy25's three level types mirrored to six of equal share with
-b_f ∈ {±0.015, ±0.05, ±0.10}, level-compensated (bv_comp 1.2) at the same price, raises GS21's room from +0.014 to
-+0.062 (2% to 11% of the linear ceiling) and halves the market's share of SR_max (84% to 50%), but the linear ceiling
-keeps 88% of SR_max (0.558 of 0.632, against 0.684 of 0.739 in gvy25), and DKKM does not take what is left: the fair
-gap is -0.012 (t -4.4, two of ten seeds positive; DKKM 0.549 against FMR's 0.541 and the fair linear model's 0.561),
-where the prediction was +0.02 to +0.06. The visibility numbers explain it: the type shows in
-ROE, size and book-to-market, the premium is monotone in the type, and the linear span holds most of the exposure.
-The earlier conjecture that the firm's chosen leverage reveals the sign is not supported (leverage rank correlates
--0.15 with b_f); the order of the three rooms (226%, 20%, 11%) is the order of how non-monotone the premium is in the
-type, not of how much the firm decides.
-
-**The strength of the level compensation.** Two ladders test whether the compensation, which sets how visible the
-type is, moves room. In KP14 it changes the characteristics and nothing else: `vyg25s6` and `vyg25s18` (bv_comp 0.6
-and 1.8) have vyg25s's returns exactly, seed by seed (SR_max and every type's mean return agree to the digit). The
-type's visibility moves a lot: R² of b_f on the ranks is 0.67 to 0.74 at 0.6 (through book-to-market; size is
-uncorrelated with b_f), 0.88 to 0.92 at 1.2 and 0.95 to 0.97 at 1.8 (size correlation 0.97). The linear ceiling
-barely moves (0.21, 0.17, 0.21), room is 147%, 226% and 167% of it, and the fair gap is +0.142 (t 24), +0.181 and
-+0.185 (t 8.7), five of five seeds at both new points (seven and five oracle seeds, five estimator seeds each). The
-premium stays hump-shaped in b_f because the returns do not change, and the hump is the room; how visible the type
-is does not matter. In BGN the compensation does change returns, and weakening it goes the other way: `bvychs4`,
-`bvychs6` and `bvychs8` (bv_comp 0.4, 0.6, 0.8) make the type more visible (R² 0.89 at 0.4 and 0.76 at 0.8, through
-size) with the premium monotone in b_f, room falls from 20% to 12%, 8% and 7% of a linear ceiling that rises from
-0.35 to 0.52 to 0.59, and the fair gap is -0.004, +0.001 and +0.009, none distinguishable from zero (five, three and
-three seeds; the rest were stopped at the oracle). The spec's prediction, a hidden sign near 0.6 lifting room above
-50%, is falsified.
-
-**GS21 with its capital structure fixed.** `gvytls` takes `gvytl`'s chassis (three coupons, 0.15 / 0.40 / 0.70 per
-unit capital, fixed for life and drawn independently of the type) and mirrors the exposure ladder as `gvy25s` does:
-eighteen mean-zero types. It tests whether the firm's coupon choice is what reveals the sign in GS21. It is not: room
-is 8% of the linear ceiling (eight oracle seeds) against gvy25s's 11%, and the fair gap is -0.007 (t -1.0, one of
-three; the other seven were stopped). The type stays visible (R² 0.83 to 0.84; ROE +0.68, size +0.67, book-to-market
--0.63), and within each coupon the mean return rises with b_f. The most exposed levered firms also select themselves
-out: in each of three seeds none of the b_f = -0.10, coupon-0.70 firms and at most five of about thirty b_f = -0.05,
-coupon-0.70 firms survive into the panel. The prediction (room 15 to 25%) is falsified.
-
-**A hump outside KP14, and larger loadings.** The decomposition of each type's premium on the market and on y
-(`variants/hump_decomp.py`: a type's equal-weighted return regressed on the equal-weighted market and on dy) says why
-only KP14's premium is hump-shaped. In `vyg25s` the market beta rises from 0.71 to 1.27 across the ladder, concave in
-b_f, while the residual premium falls from +0.10 to -0.23% a month: two opposed channels, and their sum peaks inside.
-In `bvychs` both channels rise with b_f; in `gvy25s` they oppose, but the y channel is ten times the market channel.
-Seven economies tried to build the second channel into BGN and GS21, and none did. A pure curvature of the
-productivity loading in GS21 without y (`gxq35`, `gxq70`: loading 1 + c (z̃² − 1)/√2, c = −0.35 and −0.70) gives
-room of 1 to 3% and a gap of zero. Keeping `gvy25s`'s level shifts but cutting the y price (`gvy25sq`, `gvy25sh`:
-γ_v 0.25 and 0.5 with bv_comp 12 and 9) does make the premium non-monotone, because the market beta collapses from
-1.0 to 0.5 at the top of the ladder, but the premium then spans 0.0 to 0.4% a month against −0.2 to +1.0 in
-`gvy25s`, room is 1 to 3% and the gap −0.004 and −0.008. In BGN the compensation ladder was continued in both
-directions (`bvychsn5`, `bvychs18`, `bvychs25`, `bvychs30`, `bvychs35`: bv_comp −0.5, 1.8, 2.5, 3.0, 3.5). The
-premium stays monotone in b_f at every rung (bvychs25 seed 0: 0.27 to 1.17% a month), so no hump; but room, which was
-20% of the linear ceiling at 1.2 and 27% at 1.8, is 67% at 2.5 (+0.163), 67% at 3.0 (+0.182) and 66% at 3.5
-(+0.185, seven oracle seeds), with SR_max rising from 0.51 to 0.50 at 3.5 and the linear ceiling falling from 0.35
-to 0.25 to 0.29. It is cross-sectional nonlinearity, not conditioning: the bins basis alone reaches 0.36 against a
-linear 0.21 in bvychs25's seed 0. DKKM takes some of it: the fair gap is +0.048 (t 3.7, nine of ten) at 2.5 and
-+0.063 (t 5.6, ten of ten) at 3.0, the largest BGN gaps of the campaign (bvychs +0.026; bvychs35's estimators were
-still running when this was written), where 1.8 gave +0.006 (t 1.4) and −0.5 gave −0.005 despite 35% room. The
-response to bv_comp is not monotone, and the oracle room at −0.5 was not learnable: DKKM there is below the linear
-model in four of ten seeds.
-
-**The size of the loading.** The one lever that moved the gap was the size of the sign-switching loading, and only
-in KP14. `vyg25sx2` doubles `vyg25s`'s loadings (±0.04, ±0.14, ±0.28; θ_f 1 to 11.2, the compensation still exact at
-y = 0). SR_max rises from 0.575 to 0.640, the linear ceiling falls from 0.174 to 0.158, room is +0.437 (343% of the
-ceiling against 226%), and the fair gap +0.245 (t 11.1, ten of ten; DKKM 0.456 against the linear model's 0.134 and
-FMR's 0.206) against +0.181. The hump deepens: seed 4's premium is −0.04, +0.43, +0.60, +0.58, +0.43, +0.32% a month
-from b_f = −0.28 to +0.28, the residual channel +0.25 to −0.27 against a market beta of 0.58 to 1.36. Tripling
-(`vyg25sx3`: ±0.06, ±0.21, ±0.42; θ_f 1 to 37) is past the peak: the forty-fold level spread begins to show
-linearly in size, the linear ceiling rises to 0.248, room is +0.364 (175%) and the gap +0.218 (t 9.7, ten of ten).
-BGN and GS21 do not follow. `bvychsx2` and `bvychsx3` (loadings ×2 and ×3) raise room from +0.068 to +0.089 and
-+0.081 but the gaps are +0.007 (seven of ten) and +0.002 (six of ten); the room is there and DKKM does not find it.
-`gvy25sx2` makes the type linearly visible, as the product ladder did: the linear ceiling is 0.72 of an SR_max of
-0.82, room 13%, gap +0.0005. (`gvy25sx3`'s b_f = +0.045 type did not converge and the economy was not run.)
-
-**Interaction and non-monotone exposures in every model.** The campaign's last round asked for six economies: in each model one
-whose gap comes from an interaction of characteristics and one whose exposure is non-monotone, each with a fair gap of 0.1 a year
-(+0.029 monthly). All six exist, and the three non-monotone economies are described in section 3c. KP14's non-monotone economy is the hump across the size ladder (`vyhx3`, +0.212; the sign ladder's emergent hump `vyg25sx2`, +0.245, is its cousin in this section) and BGN's interaction `bvychs35`
-(+0.071, see the compensation ladder above). GS21's interaction is the imposed product (`gvyp15`, +0.078) and, with a story, the industry sign times the firm's productivity (`gvysz2`, +0.059, t 11.5, ten of ten; `gvysz1` +0.053; the last paragraph of this section): making the type a
-size characteristic through strong compensation, bvychs30's recipe, gives GS21 room of 31 to 34% but no gap (`gvy25sc25`: −0.023,
-one of five; the leverage-augmented linear model holds what the oracle counts as room, as it did for `bvychsn5`). GS21's and BGN's non-monotone economies (`gvyzzh10`, +0.080; `bvyhx4`, +0.119) are in section 3c. Putting the hump into b itself through a second priced state whose
-loading is quadratic in the first (`bvyq2`, b₂ = −14 (b₁² − mean)) gives the designed hump in the type premium (0.18, 0.63, 0.91,
-1.06, 1.13, 0.96% a month) but at the parent's room, and a steady gap just under the bar (+0.022, t 18, three of three); doubling the
-loadings (`bvyq2x`) leaves room at 18 to 19% and a gap of −0.014, and the steeper quadratic (`bvyq2k`, −28) gives the designed hump in b itself (0.07, 0.78, 1.17, 1.32, 1.24, 0.73% a month, peaking at b = +0.01) with room of 21 to 26% but no gap (+0.001 and −0.006 on its first two seeds): a hump that a second priced state writes into b is held by the linear model once it is given the market and the state's own factor. The compensation ladder on
-`bvychs` was continued to 4.0 and 4.5: the gap peaks at 3.5 (2.5 / 3.0 / 3.5 / 4.0 / 4.5: +0.048 / +0.063 / +0.071 / +0.059 / +0.064, ten seeds each except four at 4.5), because past 3.5 the sixfold level spread makes the type a size factor that the Fama-French benchmark holds (FF rises from
-0.29 to 0.33 to 0.38 and becomes the binding comparison). KP14's interaction slot was the last to be filled (`vygelbc` and `vygelbcs`, below). The
-sign-switching ladders' premium is hump-shaped whatever the compensation: `vyg25su` and `vyg25sux2`, the ladders with bv_comp 0,
-have vyg25s's and vyg25sx2's returns to the digit and keep most of the gap (+0.116 and +0.191, ten of ten) with a less visible type,
-so the compensation is not what makes KP14's gap and cannot be used to remove the hump. The interaction-only KP14 economy is the
-positive ladder, and none of its levers moves room off vyg25's 19 to 28%: loadings ×2 (`vyg25x2`, 20 to 23%), ×3 (`vyg25x3`, 14 to
-20%: the type becomes more visible), the y price at 3.5 (`vyg35x2`, 17 to 26%) and the compensation at 2.5 (`vyg25x2c`, 19 to 22%);
-all four were stopped at the oracle. In KP14 the type enters only through b and the level, and the level changes nothing but the
-characteristics, so a product of two type dimensions needed a new channel, and the round built one: the y exposure on the firm's own
-profitability deviation, b_f (ε − 1), so that cash flow is x K^α θ u [1 + (ε − 1) e^{b_f y}] and a profitable firm loads positively, an unprofitable one negatively, with the type setting the scale (`bv_on_eps`; the level and project-mix coefficients are solved unexposed, the profitability coefficients with b_f and e^{b y} folded in, the growth-option solve and the simulator carry no wholesale factor, and the unit project value is clipped at zero at the investment margin; the mode off is op-for-op identical, and the gate's realised-against-expected return check passes by type). It does not produce the gap. With the type hidden (`vyge`, b_f = 0.1 / 0.25 / 0.45) the three types earn the same premium and room is 11 to 21%; with the type revealed through size by a level ladder (`vygel`, new `type_level`, R² of b_f on the ranks 0.91) room stays at 10 to 27%, because with positive loadings the product is a monotone function of ROE whose slope varies by type, and a ROE sort takes it; and the version in which both factors are mean zero (`vygesm`: mirrored types ±0.05, ±0.1, ±0.15 on a level ladder) is capped by the model itself, since for a negative loading the unit project value turns negative for unprofitable firms where y is far negative under the risk-neutral measure (±0.2 already fails), and at the loadings that keep values positive the product's own Sharpe is small (SR_max 0.36 against vyg25's 0.50) and room is 7 to 12%. Eight economies and four routes left the slot there: in KP14 the capturable gap was the hump of the sign-switching ladder, and an interaction-only economy at the bar needed a model that admits negative project values or a bounded exposure function. The bounded exposure function fills it. Replacing e^{b_f y} on the profitability deviation by h_b(y) = c / (1 + (c − 1) e^{−c b y/(c−1)}), which has h(0) = 1, slope b at zero and range (0, c), bounds the profitability claim at c times its unexposed value whatever the loading (`bv_eps_cap`; the pricing equation keeps its form with h in place of the exponential on the right-hand side, the panel and the SDF use the same h, and economies without the cap are bit-identical). With c = 2 the mirrored ladder ±0.1 / 0.25 / 0.45 that could not be solved (`vygels`) has unit project values of +0.66 or more on the table grid and runs (`vygelb`), and the loadings can go to ±1.2 (+0.62); cap 3 turns them negative. Along the family the oracle room and the fair gap rise together: `vygelb` (±0.1 / 0.25 / 0.45, cap 2, price 2.5) room 21 to 31%, gap +0.002 (t 1.4); `vygelb7` (±0.2 / 0.45 / 0.7) 27 to 45%, +0.005 (t 2.1); `vygelb7g` (the same at price 4.0) 33 to 62%, +0.014 (t 4.2, ten of ten); `vygelbw` (±0.3 / 0.7 / 1.2, price 4.0) 30 to 73%, +0.022 (t 4.3, ten of ten); `vygelbx` (±0.5 / 1.2 / 2.0) 28 to 70%, +0.030 (t 4.2, ten of ten), the width saturating past 1.2; and `vygelbc` (±0.3 / 0.7 / 1.2 at cap 2.5, price 4.0) room 40 to 90% and a fair gap of +0.037 (t 6.6, ten of ten; DKKM 0.272 against the fair linear model's 0.235), above the bar. The exposure is b_f (ε − 1) h'(y): the type's sign is read from size (the level ladder 0.5 to 2.0), the firm's deviation from ROE, and the product of the two mean-zero factors is what no linear function of the characteristics spans, bvychs30's structure in KP14. Two things about the mechanism are worth recording. The profitability claim is a large share of value only for the negative loadings (A1/A0 0.7 to 0.9 against 0.05 to 0.15 for the positive ones, whose exposed claim is discounted more heavily under the risk-neutral measure), so the premium pattern lives mostly in the small, negatively loaded firms. And the room converts to gap at about 17% of its absolute size here, against about 45% for the hump economies, so a bounded KP14 interaction needs room near 0.17 in Sharpe to reach the bar where a BGN hump needs 0.07. The levers in order of effect are the cap (the swing of the claim over the y range; above 2.7 project values turn negative), the price of y risk (no positivity limit; at 6.0, `vygelbc6`, room 48 to 88% and a fair gap of +0.049, t 5.8, ten of ten), and the width of the ladder up to 1.2. The strongest lever of all is the profitability dispersion itself. Widening it to σ_ε 0.3 (`vygelbcs`, cap 2.5, price 4.0) widens the firm's deviation from ROE that the exposure multiplies, lifts the absolute room to 0.15 to 0.30 in Sharpe (58 to 119% of the linear ceiling, the Fama–French benchmark now the binding comparison in most seeds), and gives a fair gap of +0.091 (t 12.3, ten of ten; DKKM 0.388 against the fair linear model's 0.297; the weakest seed +0.041, the strongest +0.131), three times the bar and the largest interaction gap in any of the three models. The room still converts at about a third of its absolute size, so the gain is the room itself, not a better conversion: the exposure b_f (ε − 1) h'(y) scales with the dispersion of ε, and the hidden premium pattern grows with it while the characteristics that reveal it do not. The reduced form has the same two results in miniature: a factor loading on the square of one partly
-hidden latent is non-monotone where the firms are, and gives room +0.40 and a fair gap of +0.37 (t 11) when the latent is
-book-to-market (`lsqb_a0_n0`, +0.34 with observation noise), while any shift of the latent's mean, (s + m)² − 1 with m of 1 or
-more, adds a linear part a linear portfolio holds and sends room to 0.002; the same square on the size latent (`lsq_a0_n0`) has the
-room and no fair gap, because market value is e^size and the value-weighted market inside the Fama-French set holds size².
-
-**Leverage as the amplifier in GS21.** The more natural amplifier, financial leverage, does not work as a type: two industries (gs_level 0.8 / 1.2) times three fixed coupons (0.15 / 0.40 / 0.70) with the exposure proportional to the coupon (`gvysl15`, `gvysl20`) has room of 0.3 to 1% of a linear ceiling of 0.7 to 1.4 and was stopped at the oracle; six perfectly observed groups are priced linearly (section 3c, the U in leverage).
-
-### 3c: the search
-
-The hump ladder's rungs and GS21's failure, the U in size, the U in leverage, and the earlier attempts.
-
-<!-- TABLE:s3c -->
-| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN | `bvyhx2` -- hump-shaped loading across a mild level ladder 0.85..1.15: b = -0.14, +0.00, +0.14, +0.00, -0.14 | 0.597 | 27% | 0.526 | +0.057 | 11 | 0.25 | 0.523 | 0.392 | 0.315 | 0.508 | 0.158 | +0.0150 (t 0.7) | +0.06 | 2/3 |
-| BGN | `bvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.551 | 28% | 0.349 | +0.155 | 44 | 0.36 | 0.375 | 0.295 | 0.280 | 0.340 | 0.153 | +0.0345 (t 3.9) | +0.14 | 10/10 |
-| KP14 | `vyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.659 | 5% | 0.298 | +0.318 | 123 | 0.53 | 0.480 | 0.309 | 0.199 | 0.278 | 0.022 | +0.1664 (t 10.6) | +0.36 | 10/10 |
-| GS21 | `gvyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.823 | 26% | 0.706 | +0.112 | 17 | 0.41 | 0.766 | 0.737 | 0.725 | 0.764 | 0.210 | +0.0023 (t 0.9) | +0.04 | 7/10 |
-| GS21 | `gvyzz20` -- U-shaped exposure in the firm's own productivity: +0.2 (z^2 - 1), one type | 0.686 | 26% | 0.441 | +0.168 | 43 | 0.42 | 0.521 | 0.350 | 0.321 | 0.462 | 0.179 | +0.0589 (t 6.3) | +0.23 | 10/10 |
-| GS21 | `gvyzz10` -- U-shaped exposure in the firm's own productivity: +0.1 (z^2 - 1), one type | 0.621 | 43% | 0.356 | +0.224 | 60 | 0.45 | 0.498 | 0.455 | 0.312 | 0.489 | 0.252 | +0.0086 (t 0.7) | +0.02 | 3/5 |
-| BGN | `bvyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.382 | 31% | 0.246 | +0.111 | 54 | 0.25 | 0.241 | 0.157 | 0.181 | 0.227 | 0.118 | +0.0142 (t 1.3) | +0.06 | 7/10 |
-| BGN | `bvyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.774 | 46% | 0.641 | +0.108 | 17 | 0.38 | 0.664 | 0.562 | 0.558 | 0.623 | 0.358 | +0.0295 (t 3.1) | +0.16 | 9/10 |
-| BGN | `bvyu6r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.42 at the ends, unexposed reference type | 0.768 | 49% | 0.592 | +0.137 | 24 | 0.42 | 0.616 | 0.479 | 0.533 | 0.582 | 0.373 | +0.0246 (t 2.6) | +0.13 | 8/10 |
-| KP14 | `vyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.371 | 13% | 0.263 | +0.072 | 28 | 0.20 | 0.256 | 0.216 | 0.209 | 0.246 | 0.040 | +0.0100 (t 1.5) | +0.04 | 7/10 |
-| KP14 | `vyu4r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28 at the ends, unexposed reference type | 0.367 | 14% | 0.262 | +0.069 | 27 | 0.20 | 0.251 | 0.223 | 0.208 | 0.248 | 0.038 | +0.0025 (t 0.7) | +0.01 | 5/10 |
-| KP14 | `vyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.342 | 14% | 0.267 | +0.050 | 19 | 0.17 | 0.254 | 0.219 | 0.205 | 0.253 | 0.036 | +0.0003 (t 0.2) | -0.00 | 4/10 |
-| GS21 | `gvyu4`‡ -- U-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = +0.28, 0, 0, 0, +0.28 | 0.917 | 85% | 0.893 | +0.020 | 2 | 0.18 | -- | -- | -- | -- | -- | -- | -- | -- |
-| GS21 | `gvylu30`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, no compensation | 0.967 | 95% | 0.951 | +0.016 | 2 | 0.17 | -- | -- | -- | -- | -- | -- | -- | -- |
-| GS21 | `gvylu30c`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, value-compensated | 1.219 | 99% | 1.213 | +0.005 | 0 | 0.11 | -- | -- | -- | -- | -- | -- | -- | -- |
-<!-- /TABLE:s3c -->
-
-**The U in size.** At 0.28 the U is below the bar in both models that carry the ladder: BGN `bvyu4` room 18 to 121% (mean 54%) and a fair gap of +0.014 (t 1.3, seven of ten); KP14 `vyu4` room 15 to 55% and +0.010 (t 1.5, seven of ten); GS21 `gvyu4` room 1 to 5%, stopped at the oracle. Two things hold it down. First, the y = 0 compensation is referenced to the first type in the list, which in these specs was the small exposed type, whose positive exposure is discounted under the risk-neutral measure (the Q-mean of y is near −7 standard deviations), so every type was scaled down to that low value; at 0.35 BGN's small type had no positive-NPV project and the gate rejected the economy (`bvyu5`: J* = 0, realised +0.006 against expected +0.065 a month). Reordering the types so that the unexposed level-1.0 type is the reference changes the scale and nothing else (`bvyu5r`, `bvyu6r` at 0.35 and 0.42; `vyu4r`, `vyu5r` at 0.28 and 0.35). Second, and structural: a one-signed exposure in a type ladder is revealed by the compensation itself. The compensation is a function of the exposure, so the compensated cash-flow level, and with it ROE, rank the types by |b|, and a linear sort on ROE holds the U; without compensation the exposed types are worth less and book-to-market ranks them. The sign-flip hump escapes because its premium is non-monotone in the exposure. The reordered ladder shows it. In BGN the U reaches the bar at 0.35 (`bvyu5r`: room 8 to 27% of a linear ceiling that rose from 0.25 to 0.64, fair gap +0.0295, t 3.1, nine of ten; DKKM 0.664 against 0.634) and falls back at 0.42 (`bvyu6r`: room 10 to 48%, +0.025, t 2.6, eight of ten), the compensated level then showing more in ROE. In KP14 the U has no gap at any loading (`vyu4r` +0.003, t 0.7, five of ten; `vyu5r` +0.000, t 0.2, four of ten; room 13 to 34%): KP14's compensation reveals the one-signed exposure completely, and its non-monotone economy stays the hump.
-
-**The U in leverage.** The most natural non-monotone story is in leverage: highly levered firms are in distress and lowly levered firms are credit-rationed, so both have cash flows more sensitive to the aggregate shock than firms in the middle. GS21 is the model with debt, and its fixed-coupon chassis (`gvyzlf`: three types born with coupon 0.15, 0.40 or 0.70 per unit capital, fixed for life, D/E about 0.25, 1.0 and 3.25) gives leverage a cross-section that the endogenous capital structure does not (0.002 to 0.006 across quintiles, which is why the leverage-curvature term of `gvyql10` had nothing to load on). A production-level exposure of 0.3 on the low and high coupon types and zero on the middle one (`gvylu30`; `gvylu30c` with the y = 0 value compensation) has no room: 1 to 3% and 0.3 to 0.5% of linear ceilings of 0.5 to 1.4, both stopped at the oracle. With leverage fixed by type the exposure is a function of three perfectly observed groups whose values differ sharply, and a linear model in six characteristics fits three group means through leverage and book-to-market. The same holds for the interaction built on the chassis (`gvysl15`, section 3b). Room needs a second factor that varies continuously within the type, which is what the productivity versions have.
-
-**Earlier attempts.** Before the ladder, two constructions put the non-monotonicity into the exposure itself. `bvyvee` gives BGN five types on a visible level ladder (θ_f = 0.6, 0.8,
-1.0, 1.2, 1.4 multiplies the cash-flow level) with the exposure V-shaped across it (b_f = +0.07, 0, −0.07, 0, +0.07),
-so the extremes of size are the exposed firms. Room is 23% of the linear ceiling (bvychs 20%) and the fair gap +0.007
-(t 1.3, six of eight): the premium is monotone in the level itself, from −0.15 to +1.0% a month along the ladder with
-the market beta rising from 0.5 to 1.2, because in BGN the level changes returns and that monotone piece swamps the V
-in b_f. The mirror (`bvyhump`) was solved and not run. In GS21 the y exposure was written as a quadratic in the
-firm's own standardized coupon, c (b̃² − 1), with c = +0.1, +0.2 and −0.1 (`gvyql10`, `gvyql20`, `gvyqh10`), so that
-extreme leverage is more (or less) exposed to cash-flow risk. Room is 1 to 11%, the fair gaps −0.002, −0.002 and
-−0.026 (none of three seeds positive in any), and two things explain it: the leverage characteristic spans only
-0.002 to 0.006 across quintiles in these panels, so the term has almost no cross-sectional variation to load on
-(the premium across leverage quintiles is within ±0.09% a month of its market part), and the one-type wiring hands
-the market a negative premium (−0.1 to −0.7% a month, `market %` negative in the appendix table).
-
-### Everything else
 
 <!-- TABLE:xa -->
 | model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
@@ -810,6 +484,18 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 | KP14 | `vygelbc` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0 | 0.752 | 9% | 0.244 | +0.170 | 69 | 0.33 | 0.272 | 0.220 | 0.219 | 0.231 | 0.068 | +0.0369 (t 6.6) | +0.14 | 10/10 |
 | KP14 | `vygelbc6` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 6.0 | 0.892 | 8% | 0.249 | +0.201 | 80 | 0.37 | 0.290 | 0.230 | 0.222 | 0.237 | 0.069 | +0.0487 (t 5.8) | +0.16 | 10/10 |
 | KP14 | `vygelbcs` -- bounded exposure (cap 2.5), mirrored types pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, gamma_v 4.0, sigma_epsilon 0.3 | 0.858 | 7% | 0.297 | +0.256 | 90 | 0.46 | 0.388 | 0.251 | 0.288 | 0.282 | 0.052 | +0.0913 (t 12.3) | +0.25 | 10/10 |
+| GS21 | `gvylu30c`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, value-compensated | 1.219 | 99% | 1.213 | +0.005 | 0 | 0.11 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvylu30`‡ -- exposure U-shaped in leverage: fixed coupons 0.15 / 0.40 / 0.70, b = 0.3, 0, 0.3, no compensation | 0.967 | 95% | 0.951 | +0.016 | 2 | 0.17 | -- | -- | -- | -- | -- | -- | -- | -- |
+| GS21 | `gvyu4`‡ -- U-shaped loading across a mild level ladder 0.8..1.2 (gs_level): b = +0.28, 0, 0, 0, +0.28 | 0.917 | 85% | 0.893 | +0.020 | 2 | 0.18 | -- | -- | -- | -- | -- | -- | -- | -- |
+| KP14 | `vyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.342 | 14% | 0.267 | +0.050 | 19 | 0.17 | 0.254 | 0.219 | 0.205 | 0.253 | 0.036 | +0.0003 (t 0.2) | -0.00 | 4/10 |
+| KP14 | `vyu4r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28 at the ends, unexposed reference type | 0.367 | 14% | 0.262 | +0.069 | 27 | 0.20 | 0.251 | 0.223 | 0.208 | 0.248 | 0.038 | +0.0025 (t 0.7) | +0.01 | 5/10 |
+| KP14 | `vyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.371 | 13% | 0.263 | +0.072 | 28 | 0.20 | 0.256 | 0.216 | 0.209 | 0.246 | 0.040 | +0.0100 (t 1.5) | +0.04 | 7/10 |
+| BGN | `bvyu6r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.42 at the ends, unexposed reference type | 0.768 | 49% | 0.592 | +0.137 | 24 | 0.42 | 0.616 | 0.479 | 0.533 | 0.582 | 0.373 | +0.0246 (t 2.6) | +0.13 | 8/10 |
+| BGN | `bvyu5r` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.35 at the ends, unexposed reference type | 0.774 | 46% | 0.641 | +0.108 | 17 | 0.38 | 0.664 | 0.562 | 0.558 | 0.623 | 0.358 | +0.0295 (t 3.1) | +0.16 | 9/10 |
+| BGN | `bvyu4` -- U-shaped loading across a mild level ladder 0.8..1.2: b = +0.28, 0, 0, 0, +0.28 | 0.382 | 31% | 0.246 | +0.111 | 54 | 0.25 | 0.241 | 0.157 | 0.181 | 0.227 | 0.118 | +0.0142 (t 1.3) | +0.06 | 7/10 |
+| KP14 | `vyg25` -- three types on y, price 2.5 (control) | 0.495 | 11% | 0.346 | +0.082 | 24 | 0.25 | 0.350 | 0.292 | 0.320 | 0.335 | 0.044 | +0.0148 (t 5.2) | +0.09 | 10/10 |
+| GS21 | `gvyp10` -- product exposure zb at 0.10 (control) | 0.650 | 8% | 0.447 | +0.194 | 47 | 0.46 | 0.553 | 0.238 | 0.333 | 0.548 | 0.018 | +0.0057 (t 0.7) | +0.01 | 5/10 |
+| BGN | `bvych0` -- y as a 21-node chain, three types (control) | 0.576 | 37% | 0.341 | +0.055 | 16 | 0.20 | 0.334 | 0.285 | 0.292 | 0.326 | 0.216 | +0.0076 (t 2.7) | +0.05 | 8/10 |
 | GS21 | `gvysl15`‡ -- industry sign x leverage: two industries (gs_level 0.8 / 1.2) x fixed coupons 0.15 / 0.40 / 0.70, b = sign x 0.15 x coupon/0.4 | 1.190 | 66% | 1.183 | +0.006 | 1 | 0.12 | -- | -- | -- | -- | -- | -- | -- | -- |
 | GS21 | `gvysz2` -- type sign x productivity z: mirrored types pm0.15 / 0.3 / 0.5, gs_level ladder 0.5..2.0, no compensation | 0.847 | 17% | 0.603 | +0.208 | 37 | 0.54 | 0.678 | 0.536 | 0.488 | 0.619 | 0.151 | +0.0590 (t 11.5) | +0.27 | 10/10 |
 | GS21 | `gvysz1` -- type sign x productivity z: mirrored types pm0.1 / 0.2 / 0.35, gs_level ladder 0.5..2.0, no compensation | 0.844 | 25% | 0.530 | +0.278 | 60 | 0.60 | 0.658 | 0.560 | 0.431 | 0.605 | 0.210 | +0.0533 (t 6.1) | +0.24 | 10/10 |
@@ -826,12 +512,6 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 | RF | `kfh_tanh_1` -- K=1, bounded (tanh) loadings on observed characteristics | 0.592 | 8% | 0.592 | +0.001 | 0 | 0.03 | 0.579 | 0.578 | 0.570 | 0.588 | 0.041 | -0.0105 (t -1.9) | -0.10 | 0/5 |
 | RF | `kfh_tanh_4` -- K=4 | 0.584 | 9% | 0.574 | +0.007 | 1 | 0.09 | 0.541 | 0.564 | 0.544 | 0.560 | 0.041 | -0.0232 (t -2.9) | -0.16 | 0/5 |
 | RF | `kfh_tanh_16` -- K=16 | 0.469 | 11% | 0.378 | +0.044 | 12 | 0.19 | 0.346 | 0.357 | 0.345 | 0.359 | 0.041 | -0.0152 (t -1.4) | -0.10 | 1/5 |
-| RF | `kfh_sq_1` -- K=1, pure curvature (squares) of observed characteristics | 0.600 | 8% | 0.080 | +0.519 | 647 | 0.59 | 0.582 | 0.032 | 0.046 | 0.059 | 0.041 | +0.5161 (t 57.3) | +0.58 | 5/5 |
-| RF | `kfh_sq_4` -- K=4 | 0.601 | 8% | 0.097 | +0.501 | 515 | 0.59 | 0.573 | 0.042 | 0.458 | 0.074 | 0.041 | +0.1155 (t 22.6) | +0.35 | 5/5 |
-| RF | `kfh_sq_16` -- K=16 | 0.601 | 8% | 0.076 | +0.523 | 687 | 0.59 | 0.571 | 0.036 | 0.429 | 0.052 | 0.041 | +0.1429 (t 14.3) | +0.38 | 5/5 |
-| RF | `kfo_sq_1` -- K=1, squares, directions orthogonal to size | 0.600 | 8% | 0.080 | +0.519 | 648 | 0.59 | 0.582 | 0.032 | 0.048 | 0.059 | 0.041 | +0.5163 (t 57.7) | +0.58 | 5/5 |
-| RF | `kfo_sq_4` -- K=4 | 0.601 | 8% | 0.092 | +0.507 | 552 | 0.59 | 0.575 | 0.058 | 0.061 | 0.081 | 0.041 | +0.4833 (t 25.4) | +0.57 | 5/5 |
-| RF | `kfo_sq_16` -- K=16 | 0.602 | 8% | 0.079 | +0.520 | 656 | 0.59 | 0.575 | 0.015 | 0.031 | 0.053 | 0.041 | +0.5030 (t 21.3) | +0.57 | 5/5 |
 | RF | `lsh_a0_b0_n0` -- K=1 product of two mean-zero latent states (sign ladder origin), no noise | 0.598 | 8% | 0.204 | +0.393 | 192 | 0.56 | 0.569 | 0.154 | 0.538 | 0.175 | 0.041 | +0.0309 (t 3.6) | +0.18 | 5/5 |
 | RF | `lsh_a0_b1_n0` -- one factor's mean shifted 1 sd | 0.598 | 8% | 0.594 | +0.004 | 1 | 0.07 | 0.582 | 0.579 | 0.577 | 0.593 | 0.041 | -0.0110 (t -1.8) | -0.11 | 1/5 |
 | RF | `lsh_a0_b2_n0` -- one factor shifted 2 sd | 0.598 | 8% | 0.597 | +0.001 | 0 | 0.03 | 0.587 | 0.582 | 0.578 | 0.596 | 0.041 | -0.0094 (t -1.9) | -0.10 | 0/5 |
@@ -845,8 +525,6 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 | RF | `lsq_a0_n1` -- noise 1.0 | 0.598 | 8% | 0.144 | +0.436 | 302 | 0.56 | 0.508 | 0.119 | 0.540 | 0.130 | 0.041 | -0.0313 (t -2.0) | -0.18 | 1/5 |
 | RF | `lsq_a1_n0` -- size latent shifted 1 sd | 0.598 | 8% | 0.596 | +0.002 | 0 | 0.05 | 0.585 | 0.578 | 0.581 | 0.595 | 0.041 | -0.0101 (t -1.9) | -0.11 | 0/5 |
 | RF | `lsq_a2_n0` -- shifted 2 sd | 0.598 | 8% | 0.598 | +0.000 | 0 | 0.02 | 0.588 | 0.580 | 0.579 | 0.597 | 0.041 | -0.0089 (t -1.9) | -0.10 | 0/5 |
-| RF | `lsqb_a0_n0` -- K=1 square of the BOOK-TO-MARKET latent, mean zero, no noise | 0.598 | 8% | 0.199 | +0.398 | 200 | 0.56 | 0.564 | 0.142 | 0.125 | 0.173 | 0.041 | +0.3662 (t 11.0) | +0.54 | 5/5 |
-| RF | `lsqb_a0_n1` -- noise 1.0 | 0.598 | 8% | 0.190 | +0.392 | 206 | 0.55 | 0.515 | 0.120 | 0.092 | 0.146 | 0.041 | +0.3403 (t 6.5) | +0.49 | 5/5 |
 | RF | `lsqb_a1_n0` -- bm latent shifted 1 sd | 0.598 | 8% | 0.596 | +0.002 | 0 | 0.05 | 0.590 | 0.582 | 0.577 | 0.593 | 0.041 | -0.0027 (t -2.2) | -0.06 | 0/5 |
 | RF | `lsqb_a1_n1` -- shifted 1 sd, noise 1.0 | 0.598 | 8% | 0.589 | +0.002 | 0 | 0.05 | 0.581 | 0.579 | 0.560 | 0.585 | 0.041 | -0.0047 (t -1.9) | -0.07 | 1/5 |
 | RF | `lsqb_a2_n0` -- shifted 2 sd | 0.598 | 8% | 0.597 | +0.000 | 0 | 0.02 | 0.592 | 0.583 | 0.580 | 0.594 | 0.041 | -0.0026 (t -2.3) | -0.05 | 0/5 |
@@ -856,6 +534,7 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 **BGN**
 - `g0235f`: `bgnbase` with σ_z → g_s σ_z, s_t ∈ {calm, stress} a Markov chain, g = 0.2 calm and 3.5 stress; monthly switch probabilities 1/12 (calm to stress) and 1/6 (stress to calm), so stress is one third of months with a mean spell of 6 months.
 - `g0235df`: the same g with switch probabilities 1/6 and 1/12: stress two thirds of months, mean spell 12 months.
+- `bvych0`: `bvy1ch` with three types, b_f ∈ {0.01, 0.035, 0.07}, level-compensated (θ_f = (V_0/V_f)^1.2).
 - `bvy25`: `bgnbase` plus y; type f's project cash flows are θ_f C_j e^{b_f y_t}, b_f ∈ {0.01, 0.035, 0.07}, level-compensated. Exposure is b_f times the firm's mix of assets in place and growth option.
 - `bvych41`: `bvych0` with y on a 41-node chain instead of 21.
 - `bvy9t2`: `bvych0` with a second independent 21-node chain and nine types, a pair (f₁, f₂) drawn independently from {0.01, 0.035, 0.07} for each chain, cash flows C_j e^{b_{f₁} y_t + b_{f₂} y⁽²⁾_t}; price 2.5/sqrt(2) on each: the nested nine-type design of `vy9t2` in BGN.
@@ -876,6 +555,7 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 **GS21**
 - `g28`: `gsbase` with γ_x → γ(x_t) = clip(0.5 - 0.28 x_t / sd(x), 0.05, 1.0), countercyclical.
 - `bx7`: `gsbase` with γ_x → g_s γ_x, g ∈ {0.6, 3.0} on a two-state Markov regime, and five types with output e^{b_f x_t + z_it} k_it, b_f ∈ {1, 2.5, 4, 5.5, 7}.
+- `gvyp10`: `gsbase` plus y (9-node chain), one type, output e^{x_t + z_it + 0.10 z̃_it b̃_it y_t} k_it, with z̃ = z / sd(z) and b̃ = (b - 0.5)/0.29 the standardized coupon. Exposure is productivity × leverage, revealed by profitability and leverage.
 - `gx7`: `gsbase` with five types, output e^{b_f x_t + z_it} k_it, b_f ∈ {1, 2.5, 4, 5.5, 7}, and γ(x_t) = clip(0.5 - 0.4 x_t / sd(x), 0.05, 1.5). A firm's exposure to the one priced shock is its type, which size and profitability reveal.
 - `gvy1`: `gsbase` plus y (9-node chain over ±2.5 sd), one type; output e^{x_t + z_it + 0.05 y_t} k_it, a level exposure.
 - `gvy1j`: `gvy1` with γ_v = 0 and the crash, on a chain over ±3.5 sd.
@@ -916,6 +596,7 @@ the market a negative premium (−0.1 to −0.7% a month, `market %` negative in
 
 **KP14**
 - `kpgam`: `kpbase` with γ_x → γ_x g(y_t), g(y) = 1 + 2/(1 + e^{2y}), rising from 1 when y is high to 3 when it is low; y is unpriced (γ_v = 0) and no firm is exposed to it.
+- `vyg25`: `vy1` with three types, b_f ∈ {0.02, 0.07, 0.14}, level-compensated. Growth options are options on the e^{b_f y} cash flows, so a firm's exposure is b_f times the elasticity of its value, which rises with its growth-option share: type × growth-option share, revealed by size and book-to-market.
 - `vyx`: `kpbase` plus y with γ_v = 1.8; type f's project cash flows are θ_f e^{b_f y_t} x_t u_it ε_jt K_j^α, b_f ∈ {0.02, 0.07, 0.14}, level-compensated.
 - `vyj25`: `vyg25` (group 3b) plus a Poisson jump of y to -y_max = -3.5 at intensity 0.12 a year (1% a month) under P and 0.12 e^2 = 0.89 a year under Q.
 - `vym3t3`: `vyg25` with y ∈ R³, three independent OU states; type f's cash flows load e^{b_f′ y_t} with three vectors b_f ∈ R³ spanning the three states.
@@ -983,6 +664,15 @@ types in all, so exposure to each state is its own type times leverage and zeroi
 | KP14 | `vy9t2` -- two priced states, nine types (independent ladders), total price 2.5 | 0.506 | 9% | 0.387 | +0.056 | 15 | 0.21 | 0.378 | 0.326 | 0.337 | 0.373 | 0.031 | +0.0048 (t 2.3) | +0.04 | 7/10 |
 <!-- /TABLE:g4 -->
 
+**What changes.** Total price fixed, γ_v = 2.5/sqrt(2) on each.
+
+- `bvyk2`: `bvych0` with a second independent 21-node chain y⁽²⁾; project cash flows C_j e^{b_f y_t + b_f⁽²⁾ y⁽²⁾_t}, (b_f, b_f⁽²⁾) ∈ {(0.01, 0), (0, 0.035), (0.049, 0.049)}.
+- `gvypk3`: `gvyp10` with a second independent chain (5 nodes each, 25 joint) and three types of equal share,
+  loading 0.10 z̃ b̃ on y, on y⁽²⁾, and 0.071 z̃ b̃ on both.
+- `vy9t2`: `vyg25` with y ∈ R², two independent OU states; a firm's type is a pair (f₁, f₂) drawn independently from
+  {0.02, 0.07, 0.14} for each state, nine types of equal share, and its cash flows load e^{b_{f₁} y_t + b_{f₂} y⁽²⁾_t};
+  price 2.5/sqrt(2) on each state.
+
 Verdict: more factors are a lever only where the second state brings a second interaction. In BGN the second chain
 raises room by a quarter and doubles the gap (+0.015, ten of ten seeds). In GS21 it raises the product economy's gap
 from +0.020 to +0.056 (nineteen of twenty seeds), as the two-type version did (appendix). In KP14 it does not help
@@ -995,26 +685,16 @@ the nonlinear one (0.346 to 0.387). Both states act through the same channel, th
 second state adds premium and a factor but not a second interaction. BGN's nine-type version (`bvy9t2`, +0.012, room
 16%) sits between 3b and the three-direction cell. Six states with vym3's construction (`vym6`, 24 rank-6 types)
 reproduce vym3 to the third digit (room 19%, fair gap +0.000), and the signed ladder over K = 3 and K = 6 states
-(`vym3s`, `vym6s`, section 4) gives the same room and gap at either K. The reduced form (table 6) says the same with the structure controlled.
+(`vym3s`, `vym6s`, section 4) gives the same room and gap at either K. The main reduced-form table says the same with the structure controlled.
 
-### Reduced form: bounded and curvature loadings
+### Reduced form: bounded loadings, the sign ladder and the shifted squares
 
-The RF rows of table 8 are the kfh ladder with bounded (tanh) and curvature (square) loadings on observed characteristics, and the curvature ladder with the loading directions orthogonal to size (kfo); the main table (table 6) keeps only the linear loadings and the latent products.
-
-Bounded loadings behave like linear ones: no room at K = 1 and 4, a little at K = 16 (12%), and a negative gap
-throughout, because tanh of a single index is monotone in that index and nearly linear in its rank. Pure curvature of
-an observed characteristic gives room of about five times the linear ceiling and a gap of about +0.5 at K = 1. In the
-unconstrained square rows the gap then falls to +0.12 and +0.14 at K = 4 and 16 while the room does not move: the
-squared index contains size², Fama-French's legs are value-weighted and market value is exp(size), so those legs
-hold a size² exposure mechanically and Fama-French's Sharpe jumps from 0.05 to 0.46. The kfo rows remove the size
-coordinate from every direction and the gap returns to about +0.5 at every K. Curvature of an observed characteristic
-is therefore captured by random features and by nothing linear, and the square ladder's apparent fall with K was an
-artefact of value weighting.
+The RF rows of the table above are the kfh ladder with bounded (tanh) loadings, the sign ladder and the shifted squares of a latent; the curvature ladders (`kfh_sq`, `kfo_sq`, `lsqb` at mean zero) are in the main reduced-form table of section 4.
 
 The sign ladder (`lsh` rows) shifts the mean of one or both of the two latent factors in the K = 1 product by 0, 1,
 2 or 3 standard deviations, and `lrt` replaces the product by a one-signed ratio of the two (a debt-service coverage
 ratio with a ridge). The mean-zero product has room of +0.39 (no noise) and +0.42 (noise 1.0) and fair gaps of
-+0.031 and +0.093, the K = 1 latent-product cell of table 6; every shifted cell and the ratio have room of 0.000 to
++0.031 and +0.093, the K = 1 latent-product cell of the main reduced-form table; every shifted cell and the ratio have room of 0.000 to
 0.005 and a fair gap of -0.005 to -0.014, at the same SR_max of 0.598. The linear-in-latents R² of the loading goes
 from 0.01 at no shift to 0.79 at a two-sd shift of one factor and 0.89 at two-sd shifts of both. Room in a one-factor
 economy is therefore all or nothing: a linear portfolio with any nonzero covariance with the exposure mimics the
