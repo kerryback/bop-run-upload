@@ -1537,6 +1537,314 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyslz-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvyslz2)
+    # gs_vy (2026-11-02): industry sign $\\times$ standardized leverage, firm-level coupon drawn from [0.1, 0.9]: $b_f \\tilde b$, mirrored types $\\pm$0.1 / 0.2 / 0.35 on the level ladder; CONTINUOUS exogenous leverage (gs_fixcs 2: firm coupon drawn at birth from [0.1, 0.9], fixed for life), price 2.5. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslz2; SPEC=var-gs_vy-gvyslz2-v1
+    SOLVE_TAG=sol_gvyslz2a,sol_gvyslz2b,sol_gvyslz2c,sol_gvyslz2d,sol_gvyslz2e,sol_gvyslz2f
+    export GS_VY_SOLDIRS=sol_gvyslz2a,sol_gvyslz2b,sol_gvyslz2c,sol_gvyslz2d,sol_gvyslz2e,sol_gvyslz2f
+    export GS_VY_BV=-0.15,-0.1,-0.05,0.05,0.1,0.15
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslz2-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqh5)
+    # gs_vy (2026-11-03): GS21 leverage U with continuous firm-level debt capacity, gs_bv 0.5, bounded exposure (gs_bv_cap 2). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqh5; SPEC=var-gs_vy-gvylqh5-v1
+    SOLVE_TAG=sol_gvylqh5a
+    export GS_VY_SOLDIRS=sol_gvylqh5a
+    export GS_VY_BV=0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqh5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqh10)
+    # gs_vy (2026-11-03): GS21 leverage U with continuous firm-level debt capacity, gs_bv 1.0, bounded exposure (gs_bv_cap 2). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqh10; SPEC=var-gs_vy-gvylqh10-v1
+    SOLVE_TAG=sol_gvylqh10a
+    export GS_VY_SOLDIRS=sol_gvylqh10a
+    export GS_VY_BV=1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqh10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqm5)
+    # gs_vy (2026-11-03): GS21 leverage hump with continuous firm-level debt capacity, gs_bv -0.5, bounded exposure (gs_bv_cap 2). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqm5; SPEC=var-gs_vy-gvylqm5-v1
+    SOLVE_TAG=sol_gvylqm5a
+    export GS_VY_SOLDIRS=sol_gvylqm5a
+    export GS_VY_BV=-0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqm5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqm10)
+    # gs_vy (2026-11-03): GS21 leverage hump with continuous firm-level debt capacity, gs_bv -1.0, bounded exposure (gs_bv_cap 2). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqm10; SPEC=var-gs_vy-gvylqm10-v1
+    SOLVE_TAG=sol_gvylqm10a
+    export GS_VY_SOLDIRS=sol_gvylqm10a
+    export GS_VY_BV=-1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqm10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslzh)
+    # gs_vy (2026-11-03): GS21 industry sign x standardized leverage (mean zero), BOUNDED y exposure (gs_bv_cap 2): six mirrored types on the gs_level ladder. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslzh; SPEC=var-gs_vy-gvyslzh-v1
+    SOLVE_TAG=sol_gvyslzha,sol_gvyslzhb,sol_gvyslzhc,sol_gvyslzhd,sol_gvyslzhe,sol_gvyslzhf
+    export GS_VY_SOLDIRS=sol_gvyslzha,sol_gvyslzhb,sol_gvyslzhc,sol_gvyslzhd,sol_gvyslzhe,sol_gvyslzhf
+    export GS_VY_BV=-0.35,-0.2,-0.1,0.1,0.2,0.35
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslzh-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslzhw)
+    # gs_vy (2026-11-03): GS21 industry sign x standardized leverage (mean zero), bounded exposure, WIDE ladder +-0.3/0.6/1.0. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslzhw; SPEC=var-gs_vy-gvyslzhw-v1
+    SOLVE_TAG=sol_gvyslzhwa,sol_gvyslzhwb,sol_gvyslzhwc,sol_gvyslzhwd,sol_gvyslzhwe,sol_gvyslzhwf
+    export GS_VY_SOLDIRS=sol_gvyslzhwa,sol_gvyslzhwb,sol_gvyslzhwc,sol_gvyslzhwd,sol_gvyslzhwe,sol_gvyslzhwf
+    export GS_VY_BV=-1.0,-0.6,-0.3,0.3,0.6,1.0
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslzhw-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslzg4)
+    # gs_vy (2026-11-04): GS21 industry sign x standardized leverage, bounded exposure (gs_bv_cap 2), price of y risk gamma_v 4. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslzg4; SPEC=var-gs_vy-gvyslzg4-v1
+    SOLVE_TAG=sol_gvyslzg4a,sol_gvyslzg4b,sol_gvyslzg4c,sol_gvyslzg4d,sol_gvyslzg4e,sol_gvyslzg4f
+    export GS_VY_SOLDIRS=sol_gvyslzg4a,sol_gvyslzg4b,sol_gvyslzg4c,sol_gvyslzg4d,sol_gvyslzg4e,sol_gvyslzg4f
+    export GS_VY_BV=-0.35,-0.2,-0.1,0.1,0.2,0.35
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslzg4-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc3)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -0.3, bounded exposure, PER-FIRM level compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc3; SPEC=var-gs_vy-gvylqc3-v1
+    SOLVE_TAG=sol_gvylqc3a
+    export GS_VY_SOLDIRS=sol_gvylqc3a
+    export GS_VY_BV=-0.3
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc3-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc5)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -0.5, bounded exposure, PER-FIRM level compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc5; SPEC=var-gs_vy-gvylqc5-v1
+    SOLVE_TAG=sol_gvylqc5a
+    export GS_VY_SOLDIRS=sol_gvylqc5a
+    export GS_VY_BV=-0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc10)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -1.0, bounded exposure, PER-FIRM level compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc10; SPEC=var-gs_vy-gvylqc10-v1
+    SOLVE_TAG=sol_gvylqc10a
+    export GS_VY_SOLDIRS=sol_gvylqc10a
+    export GS_VY_BV=-1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc5g4)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -0.5, bounded exposure, PER-FIRM level compensation (gs_qcomp 1), gamma_v 4.0. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc5g4; SPEC=var-gs_vy-gvylqc5g4-v1
+    SOLVE_TAG=sol_gvylqc5g4a
+    export GS_VY_SOLDIRS=sol_gvylqc5g4a
+    export GS_VY_BV=-0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc5g4-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvyslzg6)
+    # gs_vy (2026-11-04): GS21 industry sign x standardized leverage, bounded exposure (gs_bv_cap 2), price of y risk gamma_v 6. 6 solve(s).
+    MODEL=gs_vy; TAG=gvyslzg6; SPEC=var-gs_vy-gvyslzg6-v1
+    SOLVE_TAG=sol_gvyslzg6a,sol_gvyslzg6b,sol_gvyslzg6c,sol_gvyslzg6d,sol_gvyslzg6e,sol_gvyslzg6f
+    export GS_VY_SOLDIRS=sol_gvyslzg6a,sol_gvyslzg6b,sol_gvyslzg6c,sol_gvyslzg6d,sol_gvyslzg6e,sol_gvyslzg6f
+    export GS_VY_BV=-0.35,-0.2,-0.1,0.1,0.2,0.35
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslzg6-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc15)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -1.5, bounded exposure, per-firm level compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc15; SPEC=var-gs_vy-gvylqc15-v1
+    SOLVE_TAG=sol_gvylqc15a
+    export GS_VY_SOLDIRS=sol_gvylqc15a
+    export GS_VY_BV=-1.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc15-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqc20)
+    # gs_vy (2026-11-04): GS21 leverage hump, continuous firm-level coupon, gs_bv -2.0, bounded exposure, per-firm level compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqc20; SPEC=var-gs_vy-gvylqc20-v1
+    SOLVE_TAG=sol_gvylqc20a
+    export GS_VY_SOLDIRS=sol_gvylqc20a
+    export GS_VY_BV=-2.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqc20-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqck1)
+    # gs_vy (2026-11-04): GS21 leverage hump, gs_bv -1.0, bounded exposure, per-firm compensation (gs_qcomp 1), persistent y (kappa_y 0.1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqck1; SPEC=var-gs_vy-gvylqck1-v1
+    SOLVE_TAG=sol_gvylqck1a
+    export GS_VY_SOLDIRS=sol_gvylqck1a
+    export GS_VY_BV=-1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqck1-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqn5)
+    # gs_vy (2026-11-04): GS21 leverage hump, gs_bv -0.5, unbounded, per-firm compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqn5; SPEC=var-gs_vy-gvylqn5-v1
+    SOLVE_TAG=sol_gvylqn5a
+    export GS_VY_SOLDIRS=sol_gvylqn5a
+    export GS_VY_BV=-0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqn5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqn10)
+    # gs_vy (2026-11-04): GS21 leverage hump, gs_bv -1.0, unbounded, per-firm compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqn10; SPEC=var-gs_vy-gvylqn10-v1
+    SOLVE_TAG=sol_gvylqn10a
+    export GS_VY_SOLDIRS=sol_gvylqn10a
+    export GS_VY_BV=-1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqn10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqw10)
+    # gs_vy (2026-11-04): GS21 leverage hump, gs_bv -1.0, gs_bv_cap 10, per-firm compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqw10; SPEC=var-gs_vy-gvylqw10-v1
+    SOLVE_TAG=sol_gvylqw10a
+    export GS_VY_SOLDIRS=sol_gvylqw10a
+    export GS_VY_BV=-1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqw10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqu10)
+    # gs_vy (2026-11-04): GS21 leverage U, gs_bv 1.0, gs_bv_cap 2, per-firm compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqu10; SPEC=var-gs_vy-gvylqu10-v1
+    SOLVE_TAG=sol_gvylqu10a
+    export GS_VY_SOLDIRS=sol_gvylqu10a
+    export GS_VY_BV=1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqu10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqun5)
+    # gs_vy (2026-11-04): GS21 leverage U, gs_bv 0.5, unbounded, per-firm compensation (gs_qcomp 1). 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqun5; SPEC=var-gs_vy-gvylqun5-v1
+    SOLVE_TAG=sol_gvylqun5a
+    export GS_VY_SOLDIRS=sol_gvylqun5a
+    export GS_VY_BV=0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqun5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz1)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 1 z~)^2, gs_bv -0.1, cap 4, gs_qcomp 0. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz1; SPEC=var-gs_vy-gvylqz1-v1
+    SOLVE_TAG=sol_gvylqz1a
+    export GS_VY_SOLDIRS=sol_gvylqz1a
+    export GS_VY_BV=-0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz1-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz1c)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 1 z~)^2, gs_bv -0.1, unbounded, gs_qcomp 1. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz1c; SPEC=var-gs_vy-gvylqz1c-v1
+    SOLVE_TAG=sol_gvylqz1ca
+    export GS_VY_SOLDIRS=sol_gvylqz1ca
+    export GS_VY_BV=-0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz1c-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz5)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.1, cap 4, gs_qcomp 0. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz5; SPEC=var-gs_vy-gvylqz5-v1
+    SOLVE_TAG=sol_gvylqz5a
+    export GS_VY_SOLDIRS=sol_gvylqz5a
+    export GS_VY_BV=-0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz5w)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.2, cap 4, gs_qcomp 0. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz5w; SPEC=var-gs_vy-gvylqz5w-v1
+    SOLVE_TAG=sol_gvylqz5wa
+    export GS_VY_SOLDIRS=sol_gvylqz5wa
+    export GS_VY_BV=-0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5w-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz5wc)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.2, unbounded, gs_qcomp 1, gamma_v 2.5. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz5wc; SPEC=var-gs_vy-gvylqz5wc-v1
+    SOLVE_TAG=sol_gvylqz5wca
+    export GS_VY_SOLDIRS=sol_gvylqz5wca
+    export GS_VY_BV=-0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5wc-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz5g4)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.1, cap 4, gs_qcomp 0, gamma_v 4. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz5g4; SPEC=var-gs_vy-gvylqz5g4-v1
+    SOLVE_TAG=sol_gvylqz5g4a
+    export GS_VY_SOLDIRS=sol_gvylqz5g4a
+    export GS_VY_BV=-0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5g4-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqz5wg4)
+    # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.2, cap 4, gs_qcomp 0, gamma_v 4. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqz5wg4; SPEC=var-gs_vy-gvylqz5wg4-v1
+    SOLVE_TAG=sol_gvylqz5wg4a
+    export GS_VY_SOLDIRS=sol_gvylqz5wg4a
+    export GS_VY_BV=-0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5wg4-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   gvysz1)
     # gs_vy (2026-11-01): TYPE SIGN x PRODUCTIVITY: exposure gs_bv_f z~ (gs_bzl 0, gs_bzi 1), six mirrored types +-0.1/0.2/0.35 on the gs_level ladder 0.5..2.0, no compensation, price 2.5 (KP14 vygelbc's construction). Six solves.
     MODEL=gs_vy; TAG=gvysz1; SPEC=var-gs_vy-gvysz1-v1
