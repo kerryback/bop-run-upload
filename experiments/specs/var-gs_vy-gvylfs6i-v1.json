@@ -1,0 +1,246 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylfs6i-v1",
+ "title": "gvylfs at price 6 on its four inner types b_f = -0.1, -0.03, +0.03, +0.1 (gvylfs6 without the +-0.2 types; the +0.2 solve hit the sweep cap)",
+ "question": "Does type sign x leverage, with leverage entering only through equity's fixed coupon (as asset composition does in BGN and KP14), give a fair gap above 0.02?",
+ "notes": "WHY (2026-11-09). gvylfs6 with the +-0.2 types dropped: sol_gvylfs6f (+0.2, price 6) hit the 5600-sweep cap in a price cycle (qerr 8e-11, perr 2.1e-2) and failed the gate, while -0.2 and the four inner loadings converged. The four inner solves are reused unchanged (sol_gvylfs6i a..d are sol_gvylfs6b..e). Shares 0.25 each.\n\nPREDICTION: the sign is hidden and leverage amplifies it, a product the linear model cannot hold; room and a gap. Whether the gap clears +0.02 depends on how much the coupon spreads equity's exposure; the endogenous-coupon version (gvy25s, gvy25sx2) had room 11-13% and no gap.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylfs6-v1",
+  "changes": [
+   "drop the +-0.2 types (sol_gvylfs6a, sol_gvylfs6f); four types, shares 0.25; solves reused from gvylfs6"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv y): uniform within a type (gs_bzl 1, gs_bzc 0); the firm-level coupon (gs_fixcs 2) amplifies equity's exposure",
+  "gs_vy_sign_ladder": "four mirrored types, mean-zero loadings +-0.03 / 0.1, level-compensated (bv_comp 1.2)",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 6.0,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 1.2,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 1.0,
+  "gs_bzc": 0.0,
+  "gs_bv": -0.15,
+  "gs_level": 0.5,
+  "gs_bzq": 0.0
+ },
+ "types": {
+  "share": [
+   0.25,
+   0.25,
+   0.25,
+   0.25
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.1,
+    -0.03,
+    0.03,
+    0.1
+   ],
+   "gs_level": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylfs6ia",
+   "sol_gvylfs6ib",
+   "sol_gvylfs6ic",
+   "sol_gvylfs6id"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylfs6ia",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 6.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": -0.1,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvylfs6ib",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 6.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": -0.03,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvylfs6ic",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 6.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": 0.03,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvylfs6id",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 6.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": 0.1,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylfs6ia,sol_gvylfs6ib,sol_gvylfs6ic,sol_gvylfs6id",
+  "GS_VY_BV": "-0.1,-0.03,0.03,0.1",
+  "GS_VY_SHARES": "0.25,0.25,0.25,0.25"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "2026-11-09: spec written by _scratch/gen_gvylfs6i.py from var-gs_vy-gvylfs6-v1 (four converged inner types); ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylfs6i",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylfs6ia": "ead1397aa5e20030",
+  "sol_gvylfs6ib": "36caf5e512127848",
+  "sol_gvylfs6ic": "d1aa75793cb75c12",
+  "sol_gvylfs6id": "ad170d78b85c41c8"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": {
+  "sol_gvylfs6ia": "sol_gvylfs6b",
+  "sol_gvylfs6ib": "sol_gvylfs6c",
+  "sol_gvylfs6ic": "sol_gvylfs6d",
+  "sol_gvylfs6id": "sol_gvylfs6e"
+ },
+ "spec_hash": "e5c90f9e725c4e076b4feefa2fe42e8380eecffc3dd877f9b5012d0f4b6c61fa"
+}

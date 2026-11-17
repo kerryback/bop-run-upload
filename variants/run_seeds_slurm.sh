@@ -1054,6 +1054,34 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyu4r
     SOLVE_HINT='export KSPECS=var-kp_vy-vyu4r-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
+  vyuq)
+    # kp_vy (2026-11-10): 3c BLUEPRINT, loading c z~^2 on a level ladder [1.0, 0.38, 0.86, 1.06, 0.58] chosen so the types sit at the fifths of size (both ends exposed, middle unexposed, reference first), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyuq; SPEC=var-kp_vy-vyuq-v1; SOLVE_TAG=vyuq
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_level": [1.0, 0.38, 0.86, 1.06, 0.58], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyuq
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyuq-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyu3)
+    # kp_vy (2026-11-10): 3c BLUEPRINT, loading c z~^2 on a level ladder [1.0, 0.38, 0.58] chosen so the types sit at the fifths of size (both ends exposed, middle unexposed, reference first), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyu3; SPEC=var-kp_vy-vyu3-v1; SOLVE_TAG=vyu3
+    export KP_PARAM_OVERRIDES='{"type_share": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333], "type_bv": [0.0, 0.35, 0.35], "type_level": [1.0, 0.38, 0.58], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyu3
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyu3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyuq2)
+    # kp_vy (2026-11-11): 3c BLUEPRINT second pass, loading c z~^2 on a level ladder [1.0, 0.38, 0.74, 0.92, 0.58] solved against the measured size slopes (types at the fifths of size, both ends exposed), exact compensation, price 2.5
+    MODEL=kp_vy; TAG=vyuq2; SPEC=var-kp_vy-vyuq2-v1; SOLVE_TAG=vyuq2
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_level": [1.0, 0.38, 0.74, 0.92, 0.58], "gamma_v": 2.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyuq2
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyuq2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
+  vyuq2h)
+    # kp_vy (2026-11-11): 3c BLUEPRINT second pass, loading c z~^2 on a level ladder [1.0, 0.38, 0.74, 0.92, 0.58] solved against the measured size slopes (types at the fifths of size, both ends exposed), exact compensation, price 3.5
+    MODEL=kp_vy; TAG=vyuq2h; SPEC=var-kp_vy-vyuq2h-v1; SOLVE_TAG=vyuq2h
+    export KP_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_level": [1.0, 0.38, 0.74, 0.92, 0.58], "gamma_v": 3.5, "bv_comp": 1.0}'
+    export KP_VY_PREFIX=vyuq2h
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyuq2h-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    ;;
   vyu5r)
     # kp_vy (2026-11-01): U-shaped exposure 0.35 at the ends of the MILD level ladder [0.8 .. 1.2], unexposed level-1.0 type FIRST (the compensation's reference), exact compensation, price 2.5
     MODEL=kp_vy; TAG=vyu5r; SPEC=var-kp_vy-vyu5r-v1; SOLVE_TAG=vyu5r
@@ -1129,6 +1157,60 @@ case "$SEED_SPEC" in
     MODEL=bgn_vy; TAG=bvyhx4; SPEC=var-bgn_vy-bvyhx4-v1; SOLVE_TAG=Jstar_vy_bvyhx4
     export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [-0.28, 0.0, 0.28, 0.0, -0.28], "type_level": [0.8, 0.9, 1.0, 1.1, 1.2], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyhx4.npz"}'
     SOLVE_HINT='export BSPECS=var-bgn_vy-bvyhx4-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyhsc)
+    # bgn_vy (2026-11-08): bvyhx4's HUMP +-0.28 on a FIRM-SCALE ladder type_scale [0.6, 0.78, 1.0, 1.28, 1.65] (only size moves; no level ladder), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyhsc; SPEC=var-bgn_vy-bvyhsc-v1; SOLVE_TAG=Jstar_vy_bvyhsc
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [-0.28, 0.0, 0.28, 0.0, -0.28], "type_scale": [0.6, 0.78, 1.0, 1.28, 1.65], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyhsc.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyhsc-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyhsw)
+    # bgn_vy (2026-11-08): bvyhx4's HUMP +-0.28 on a FIRM-SCALE ladder type_scale [0.4, 0.63, 1.0, 1.58, 2.5] (only size moves; no level ladder), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyhsw; SPEC=var-bgn_vy-bvyhsw-v1; SOLVE_TAG=Jstar_vy_bvyhsw
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [-0.28, 0.0, 0.28, 0.0, -0.28], "type_scale": [0.4, 0.63, 1.0, 1.58, 2.5], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyhsw.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyhsw-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyusc)
+    # bgn_vy (2026-11-10): U in SIZE on the FIRM-SCALE ladder type_scale [1.0, 0.6, 0.78, 1.28, 1.65]: five types, +0.35 on the two size ends, price 2.5, unexposed reference type first, exact compensation, chain
+    MODEL=bgn_vy; TAG=bvyusc; SPEC=var-bgn_vy-bvyusc-v1; SOLVE_TAG=Jstar_vy_bvyusc
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0, 0.0, 0.35], "type_scale": [1.0, 0.6, 0.78, 1.28, 1.65], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyusc.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyusc-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyus3)
+    # bgn_vy (2026-11-10): U in SIZE on the FIRM-SCALE ladder type_scale [1.0, 0.6, 1.65]: three types, +0.35 on the two size ends, price 2.5, unexposed reference type first, exact compensation, chain
+    MODEL=bgn_vy; TAG=bvyus3; SPEC=var-bgn_vy-bvyus3-v1; SOLVE_TAG=Jstar_vy_bvyus3
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333], "type_bv": [0.0, 0.35, 0.35], "type_scale": [1.0, 0.6, 1.65], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyus3.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyus3-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyusc35)
+    # bgn_vy (2026-11-10): U in SIZE on the FIRM-SCALE ladder type_scale [1.0, 0.6, 0.78, 1.28, 1.65]: five types, +0.35 on the two size ends, price 3.5, unexposed reference type first, exact compensation, chain
+    MODEL=bgn_vy; TAG=bvyusc35; SPEC=var-bgn_vy-bvyusc35-v1; SOLVE_TAG=Jstar_vy_bvyusc35
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0, 0.0, 0.35], "type_scale": [1.0, 0.6, 0.78, 1.28, 1.65], "gamma_v": 3.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyusc35.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyusc35-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyuq)
+    # bgn_vy (2026-11-10): 3c BLUEPRINT, loading c z~^2 on the firm-scale ladder type_scale [1.0, 0.6, 0.78, 1.28, 1.65] (both size ends exposed, middle unexposed, reference first), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyuq; SPEC=var-bgn_vy-bvyuq-v1; SOLVE_TAG=Jstar_vy_bvyuq
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_scale": [1.0, 0.6, 0.78, 1.28, 1.65], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyuq.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyuq-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyuq35)
+    # bgn_vy (2026-11-10): 3c BLUEPRINT, loading c z~^2 on the firm-scale ladder type_scale [1.0, 0.6, 0.78, 1.28, 1.65] (both size ends exposed, middle unexposed, reference first), exact compensation, chain, price 3.5
+    MODEL=bgn_vy; TAG=bvyuq35; SPEC=var-bgn_vy-bvyuq35-v1; SOLVE_TAG=Jstar_vy_bvyuq35
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_scale": [1.0, 0.6, 0.78, 1.28, 1.65], "gamma_v": 3.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyuq35.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyuq35-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyuq2)
+    # bgn_vy (2026-11-11): 3c BLUEPRINT second pass, loading c z~^2 on the firm-scale ladder type_scale [1.0, 0.33, 0.61, 1.49, 1.99] (ladder solved against the measured size slopes), exact compensation, chain, price 2.5
+    MODEL=bgn_vy; TAG=bvyuq2; SPEC=var-bgn_vy-bvyuq2-v1; SOLVE_TAG=Jstar_vy_bvyuq2
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_scale": [1.0, 0.33, 0.61, 1.49, 1.99], "gamma_v": 2.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyuq2.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyuq2-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
+    ;;
+  bvyuq2h)
+    # bgn_vy (2026-11-11): 3c BLUEPRINT second pass, loading c z~^2 on the firm-scale ladder type_scale [1.0, 0.33, 0.61, 1.49, 1.99] (ladder solved against the measured size slopes), exact compensation, chain, price 3.5
+    MODEL=bgn_vy; TAG=bvyuq2h; SPEC=var-bgn_vy-bvyuq2h-v1; SOLVE_TAG=Jstar_vy_bvyuq2h
+    export BGN_PARAM_OVERRIDES='{"type_share": [0.2, 0.2, 0.2, 0.2, 0.2], "type_bv": [0.0, 0.35, 0.0875, 0.0875, 0.35], "type_scale": [1.0, 0.33, 0.61, 1.49, 1.99], "gamma_v": 3.5, "kappa_y": 0.35, "bv_comp": 1.0, "y_kind": "chain", "jstar_vy_file": "Jstar_vy_bvyuq2h.npz"}'
+    SOLVE_HINT='export BSPECS=var-bgn_vy-bvyuq2h-v1; sbatch --export=ALL variants/klc/solve_bgn_vy_klc.sh   # Quest'
     ;;
   bvyu4)
     # bgn_vy (2026-11-01): U-shaped exposure (0.28, 0, 0, 0, 0.28) across the MILD level ladder [0.8 .. 1.2] (small firms constrained, large firms operationally levered), exact compensation, chain, price 2.5
@@ -1548,6 +1630,17 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvyslz2-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvyslz3)
+    # gs_vy (2026-11-05): gvyslz2 on its four converged types: industry sign x standardized leverage, firm-level coupon drawn from [0.1, 0.9], mirrored types +-0.05 / 0.1 on levels 0.65..1.5; CONTINUOUS exogenous leverage (gs_fixcs 2), price 2.5. 4 solve(s), reused from gvyslz2.
+    MODEL=gs_vy; TAG=gvyslz3; SPEC=var-gs_vy-gvyslz3-v1
+    SOLVE_TAG=sol_gvyslz3a,sol_gvyslz3b,sol_gvyslz3c,sol_gvyslz3d
+    export GS_VY_SOLDIRS=sol_gvyslz3a,sol_gvyslz3b,sol_gvyslz3c,sol_gvyslz3d
+    export GS_VY_BV=-0.1,-0.05,0.05,0.1
+    export GS_VY_SHARES=0.25,0.25,0.25,0.25
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvyslz3-v1; sbatch --export=ALL --array=0-3 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   gvylqh5)
     # gs_vy (2026-11-03): GS21 leverage U with continuous firm-level debt capacity, gs_bv 0.5, bounded exposure (gs_bv_cap 2). 1 solve(s).
     MODEL=gs_vy; TAG=gvylqh5; SPEC=var-gs_vy-gvylqh5-v1
@@ -1735,6 +1828,39 @@ case "$SEED_SPEC" in
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvylqn10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
+  gvylqup5)
+    # gs_vy (2026-11-10): 3c BLUEPRINT, loading 0.5 b~^2 on the coupon (both leverage ends exposed, middle unexposed), unbounded, per-firm compensation, price 2.5. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqup5; SPEC=var-gs_vy-gvylqup5-v1
+    SOLVE_TAG=sol_gvylqup5a
+    export GS_VY_SOLDIRS=sol_gvylqup5a
+    export GS_VY_BV=0.5
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqup5-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqup10)
+    # gs_vy (2026-11-10): 3c BLUEPRINT, loading 1.0 b~^2 on the coupon (both leverage ends exposed, middle unexposed), unbounded, per-firm compensation, price 2.5. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqup10; SPEC=var-gs_vy-gvylqup10-v1
+    SOLVE_TAG=sol_gvylqup10a
+    export GS_VY_SOLDIRS=sol_gvylqup10a
+    export GS_VY_BV=1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqup10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqun10)
+    # gs_vy (2026-11-06): leverage U, firm-level coupon drawn from [0.1, 0.9]: $b$ = +1.0 ($\\tilde b^2 - 1$), unbounded, per-firm compensation; the sign-flipped mirror of gvylqn10. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqun10; SPEC=var-gs_vy-gvylqun10-v1
+    SOLVE_TAG=sol_gvylqun10a
+    export GS_VY_SOLDIRS=sol_gvylqun10a
+    export GS_VY_BV=1.0
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqun10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
   gvylqw10)
     # gs_vy (2026-11-04): GS21 leverage hump, gs_bv -1.0, gs_bv_cap 10, per-firm compensation (gs_qcomp 1). 1 solve(s).
     MODEL=gs_vy; TAG=gvylqw10; SPEC=var-gs_vy-gvylqw10-v1
@@ -1833,6 +1959,105 @@ case "$SEED_SPEC" in
     unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
     unset GS_SIM_OVERRIDES
     SOLVE_HINT='export GSPEC=var-gs_vy-gvylqz5g4-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqzu5g4)
+    # gs_vy (2026-11-06): U in the index $(\\tilde b - 0.5\\tilde z)^2$, firm-level coupon: $b$ = +0.1, cap 4, price 4; the sign-flipped mirror of gvylqz5g4. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqzu5g4; SPEC=var-gs_vy-gvylqzu5g4-v1
+    SOLVE_TAG=sol_gvylqzu5g4a
+    export GS_VY_SOLDIRS=sol_gvylqzu5g4a
+    export GS_VY_BV=0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqzu5g4-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqs20)
+    # gs_vy (2026-11-07): exposure LINEAR in leverage, 0.2 b~ on the continuous firm-level coupon (gs_fixcs 2), one type, price 2.5: the 3a control on leverage. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqs20; SPEC=var-gs_vy-gvylqs20-v1
+    SOLVE_TAG=sol_gvylqs20a
+    export GS_VY_SOLDIRS=sol_gvylqs20a
+    export GS_VY_BV=0.2
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqs20-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylqs10)
+    # gs_vy (2026-11-07): exposure LINEAR in leverage, 0.1 b~ on the continuous firm-level coupon (gs_fixcs 2), one type, price 2.5: the 3a control on leverage. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylqs10; SPEC=var-gs_vy-gvylqs10-v1
+    SOLVE_TAG=sol_gvylqs10a
+    export GS_VY_SOLDIRS=sol_gvylqs10a
+    export GS_VY_BV=0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylqs10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylfs6)
+    # gs_vy (2026-11-09): UNIFORM output exposure within a type, continuous firm-level coupon (gs_fixcs 2) as the within-firm state; gvylfs at price 6 (as gvyslzg6). 6 solve(s).
+    MODEL=gs_vy; TAG=gvylfs6; SPEC=var-gs_vy-gvylfs6-v1
+    SOLVE_TAG=sol_gvylfs6a,sol_gvylfs6b,sol_gvylfs6c,sol_gvylfs6d,sol_gvylfs6e,sol_gvylfs6f
+    export GS_VY_SOLDIRS=sol_gvylfs6a,sol_gvylfs6b,sol_gvylfs6c,sol_gvylfs6d,sol_gvylfs6e,sol_gvylfs6f
+    export GS_VY_BV=-0.2,-0.1,-0.03,0.03,0.1,0.2
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylfs6-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylfs6i)
+    # gs_vy (2026-11-09): gvylfs6 on its four converged inner types: uniform output exposure b_f y, b_f = +-0.03 / 0.1, coupon drawn at birth from [0.1, 0.9] (gs_fixcs 2), level-compensated 1.2, price 6. 4 solve(s), reused from gvylfs6.
+    MODEL=gs_vy; TAG=gvylfs6i; SPEC=var-gs_vy-gvylfs6i-v1
+    SOLVE_TAG=sol_gvylfs6ia,sol_gvylfs6ib,sol_gvylfs6ic,sol_gvylfs6id
+    export GS_VY_SOLDIRS=sol_gvylfs6ia,sol_gvylfs6ib,sol_gvylfs6ic,sol_gvylfs6id
+    export GS_VY_BV=-0.1,-0.03,0.03,0.1
+    export GS_VY_SHARES=0.25,0.25,0.25,0.25
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylfs6i-v1; sbatch --export=ALL --array=0-3 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylfs9i)
+    # gs_vy (2026-11-09): gvylfs6i at price 9: four inner types +-0.03 / 0.1, uniform output exposure, coupon drawn at birth from [0.1, 0.9], compensation exponent 1.2. 4 solve(s).
+    MODEL=gs_vy; TAG=gvylfs9i; SPEC=var-gs_vy-gvylfs9i-v1
+    SOLVE_TAG=sol_gvylfs9ia,sol_gvylfs9ib,sol_gvylfs9ic,sol_gvylfs9id
+    export GS_VY_SOLDIRS=sol_gvylfs9ia,sol_gvylfs9ib,sol_gvylfs9ic,sol_gvylfs9id
+    export GS_VY_BV=-0.1,-0.03,0.03,0.1
+    export GS_VY_SHARES=0.25,0.25,0.25,0.25
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylfs9i-v1; sbatch --export=ALL --array=0-3 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylfs6c35)
+    # gs_vy (2026-11-09): gvylfs6i with the compensation exponent raised to 3.5 (as bvychs35): four inner types +-0.03 / 0.1, uniform output exposure, coupon drawn at birth fro. 4 solve(s).
+    MODEL=gs_vy; TAG=gvylfs6c35; SPEC=var-gs_vy-gvylfs6c35-v1
+    SOLVE_TAG=sol_gvylfs6c35a,sol_gvylfs6c35b,sol_gvylfs6c35c,sol_gvylfs6c35d
+    export GS_VY_SOLDIRS=sol_gvylfs6c35a,sol_gvylfs6c35b,sol_gvylfs6c35c,sol_gvylfs6c35d
+    export GS_VY_BV=-0.1,-0.03,0.03,0.1
+    export GS_VY_SHARES=0.25,0.25,0.25,0.25
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylfs6c35-v1; sbatch --export=ALL --array=0-3 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylfs)
+    # gs_vy (2026-11-09): UNIFORM output exposure within a type, continuous firm-level coupon (gs_fixcs 2) as the within-firm state; GS21 six signed types, uniform output exposure b_f y with b_f = -0.2, -0.1, -0.03, +0.03, . 6 solve(s).
+    MODEL=gs_vy; TAG=gvylfs; SPEC=var-gs_vy-gvylfs-v1
+    SOLVE_TAG=sol_gvylfsa,sol_gvylfsb,sol_gvylfsc,sol_gvylfsd,sol_gvylfse,sol_gvylfsf
+    export GS_VY_SOLDIRS=sol_gvylfsa,sol_gvylfsb,sol_gvylfsc,sol_gvylfsd,sol_gvylfse,sol_gvylfsf
+    export GS_VY_BV=-0.2,-0.1,-0.03,0.03,0.1,0.2
+    export GS_VY_SHARES=0.1667,0.1667,0.1667,0.1667,0.1666,0.1666
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylfs-v1; sbatch --export=ALL --array=0-5 variants/klc/solve_gs_vy_klc.sh   # Quest'
+    ;;
+  gvylf10)
+    # gs_vy (2026-11-09): UNIFORM output exposure within a type, continuous firm-level coupon (gs_fixcs 2) as the within-firm state; GS21 uniform output exposure 0.1 y with a continuous firm-level coupon drawn at birth from. 1 solve(s).
+    MODEL=gs_vy; TAG=gvylf10; SPEC=var-gs_vy-gvylf10-v1
+    SOLVE_TAG=sol_gvylf10a
+    export GS_VY_SOLDIRS=sol_gvylf10a
+    export GS_VY_BV=0.1
+    export GS_VY_SHARES=1.0
+    unset GS_VY_BV2 GS_VY_BIB GS_VY_BC GS_VY_BI GS_VY_BK
+    unset GS_SIM_OVERRIDES
+    SOLVE_HINT='export GSPEC=var-gs_vy-gvylf10-v1; sbatch --export=ALL --array=0-0 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   gvylqz5wg4)
     # gs_vy (2026-11-04): GS21 hump in a leverage index (b~ - 0.5 z~)^2, gs_bv -0.2, cap 4, gs_qcomp 0, gamma_v 4. 1 solve(s).

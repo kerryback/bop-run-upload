@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyhsc-v1",
+ "title": "BGN HUMP-shaped exposure +-0.28 across a FIRM-SCALE ladder [0.6, 0.78, 1.0, 1.28, 1.65] (type_scale: project cost, cash flows, book and value all scaled; log step 0.26), five types, exact compensation, price 2.5",
+ "question": "Does moving BGN's size hump from a cash-flow LEVEL ladder (which also moves book-to-market and composition) to a pure FIRM-SCALE ladder (only size moves) make the true SDF weight hump-shaped in size, and what does that do to room and gap?",
+ "notes": "2026-11-08: BGN size hump on a FIRM-SCALE ladder (type_scale) instead of the cash-flow LEVEL ladder (type_level).\nUser: 'is there no way to make bgn more non-monotonic for 3c?'. Diagnosis on bvyhx4 (wts by type, seeds 0-2): the premium is\nthe hump as designed (-0.28/+0.76/+3.10/+0.72/-0.20 %/mo) but the true MVE weight is MONOTONE in the type (-1.43, 0.07, 0.00,\n0.42, 1.12 cross-sectional sd) because the level ladder also moves book-to-market (book = I x projects is cost-based, value\nscales with the level: bm pct 0.78 -> 0.10 across the ladder) and hence composition and interest-rate exposure. type_scale\nmultiplies I, cash flows, book and both value components (homogeneity: returns, bm, roe, agr, mom, J*/OV unchanged; only size\nmoves; verified to 1e-12 on a 40x30 panel, byte-identical with the knob unset).\n\nDESIGN. bvyhx4's hump (type_bv [-0.28, 0.0, 0.28, 0.0, -0.28], bv_comp 1.0, price 2.5, chain) with type_level dropped and type_scale [0.6, 0.78, 1.0, 1.28, 1.65] (log step 0.26; within-type sd of log mve in bvyhx4 is 0.11, so the types are mostly separated by size). Types 0 and 4 (and 1 and 3) are now identical in everything but size, so the premium and the true weight are symmetric in the type: a hump in size by construction.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-08): the true weight projected on size is hump-shaped (symmetric about the middle type); room above bvyhx4's 73% is not expected (less of the type is revealed), but the fair gap should be positive, since the hump is orthogonal to the size rank and no other characteristic reveals the type. FALSIFIED if three seeds have room at or below 10% or ten seeds give no gap.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvyhx4-v1",
+  "changes": [
+   "type_level [0.8..1.2] dropped (ones); type_scale [0.6, 0.78, 1.0, 1.28, 1.65] (new knob, 2026-11-08); jstar_vy_file Jstar_vy_bvyhsc.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   -0.28,
+   0.0,
+   0.28,
+   0.0,
+   -0.28
+  ],
+  "type_scale": [
+   0.6,
+   0.78,
+   1.0,
+   1.28,
+   1.65
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyhsc.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      -0.28,
+      0.0,
+      0.28,
+      0.0,
+      -0.28
+     ],
+     "type_scale": [
+      0.6,
+      0.78,
+      1.0,
+      1.28,
+      1.65
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyhsc.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": "_scratch/gen_bvyhs_specs.py",
+  "source_script_note": "proposed 2026-11-08 (BGN 3c: size hump on a firm-scale ladder)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyhsc",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.7665649.Jstar_vy_bvyhsc.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "b764ad506b78beb6"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "2dd6cfe7113d449b6c2edfdd114e0ff389b09031ff014908e7328de835e6ca9c"
+}

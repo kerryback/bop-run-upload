@@ -24,6 +24,7 @@ from scipy.interpolate import RegularGridInterpolator
 from parameters import *
 import vasicek_vy as vv
 from vasicek_vy import type_theta, Chat_f, DA, DB, optval_core, Ek_mat
+from parameters import type_scale
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _Jint = vv.load_jstar(os.path.join(_HERE, jstar_vy_file))      # [f][s] interpolators over (r, y)
@@ -138,6 +139,8 @@ def sdf_compute(N, T, arr_tuple):
      l1, l2, l3, l4, sreg, yreg, ftype) = arr_tuple
     ft = np.asarray(ftype, int)
     th = Chat_f[ft]                                              # per-firm cash-flow level
+    If = I * type_scale[ft]                                      # per-firm project cost (firm-scale ladder; ones by default)
+    II = np.outer(If, If)                                        # replaces I ** 2 in every pairwise term
     bvf = type_bv[ft]
     FT = np.ix_(ft, ft)
     exp_betaA = np.exp(-beta * gmult[0]); exp_betaB = np.exp(-beta * gmult[1])
@@ -186,13 +189,13 @@ def sdf_compute(N, T, arr_tuple):
         SA = np.asarray(col1A.sum(axis=0)).ravel(); SB = np.asarray(col1B.sum(axis=0)).ravel()
         onehot = np.stack([ft == f for f in range(ntypes)]).astype(float)   # (ntypes, N)
 
-        term1 = I ** 2 * PR["JJ"][FT]
-        term2 = I ** 2 * PR["OVOV"][FT] + np.diag(I ** 2 * (OVsq[ft] - np.diag(PR["OVOV"])[ft]))
+        term1 = II * PR["JJ"][FT]
+        term2 = II * PR["OVOV"][FT] + np.diag(If ** 2 * (OVsq[ft] - np.diag(PR["OVOV"])[ft]))
         thth = np.outer(th, th)
-        term3 = (I * pi) ** 2 * thth * (np.outer(SA, SA) * PR["AA"][FT] + np.outer(SA, SB) * PR["AB"][FT]
+        term3 = pi ** 2 * II * thth * (np.outer(SA, SA) * PR["AA"][FT] + np.outer(SA, SB) * PR["AB"][FT]
                                         + np.outer(SB, SA) * PR["AB"][FT].T + np.outer(SB, SB) * PR["BB"][FT])
         iAA = np.diag(PR["AA"])[ft]; iAB = np.diag(PR["AB"])[ft]; iBB = np.diag(PR["BB"])[ft]
-        diag3 = (I * pi) ** 2 * th ** 2 * np.asarray((chi[t, : t + 1, :] * (exp_betaA[: t + 1, :] ** 2 * iAA
+        diag3 = (If * pi) ** 2 * th ** 2 * np.asarray((chi[t, : t + 1, :] * (exp_betaA[: t + 1, :] ** 2 * iAA
                  + 2 * exp_betaA[: t + 1, :] * exp_betaB[: t + 1, :] * iAB + exp_betaB[: t + 1, :] ** 2 * iBB)).sum(axis=0)).ravel()
         term3 = term3 + np.diag(diag3 * (1 / pi - 1))
 
@@ -207,9 +210,9 @@ def sdf_compute(N, T, arr_tuple):
         K4 = np.zeros((N, N))
         for _s in range(0, _nnz, 2048):
             K4 += _G[_s:_s + 2048].T @ (np.exp(_a[_s:_s + 2048, None] * _a[None, :]) @ _G)
-        term4 = (I * pi) ** 2 * thth * Gy * K4
-        diag4_sub = (I * pi) ** 2 * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2 * corr_zj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
-        diag4_add = I ** 2 * pi * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
+        term4 = pi ** 2 * II * thth * Gy * K4
+        diag4_sub = (If * pi) ** 2 * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2 * corr_zj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
+        diag4_add = If ** 2 * pi * th ** 2 * np.diag(Gy) * np.asarray((chi[t, : t + 1, :] * np.exp(sigmaj[: t + 1, :] ** 2)).sum(axis=0)).ravel()
         term4 = term4 + np.diag(diag4_add - diag4_sub)
 
         term5 = np.zeros((N, N)); diag5 = np.zeros(N); row8 = np.zeros((ntypes, N))
@@ -221,12 +224,12 @@ def sdf_compute(N, T, arr_tuple):
             diag5 += onehot[fi] * np.asarray((col1A.multiply(col3).multiply(iDA) + col1B.multiply(col3).multiply(iDB)).sum(axis=0)).ravel()
             iJ = tilted("J", fi); iOV = tilted("OV", fi)
             row8[fi] = np.asarray(col3.multiply(iJ + iOV).sum(axis=0)).ravel()
-        term5 = (I * pi) ** 2 * thth * term5
-        term5 = term5 + np.diag((I * pi) ** 2 * th ** 2 * diag5 * (1 / pi - 1))
+        term5 = pi ** 2 * II * thth * term5
+        term5 = term5 + np.diag((If * pi) ** 2 * th ** 2 * diag5 * (1 / pi - 1))
 
-        term6 = I ** 2 * (PR["J_OV"][FT] + PR["J_OV"][FT].T)
-        term7 = I * (I * pi) * th[None, :] * (SA[None, :] * (PR["JA"] + PR["A_OV"])[FT] + SB[None, :] * (PR["JB"] + PR["B_OV"])[FT])
-        term8 = I * (I * pi) * th[None, :] * row8[ft, :]
+        term6 = II * (PR["J_OV"][FT] + PR["J_OV"][FT].T)
+        term7 = pi * II * th[None, :] * (SA[None, :] * (PR["JA"] + PR["A_OV"])[FT] + SB[None, :] * (PR["JB"] + PR["B_OV"])[FT])
+        term8 = pi * II * th[None, :] * row8[ft, :]
 
         ER = np.zeros((N + 1, N + 1))
         ER[1:, 1:] = (term1 + term2 + term3 + term4 + term5 + term5.T + term6 + term7 + term7.T + term8 + term8.T)

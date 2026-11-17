@@ -1,0 +1,143 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylqm5-v1",
+ "title": "GS21 leverage hump with continuous firm-level debt capacity, gs_bv -0.5, bounded exposure (gs_bv_cap 2)",
+ "question": "gvylq20 at 2.5x the loading, with the exposure bounded: is a hump in leverage large enough to clear the bar?",
+ "notes": "WHY (2026-11-03). gvylq10/20 (gs_bv 0.1/0.2) left room of about 7%: with the coupon uniform on [0.1, 0.9], b~^2 - 1 spans only [-1, 0.9], so the exposure ranged about +-0.2 (gvyzzh10's productivity curvature spans to about 8 and had room 70%). gs_bv -0.5 scales it to [-0.45, 0.50], with gs_bv_cap 2 so the exposed claim keeps a finite value (gvyslz e/f). Hump-shaped, the sign that worked for productivity (gvyzzh10).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-03): the premium across leverage quintiles is hump-shaped; room 30% or more and a fair gap at or above +0.029. FALSIFIED if room is at or below 10% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylq20-v1",
+  "changes": [
+   "gs_bv 0.2 -> -0.5; gs_bv_cap 2.0"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "one type; exposure gs_bv (b~^2 - 1) on the continuous firm coupon",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 0.0,
+  "gs_bzq": 1.0,
+  "gs_bv_cap": 2.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.2
+   ],
+   "gs_level": [
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylqm5a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylqm5a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 0.0,
+     "gs_bzq": 1.0,
+     "gs_bv": -0.5,
+     "gs_level": 1.0,
+     "gs_bv_cap": 2.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylqm5a",
+  "GS_VY_BV": "-0.5",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-03 (stronger leverage curvature); derived from var-gs_vy-gvylq20-v1",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylqm5",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylqm5a": "00b01773dfc0027b"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "4c07bad0988ec8bbdc5de5fdcb55177eb5bd237a3e3203b8f19e245259797a93"
+}

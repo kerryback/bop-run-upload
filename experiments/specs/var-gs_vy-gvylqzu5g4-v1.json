@@ -1,0 +1,149 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylqzu5g4-v1",
+ "title": "GS21 U in the distance-to-distress index (b~ - 0.5 z~)^2 with a continuous firm-level debt capacity: exposure +0.1, bounded (cap 4), price 4; the mirror of the hump gvylqz5g4",
+ "question": "Does the leverage-index hump reach room 30% and a fair gap of +0.029 with the bound removed or a higher price of y risk?",
+ "notes": "WHY (2026-11-06). gvylqz5g4 (the same index with loading -0.1, a hump) has a fair gap of +0.147 (t 12.7, 10/10), the largest in GS21. This flips the sign: firms far from the middle of the leverage-minus-productivity index on either side (over-levered relative to productivity, or under-levered) carry the most exposure. The bounded factor h_e(y) caps the exposure at 4x either way.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-06): if the hump's room comes from the curvature itself, the U has room 20% or more and a fair gap at or above +0.029; if it comes from the hump's sign (middle leverage most exposed, extremes least), the U is null like gvylqun5. FALSIFIED (as a U) if room is at or below 10% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylqz5g4-v1",
+  "changes": [
+   "gs_bv -0.1 -> 0.1 (hump -> U); nothing else"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "one type; exposure gs_bv (b~^2 - 1) on the continuous firm coupon",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 4.0,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 0.0,
+  "gs_bzq": 1.0,
+  "gs_bv_cap": 4.0,
+  "gs_qcomp": 0.0,
+  "gs_bzb": -1.0,
+  "gs_bzz": 0.25
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    0.1
+   ],
+   "gs_level": [
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylqzu5g4a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylqzu5g4a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 4.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 0.0,
+     "gs_bzq": 1.0,
+     "gs_bv": 0.1,
+     "gs_level": 1.0,
+     "gs_bv_cap": 4.0,
+     "gs_qcomp": 0.0,
+     "gs_bzb": -1.0,
+     "gs_bzz": 0.25
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylqzu5g4a",
+  "GS_VY_BV": "0.1",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "2026-11-06: spec written by _scratch/gen_lev_u_mirror.py (sign-flipped mirror of a working leverage hump); ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylqzu5g4",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylqzu5g4a": "d546340ed63e19a8"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "9cc60cd14df9aecb12e7bb0834ac1c4c6643a2f03fcc165a3cd2b79f485232a7"
+}

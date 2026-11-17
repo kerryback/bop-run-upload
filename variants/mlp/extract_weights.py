@@ -49,7 +49,7 @@ else:
 
 dkkm.WINDOW = args.window; fama.WINDOW = args.window
 rng = np.random.default_rng(args.seed + 7)            # run_estimators.py: default_rng(args.seed + 7)
-chars = ["size", "bm", "agr", "roe", "mom"] + (["lev"] if args.model in ("gs_vy", "gs_bx") else [])   # run_estimators.py, 2026-10-26
+chars = ["size", "bm", "agr", "roe", "mom"] + (["lev"] if args.model in ("gs_vy", "gs_bx") else [])   # run_estimators.py since 2026-10-26: GS21 estimators see leverage
 gamma_grid = np.arange(0.5, 1.1, 0.1)
 stem = f"{args.model}_%s_{args.tag}_s{args.seed:03d}"
 R = args.results
@@ -98,7 +98,7 @@ nf_indx = np.concatenate([np.arange(num), np.arange(half, half + num)])
 rec_idx = rec.set_index(["method", "P", "kappa", "mat", "month"]).sharpe
 checks = {"fm": [], "ff": [], "dkkm": []}
 parts = []
-extra = [c for c in ["mve", "xret", "lev", "ftype", "default"] + RFC if c in panel.columns]
+extra = [c for c in ["mve", "xret", "lev", "ftype", "default"] + RFC if c in panel.columns and c not in chars]
 for k, month in enumerate(eval_months):
     i = midx[month]
     data = panel.loc[month]

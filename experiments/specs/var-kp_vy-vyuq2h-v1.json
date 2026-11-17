@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyuq2h-v1",
+ "title": "KP14 3c blueprint, second pass: loading c z~^2 = [0.0, 0.35, 0.0875, 0.0875, 0.35] on a cash-flow-level ladder [1.0, 0.38, 0.74, 0.92, 0.58] (a pure scale; solved so the types sit 0.7 log-size apart after the exposure's 14 b), exact compensation, price 3.5",
+ "question": "On the one 3c blueprint (loading c z~^2 on a scale ladder, both ends exposed), is the true weight non-monotone in the characteristic and the fair gap above 0.02?",
+ "notes": "2026-11-11: second pass on the 3c blueprint ladders. Measured on bvyuq / vyuq (3 seeds): d log mve = 1.03 log scale + 0.60 b (BGN),\n6.52 log level + 14.0 b (KP14). The first-pass ladders left the small exposed type at the size of the next unexposed type (BGN\nranks 0.32 = 0.32; KP14 0.81 > 0.78). Here the ladder is solved so the five types sit at log-size targets (-0.92, -0.46, 0, 0.46,\n0.92) in BGN and (-1.4, -0.7, 0, 0.7, 1.4) in KP14 AFTER the exposure's own effect on value. Loading as before: c z~^2 =\n(0.35, 0.0875, 0, 0.0875, 0.35), compensated at y = 0; prices 2.5 and 3.5.\n\nDESIGN. type_share [0.2, 0.2, 0.2, 0.2, 0.2], type_bv [0.0, 0.35, 0.0875, 0.0875, 0.35], type_level [1.0, 0.38, 0.74, 0.92, 0.58], gamma_v 3.5, bv_comp 1.0; own tables under prefix vyuq2h.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-11): size ranks by type monotone in the ladder position (exposed types the smallest and largest fifths); true weight a U in size; fair gap at or above +0.02. FALSIFIED if three seeds have room at or below 10% or ten seeds give a gap below 0.02.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyuq-v1",
+  "changes": [
+   "type_level [1.0, 0.38, 0.86, 1.06, 0.58] -> [1.0, 0.38, 0.74, 0.92, 0.58]; gamma_v 3.5; own tables under prefix vyuq2h"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   0.0,
+   0.35,
+   0.0875,
+   0.0875,
+   0.35
+  ],
+  "type_level": [
+   1.0,
+   0.38,
+   0.74,
+   0.92,
+   0.58
+  ],
+  "gamma_v": 3.5,
+  "bv_comp": 1.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyuq2h"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      0.0,
+      0.35,
+      0.0875,
+      0.0875,
+      0.35
+     ],
+     "type_level": [
+      1.0,
+      0.38,
+      0.74,
+      0.92,
+      0.58
+     ],
+     "gamma_v": 3.5,
+     "bv_comp": 1.0
+    },
+    "args": {
+     "prefix": "vyuq2h"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": "_scratch/gen_u_blueprint2.py",
+  "source_script_note": "proposed 2026-11-11 (3c blueprint, ladders solved against the measured size slopes)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyuq2h",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.8117710.vyuq2h.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "ae280f32369bf83f51192aa5507cc986467b006367a0077ab91fed6b83a524a6",
+ "expected_solves": {
+  "G": "e503f38ebf1c48cf",
+  "integ": "aa1d220fee79e16c"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null
+}

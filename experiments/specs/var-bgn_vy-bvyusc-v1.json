@@ -1,0 +1,140 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-bgn_vy-bvyusc-v1",
+ "title": "BGN U-shaped exposure in SIZE on a FIRM-SCALE ladder (type_scale [1.0, 0.6, 0.78, 1.28, 1.65], unexposed reference type first): five types, +0.35 on the two size ends, price 2.5, exact compensation",
+ "question": "Does a U in size on the firm-scale ladder (the exposed types identical in everything but size) give a true weight that is non-monotone in size AND a fair gap above 0.02?",
+ "notes": "2026-11-10: BGN 3c, a U in SIZE on the FIRM-SCALE ladder (type_scale), positive loadings at the two size ends.\nUser: 'any way to modify bgn 3c so that the weight is actually non-monotonic in size?'. The 11-08 scale-ladder hump\n(bvyhsc/bvyhsw, b = -0.28, 0, +0.28, 0, -0.28) made the true weight symmetric in size but the gap died (+0.01, t<2):\nthe +0.28 type's premium comes with four times the residual volatility and the -0.28 types' premium is small (the\nexponential's P/Q ratio is convex in b). bvyu5r (U, +0.35 at the ends of the LEVEL ladder, unexposed reference first)\ngave +0.0295 (t 3.1, 9/10) but its weight is monotone in size for the same composition reason as bvyhx4. Here the\nsame U sits on the scale ladder: the two exposed types are identical in everything but size, so the true weight is\nsymmetric in size by construction, and both exposed types carry the large positive premium.\n\nDESIGN. type_share [0.2, 0.2, 0.2, 0.2, 0.2], type_bv [0.0, 0.35, 0.0, 0.0, 0.35], type_scale [1.0, 0.6, 0.78, 1.28, 1.65], gamma_v 2.5, bv_comp 1.0, chain. Type 0 is the unexposed scale-1.0 reference (the compensation's reference; bvyu5 failed the gate with an exposed reference).\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-10): the true weight projected on size is a U (symmetric in the two exposed types); fair gap at or above bvyu5r's +0.03 since the U is orthogonal to the size rank and no other characteristic reveals the type. FALSIFIED if three seeds have room at or below 10% or the gap on ten seeds is below 0.02.",
+ "lineage": {
+  "parent_spec": "var-bgn_vy-bvyhsc-v1",
+  "changes": [
+   "type_share [0.2, 0.2, 0.2, 0.2, 0.2]; type_bv [0.0, 0.35, 0.0, 0.0, 0.35] (U, +0.35 ends, unexposed first) instead of the hump; type_scale [1.0, 0.6, 0.78, 1.28, 1.65]; gamma_v 2.5; jstar_vy_file Jstar_vy_bvyusc.npz"
+  ]
+ },
+ "engine": "oracle",
+ "model": "bgn_vy",
+ "method": {
+  "zero_book_in_sdf_solve": true,
+  "bgn_vy_jstar": "dynamic_programme_r321_ysub4_tol1e-7",
+  "bgn_vy_quadrature": "gauss_hermite_r100_y12"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / bx_seed offset by the seed)."
+ },
+ "params": {
+  "type_share": [
+   0.2,
+   0.2,
+   0.2,
+   0.2,
+   0.2
+  ],
+  "type_bv": [
+   0.0,
+   0.35,
+   0.0,
+   0.0,
+   0.35
+  ],
+  "type_scale": [
+   1.0,
+   0.6,
+   0.78,
+   1.28,
+   1.65
+  ],
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "bv_comp": 1.0,
+  "y_kind": "chain",
+  "jstar_vy_file": "Jstar_vy_bvyusc.npz"
+ },
+ "param_env": "BGN_PARAM_OVERRIDES",
+ "env": {},
+ "solve": {
+  "stages": [
+   {
+    "name": "jstar",
+    "producer": "variants/bgn_vy/rebuild_jstar_vy.py",
+    "param_env": "BGN_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.2,
+      0.2,
+      0.2,
+      0.2,
+      0.2
+     ],
+     "type_bv": [
+      0.0,
+      0.35,
+      0.0,
+      0.0,
+      0.35
+     ],
+     "type_scale": [
+      1.0,
+      0.6,
+      0.78,
+      1.28,
+      1.65
+     ],
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "bv_comp": 1.0,
+     "y_kind": "chain",
+     "jstar_vy_file": "Jstar_vy_bvyusc.npz"
+    },
+    "args": {},
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": "_scratch/gen_bvyus_specs.py",
+  "source_script_note": "proposed 2026-11-10 (BGN 3c: U in size on the firm-scale ladder)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=bvyusc",
+  "solve_runner": "variants/klc/solve_bgn_vy_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log solve_bvy.8019623.Jstar_vy_bvyusc.npz.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "jstar": "2e199564ad25ce63"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "9d11d87c10b646ad58c479d4fecd70527c71b649d97ebbdf4a4daaf9b2eb34ba"
+}

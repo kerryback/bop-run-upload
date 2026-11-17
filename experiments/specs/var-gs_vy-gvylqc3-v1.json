@@ -1,0 +1,145 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylqc3-v1",
+ "title": "GS21 leverage hump, continuous firm-level coupon, gs_bv -0.3, bounded exposure, PER-FIRM level compensation (gs_qcomp 1)",
+ "question": "With the priced value of the y factor equalised across firms, does the leverage hump survive into the observed leverage characteristic (coupon over market equity) and clear the bar?",
+ "notes": "WHY (2026-11-04). gvylqm5/10 had room 2-8% although the equity y-slope is a strong hump in the coupon (0 at the edges, +0.34 at mid coupon in sol_gvylqm10a). The exposed mid-coupon firms are priced at 7-9 against 110-190 at the edges, so their lev = b / P is the highest in the panel and the premium is MONOTONE in observed leverage, which the linear model spans. gs_qcomp 1 (gs_solve_vy.py) scales each firm's production by W(e)^-1, W(e) the priced mean of its own y factor, so the y exposure no longer moves the equity price and lev tracks the coupon; the hump is then in the observed characteristic.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-04): the premium across lev quintiles is hump-shaped; room 30% or more and a fair gap at or above +0.029. FALSIFIED if room is at or below 10% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylqm10-v1",
+  "changes": [
+   "gs_qcomp 0 -> 1 (per-firm compensation); gs_bv -1.0 -> -0.3"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "one type; exposure gs_bv (b~^2 - 1) on the continuous firm coupon",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 0.0,
+  "gs_bzq": 1.0,
+  "gs_bv_cap": 2.0,
+  "gs_qcomp": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.3
+   ],
+   "gs_level": [
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylqc3a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylqc3a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 0.0,
+     "gs_bzq": 1.0,
+     "gs_bv": -0.3,
+     "gs_level": 1.0,
+     "gs_bv_cap": 2.0,
+     "gs_qcomp": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylqc3a",
+  "GS_VY_BV": "-0.3",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-04; derived from var-gs_vy-gvylqm10-v1; solves by variants/klc/solve_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylqc3",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylqc3a": "2a2a48f75e8cb7b8"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "8a59fdf6d29c17d4170ee605855fd2d120803ac6219df341bb3460bcdfe35599"
+}

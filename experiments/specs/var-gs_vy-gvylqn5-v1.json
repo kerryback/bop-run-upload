@@ -1,0 +1,145 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylqn5-v1",
+ "title": "GS21 leverage hump, gs_bv -0.5, unbounded, per-firm compensation (gs_qcomp 1)",
+ "question": "Does the leverage hump clear the bar once the exposure is not switched off by the cap?",
+ "notes": "WHY (2026-11-05). With gs_qcomp 1 the hump's room stops rising in the loading at about 10% (gvylqc10 10%, gvylqc15 10%, gvylqc20 7%) and swings across seeds from 0 to 37%. The bounded factor h_e(y) = c / (1 + (c-1) e^{-c e y/(c-1)}) saturates once |y| > ~(c-1)/(c|e|), so at e ~ 1 and c = 2 the exposure is off whenever y is more than about half a standard deviation from 0: a larger loading narrows the band where the hump is live, and seeds whose evaluation window sits away from y = 0 see none of it. This economy: UNBOUNDED exposure (e^{e y}); the compensation W(e) keeps the priced value finite. Otherwise gvylqc10.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-05): the premium across lev quintiles is hump-shaped; room 30% or more and a fair gap at or above +0.029. FALSIFIED if room is at or below 10% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylqc10-v1",
+  "changes": [
+   "gs_bv -1.0 -> -0.5; gs_bv_cap 2 -> None"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "one type; exposure gs_bv (b~^2 - 1) on the continuous firm coupon",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 0.0,
+  "gs_bzq": 1.0,
+  "gs_bv_cap": null,
+  "gs_qcomp": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.5
+   ],
+   "gs_level": [
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylqn5a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylqn5a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 0.0,
+     "gs_bzq": 1.0,
+     "gs_bv": -0.5,
+     "gs_level": 1.0,
+     "gs_bv_cap": null,
+     "gs_qcomp": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylqn5a",
+  "GS_VY_BV": "-0.5",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-04; derived from var-gs_vy-gvylqc10-v1; solves by variants/klc/solve_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylqn5",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylqn5a": "1da92c57e2336329"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "49bf67647722d9bd7a04063eb6854b6971fdcf47e7c19d1b52e14c8d3858f7d7"
+}

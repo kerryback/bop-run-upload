@@ -51,6 +51,9 @@ gs_bzc = float(_s["gs_bzc"]) if "gs_bzc" in _s.files else 0.0
 gs_bzq = float(_s["gs_bzq"]) if "gs_bzq" in _s.files else 0.0
 gs_bzz = float(_s["gs_bzz"]) if "gs_bzz" in _s.files else 0.0      # productivity-curvature exposure term (gs_solve_vy.py)      # leverage-curvature exposure term (gs_solve_vy.py)
 gs_bx2 = float(_s["gs_bx2"]) if "gs_bx2" in _s.files else 0.0
+gs_bv_cap = float(_s["gs_bv_cap"]) if "gs_bv_cap" in _s.files and np.isfinite(_s["gs_bv_cap"]) else None   # bounded y exposure (gs_solve_vy.py)
+gs_qcomp = float(_s["gs_qcomp"]) if "gs_qcomp" in _s.files else 0.0   # per-firm level compensation (gs_solve_vy.py)
+qc_e = _s["qc_e"] if "qc_e" in _s.files else np.array([-4.0, 4.0]); qc_logW = _s["qc_logW"] if "qc_logW" in _s.files else np.zeros(2)
 gs_pj = float(_s["gs_pj"]) if "gs_pj" in _s.files else 0.0
 level_ts = [float(d["gs_level"]) if "gs_level" in d.files else 1.0 for d in _sols]   # per-type visible level (gs_solve_vy.py gs_level)
 ashift_ts = [float(d["gs_ashift"]) + float(np.log(l)) for d, l in zip(_sols, level_ts)]  # applied in production below, as the solver does (log 1 = 0 exactly)
@@ -90,11 +93,15 @@ for _f, (_d, _sol) in enumerate(zip(_dirs, _sols)):
     if _f == 0:
         continue
     for _k in ("xgrid", "zgrid", "bgrid", "pr_x", "pr_z", "Mx", "ygrid", "pr_y", "MPy", "params", "kappa_e", "gs_bx",
-               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bzc", "gs_bzq", "gs_bzz", "gs_bx2", "gs_pj", "gs_gj",
+               "gamma_v", "kappa_y", "bv_comp", "gs_fc", "gs_bphi", "tau", "sigma_m", "gs_bzl", "gs_bzi", "gs_bzb", "gs_bzc", "gs_bzq", "gs_bzz", "gs_bx2", "gs_pj", "gs_gj", "gs_bv_cap", "gs_qcomp", "qc_logW",
                "ygrid2", "NY2", "gamma_v2", "kappa_y2"):
         if _k not in _s.files or _k not in _sol.files:
             continue
-        if not np.array_equal(_s[_k], _sol[_k]):
+        try:
+            _same = np.array_equal(_s[_k], _sol[_k], equal_nan=True)   # gs_bv_cap is stored as nan when unset; nan != nan
+        except TypeError:
+            _same = np.array_equal(_s[_k], _sol[_k])
+        if not _same:
             raise ValueError(f"solutions disagree on '{_k}': {_dirs[0].strip()} vs {_d.strip()}. The types must differ "
                              f"in gs_bv (and the derived gs_ashift) and gs_level and NOTHING else; re-solve the ladder with one parameter set.")
 
@@ -105,6 +112,13 @@ _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)   # (znum,) x loading 
 def _expo_of(zi, b):
     """exposure multiplier at productivity node zi and coupon b (continuous): gs_bzl + gs_bzi z~ + gs_bzb z~ b~ + gs_bzc b~ + gs_bzq (b~^2 - 1) + gs_bzz (z~^2 - 1)"""
     return _zexpo[zi] + (gs_bzb * _ztil[zi] + gs_bzc) * (b - 0.5) / 0.29 + gs_bzq * (((b - 0.5) / 0.29) ** 2 - 1.0)
+def _yterm(bv, bv2, y, y2, ex):
+    """the y part of log production: (bv y + bv2 y2) ex, or log h_{bv ex}(y) + bv2 y2 ex under gs_bv_cap (gs_solve_vy.py _ylog)"""
+    qs = -gs_qcomp * np.interp(bv * ex, qc_e, qc_logW) if gs_qcomp else 0.0          # gs_qcomp's per-firm level shift
+    if gs_bv_cap is None:
+        return (bv * y + bv2 * y2) * ex + qs
+    c = gs_bv_cap
+    return np.log(c) - np.logaddexp(0.0, np.log(c - 1.0) - c * (bv * ex) * y / (c - 1.0)) + bv2 * y2 * ex + qs
 burnin = 400          # the protocol's BURNIN (common/protocol.py)
 alpha_e = 0.2
 reg_seed = 909
@@ -223,7 +237,7 @@ def create_arrays(N, T, seed_offset=0):
         scale[t] = np.where(invest[t], g, 1.0)
         Vc = np.where(invest[t], _by_type(EPI_ts, s, zi, xt, bp, ftype), _by_type(EP0_ts, s, zi, xt, bp, ftype))
         Vcont[t] = Vc
-        prod = (1 - tau) * (np.exp(_bxz[zi] * xgrid[xt] + zgrid[zi] + (bvf * ygrid[s] + bvf2 * ygrid2[s]) * _expo_of(zi, b[t]) + ashf) - delta
+        prod = (1 - tau) * (np.exp(_bxz[zi] * xgrid[xt] + zgrid[zi] + _yterm(bvf, bvf2, ygrid[s], ygrid2[s], _expo_of(zi, b[t])) + ashf) - delta
                             - gs_fc * np.exp(bcf * ygrid[s])) - (1 - tau) * b[t] * np.exp(bkf * ygrid[s])
         dflow = np.where(eta[t],
                          np.where(invest[t],
@@ -302,7 +316,7 @@ def create_panel(N, T, arr):
     rets = arr["rets"]
     bvf = np.array(_bv_list)[arr["ftype"]]; ashf = np.array(ashift_ts)[arr["ftype"]]; bcf = np.array(_bc_list)[arr["ftype"]]
     bvf2 = np.array(_bv2_list)[arr["ftype"]]
-    opcf = (1 - tau) * (np.exp(_bxz[iz] * xgrid[ix][:, None] + zgrid[iz] + (bvf[None, :] * ygrid[iy][:, None] + bvf2[None, :] * ygrid2[iy][:, None]) * _expo_of(iz, b) + ashf[None, :]) - delta
+    opcf = (1 - tau) * (np.exp(_bxz[iz] * xgrid[ix][:, None] + zgrid[iz] + _yterm(bvf[None, :], bvf2[None, :], ygrid[iy][:, None], ygrid2[iy][:, None], _expo_of(iz, b)) + ashf[None, :]) - delta
                         - gs_fc * np.exp(bcf[None, :] * ygrid[iy][:, None]))
     Ax = np.zeros((T, N))
     for t in range(T):

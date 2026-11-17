@@ -1,8 +1,8 @@
-\begin{table}[htbp]\centering\footnotesize
-\caption{Group 3a. Exposure captured by a single characteristic. A priced state y with one type: a firm's exposure varies only through one firm state (project mix, operating leverage, growth-option share).}\label{tab:g3a}
-\resizebox{\textwidth}{!}{\begin{tabular}{llrrrrrrrrrrrrrr}\hline
-model & economy & SR$_{\max}$ & market share & linear ceiling & room & room \% of linear & interaction SR & DKKM & FMR & FF & linear & CAPM & fair gap & DKKM $\perp$ & + \\\hline
+\begin{table}[htbp]\centering\footnotesize\setlength{\tabcolsep}{2pt}
+\caption{Group 3a. Exposure captured by a single characteristic. A priced state $y$ with one type and one loading on the whole cash flow: a firm's exposure varies only through one firm state (the share of value in live projects in BGN, the coupon fixed at birth in GS21, the growth-option share in KP14).}\label{tab:g3a}
+\begin{adjustbox}{max width=\textwidth}\begin{tabular}{l>{\raggedright\arraybackslash}p{3.6cm}rrrrrrrrrrrrrr}\hline
+model & economy & \shortstack[r]{best\\Sharpe} & \shortstack[r]{market\\share} & \shortstack[r]{best\\linear} & room & \shortstack[r]{room\\\%} & \shortstack[r]{inter-\\action} & DKKM & FM & FF & linear & CAPM & gap & \shortstack[r]{DKKM\\extra} & + \\\hline
 BGN & \texttt{bvy1ch} -- one type, project cash flows $\times e^{0.035y}$ & 0.336 & 54\% & 0.297 & +0.029 & 10 & 0.13 & 0.283 & 0.252 & 0.255 & 0.281 & 0.181 & +0.0017 (t 0.8) & +0.02 & 7/10 \\
-GS21 & \texttt{gvyz10} -- one type, output $\times e^{0.10\,\tilde z\,y}$: the product economy without the coupon & 0.854 & 50\% & 0.800 & +0.043 & 5 & 0.27 & 0.793 & 0.805 & 0.742 & 0.808 & 0.421 & -0.0164 (t -6.5) & -0.15 & 1/10 \\
+GS21 & \texttt{gvylf10} -- uniform output exposure 0.1 $y$, coupon drawn at birth from [0.1, 0.9]: leverage amplifies it (the 3a control) & 0.771 & 91\% & 0.768 & +0.002 & 0 & 0.06 & 0.752 & 0.726 & 0.733 & 0.760 & 0.703 & -0.0072 (t -5.8) & -0.10 & 0/10 \\
 KP14 & \texttt{vy1} -- one type, cash flows $\times e^{0.07y}$ & 0.466 & 12\% & 0.369 & +0.019 & 5 & 0.12 & 0.355 & 0.335 & 0.340 & 0.360 & 0.047 & -0.0050 (t -2.9) & -0.05 & 1/10 \\
-\hline\end{tabular}}\end{table}
+\hline\end{tabular}\end{adjustbox}\end{table}

@@ -51,6 +51,10 @@ y_max = 3.5
 type_share = [1.0]
 type_bv = [0.0]           # exposure of each type's project cash flows: e^{b_f y}
 bv_comp = 0.0             # y=0 level compensation exponent (kp_vy's bv_comp)
+type_scale = None         # (2026-11-08, size ladder without a composition shift) a per-type FIRM-SCALE multiplier: the project
+                          # cost I, every cash flow, book and both value components of a type-f firm are multiplied by
+                          # type_scale[f]. The model is homogeneous of degree one in (I, cash flows), so returns, bm, roe, agr,
+                          # mom and the J*/OV tables (per unit I) are unchanged; only size (mve) moves. None = ones.
 type_level = None         # (2026-10-29, non-monotone exposures) an EXPLICIT per-type cash-flow level multiplier on top of
                           # the compensation: Chat_f = Chat x type_theta_f x type_level_f. With it the visible level ladder and
                           # the loading b are set separately, so b can be hump-shaped across the levels. None = ones (unchanged).
@@ -126,6 +130,8 @@ ntypes = len(type_share)
 assert len(type_bv) == ntypes
 type_level = np.ones(ntypes) if type_level is None else np.array(type_level, float)
 assert len(type_level) == ntypes
+type_scale = np.ones(ntypes) if type_scale is None else np.array(type_scale, float)
+assert len(type_scale) == ntypes and np.all(type_scale > 0)
 NY2 = int(NY2)
 type_bv2 = np.zeros(ntypes) if type_bv2 is None else np.array(type_bv2, float)
 assert len(type_bv2) == ntypes

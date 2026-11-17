@@ -9,6 +9,7 @@ from scipy.stats import norm, expon
 from parameters import *
 import vasicek_vy as vv
 from vasicek_vy import type_theta, Chat_f, beta_star, scale
+from parameters import type_scale
 import sdf_compute as sc
 
 
@@ -39,6 +40,7 @@ def create_arrays(N, T):
     ftype = rng_bx.choice(ntypes, size=N, p=type_share)
     bvf = type_bv[ftype]                       # (N,)
     thf = Chat_f[ftype]                        # (N,) cash-flow level per firm (Chat x type_theta)
+    If = I * type_scale[ftype]                 # (N,) project cost per firm: the firm-scale ladder (ones unless the spec sets type_scale)
 
     nu = norm.rvs(size=T)
     rate_shock = norm.rvs(size=T)
@@ -83,11 +85,11 @@ def create_arrays(N, T):
     ylev = (np.exp(BY[ftype[None, :], iyp[2:, None]]) if CHAIN else np.exp(bvf[None, :] * yreg[2:, None])) * type_theta[ftype][None, :]   # (T-1, N) at dates 2..T
     op_cash_flow = np.zeros((T - 1, N))
     for t in range(T - 1):
-        op_cash_flow[t, :] = I * (C[t, : t + 1, :] * chi[t + 1, : t + 1, :]).sum(axis=0) * ylev[t]
-    free_cash_flow = -I * np.float64(invest)
+        op_cash_flow[t, :] = If * (C[t, : t + 1, :] * chi[t + 1, : t + 1, :]).sum(axis=0) * ylev[t]
+    free_cash_flow = -If[None, :] * np.float64(invest)
     free_cash_flow[1:, :] += op_cash_flow
     num = chi.sum(axis=1)
-    book = I * num
+    book = If[None, :] * num
     if sigmaj_size_elast > 0:
         raise NotImplementedError("sigmaj_size_elast > 0 is not carried into bgn_vy")
 
@@ -104,7 +106,7 @@ def create_arrays(N, T):
         cols = ftype == f
         if cols.any():
             j = np.where(sreg == 0, sc._Jint[f][0](pts), sc._Jint[f][1](pts))
-            G[:, cols] = (I * j)[:, None]
+            G[:, cols] = (I * type_scale[f] * j)[:, None]
     P = np.zeros((T + 1, N))
     P += G
     P[1:, :] += A
@@ -124,12 +126,12 @@ def create_arrays(N, T):
     EJ = mean_by_type("J", d1); EOV = mean_by_type("OV", d1); EDA = mean_by_type("DA", d1); EDB = mean_by_type("DB", d1)
     gy = (np.stack([Ephys_exp_chain(BY[f], iyp[1:]) for f in range(ntypes)], 1)[:, ftype]
           if CHAIN else Ephys_exp(bvf[None, :], yreg[1:, None]))   # (T, N)
-    term1 = I * EJ
+    term1 = If[None, :] * EJ
     term2 = pi * book * thf[None, :] * (beta_avgA * EDA + beta_avgB * EDB)
-    term3 = I * EOV
+    term3 = If[None, :] * EOV
     term4 = thf[None, :] * pi * book * gy
     eret = np.zeros((T + 1, N))
-    eret[0, :] = (I * mean_by_type("J", np.array([0])) + I * mean_by_type("OV", np.array([0])))[0] / P[0] - 1
+    eret[0, :] = (If[None, :] * mean_by_type("J", np.array([0])) + If[None, :] * mean_by_type("OV", np.array([0])))[0] / P[0] - 1
     eret[1:, :] = (term1 + term2 + term3 + term4) / P[1:] - 1
     eret = eret[:T, :]
 

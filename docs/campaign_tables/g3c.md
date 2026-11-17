@@ -1,5 +1,5 @@
-| model | economy | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | DKKM ⊥ | + |
+| model | economy | best Sharpe | market share | best linear | room | room % | interaction | DKKM | FM | FF | linear | CAPM | gap | DKKM extra | + |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BGN | `bvyhx4` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.28, +0.00, +0.28, +0.00, -0.28 | 0.642 | 25% | 0.357 | +0.260 | 73 | 0.50 | 0.476 | 0.341 | 0.293 | 0.344 | 0.159 | +0.1186 (t 10.9) | +0.31 | 10/10 |
-| KP14 | `vyhx3` -- hump-shaped loading across a mild level ladder 0.8..1.2: b = -0.21, +0.00, +0.21, +0.00, -0.21 | 0.632 | 7% | 0.207 | +0.377 | 197 | 0.54 | 0.431 | 0.217 | 0.136 | 0.178 | 0.031 | +0.2123 (t 12.5) | +0.37 | 10/10 |
-| GS21 | `gvyzzh10` -- hump-shaped exposure in the firm's own productivity: -0.1 (z^2 - 1), one type | 0.639 | 25% | 0.364 | +0.250 | 70 | 0.49 | 0.480 | 0.325 | 0.255 | 0.400 | 0.152 | +0.0795 (t 4.6) | +0.25 | 10/10 |
+| BGN | `bvyuq2` -- loading cz^2 on firm scales [1.0, 0.33, 0.61, 1.49, 1.99] (firm scale; solved so the types sit at the fifths of size), b = 0.35, 0.09, 0, 0.09, 0.35, price 2.5 | 0.751 | 55% | 0.522 | +0.142 | 30 | 0.40 | 0.554 | 0.471 | 0.475 | 0.524 | 0.411 | +0.0302 (t 6.1) | +0.18 | 10/10 |
+| KP14 | `vyuq2` -- loading cz^2 on cash-flow levels [1.0, 0.38, 0.74, 0.92, 0.58] (solved so the types sit at the fifths of size), b = 0.35, 0.09, 0, 0.09, 0.35, price 2.5 | 0.484 | 8% | 0.307 | +0.103 | 34 | 0.27 | 0.318 | 0.179 | 0.264 | 0.294 | 0.022 | +0.0245 (t 9.2) | +0.12 | 10/10 |
+| GS21 | `gvylqup5` -- sixteen coupon types drawn at birth from [0.1, 0.9], loading b_f = 0.5 b_f^2 (zero at the middle coupon, +0.95 at the ends), unbounded, compensated at y = 0 | 1.272 | 84% | 1.095 | +0.163 | 15 | 0.62 | 1.138 | 1.052 | 1.030 | 1.099 | 1.061 | +0.0376 (t 4.3) | +0.27 | 10/10 |

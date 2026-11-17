@@ -1,4 +1,4 @@
-| configuration | SR_max | market % | linear ceiling | room | room % lin | interaction SR | DKKM | FMR | FF | linear | CAPM | fair gap | + |
+| configuration | best Sharpe | market share | best linear | room | room % | interaction | DKKM | FM | FF | linear | CAPM | gap | + |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **Linear loadings on observed characteristics** | | | | | | | | | | | | | |
 | kfh_lin_1 -- K=1 factor on observed characteristics, linear loadings | 0.598 | 8 | 0.598 | +0.000 | 0 | 0.01 | 0.590 | 0.584 | 0.581 | 0.595 | 0.041 | -0.0067 (t -1.7) | 0/5 |

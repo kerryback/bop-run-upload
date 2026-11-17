@@ -1,0 +1,149 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylqz1-v1",
+ "title": "GS21 hump in a leverage index (b~ - 1 z~)^2, gs_bv -0.1, cap 4, gs_qcomp 0",
+ "question": "Does a square in the leverage index that the observed lev characteristic tracks give the leverage hump room and a gap?",
+ "notes": "WHY (2026-11-05). The leverage humps in the coupon alone (gvylqm/lqh/lqc) leave absolute room of 0.02-0.12 in Sharpe against 0.25-0.31 for the GS21 economies that work, because a coupon fixed for life and uniform on [0.1, 0.9] gives b~^2 a range of only [0, 1.9] and no time variation. The analog of what worked (gvyzzh10, the square of productivity: tails to 9, time-varying, revealed by ROE and size; KP's lesson that the dispersion of the characteristic the exposure multiplies is the strongest lever) is a square in a LEVERAGE INDEX L = b~ - k z~: high coupon and low productivity are both high leverage, and the observed lev = b / P moves with exactly that combination because P falls with z. The exposure gs_bv (L^2 - 1 - k^2) is written with the existing terms: gs_bzq 1 (b~^2 - 1), gs_bzb -2k (z~ b~), gs_bzz k^2 (z~^2 - 1). gs_bv < 0 is a hump in market leverage, the sign that worked for productivity (gvyzzh10). This economy: k 1, gs_bv -0.1, cap 4, compensation 0.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-05): the premium across lev quintiles is hump-shaped; room 30% or more and a fair gap at or above +0.029. FALSIFIED if room is at or below 10% on three seeds.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylqc10-v1",
+  "changes": [
+   "exposure (b~ - 1 z~)^2 - 1 - 1: gs_bzb -2, gs_bzz 1; gs_bv -0.1; gs_bv_cap 4.0; gs_qcomp 0"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv (gs_bzl + gs_bzi z~) y)",
+  "gs_vy_sign_ladder": "one type; exposure gs_bv (b~^2 - 1) on the continuous firm coupon",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 2.5,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 0.0,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 0.0,
+  "gs_bzq": 1.0,
+  "gs_bv_cap": 4.0,
+  "gs_qcomp": 0.0,
+  "gs_bzb": -2.0,
+  "gs_bzz": 1.0
+ },
+ "types": {
+  "share": [
+   1.0
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.1
+   ],
+   "gs_level": [
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylqz1a"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylqz1a",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 2.5,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 0.0,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 0.0,
+     "gs_bzq": 1.0,
+     "gs_bv": -0.1,
+     "gs_level": 1.0,
+     "gs_bv_cap": 4.0,
+     "gs_qcomp": 0.0,
+     "gs_bzb": -2.0,
+     "gs_bzz": 1.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylqz1a",
+  "GS_VY_BV": "-0.1",
+  "GS_VY_SHARES": "1.0"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "proposed 2026-11-04; derived from var-gs_vy-gvylqc10-v1; solves by variants/klc/solve_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylqz1",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylqz1a": "1b517853ea8e347d"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "843a29ba55c795ca3ef3a67b63e0c7a2e00cc032fc382a293eb67b80c020878e"
+}

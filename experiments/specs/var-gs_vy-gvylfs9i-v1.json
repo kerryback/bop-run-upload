@@ -1,0 +1,242 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-gs_vy-gvylfs9i-v1",
+ "title": "gvylfs6i at price 9: four inner types +-0.03 / 0.1, uniform output exposure, coupon drawn at birth from [0.1, 0.9], compensation exponent 1.2",
+ "question": "Does type sign x leverage, with leverage entering only through equity's fixed coupon (as asset composition does in BGN and KP14), give a fair gap above 0.02?",
+ "notes": "WHY (2026-11-09). gvylfs6i (price 6, exponent 1.2) first wave: room 12-18%, fair gap +0.020 (t 1.7, 4/5), borderline. In BGN the compensation exponent 1.2 -> 3.5 took the gap from +0.026 to +0.071 and price raises room; this economy moves one lever: gamma_v 9.0, bv_comp 1.2. PRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION: room above gvylfs6i's 12-18% and a gap clearing +0.02 with t > 3; if neither lever works, GS21 needs the coupon in the exponent for a 3b gap.",
+ "lineage": {
+  "parent_spec": "var-gs_vy-gvylfs6i-v1",
+  "changes": [
+   "gamma_v 6.0 -> 9.0",
+   "bv_comp 1.2 -> 1.2"
+  ]
+ },
+ "engine": "oracle",
+ "model": "gs_vy",
+ "method": {
+  "gs21_discretization": "tauchen_exact",
+  "zero_book_in_sdf_solve": true,
+  "gs21_calibration": "table_I_corrected_2026_09_06",
+  "gs_vy_y_chain": "tauchen_9_nodes_3.5sd_priced",
+  "gs_vy_exposure": "production x exp(gs_bv y): uniform within a type (gs_bzl 1, gs_bzc 0); the firm-level coupon (gs_fixcs 2) amplifies equity's exposure",
+  "gs_vy_sign_ladder": "four mirrored types, mean-zero loadings +-0.03 / 0.1, level-compensated (bv_comp 1.2)",
+  "gs_capital_structure": "gs_fixcs 2: firm-level coupon per unit capital drawn at birth uniformly from the grid nodes in [0.1, 0.9], fixed for life, no refinancing"
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks and the aggregate y path (reg_seed offset by the seed).",
+  "type_seed": "reg_seed spawn"
+ },
+ "params": {
+  "gamma_v": 9.0,
+  "kappa_y": 0.35,
+  "NY": 9,
+  "y_mult": 3.5,
+  "bv_comp": 1.2,
+  "gs_fc": 0.0,
+  "xi": 0.0,
+  "gs_fixcs": 2,
+  "gs_blo": 0.1,
+  "gs_bhi": 0.9,
+  "gs_bzl": 1.0,
+  "gs_bzc": 0.0,
+  "gs_bv": -0.15,
+  "gs_level": 0.5,
+  "gs_bzq": 0.0
+ },
+ "types": {
+  "share": [
+   0.25,
+   0.25,
+   0.25,
+   0.25
+  ],
+  "exposure": {
+   "gs_bv": [
+    -0.1,
+    -0.03,
+    0.03,
+    0.1
+   ],
+   "gs_level": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "soldirs": [
+   "sol_gvylfs9ia",
+   "sol_gvylfs9ib",
+   "sol_gvylfs9ic",
+   "sol_gvylfs9id"
+  ]
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "sol_gvylfs9ia",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 9.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": -0.1,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 0
+   },
+   {
+    "name": "sol_gvylfs9ib",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 9.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": -0.03,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 1
+   },
+   {
+    "name": "sol_gvylfs9ic",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 9.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": 0.03,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 2
+   },
+   {
+    "name": "sol_gvylfs9id",
+    "producer": "variants/gs_vy/gs_solve_vy.py",
+    "param_env": "GS_PARAM_OVERRIDES",
+    "params": {
+     "gamma_v": 9.0,
+     "kappa_y": 0.35,
+     "NY": 9,
+     "y_mult": 3.5,
+     "bv_comp": 1.2,
+     "gs_fc": 0.0,
+     "xi": 0.0,
+     "gs_fixcs": 2,
+     "gs_blo": 0.1,
+     "gs_bhi": 0.9,
+     "gs_bzl": 1.0,
+     "gs_bzc": 0.0,
+     "gs_bv": 0.1,
+     "gs_level": 1.0,
+     "gs_bzq": 0.0
+    },
+    "args": {
+     "xnum": 161,
+     "tol": 1e-06
+    },
+    "type_index": 3
+   }
+  ]
+ },
+ "env": {
+  "GS_VY_SOLDIRS": "sol_gvylfs9ia,sol_gvylfs9ib,sol_gvylfs9ic,sol_gvylfs9id",
+  "GS_VY_BV": "-0.1,-0.03,0.03,0.1",
+  "GS_VY_SHARES": "0.25,0.25,0.25,0.25"
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom",
+   "lev"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": null,
+  "source_script_note": "2026-11-09: spec written by _scratch/gen_gvylfs6_levers.py from var-gs_vy-gvylfs6i-v1; ids filled by verify_gs_vy_klc.sh",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=gvylfs9i",
+  "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
+ },
+ "expected_solves": {
+  "sol_gvylfs9ia": "c65a06ede043a926",
+  "sol_gvylfs9ib": "0334dbc540c7d652",
+  "sol_gvylfs9ic": "e1a10922d9149b7e",
+  "sol_gvylfs9id": "6149ac201ba53dc2"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null,
+ "spec_hash": "d6c8f688b294dfeb007a4c340e86420b896dc2c15718c0c67802f290c792afbf"
+}

@@ -1,0 +1,128 @@
+{
+ "schema_version": 1,
+ "spec_id": "var-kp_vy-vyu3-v1",
+ "title": "KP14 3c blueprint: loading c z~^2 on a cash-flow-level ladder (a pure scale in KP14) whose levels [1.0, 0.38, 0.58] place the types at the fifths of size after the exposure's own effect on value: b = [0.0, 0.35, 0.35], exact compensation, price 2.5",
+ "question": "On the one 3c blueprint (loading c z~^2 on a scale ladder, both ends exposed), is the true weight non-monotone in the characteristic and the fair gap above 0.02?",
+ "notes": "2026-11-10: section 3c on ONE BLUEPRINT across the three models (user: 'small and large firms more exposed than the opposite;\nthe same pattern in KP; for GS the levered U should also have low and high leverage more risky; all on the same basic blueprint').\nTypes drawn at birth with equal shares; each type has a position z~_f on a scale ladder (BGN: firm scale type_scale; KP14: the\ncash-flow level, a pure scale there; GS21: the coupon drawn from 16 nodes); the loading is c times the square of the standardized\nposition, b_f = c z~_f^2: zero in the middle, positive at both ends, so the smallest and the largest firms (BGN, KP14) or the\nleast and the most levered (GS21) carry the exposure. Level-compensated at y = 0 (bv_comp 1 / gs_qcomp 1). Five positions at\n-1.41, -0.71, 0, 0.71, 1.41 give z~^2 = 2, 0.5, 0, 0.5, 2 -> b = (0.35, 0.0875, 0, 0.0875, 0.35) at c = 0.175.\nKP14: a +0.35 loading raises log size by ~5.0 (40.8 b^2 at 1/(1-alpha) = 6.67, measured on vyu5r), so the levels are set to put the\nfive types one 0.7-log-size step apart AFTER that: 6.67 log l + 40.8 b^2 = (-1.4, -0.7, 0, 0.7, 1.4).\n\nDESIGN. type_share [0.3333333333333333, 0.3333333333333333, 0.3333333333333333], type_bv [0.0, 0.35, 0.35], type_level [1.0, 0.38, 0.58], gamma_v 2.5, bv_comp 1.0; own tables under prefix vyu3.\n\nPRECOMMITMENT STATUS: precommitted=false; ids filled from the Quest build log by the solve script before any seed runs.\n\nPREDICTION (2026-11-10): true weight non-monotone in the characteristic (both ends alike); fair gap at or above +0.02. FALSIFIED if three seeds have room at or below 10% or ten seeds give a gap below 0.02.",
+ "lineage": {
+  "parent_spec": "var-kp_vy-vyu5r-v1",
+  "changes": [
+   "type_bv [0.0, 0.35, 0.35]; type_level [1.0, 0.38, 0.58] (levels set so size ranks the types as the ladder, see notes)"
+  ]
+ },
+ "engine": "oracle",
+ "model": "kp_vy",
+ "method": {
+  "kp_interpolation": "linear",
+  "kp_cir_quadrature": "adaptive_epsrel_1e-6",
+  "kp_regime_labels": "corrected_2026_09_04_entry_rates",
+  "zero_book_in_sdf_solve": true
+ },
+ "panel": {
+  "N": 500,
+  "T": 500,
+  "burnin": 400
+ },
+ "seeds": {
+  "base": 0,
+  "policy": "run_oracle.py --seed drives BOTH the firm-level shocks (global numpy stream) and the AGGREGATE state path (gam_seed / reg_seed offset by the seed). Seed 0 reproduces the pre-2026-09-07 single-run behaviour; --common_aggregate restores the old fixed-aggregate behaviour as an explicit variance decomposition."
+ },
+ "params": {
+  "type_share": [
+   0.3333333333333333,
+   0.3333333333333333,
+   0.3333333333333333
+  ],
+  "type_bv": [
+   0.0,
+   0.35,
+   0.35
+  ],
+  "type_level": [
+   1.0,
+   0.38,
+   0.58
+  ],
+  "gamma_v": 2.5,
+  "bv_comp": 1.0
+ },
+ "param_env": "KP_PARAM_OVERRIDES",
+ "env": {
+  "KP_VY_PREFIX": "vyu3"
+ },
+ "solve": {
+  "stages": [
+   {
+    "name": "vy_tables",
+    "producer": "variants/kp_vy/build_vy_tables.py",
+    "param_env": "KP_PARAM_OVERRIDES",
+    "params": {
+     "type_share": [
+      0.3333333333333333,
+      0.3333333333333333,
+      0.3333333333333333
+     ],
+     "type_bv": [
+      0.0,
+      0.35,
+      0.35
+     ],
+     "type_level": [
+      1.0,
+      0.38,
+      0.58
+     ],
+     "gamma_v": 2.5,
+     "bv_comp": 1.0
+    },
+    "args": {
+     "prefix": "vyu3"
+    },
+    "type_index": null
+   }
+  ]
+ },
+ "estimation": {
+  "chars": [
+   "size",
+   "bm",
+   "agr",
+   "roe",
+   "mom"
+  ],
+  "window": 360,
+  "levels": true,
+  "include_mkt": true,
+  "kappas": [
+   1e-07,
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1,
+   1.0,
+   10.0,
+   100.0,
+   1000.0
+  ],
+  "fair_linear": true
+ },
+ "provenance": {
+  "source_script": "_scratch/gen_u_blueprint.py",
+  "source_script_note": "proposed 2026-11-10 (3c blueprint: U of the standardized ladder position, both ends exposed)",
+  "runner": "variants/run_seeds_slurm.sh",
+  "runner_note": "SEED_SPEC=vyu3",
+  "solve_runner": "variants/klc/solve_kp_klc.sh",
+  "verified_by": "variants/klc/verify_solves.py kp (BOP_VERIFY_KP_SPEC)",
+  "solve_note": "built on Quest by variants/klc/solve_kp_klc.sh; ids read from the build log solve_kp.8020392.vyu3.build.log (see PRECOMMITMENT STATUS in notes)"
+ },
+ "spec_hash": "accf503b63620c6b77b77894938265e2f729f06c21df1c769026c97f325cd26a",
+ "expected_solves": {
+  "G": "c9aaa2dec04fb5e3",
+  "integ": "310143f5651e3ad1"
+ },
+ "precommitted": false,
+ "solves_pending": null,
+ "reused_solves": null
+}

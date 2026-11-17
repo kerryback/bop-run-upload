@@ -105,6 +105,21 @@ gs_bzq = 0.0
 # in the characteristics that reveal z (ROE, size). The reduced form's pure-curvature loading (kfh_sq) is the ceiling case. gs_bzz = 0
 # leaves every economy unchanged (x + 0.0).
 gs_bzz = 0.0
+# gs_bv_cap (2026-11-03): a BOUNDED y exposure in production, kp_vy's bv_eps_cap one model over. With e^{e y}, e the firm's exposure
+# (gs_bv times the shape above), a firm with e < 0 pays most where the y discount is largest (My's diagonal is 1.079 at the lowest
+# node), and on a high gs_level the claim has no finite value: gvyslz e/f (exposure down to -0.28 / -0.48 at level 1.5 / 2.0) hit
+# the sweep cap with prices growing x1.065 a sweep. h_e(y) = c / (1 + (c-1) e^{-c e y/(c-1)}) has h(0) = 1, h'(0) = e and range
+# (0, c), so production is at most c times its unexposed value whatever e. Applies to the first chain only; needs bv_comp 0 (the
+# compensation W(b) prices e^{b y}). None keeps e^{e y} (every economy op-for-op unchanged).
+gs_bv_cap = None
+# gs_qcomp (2026-11-04): a per-FIRM level compensation for the y exposure, production x W(e)^(-gs_qcomp) with e the firm's own
+# exposure at its (z, b) node and W(e) = sum_k e^{-rk} E^Q[h_e(y_k) | y_0 = 0] / sum_k e^{-rk} the priced mean of its y factor
+# (e^{e y}, or h_e under gs_bv_cap), computed on this chain by iterating MPy. WHY: the leverage characteristic is coupon over
+# market equity, and an uncompensated positive exposure crushes the equity price, so the most exposed firms are the most levered
+# whatever the coupon and a hump in the coupon becomes monotone in observed leverage (gvylqm5/10: equity at mid coupon 7-9
+# against 110-190 at the edges). gs_qcomp 1 equalises the priced value of the y factor across firms, so leverage tracks the
+# coupon. Tabulated on _qc_e and interpolated, here and in gs_sim_vy.py alike. One chain only. 0 adds 0.0 (unchanged).
+gs_qcomp = 0.0
 # ---- a SECOND nonlinear loading, on the existing priced productivity shock x (2026-10-12, "larger factor model"):
 # the x loading becomes gs_bx + gs_bx2 * (z~^2 - 1)/sqrt(2), a curvature in productivity that is distinct from the
 # y loading's product z~ b~. No second chain is needed: x is already priced at gamma_x.
@@ -156,6 +171,7 @@ rho_y2 = float(np.exp(-kappa_y2 * dt)); s_y2 = float(np.sqrt(1.0 - rho_y2 ** 2))
 _mk2 = -gs_bv2 * lam_y2 * s_y2 * (1 - rho_y2 ** _k) / (1 - rho_y2) + 0.5 * gs_bv2 ** 2 * (1 - rho_y2 ** (2 * _k))   # 0 at gs_bv2 = 0
 _W = float((np.exp(-r * _k) * np.exp(_mk + _mk2)).sum() / np.exp(-r * _k).sum())
 gs_ashift = float(-bv_comp * np.log(_W))
+assert gs_bv_cap is None or (float(gs_bv_cap) > 1.0 and bv_comp == 0.0), "gs_bv_cap needs a bound above 1 and bv_comp 0"
 _lshift = float(np.log(gs_level))                 # the visible level ladder, 0 unless the spec sets gs_level
 
 sys.path.insert(0, os.path.dirname(HERE))          # variants/, for `common`
@@ -288,7 +304,27 @@ _btil = (bgrid - 0.5) / 0.29                                                    
 _expo = gs_bv * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0) + gs_bzz * (_ztil[:, None] ** 2 - 1.0))   # (znum, bnum)
 _expo2 = gs_bv2 * (gs_bzl + gs_bzi * _ztil[:, None] + gs_bzb * _ztil[:, None] * _btil[None, :] + gs_bzc * _btil[None, :] + gs_bzq * (_btil[None, :] ** 2 - 1.0) + gs_bzz * (_ztil[:, None] ** 2 - 1.0))  # the second chain's
 _bxz = gs_bx + gs_bx2 * (_ztil ** 2 - 1.0) / np.sqrt(2.0)                          # (znum,) x loading by productivity
-_prod = np.exp(_bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _expo[None, :, None, :] * ygrid[:, None, None, None] + _expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift + _lshift)
+
+def _ylog(e, y):
+    """log of the y exposure factor: e y, or log h_e(y) under gs_bv_cap"""
+    if gs_bv_cap is None:
+        return e * y
+    c = float(gs_bv_cap)
+    return np.log(c) - np.logaddexp(0.0, np.log(c - 1.0) - c * e * y / (c - 1.0))
+
+_qc_e = np.linspace(-4.0, 4.0, 1601)                                               # exposure grid of the gs_qcomp table
+if gs_qcomp:
+    assert NY2 == 1 and NY > 1, "gs_qcomp prices the first chain only: needs NY2 = 1 and NY > 1"
+    assert np.abs(_expo).max() <= 4.0, "gs_qcomp table covers exposures in [-4, 4]"
+    _qv = np.exp(_ylog(_qc_e[None, :], ygrid[:, None]))                            # (NY, ne): h_e(y) by node
+    _qacc = np.zeros_like(_qv); _qd = 0.0
+    for _k in range(2400):
+        _qacc += np.exp(-r * _k) * _qv; _qd += np.exp(-r * _k); _qv = MPy @ _qv
+    _qc_logW = np.log(_qacc[NY // 2] / _qd)
+else:
+    _qc_logW = np.zeros_like(_qc_e)
+_qshift = -gs_qcomp * np.interp(_expo, _qc_e, _qc_logW)                           # (znum, bnum), 0 unless gs_qcomp
+_prod = np.exp(_qshift[None, :, None, :] + _bxz[None, :, None, None] * xgrid[None, None, :, None] + zgrid[None, :, None, None] + _ylog(_expo[None, :, None, :], ygrid[:, None, None, None]) +_expo2[None, :, None, :] * ygrid2[:, None, None, None] + gs_ashift + _lshift)
 _cost = delta + gs_fc * np.exp(gs_bc * ygrid)[:, None, None, None]            # (NY, 1, 1, 1)
 cy = np.exp((gs_bi + gs_bib * _btil[None, :]) * ygrid[:, None])                 # (NY, bnum) investment-cost multiplier by y node and current coupon
 ky = np.exp(gs_bk * ygrid)                                                      # (NY,) coupon multiplier
@@ -463,6 +499,7 @@ np.savez_compressed(os.path.join(outdir, "solution.npz"),
                                      kappa_b, xi, imin, imax, sigma_m]),
                     solve_id=_snap.solve_id,
                     gs_bx=gs_bx, gs_bv=gs_bv, gs_ashift=gs_ashift, gs_level=gs_level, bv_comp=bv_comp, gs_fc=gs_fc, gs_bc=gs_bc, gs_bphi=gs_bphi, gs_bi=gs_bi, gs_bib=gs_bib, cy=cy, gs_bk=gs_bk, ky=ky, gs_bzl=gs_bzl, gs_bzi=gs_bzi, gs_bzb=gs_bzb, gs_bzc=gs_bzc, gs_bzq=gs_bzq, gs_bzz=gs_bzz, gs_bx2=gs_bx2, gs_pj=gs_pj, gs_gj=gs_gj, gs_blo=gs_blo, gs_bhi=gs_bhi, gs_fixcs=gs_fixcs, gs_riskless=gs_riskless,
+                    gs_bv_cap=np.nan if gs_bv_cap is None else float(gs_bv_cap), gs_qcomp=gs_qcomp, qc_e=_qc_e, qc_logW=_qc_logW,
                     gamma_v=gamma_v, kappa_y=kappa_y, NY=NY, y_mult=y_mult, lam_y=lam_y, rho_y=rho_y, s_y=s_y,
                     ygrid2=ygrid2, NY1=NY1, NY2=NY2, gs_bv2=gs_bv2, gamma_v2=gamma_v2, kappa_y2=kappa_y2,
                     kappa_e=kappa_e, xnum=xnum, bnum=bnum, znum=znum, tol=tol,

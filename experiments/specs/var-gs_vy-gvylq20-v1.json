@@ -129,13 +129,13 @@
   "runner": "variants/run_seeds_slurm.sh",
   "runner_note": "SEED_SPEC=gvylq20",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
-  "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs (PRECOMMITMENT STATUS in notes)"
+  "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvylq20a": "bfb82f62a5a6e040"
+ },
  "precommitted": false,
- "solves_pending": [
-  "sol_gvylq20a"
- ],
+ "solves_pending": null,
  "reused_solves": null,
- "spec_hash": "65425c4e116585ef84421124ebba780e1ef538bde144eaee6166c0ee700b9021"
+ "spec_hash": "051668b8ffeadc31c8f3c3cf088b74c3727fad63ea90d420292a37969fe9a970"
 }
