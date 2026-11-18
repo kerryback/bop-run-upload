@@ -59,11 +59,19 @@ esac
 python - "$SPECF" "$LOG" <<'EOF' | tee -a "$LOG"
 import json, os, re, sys
 spec = json.load(open(sys.argv[1])); log = open(sys.argv[2]).read()
-printed = set(re.findall(r"solve_id[= ]([0-9a-f]{16})", log))
+# Only the producers' own "[solstamp] ... solve_id=<id>" lines say which id THIS run built. The old
+# pattern `solve_id[= ]` also matched solstamp's stale-cache warning ("tables on disk belong to
+# solve_id <old>; this run wants <new>"), so a run whose id had moved still reported SOLVE OK
+# (kpbase on Sol, 2026-11-17). KP lines also name their stage, and are then compared stage by stage.
+claims = re.findall(r"^\[solstamp\] [^\n]*?(?:stage=(\w+) )?solve_id=([0-9a-f]{16})\s*$", log, re.M)
+by_stage = {st: sid for st, sid in claims if st}
+printed = {sid for _, sid in claims}
 bad = []
 for stage, sid in spec["expected_solves"].items():
-    if sid not in printed:
-        bad.append(f"{stage}: spec precommitted {sid}; this run printed {sorted(printed)}")
+    got = by_stage.get(stage)
+    if (got is not None and got != sid) or (got is None and sid not in printed):
+        bad.append(f"{stage}: spec precommitted {sid}; this run printed "
+                   f"{got if got is not None else sorted(printed)}")
     if not os.path.exists(os.path.join("experiments", "registry", sid + ".json")):
         bad.append(f"{stage}: no manifest experiments/registry/{sid}.json after the build")
 if bad:

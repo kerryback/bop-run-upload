@@ -63,6 +63,8 @@ Each `run_*.sh` runs the same three stages:
    runs FMR, FFC, linear-in-ranks and RFF+ridge (P = 36, 360, 3600) on the saved panel with rolling
    windows, scored with the true moments. Writes `results/{model}_estimators_{tag}_w360.csv` and
    `..._summary.csv` (columns: method, P, kappa, sharpe, hjd, real_sr, t_vs_fm).
+   The month-by-month CSV is gitignored (2026-11-18); only `..._summary.csv` is committed. See
+   `results/README_monthly.md`.
 
 Model parameters are overridden through JSON in an environment variable (`BGN_PARAM_OVERRIDES`,
 `KP_PARAM_OVERRIDES`, `GS_PARAM_OVERRIDES` / `GS_SIM_OVERRIDES`); the run scripts set the winning values.

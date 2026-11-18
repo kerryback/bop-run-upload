@@ -78,6 +78,11 @@ variants/results/*.parquet
 variants/results/*_moments_*.npz
 variants/results/logs/
 variants/results/log_*.txt
+# Month-by-month estimator output ({model}_estimators_{tag}_s{seed}_w{window}.csv, ~5.5 MB each): out of git
+# since 2026-11-18. Nothing in the pipeline reads it; the _summary.csv beside it (kept) is what aggregates.
+# Every version ever committed is archived; see variants/results/README_monthly.md.
+variants/**/*_estimators_*.csv
+!variants/**/*_estimators_*_summary.csv
 
 # local reference copies, never committed
 Code_light/

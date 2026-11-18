@@ -1,10 +1,20 @@
 """Exact unconditional SR of each estimated portfolio from the TRUE conditional moments:
    SR_unc = E[m_t] / sqrt(E[s_t^2 + m_t^2] - E[m_t]^2),  m_t = w_t'mu_t, s_t^2 = w_t'Sigma_t w_t
-(only the weights carry estimation noise), next to the mean conditional SR and the realised SR."""
+(only the weights carry estimation noise), next to the mean conditional SR and the realised SR.
+
+Reads the month-by-month estimator CSVs ({model}_estimators_{tag}_s{seed}_w360.csv). Since 2026-11-18 those
+are not in git (only the _summary.csv files are); the cluster run leaves them in its results folder, and every
+version that was ever committed is in the archive described in variants/results/README_monthly.md. Point
+BOP_RESULTS_DIR at whichever holds them; the default is results/, as before."""
 import glob, os, sys, numpy as np, pandas as pd
 pd.set_option("display.width", 250)
 rows = []
-for f in sorted(glob.glob("results/*_estimators_*_w360.csv")):
+RESULTS = os.environ.get("BOP_RESULTS_DIR", "results")
+files = sorted(glob.glob(os.path.join(RESULTS, "*_estimators_*_w360.csv")))
+if not files:
+    sys.exit(f"no *_estimators_*_w360.csv in {RESULTS!r}: they are not in git; set BOP_RESULTS_DIR "
+             "(see variants/results/README_monthly.md)")
+for f in files:
     tag = os.path.basename(f).replace("_estimators_", " ").replace("_w360.csv", "")
     d = pd.read_csv(f)
     d = d[(d.method != "rff") | (d.P == 3600)]
