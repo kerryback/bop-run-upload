@@ -15,9 +15,31 @@ sys.path.insert(0, os.path.join(ROOT, "variants"))
 import solve_impact  # noqa: E402
 
 
-def run(*args):
+COMMIT_MAP = os.path.join(ROOT, "docs", "commit_map_2026-11-18.tsv")
+
+
+def commit(old):
+    """The fixture commit, under the id it has in THIS history.
+
+    The 2026-11-18 history rewrite (docs/HISTORY_REWRITE_2026-11-18.md) changed every commit id.
+    The fixtures above are the pre-rewrite ids; docs/commit_map_2026-11-18.tsv maps each to its
+    rewritten commit, whose code is identical (only month-by-month estimator csvs were dropped).
+    """
+    r = subprocess.run(["git", "cat-file", "-e", old + "^{commit}"], cwd=ROOT, capture_output=True)
+    if r.returncode == 0 or not all(c in "0123456789abcdef" for c in old):
+        return old                    # resolves here, or is a ref name / a deliberately bad ref
+    with open(COMMIT_MAP) as fh:
+        for line in fh:
+            o, n = line.split()[:2]
+            if o.startswith(old):
+                return n
+    raise LookupError(f"{old} is neither a commit here nor in {COMMIT_MAP}")
+
+
+def run(a, b):
+    a, b = (commit(x[:-1]) + "^" if x.endswith("^") else commit(x) for x in (a, b))
     r = subprocess.run([sys.executable, os.path.join(ROOT, "variants", "solve_impact.py"),
-                        *args], cwd=ROOT, capture_output=True, text=True)
+                        a, b], cwd=ROOT, capture_output=True, text=True)
     return r.returncode, r.stdout
 
 

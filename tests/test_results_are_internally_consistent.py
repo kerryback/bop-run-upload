@@ -79,16 +79,28 @@ def test_every_estimator_summary_is_the_aggregate_of_its_full_csv():
     So regrouping the full file must reproduce the summary. If it does not, the two
     files are from different runs -- the same failure as the oracle/_ts.csv mismatch,
     one level down. The full csv is the evidence behind every t-statistic in the
-    summary (a plain iid t over 125 monthly differences), which is why it is committed.
+    summary (a plain iid t over 125 monthly differences).
+
+    Since 2026-11-18 the full csvs are NOT in git (variants/results/README_monthly.md): they
+    stay in the producing cluster's results folder, and every committed version is archived.
+    So this checks the full csvs found in BOP_FULL_CSV_DIR (an unpacked archive's
+    variants/results/, or a cluster results folder) against the committed summaries, and
+    skips when none are present. It was run over the whole archive before the history
+    rewrite: every one of the 749 summaries at HEAD matched.
     """
     import numpy as np
     import pandas as pd
+    import pytest
+    full_dir = os.environ.get("BOP_FULL_CSV_DIR", RESULTS)
+    fulls = [f for f in sorted(glob.glob(os.path.join(full_dir, "*_estimators_*_w*.csv")))
+             if not f.endswith("_summary.csv")]
+    if not fulls:
+        pytest.skip(f"no month-by-month estimator csvs in {full_dir} (not in git since "
+                    "2026-11-18); set BOP_FULL_CSV_DIR to check them")
     bad = []
     n = 0
-    for full in sorted(glob.glob(os.path.join(RESULTS, "*_estimators_*_w*.csv"))):
-        if full.endswith("_summary.csv"):
-            continue
-        summ_path = full[:-4] + "_summary.csv"
+    for full in fulls:
+        summ_path = os.path.join(RESULTS, os.path.basename(full)[:-4] + "_summary.csv")
         if not os.path.exists(summ_path):
             continue
         n += 1
