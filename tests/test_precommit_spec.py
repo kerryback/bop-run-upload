@@ -84,7 +84,11 @@ def test_chained_stages_are_declared_for_the_producer_that_has_one():
     producers = {os.path.basename(s["producer"])
                  for spec in _live_specs()
                  for s in (spec.get("solve") or {}).get("stages") or []}
+    # gs_solve_vy.py and rebuild_jstar_vy.py (the quest's gs_vy / bgn_vy producers) are single-stage:
+    # each snapshots its params and its own sources, no upstream `inputs`, so neither chains. Both have
+    # an _argv_for row in precommit_spec.py (checked 2026-11-18).
     unknown = producers - {"build_vy_tables.py", "rebuild_jstar_gam.py",
-                           "gs_solve_reg.py", "gs_solve_gam.py"}
+                           "gs_solve_reg.py", "gs_solve_gam.py",
+                           "gs_solve_vy.py", "rebuild_jstar_vy.py"}
     assert not unknown, (f"live specs name producers precommit_spec has never been "
                          f"taught: {sorted(unknown)}")

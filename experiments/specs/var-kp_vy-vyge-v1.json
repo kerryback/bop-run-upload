@@ -8,7 +8,8 @@
   "parent_spec": "var-kp_vy-vyg25-v1",
   "changes": [
    "type_bv [0.02, 0.07, 0.14] -> [0.1, 0.25, 0.45]; bv_on_eps true (new); own tables under prefix vyge"
-  ]
+  ],
+  "superseded_by": "var-kp_vy-vyge-v2"
  },
  "engine": "oracle",
  "model": "kp_vy",

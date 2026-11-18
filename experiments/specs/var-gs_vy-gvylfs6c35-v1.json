@@ -229,14 +229,16 @@
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
   "solve_note": "built on Quest by variants/klc/solve_gs_vy_klc.sh; ids read from the detail logs in /kellogg/proj/axa3203/bop_runs/logs (see PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvylfs6c35a": "98c89a319bc703d4",
+  "sol_gvylfs6c35b": "62f206fa76f5dfae",
+  "sol_gvylfs6c35c": "a01a1f59a372e7b1",
+  "sol_gvylfs6c35d": "e80a92312abf4587"
+ },
  "precommitted": false,
  "solves_pending": [
-  "sol_gvylfs6c35a",
-  "sol_gvylfs6c35b",
-  "sol_gvylfs6c35c",
   "sol_gvylfs6c35d"
  ],
  "reused_solves": null,
- "spec_hash": "c2bdec4f902ec6e3328e3059d47897c57413a6e38d6703b1980c168d1ad07cd4"
+ "spec_hash": "15281bc31038c66113f1b11d6d86dacae874d39a9766ff36838eeae6cc3f3fcd"
 }

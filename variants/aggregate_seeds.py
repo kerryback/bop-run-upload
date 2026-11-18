@@ -131,7 +131,12 @@ def seed_rows(results):
             return float(ts_sr[mask].mean()) if mask.any() else np.nan
         ests = sorted(glob.glob(os.path.join(results, f"{model}_estimators_{tag}_s{seed:03d}_w*_summary.csv")))
         if not ests:
-            rows.append(dict(base, window=np.nan, sr_max_eval=np.nan, dkkm=np.nan, lin=np.nan,
+            # An oracle-only run (no estimators: RESULTS.md's "oracle only" rows) is measured on the
+            # oracle's evaluation window, so that is its window. Until 2026-11-18 it was NaN, which
+            # made every oracle-only row read as off protocol whatever its sample; an oracle run
+            # before --eval_window (2026-09-09) still has none and is still refused.
+            _w = d.get("eval_window")
+            rows.append(dict(base, window=np.nan if _w is None else int(_w), sr_max_eval=np.nan, dkkm=np.nan, lin=np.nan,
                              gap=np.nan, t=np.nan, room_all_pct_lin=np.nan, room_eval_pct_lin=np.nan,
                              gap_pct_lin=np.nan, fm=np.nan, gap_fm=np.nan, room_all_pct_fm=np.nan,
                              room_eval_pct_fm=np.nan, gap_fm_pct_fm=np.nan,

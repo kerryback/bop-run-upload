@@ -182,12 +182,15 @@
   "runner_note": "SEED_SPEC=gvyp2n",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvyp2na": "0f7bdc57c7c68b90",
+  "sol_gvyp2nb": "b24d9ab3a2f66622"
+ },
  "precommitted": false,
  "solves_pending": [
   "sol_gvyp2na",
   "sol_gvyp2nb"
  ],
  "reused_solves": null,
- "spec_hash": "e1755a392499992dc49cdf3a361e5a567586402b2acb417f3d7603c9eb81e88d"
+ "spec_hash": "520b0e6f1e5eea84003c4987cb45dea59f1129bf67d3ddc23e557102a87a81df"
 }

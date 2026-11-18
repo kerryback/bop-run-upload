@@ -212,7 +212,11 @@
   "runner_note": "SEED_SPEC=gvyzlx",
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvyzlxa": "35ca4cca08f63c2e",
+  "sol_gvyzlxb": "c0fce841d4f78ac7",
+  "sol_gvyzlxc": "bf0b426c71ea308c"
+ },
  "precommitted": false,
  "solves_pending": [
   "sol_gvyzlxa",
@@ -220,5 +224,5 @@
   "sol_gvyzlxc"
  ],
  "reused_solves": null,
- "spec_hash": "45c14be2234a9be45a199611fc805cc8ece2a91fb273360b6c80e77a8332b325"
+ "spec_hash": "9723bac573c581585cf3e0054f46106da6c42c907cd5def80a6e5984e7dbb00e"
 }

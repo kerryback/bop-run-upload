@@ -8,7 +8,8 @@
   "parent_spec": "var-kp_vy-vyg25x2-v1",
   "changes": [
    "{'gamma_v': 3.5}; own tables under prefix vyg35x2; everything else vyg25x2's"
-  ]
+  ],
+  "superseded_by": "var-kp_vy-vyg35x2-v2"
  },
  "engine": "oracle",
  "model": "kp_vy",

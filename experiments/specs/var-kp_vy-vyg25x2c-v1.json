@@ -8,7 +8,8 @@
   "parent_spec": "var-kp_vy-vyg25x2-v1",
   "changes": [
    "{'bv_comp': 2.5}; own tables under prefix vyg25x2c; everything else vyg25x2's"
-  ]
+  ],
+  "superseded_by": "var-kp_vy-vyg25x2c-v2"
  },
  "engine": "oracle",
  "model": "kp_vy",

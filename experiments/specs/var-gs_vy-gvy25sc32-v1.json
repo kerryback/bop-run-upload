@@ -217,7 +217,14 @@
   "verified_by": "variants/klc/verify_solves.py gvy (BOP_VERIFY_GVY_SPEC)",
   "solve_note": "to be built on Quest by variants/klc/solve_gs_vy_klc.sh (six tasks); ids filled by verify_gs_vy_klc.sh"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "sol_gvy25sc32a": "7cf4e1c3de949e3f",
+  "sol_gvy25sc32b": "07a18013645033e0",
+  "sol_gvy25sc32c": "8a1dc40f1b473873",
+  "sol_gvy25sc32d": "da641f2b94cdaf1a",
+  "sol_gvy25sc32e": "58507ff0e08b6029",
+  "sol_gvy25sc32f": "c570e046200fe62e"
+ },
  "precommitted": false,
  "solves_pending": [
   "sol_gvy25sc32a",
@@ -228,5 +235,5 @@
   "sol_gvy25sc32f"
  ],
  "reused_solves": null,
- "spec_hash": "c458f6e8fc0276fd1c0dbe3c51fec32cdac6d17a5482666fbe9826407570d2bb"
+ "spec_hash": "58ce488abbe5aafb588743abc00a7b7768ef7652789152708ac3d961dea495f8"
 }

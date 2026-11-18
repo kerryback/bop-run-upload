@@ -212,7 +212,7 @@
 
 set -euo pipefail
 
-: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vym3 | vym3t3 | g0235d | bgnbase | kpbase | gsbase | g0235df | vyg30k70 | gx7w | vyg25k15 | vyg25k70 | kpgam | vyj25 | vy1 | vym2t3 | vy1j | kpq | vy9t2 | vy9t2f | bvy25 | bvyc0 | gvy25 | gvyc25) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
+: "${SEED_SPEC:?set SEED_SPEC (vyx | g0235 | g0235f | g0235s | g0235r | g28 | bx7 | gx7 | vyg25 | vym3 | vym3t3 | g0235d | bgnbase | kpbase | gsbase | g0235df | vyg30k70 | vyg25k15 | vyg25k70 | kpgam | vyj25 | vy1 | vym2t3 | vy1j | kpq | vy9t2 | vy9t2f | bvy25 | bvyc0 | gvy25 | gvyc25) -- e.g. sbatch --export=ALL,SEED_SPEC=vyx ...}"
 
 case "$SEED_SPEC" in
   vyx)
@@ -464,19 +464,8 @@ case "$SEED_SPEC" in
     export KP_VY_PREFIX=vyg25k70
     SOLVE_HINT='sbatch --export=ALL,KSPECS=var-kp_vy-vyg25k70-v1 variants/klc/solve_kp_klc.sh   # Quest'
     ;;
-  gx7w)
-    # gx7 with a steeper and wider price of risk: gamma(x) = clip(0.5 - 0.40 x/sd(x), 0.05, 1.5)
-    # against gx7's slope 0.28 and ceiling 1.0 (2026-10-05, Quest). Same five-type ladder. GS21 is
-    # K=1, so no FAIR gap is expected; this targets DKKM against FMR/FF, where gx7 holds the file's
-    # largest absolute gap. FIVE new solves, none reused. GS_SIM_OVERRIDES stays UNSET.
-    MODEL=gs_bx; TAG=gx7w; SPEC=var-gs_bx-gx7w-v1
-    SOLVE_TAG=sol_gw10,sol_gw25,sol_gw40,sol_gw55,sol_gw70
-    export GS_BX_SOLDIRS=sol_gw10,sol_gw25,sol_gw40,sol_gw55,sol_gw70
-    export GS_BX_BETAS=1.0,2.5,4.0,5.5,7.0
-    export GS_BX_SHARES=0.2,0.2,0.2,0.2,0.2
-    unset GS_SIM_OVERRIDES
-    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gx7w-v1 --from "<the shared solves folder>"   # or, on Quest, re-solve: sbatch variants/klc/solve_gs_klc.sh (five ~5 h solves)'
-    ;;
+  # gx7w (var-gs_bx-gx7w-v1) was removed 2026-11-18: RETIRED, never run. Its gw25 solve hit the 5600-sweep
+  # cycle cap at both tol 1e-6 and 2e-6. See the spec's lineage.retired.
   bvy25)
     # The KP14 construction in BGN (2026-10-07): a priced AR(1) state y, three exposure types, bv_comp 1.2,
     # gamma_v 2.5, kappa_y 0.35 -- vyg25's ingredients, nothing else changed from bgnbase. variants/bgn_vy/.
@@ -815,7 +804,7 @@ case "$SEED_SPEC" in
     export GS_BX_BETAS=1.0
     export GS_BX_SHARES=1.0
     unset GS_SIM_OVERRIDES
-    SOLVE_HINT='export GSBX_SPEC=var-gs_bx-gq25-v1; sbatch --export=ALL --array=0 variants/klc/solve_gs_klc.sh   # Quest'
+    SOLVE_HINT='python variants/fetch_solves.py --spec var-gs_bx-gq25-v1 --from "<the shared solves folder, e.g. the Dropbox solves/ dir>"'
     ;;
   gvyz10)
     # GS21, the priced y factor on a fixed OPERATING COST (2026-10-08): exposure runs through operating leverage,
@@ -916,115 +905,115 @@ case "$SEED_SPEC" in
     ;;
   vyg25x2)
     # kp_vy (2026-10-30): vyg25 (positive three-type ladder) with the loadings x2: [0.04, 0.14, 0.28], level-compensated, price 2.5
-    MODEL=kp_vy; TAG=vyg25x2; SPEC=var-kp_vy-vyg25x2-v1; SOLVE_TAG=vyg25x2
+    MODEL=kp_vy; TAG=vyg25x2; SPEC=var-kp_vy-vyg25x2-v2; SOLVE_TAG=vyg25x2
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.04, 0.14, 0.28], "gamma_v": 2.5, "bv_comp": 1.2}'
     export KP_VY_PREFIX=vyg25x2
-    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x2-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vyg25x3)
     # kp_vy (2026-10-30): vyg25 (positive three-type ladder) with the loadings x3: [0.06, 0.21, 0.42], level-compensated, price 2.5
-    MODEL=kp_vy; TAG=vyg25x3; SPEC=var-kp_vy-vyg25x3-v1; SOLVE_TAG=vyg25x3
+    MODEL=kp_vy; TAG=vyg25x3; SPEC=var-kp_vy-vyg25x3-v2; SOLVE_TAG=vyg25x3
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.06, 0.21, 0.42], "gamma_v": 2.5, "bv_comp": 1.2}'
     export KP_VY_PREFIX=vyg25x3
-    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x3-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x3-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vyg35x2)
     # kp_vy (2026-10-30): vyg25x2 (positive ladder 0.04/0.14/0.28) with the y price raised to 3.5
-    MODEL=kp_vy; TAG=vyg35x2; SPEC=var-kp_vy-vyg35x2-v1; SOLVE_TAG=vyg35x2
+    MODEL=kp_vy; TAG=vyg35x2; SPEC=var-kp_vy-vyg35x2-v2; SOLVE_TAG=vyg35x2
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.04, 0.14, 0.28], "gamma_v": 3.5, "bv_comp": 1.2}'
     export KP_VY_PREFIX=vyg35x2
-    SOLVE_HINT='export KSPECS=var-kp_vy-vyg35x2-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg35x2-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vyg25x2c)
     # kp_vy (2026-10-30): vyg25x2 (positive ladder 0.04/0.14/0.28) with the level compensation strengthened to 2.5
-    MODEL=kp_vy; TAG=vyg25x2c; SPEC=var-kp_vy-vyg25x2c-v1; SOLVE_TAG=vyg25x2c
+    MODEL=kp_vy; TAG=vyg25x2c; SPEC=var-kp_vy-vyg25x2c-v2; SOLVE_TAG=vyg25x2c
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.04, 0.14, 0.28], "gamma_v": 2.5, "bv_comp": 2.5}'
     export KP_VY_PREFIX=vyg25x2c
-    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x2c-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyg25x2c-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vyge)
     # kp_vy (2026-10-30): the y exposure on the PROFITABILITY DEVIATION, b_f (eps - 1): three types [0.1, 0.25, 0.45], bv_on_eps, price 2.5
-    MODEL=kp_vy; TAG=vyge; SPEC=var-kp_vy-vyge-v1; SOLVE_TAG=vyge
+    MODEL=kp_vy; TAG=vyge; SPEC=var-kp_vy-vyge-v2; SOLVE_TAG=vyge
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.1, 0.25, 0.45], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true}'
     export KP_VY_PREFIX=vyge
-    SOLVE_HINT='export KSPECS=var-kp_vy-vyge-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vyge-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygel)
     # kp_vy (2026-10-31): vyge (exposure b_f (eps - 1)) with a visible level ladder type_level [0.6, 1.0, 1.6]: type via size, eps via ROE
-    MODEL=kp_vy; TAG=vygel; SPEC=var-kp_vy-vygel-v1; SOLVE_TAG=vygel
+    MODEL=kp_vy; TAG=vygel; SPEC=var-kp_vy-vygel-v2; SOLVE_TAG=vygel
     export KP_PARAM_OVERRIDES='{"type_share": [0.34, 0.33, 0.33], "type_bv": [0.1, 0.25, 0.45], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.6, 1.0, 1.6]}'
     export KP_VY_PREFIX=vygel
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygel-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygel-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygels)
     # kp_vy (2026-10-31): exposure b_f (eps - 1) with MIRRORED types [-0.45, -0.25, -0.1, 0.1, 0.25, 0.45] and level ladder [0.5, 0.65, 0.85, 1.15, 1.5, 2.0]: a product of two mean-zero visible factors
-    MODEL=kp_vy; TAG=vygels; SPEC=var-kp_vy-vygels-v1; SOLVE_TAG=vygels
+    MODEL=kp_vy; TAG=vygels; SPEC=var-kp_vy-vygels-v2; SOLVE_TAG=vygels
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.45, -0.25, -0.1, 0.1, 0.25, 0.45], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0]}'
     export KP_VY_PREFIX=vygels
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygels-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygels-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygesm)
     # kp_vy (2026-10-31): exposure b_f (eps - 1) with MIRRORED types [-0.15, -0.1, -0.05, 0.05, 0.1, 0.15] and level ladder [0.5, 0.65, 0.85, 1.15, 1.5, 2.0]: a product of two mean-zero visible factors
-    MODEL=kp_vy; TAG=vygesm; SPEC=var-kp_vy-vygesm-v1; SOLVE_TAG=vygesm
+    MODEL=kp_vy; TAG=vygesm; SPEC=var-kp_vy-vygesm-v2; SOLVE_TAG=vygesm
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.15, -0.1, -0.05, 0.05, 0.1, 0.15], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0]}'
     export KP_VY_PREFIX=vygesm
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygesm-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygesm-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelb)
     # kp_vy (2026-10-31): bounded exposure (cap 2) on the profitability deviation, mirrored types \pm0.1 / 0.25 / 0.45 with a level ladder 0.5..2.0
-    MODEL=kp_vy; TAG=vygelb; SPEC=var-kp_vy-vygelb-v1; SOLVE_TAG=vygelb
+    MODEL=kp_vy; TAG=vygelb; SPEC=var-kp_vy-vygelb-v2; SOLVE_TAG=vygelb
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.45, -0.25, -0.1, 0.1, 0.25, 0.45], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.0}'
     export KP_VY_PREFIX=vygelb
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelb7)
     # kp_vy (2026-10-31): bounded exposure (cap 2), mirrored types \pm0.2 / 0.45 / 0.7 with a level ladder 0.5..2.0
-    MODEL=kp_vy; TAG=vygelb7; SPEC=var-kp_vy-vygelb7-v1; SOLVE_TAG=vygelb7
+    MODEL=kp_vy; TAG=vygelb7; SPEC=var-kp_vy-vygelb7-v2; SOLVE_TAG=vygelb7
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.7, -0.45, -0.2, 0.2, 0.45, 0.7], "gamma_v": 2.5, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.0}'
     export KP_VY_PREFIX=vygelb7
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb7-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb7-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelb7g)
     # kp_vy (2026-10-31): bounded exposure (cap 2), mirrored types \pm0.2 / 0.45 / 0.7, level ladder 0.5..2.0, \gamma_v 4.0
-    MODEL=kp_vy; TAG=vygelb7g; SPEC=var-kp_vy-vygelb7g-v1; SOLVE_TAG=vygelb7g
+    MODEL=kp_vy; TAG=vygelb7g; SPEC=var-kp_vy-vygelb7g-v2; SOLVE_TAG=vygelb7g
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-0.7, -0.45, -0.2, 0.2, 0.45, 0.7], "gamma_v": 4.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.0}'
     export KP_VY_PREFIX=vygelb7g
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb7g-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelb7g-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelbw)
     # kp_vy (2026-10-31): bounded exposure (cap 2), mirrored types \pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, \gamma_v 4.0
-    MODEL=kp_vy; TAG=vygelbw; SPEC=var-kp_vy-vygelbw-v1; SOLVE_TAG=vygelbw
+    MODEL=kp_vy; TAG=vygelbw; SPEC=var-kp_vy-vygelbw-v2; SOLVE_TAG=vygelbw
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-1.2, -0.7, -0.3, 0.3, 0.7, 1.2], "gamma_v": 4.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.0}'
     export KP_VY_PREFIX=vygelbw
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbw-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbw-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelbx)
     # kp_vy (2026-10-31): bounded exposure (cap 2), mirrored types \pm0.5 / 1.2 / 2.0, level ladder 0.5..2.0, \gamma_v 4.0
-    MODEL=kp_vy; TAG=vygelbx; SPEC=var-kp_vy-vygelbx-v1; SOLVE_TAG=vygelbx
+    MODEL=kp_vy; TAG=vygelbx; SPEC=var-kp_vy-vygelbx-v2; SOLVE_TAG=vygelbx
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-2.0, -1.2, -0.5, 0.5, 1.2, 2.0], "gamma_v": 4.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.0}'
     export KP_VY_PREFIX=vygelbx
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbx-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbx-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelbc)
     # kp_vy (2026-10-31): bounded exposure (cap 2.5), mirrored types \pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, \gamma_v 4.0
-    MODEL=kp_vy; TAG=vygelbc; SPEC=var-kp_vy-vygelbc-v1; SOLVE_TAG=vygelbc
+    MODEL=kp_vy; TAG=vygelbc; SPEC=var-kp_vy-vygelbc-v2; SOLVE_TAG=vygelbc
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-1.2, -0.7, -0.3, 0.3, 0.7, 1.2], "gamma_v": 4.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.5}'
     export KP_VY_PREFIX=vygelbc
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbc-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbc-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelbc6)
     # kp_vy (2026-10-31): bounded exposure (cap 2.5), mirrored types \pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, \gamma_v 6.0
-    MODEL=kp_vy; TAG=vygelbc6; SPEC=var-kp_vy-vygelbc6-v1; SOLVE_TAG=vygelbc6
+    MODEL=kp_vy; TAG=vygelbc6; SPEC=var-kp_vy-vygelbc6-v2; SOLVE_TAG=vygelbc6
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-1.2, -0.7, -0.3, 0.3, 0.7, 1.2], "gamma_v": 6.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.5}'
     export KP_VY_PREFIX=vygelbc6
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbc6-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbc6-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vygelbcs)
     # kp_vy (2026-10-31): bounded exposure (cap 2.5), mirrored types \pm0.3 / 0.7 / 1.2, level ladder 0.5..2.0, \gamma_v 4.0, \sigma_\epsilon 0.3
-    MODEL=kp_vy; TAG=vygelbcs; SPEC=var-kp_vy-vygelbcs-v1; SOLVE_TAG=vygelbcs
+    MODEL=kp_vy; TAG=vygelbcs; SPEC=var-kp_vy-vygelbcs-v2; SOLVE_TAG=vygelbcs
     export KP_PARAM_OVERRIDES='{"type_share": [0.1667, 0.1667, 0.1667, 0.1667, 0.1666, 0.1666], "type_bv": [-1.2, -0.7, -0.3, 0.3, 0.7, 1.2], "gamma_v": 4.0, "bv_comp": 1.2, "bv_on_eps": true, "type_level": [0.5, 0.65, 0.85, 1.15, 1.5, 2.0], "bv_eps_cap": 2.5, "sigma_eps": 0.3}'
     export KP_VY_PREFIX=vygelbcs
-    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbcs-v1; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
+    SOLVE_HINT='export KSPECS=var-kp_vy-vygelbcs-v2; sbatch --export=ALL variants/klc/solve_kp_klc.sh   # Quest'
     ;;
   vyhx3)
     # kp_vy (2026-11-01): HUMP-shaped exposure +-0.21 across a MILD visible level ladder [0.8, 0.9, 1.0, 1.1, 1.2] (BGN bvyhx3's twin), exact compensation, price 2.5
@@ -2475,7 +2464,7 @@ case "$SEED_SPEC" in
     SOLVE_HINT='export GSPEC=var-gs_vy-gvytlg-v1; sbatch --export=ALL --array=0-8 variants/klc/solve_gs_vy_klc.sh   # Quest'
     ;;
   *)
-    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vym3, vym3t3, g0235d, bgnbase, kpbase, gsbase, g0235df, vyg30k70, gx7w, vyg25k15, vyg25k70, bvy25, gvy25 or gvyc25)" >&2; exit 2 ;;
+    echo "unknown SEED_SPEC '$SEED_SPEC' (expected vyx, g0235, g0235f, g0235s, g0235r, g28, bx7, gx7, vyg25, vym3, vym3t3, g0235d, bgnbase, kpbase, gsbase, g0235df, vyg30k70, vyg25k15, vyg25k70, bvy25, gvy25 or gvyc25)" >&2; exit 2 ;;
 esac
 
 # Every case above restates its economy's parameters and kappa grid, and each is checked

@@ -8,7 +8,8 @@
   "parent_spec": "var-kp_vy-vygelbw-v1",
   "changes": [
    "{'bv_eps_cap': 2.5}; own tables under prefix vygelbc; everything else vygelbw's"
-  ]
+  ],
+  "superseded_by": "var-kp_vy-vygelbc-v2"
  },
  "engine": "oracle",
  "model": "kp_vy",

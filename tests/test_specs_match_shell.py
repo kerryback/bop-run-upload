@@ -525,6 +525,10 @@ def test_expected_solves_are_live_manifests():
         if not fn.endswith(".json"):
             continue
         spec = load_spec(fn[:-5])
+        if (spec.get("lineage") or {}).get("retired"):
+            # a retired spec is never run (its seed-array case is removed), so a retired pin is
+            # its record, not a hazard -- e.g. var-gs_bx-gx7w-v1, whose gw25 never converged
+            continue
         for stage, sid in (spec.get("expected_solves") or {}).items():
             pinned += 1
             if sid in live:

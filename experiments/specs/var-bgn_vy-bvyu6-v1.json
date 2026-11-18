@@ -130,11 +130,13 @@
   "verified_by": "variants/klc/verify_solves.py bvy (BOP_VERIFY_BVY_SPEC)",
   "solve_note": "to be built on Quest by variants/klc/solve_bgn_vy_klc.sh; ids read from the build log (PRECOMMITMENT STATUS in notes)"
  },
- "expected_solves": null,
+ "expected_solves": {
+  "jstar": "1dc0b45f101a088e"
+ },
  "precommitted": false,
  "solves_pending": [
   "jstar"
  ],
  "reused_solves": null,
- "spec_hash": "ebdfc2c0951d50c2687c76414f30c6e9118c15665534f4dc32f92c00f74060cb"
+ "spec_hash": "1a6be09aba05b4b15e7d031fa8e77f0dd06b0bab16dc1af1f6e6724483154e61"
 }

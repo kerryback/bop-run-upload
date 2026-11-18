@@ -8,7 +8,8 @@
   "parent_spec": "var-kp_vy-vyge-v1",
   "changes": [
    "type_level [0.6, 1.0, 1.6] (new in kp_vy); own tables under prefix vygel"
-  ]
+  ],
+  "superseded_by": "var-kp_vy-vygel-v2"
  },
  "engine": "oracle",
  "model": "kp_vy",

@@ -251,6 +251,10 @@ def _family(params, model=None):
     return "kp" if "NY" in params else ("gs" if "bnum" in params else "bgn")
 
 
+# the four gvy2s stages accepted at tol 2.5e-6 (see the family split in the test below)
+GVY2S_LOOSE = {"f5f9e3e2c7e1cc46", "49883c5b28be13ec", "bc85e15c2d3a1d3b", "9c345022eb1bd853"}  # b, d, f, j
+
+
 def test_solve_precision_is_uniform_within_each_model():
     """Read from the manifests, which record what each solve was actually built from.
 
@@ -275,10 +279,20 @@ def test_solve_precision_is_uniform_within_each_model():
             # the crash economies and their controls span the chain over +-3.5 sd so the crash lands at -3.5 (2026-10-14/17);
             # the span is an economy choice there, compared only among themselves
             fam = fam + f":span{params['y_mult']}"
+        if man.get("model") == "gs_vy" and int(params.get("NY") or 9) == 1:
+            # NY = 1 is not a coarse y grid but NO y state (2026-10-23 gsbg1, 2026-10-29 gxq35/gxq70): with
+            # gs_bv = 0 it is gs_solve_reg at gmreg [1, 1] (parity test). There is no y resolution to share,
+            # so these are compared only with each other (decided 2026-11-18)
+            fam = fam + ":no-y"
         if int(params.get("NY2") or 1) > 1:
             # a two-chain economy (2026-10-12, group 4) solves on the JOINT node set: its NY is not the single
             # chain's precision setting, so it is compared with other two-chain solves of its model only
             fam = fam + ":two-chain"
+        if man.get("solve_id") in GVY2S_LOOSE:
+            # var-gs_vy-gvy2s-v1's stages b, d, f, j hit the 5600-sweep cap at tol 1e-6 and were re-solved at
+            # 2.5e-6 (9e94ecee, 2026-10-28; sol_gvy2sj still capped, admitted by BOP_ACCEPT_CAPPED). Accepted as
+            # recorded rather than re-solved (decided 2026-11-18): named here one by one, so a new loose solve fails
+            fam = fam + ":gvy2s-loose"
         env = man.get("env_params") or {}
         view = {}
         for k in PRECISION_KEYS[fam.split(":")[0]]:

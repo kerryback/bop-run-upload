@@ -12,7 +12,8 @@
       "gs_gamma_slope 0.28 -> 0.4",
       "gs_gamma_hi 1.0 -> 1.5",
       "five new solves sol_gw10..sol_gw70; nothing reused"
-    ]
+    ],
+    "retired": "RETIRED 2026-11-18. Never run. Its gw25 solve did not converge twice: 53a03d3739678c34 at the GS family's tol 1e-6 and 2230cba30bee2e09 at 2e-6 (retired) both hit the 5600-sweep cycle cap. Nothing reports gx7w (not in docs/RESULTS.md or NEXTUP.md), and the seed-array case was removed. The question it asked (a steeper and wider price of risk than gx7, DKKM against FMR/FF) is not pursued. Nothing supersedes this spec."
   },
   "engine": "oracle",
   "model": "gs_bx",
