@@ -106,3 +106,6 @@ variants/gs_bx/sol_*/
 docs/*.aux
 docs/*.log
 docs/*.out
+
+# Overleaf/Dropbox paper folder (per-machine symlink)
+/tex
